@@ -6,6 +6,14 @@ laufenden Hub auf den neuesten Stand bringen — ohne dass der Hub (und damit Ka
 Handy-Zugang zum Agenten) wegbleibt.
 
 ## Erledigt (verifiziert)
+- **P79 im Live-Hub deployed** (`systemctl --user restart ancientvoid-hub`, health 200
+  nach 2 s, kein Rückfall): Konfiguration `inference.engines` mit Strata
+  (`http://127.0.0.1:8080/metrics`, Schlüssel nur als Dateireferenz), Hub-Log:
+  `inference: 1 Engine-Quelle (strata)`, Request-Historie schreibt
+  `data/inference-requests.jsonl` (K7). API live geprüft: 932 Anfragen, Prompt
+  129,2 Mio, gelesen 2,38 Mio, wiederverwendet 126,8 Mio (Rechnung geht auf),
+  KV-Reuse 98,2 %, Decode p50 81,4 / p90 91,7 / Spitze 107,1 (1 Ausreißer,
+  ohne Ausr. 93,7), Grenzlaufrate 3.377 tok/s bei R² 1,00, Antwort 7,5 KB.
 - **P79 Backend** (Commit `4e92c233`, Branch `feat/p79-inferenz-token-tempo`):
   Vertrag `packages/contracts/src/inference/tempo.ts` (Quellenliste, Snapshot,
   Verteilungszeilen, K5-Kappen), Kern `packages/core/src/modules/inference/`
@@ -15,18 +23,35 @@ Handy-Zugang zum Agenten) wegbleibt.
   Tests: `packages/core/test/inference.test.ts` **12/12**,
   `apps/hub/test/modules/inference/routes.test.ts` **5/5** (leere Konfiguration →
   leere Liste, unbekannte Id → 404 mit Liste, fehlende Id → 400).
-- **P79 PWA** (Commit `1badf763`): `features/inference/` (Seite + format.ts),
-  **eigener Menüpunkt** „Inferenz“ (Route `/inferenz`, Dock, Sidebar, ToolPane),
-  `57-inference.css`, i18n de/en je 106 Keys.
+- **P79 PWA** (Commits `1badf763`, `8fffada0`): `features/inference/` (Seite +
+  format.ts), **eigener Menüpunkt** „Inferenz“ (Route `/inferenz`, Dock, Sidebar,
+  ToolPane), `57-inference.css`, i18n de/en. Im Browser an der ausgelieferten
+  Seite geprüft (1280 / 710 / 390 px): Seitenüberlauf null
+  (`documentElement.scrollWidth` == Viewport), Tabellenrahmen `scrollWidth ==
+  clientWidth` (vorher 893 > 702 — Spitze abgeschnitten), Vollbreiten-Kacheln,
+  Leerlauf zeigt „Engine im Leerlauf“ statt nackter „— tok/s“, TTFT-Kachel nennt
+  „letzte Anfrage“, Datenalter heißt „gerade gemessen“ / „Daten 2 s alt“.
+  E2E `e2e/specs/inference-tempo.spec.ts` **5/5** (Menüpunkt, Verteilung nur bei
+  Einzel-Requests, Gegenwerte erklären sich, tote Quelle bleibt sichtbar K9,
+  Key nur als Dateireferenz). Format-Tests `apps/pwa/test/inference-format.test.ts`
+  **9/9**.
 - Gates grün: `lint`, `typecheck` (Hub+PWA), `check:arch`, `check:i18n`,
   `check:context` (nach `npm run docs:reference`).
 - tokdeck (extern, `~/repos/tokdeck`) hat jetzt auch einen **Halogen-Adapter**
   (Prometheus + `/health` + `/cache`), 28/28 Tests.
 
+## Bekannte Probleme, die der Live-Betrieb gefunden und behoben hat
+- `accept: application/json, text/plain` brachte **Strata dazu, seine
+  Prometheus-Exposition statt JSON** zu liefern (`# HELP vll…`). Accept sitzt
+  jetzt pro Quellenart; Test hält den Kopf fest.
+- Der Tracker wurde in `main.ts` **nach** dem Deps-Objekt erzeugt — die Route sah
+  ihn nie („keine Engines konfiguriert“). Erzeugung liegt jetzt vor `createHubApp`.
+- Mio-Großzahlen ≥ 100 Mio waren **um Faktor 10 zu klein** (127 Mio → „12,7 Mio“).
+- Verlaufslinien zeichneten bei konstanter Serie eine flache Linie (= „stabil“
+  vorgetäuscht); jetzt null. Zähler-Engines melden „keine Hardware-Werte gemeldet“,
+  die PWA zeigt eine Grenzen-Karte mit den Gründen der Quelle.
+
 ## In Arbeit
-- Live-Nahme im Hub: Konfigurationsabschnitt `inference.engines` (Strata auf
-  `http://127.0.0.1:8080/metrics`, Schlüssel als Dateireferenz
-  `~/repos/tokdeck/tokdeck.env.key`), PWA-Build, **ein** Hub-Neustart.
 - GitHub-Abgleich: `git fetch` + `origin/main` in den Branch mergen, damit der
   deployte Stand „neueste Version + P79“ ist. Push/PR ist blockiert: keine
   GitHub-Zugangsdaten auf dem Rechner (kein `gh`-Login, kein Token, kein
