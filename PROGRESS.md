@@ -68,6 +68,25 @@ Handy-Zugang zum Agenten) wegbleibt.
   abgesetzt (`setsid`/`systemd-run --user`) mit Health-Check und Rückrollpfad.
 - tokdeck liegt weiter lokal (Port 7474, nur Loopback + Tailscale), kein Remote.
 
+## Betriebswissen auf dem Hub-Rechner (betrifft nicht das Repo, aber den Zugang)
+- **Fernzugriff war 21.11. ab 14:20 UTC tot, obwohl alles lief.** GNOME-Leerlauf
+  (`idle-delay` 300 s) aktivierte den Screensaver; mutter/xdg-desktop-portal-gnome
+  verweigern dann das Erzeugen von Remote-Desktop-Sessions
+  (`Session creation inhibited`) — deshalb fielen **Deskflow (InputCapture-Portal)
+  und gnome-remote-desktop (RDP) gleichzeitig** aus, während SSH und Hub gesund
+  waren. Behoben: `idle-delay 0`, `idle-activation-enabled false`,
+  `idle-dim false`, `sleep-inactive-ac-type 'nothing'`, Super+L entbunden, plus
+  Keep-Awake-Watchdog (`~/.config/systemd/user/gnome-keep-awake.{service,timer}`,
+  30 s, ruft `~/.local/bin/gnome-keep-awake`). Rot-dann-grün bewiesen: Blank
+  erzwungen → 7 Portal-Fehler in 10 s → Watchdog deaktiviert → 0 Fehler in 12 s.
+- RDP-Port: **3389 = System-Instanz (Greeter), 3390 = echte Wayland-Sitzung.**
+  Monitor an `card1-DP-2` angeschlossen lassen — ohne Output kein RDP.
+- RAM/VRAM der Modellseite: `strata-host` hält ~92 GiB von 125,7 GiB
+  (Expert-Arena, pinned KV, conversation cache), VRAM ~30,2/31,9 GiB, PSI 0.
+  Anzeigewahrheit: `MemTotal − MemAvailable` (≈98 GiB) und die klassische
+  Formel (≈59 GiB) sind verschiedene Rechnungen — `Mlocked` ≈ 26,6 GiB und
+  Shmem werden doppelt gezählt. Werkzeug: Skill `linux-ram-attribution`.
+
 ## Wiederaufnahme nach Hub-Neustart (falls diese Antwort abbricht)
 - Der Hub ist ein systemd-User-Service (`ancientvoid-hub.service`, `Restart=always`,
   `KillMode=process`) — Session-Worker überleben, der Hub kommt von allein hoch.
