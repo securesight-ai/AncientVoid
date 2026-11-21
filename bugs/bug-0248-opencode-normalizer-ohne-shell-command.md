@@ -1,7 +1,7 @@
 ---
 id: BUG-0248
 slug: opencode-normalizer-ohne-shell-command
-status: open
+status: done
 severity: S3
 area: adapters
 instance: dev
@@ -13,6 +13,10 @@ reporter: "EPIC-P72 §0 (Bestandsaufnahme 18.11.2026)"
 ---
 
 # BUG-0248 — opencode-Normalizer: `shell`/`bash`-tool_use ohne `command`, nur `cwd`
+
+## Fix
+
+ACP UpdateMapper: opencode liefert `command` erst im Update nach `{cwd}`.
 
 ## Gesehen
 

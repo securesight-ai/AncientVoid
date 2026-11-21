@@ -20,12 +20,14 @@ describe("skill-runs extract (T72.6)", () => {
     expect(JSON.stringify(extractRuns(fixtureRoot))).toBe(JSON.stringify(extractRuns(fixtureRoot)));
   });
 
-  it("maki- und opencode-Fixtures zeigen shellWithoutCommand > 0 statt fehlender Zeilen", () => {
+  it("BUG-0247/0248: maki/opencode-Fixtures tragen command (shellWithoutCommand = 0)", () => {
     const runs = extractRuns(fixtureRoot);
     const maki = runs.find((r) => r.adapter === "maki");
     const opencode = runs.find((r) => r.adapter === "opencode");
-    expect(maki.unparsed.shellWithoutCommand).toBeGreaterThan(0);
-    expect(opencode.unparsed.shellWithoutCommand).toBeGreaterThan(0);
+    expect(maki.unparsed.shellWithoutCommand).toBe(0);
+    expect(opencode.unparsed.shellWithoutCommand).toBe(0);
+    expect(maki.commands.map((c) => c.cmd)).toEqual(["npm test", "npm run lint"]);
+    expect(opencode.commands.map((c) => c.cmd)).toEqual(["npm run lint", "echo hi"]);
   });
 
   it("resolviert K5-Blobs und zaehlt fehlende Blobs sichtbar (blobMissing)", () => {
