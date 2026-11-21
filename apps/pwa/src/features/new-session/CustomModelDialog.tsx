@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { CustomModel, PiProviderBody } from "../../shared/api.ts";
 import { Sheet, Button } from "../../shared/ui/index.ts";
@@ -58,7 +59,7 @@ export function CustomModelDialog({ adapter, canEndpoint, api, onClose, onChange
       setId("");
       setLabel("");
       await reload();
-      setNote("Gespeichert — das Modell steht jetzt im Dropdown.");
+      setNote(t("newsession.model_saved"));
     });
 
   const saveEndpoint = () =>
@@ -74,94 +75,94 @@ export function CustomModelDialog({ adapter, canEndpoint, api, onClose, onChange
       });
       onChanged(`${name.trim()}/${modelId.trim()}`);
       await reload();
-      setNote(res.created ? "Endpunkt in pi eingetragen — das Modell steht im Dropdown." : "Endpunkt in pi ersetzt.");
+      setNote(res.created ? t("newsession.endpoint_added") : t("newsession.endpoint_replaced"));
     });
 
   const field = "display: grid; gap: 4px; font-size: calc(13px * var(--font-scale, 1))";
   const exists = /schon/.test(error ?? "");
 
   return (
-    <Sheet open onClose={onClose} label="Eigenes Modell oder Endpunkt" variant="modal" testid="modal" class="custom-model-dialog">
-        <h3>Eigenes Modell oder Endpunkt</h3>
+    <Sheet open onClose={onClose} label={t("newsession.own_model_endpoint")} variant="modal" testid="modal" class="custom-model-dialog">
+        <h3>{t("newsession.own_model_endpoint")}</h3>
         {canEndpoint && (
           <div class="row" role="tablist">
             <Button role="tab" aria-selected={tab === "model"} onClick={() => setTab("model")} variant="primary" class={tab === "model" ? undefined : undefined}>
-              Modell
+              {t("common.model")}
             </Button>
             <Button role="tab" aria-selected={tab === "endpoint"} onClick={() => setTab("endpoint")} variant="primary" class={tab === "endpoint" ? undefined : undefined}>
-              Endpunkt (pi)
+              {t("newsession.endpoint_pi")}
             </Button>
           </div>
         )}
         {tab === "model" || !canEndpoint ? (
           <>
             <label style={field}>
-              Modell-Id
+              {t("newsession.model_id")}
               <input value={id} onInput={(e) => setId((e.target as HTMLInputElement).value)} placeholder="anthropic/claude-opus-5-5" autocapitalize="off" autocorrect="off" spellcheck={false} />
             </label>
             <label style={field}>
-              Anzeigename (optional)
+              {t("newsession.display_name_optional")}
               <input value={label} onInput={(e) => setLabel((e.target as HTMLInputElement).value)} placeholder="Opus 5.5" />
             </label>
             <label class="row" style="gap: 8px; font-size: calc(13px * var(--font-scale, 1))">
               <input type="checkbox" checked={everywhere} onChange={(e) => setEverywhere((e.target as HTMLInputElement).checked)} />
-              in allen Harnesses anbieten (sonst nur in {adapter})
+              {t("newsession.offer_in_all_harnesses")} {adapter})
             </label>
             <div class="dim" style="font-size: calc(12px * var(--font-scale, 1))">
-              Der Hub reicht die Id unverändert weiter. Kennt der Harness sie nicht oder fehlt die Anmeldung beim Anbieter, scheitert der Zug sichtbar — es läuft nie ein anderes Modell.
+              {t("newsession.hub_passes_id")}
             </div>
             <div class="modal-actions">
               <Button disabled={busy || !id.trim()} onClick={() => void saveModel()} variant="primary">
-                {busy ? "lädt…" : "Speichern"}
+                {busy ? t("common.loading_dots") : t("common.save")}
               </Button>
             </div>
           </>
         ) : (
           <>
             <label style={field}>
-              Name des Providers
+              {t("newsession.provider_name")}
               <input value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} placeholder="gpubox" autocapitalize="off" spellcheck={false} />
             </label>
             <label style={field}>
-              Basis-URL
+              {t("newsession.base_url")}
               <input value={baseUrl} onInput={(e) => setBaseUrl((e.target as HTMLInputElement).value)} placeholder="http://100.64.0.10:8100/v1" inputMode="url" autocapitalize="off" spellcheck={false} />
             </label>
             <label style={field}>
-              Schnittstelle
+              {t("newsession.interface")}
               <select value={apiKind} onChange={(e) => setApiKind((e.target as HTMLSelectElement).value as PiProviderBody["api"])}>
-                <option value="openai-completions">OpenAI-kompatibel</option>
-                <option value="anthropic-messages">Anthropic-kompatibel</option>
-                <option value="google-generative-ai">Google-kompatibel</option>
+                <option value="openai-completions">{t("newsession.openai_compatible")}</option>
+                <option value="anthropic-messages">{t("newsession.anthropic_compatible")}</option>
+                <option value="google-generative-ai">{t("newsession.google_compatible")}</option>
               </select>
             </label>
             <label style={field}>
-              API-Schlüssel (optional, als $UMGEBUNGSVARIABLE)
+              {t("newsession.api_key_env")}
               <input value={apiKey} onInput={(e) => setApiKey((e.target as HTMLInputElement).value)} placeholder="$GPUBOX_KEY" autocapitalize="off" spellcheck={false} />
             </label>
             <label style={field}>
-              Modell-Id am Endpunkt
+              {t("newsession.model_id_at_endpoint")}
               <input value={modelId} onInput={(e) => setModelId((e.target as HTMLInputElement).value)} placeholder="halogen-qwen3.8-flash-next-uncensored-iq4xs" autocapitalize="off" spellcheck={false} />
             </label>
             <label style={field}>
-              Kontextfenster in Tokens (optional)
+              {t("newsession.context_window_tokens")}
               <input value={context} onInput={(e) => setContext((e.target as HTMLInputElement).value)} inputMode="numeric" placeholder="131072" />
             </label>
             <label class="row" style="gap: 8px; font-size: calc(13px * var(--font-scale, 1))">
               <input type="checkbox" checked={reasoning} onChange={(e) => setReasoning((e.target as HTMLInputElement).checked)} />
-              Modell denkt (Reasoning)
+              {t("newsession.model_thinks")}
             </label>
             {exists && (
               <label class="row" style="gap: 8px; font-size: calc(13px * var(--font-scale, 1))">
                 <input type="checkbox" checked={replace} onChange={(e) => setReplace((e.target as HTMLInputElement).checked)} />
-                den bestehenden Provider in pi ersetzen
+                {t("newsession.replace_existing_provider")}
               </label>
             )}
             <div class="dim" style="font-size: calc(12px * var(--font-scale, 1))">
-              Schreibt in pi's models.json (mit Sicherung davor). Andere Provider dort bleiben unberührt; pi lädt die Datei beim Öffnen der Modellwahl neu.
+              {t("newsession.writes_pi_models_json")}
             </div>
             <div class="modal-actions">
               <Button disabled={busy || !name.trim() || !baseUrl.trim() || !modelId.trim()} onClick={() => void saveEndpoint()} variant="primary">
-                {busy ? "lädt…" : "Eintragen"}
+                {busy ? t("common.loading_dots") : t("newsession.add_entry")}
               </Button>
             </div>
           </>
@@ -170,15 +171,15 @@ export function CustomModelDialog({ adapter, canEndpoint, api, onClose, onChange
         {note && <div class="composer-notice">{note}</div>}
         {items.length > 0 && (
           <div class="custom-model-list">
-            <strong style="font-size: calc(13px * var(--font-scale, 1))">Eigene Modelle</strong>
+            <strong style="font-size: calc(13px * var(--font-scale, 1))">{t("newsession.own_models")}</strong>
             {items.map((m) => (
               <div key={m.id} class="row" style="justify-content: space-between; gap: 8px">
                 <span class="mono" style="overflow-wrap: anywhere; font-size: calc(12px * var(--font-scale, 1))">
                   {m.label ? `${m.label} · ` : ""}
                   {m.id}
-                  <span class="dim"> {m.adapters.length === 0 ? "(alle)" : `(${m.adapters.join(", ")})`}</span>
+                  <span class="dim"> {m.adapters.length === 0 ? t("newsession.all_paren") : `(${m.adapters.join(", ")})`}</span>
                 </span>
-                <Button aria-label={`${m.id} entfernen`} disabled={busy} onClick={() => void run(async () => (await api.removeCustomModel(m.id), onChanged(), reload()))}>
+                <Button aria-label={t("newsession.remove_entry", { "id": m.id })} disabled={busy} onClick={() => void run(async () => (await api.removeCustomModel(m.id), onChanged(), reload()))}>
                   ✕
                 </Button>
               </div>
@@ -187,7 +188,7 @@ export function CustomModelDialog({ adapter, canEndpoint, api, onClose, onChange
         )}
         <div class="modal-actions">
           <Button onClick={onClose}>
-            Schließen
+            {t("common.close")}
           </Button>
         </div>
     </Sheet>

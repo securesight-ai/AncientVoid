@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { AdapterInfo, HubApi, SessionRecord } from "../../shared/api.ts";
 import { HANDOVER_CATEGORIES, type ProviderFailure } from "./handover.ts";
@@ -18,7 +19,7 @@ export function HandoverBar({ failure, session, api, onHandedOver, onRepaired }:
     setError(null);
     try {
       const ack = await api.repairSession(session.id);
-      if (!ack.ok) throw new Error(ack.detail ?? "Reparieren fehlgeschlagen.");
+      if (!ack.ok) throw new Error(ack.detail ?? t("session.repair_failed"));
       await onRepaired();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -34,12 +35,12 @@ export function HandoverBar({ failure, session, api, onHandedOver, onRepaired }:
       </div>
       {failure.category === "session" && (
         <Button  disabled={repairing} onClick={() => void repair()} variant="primary" class={repairing ? "busy" : undefined}>
-          {repairing ? "repariert…" : "Hier weitermachen (Kontext neu aufbauen)"}
+          {repairing ? t("session.repaired") : t("session.continue_here")}
         </Button>
       )}
       {!open && (
         <Button onClick={() => setOpen(true)}>
-          An andere Session übergeben…
+          {t("session.hand_over_to_other")}
         </Button>
       )}
       {open && <HandoverForm session={session} api={api} onCancel={() => setOpen(false)} onHandedOver={onHandedOver} />}
@@ -92,7 +93,7 @@ export function HandoverForm({ session, api, onCancel, onHandedOver }: { session
       setBeforeTighten(prompt);
       setPrompt(result.enhanced.slice(0, 3500));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Straffen fehlgeschlagen");
+      setError(e instanceof Error ? e.message : t("session.tighten_failed"));
     } finally {
       setTightening(false);
     }
@@ -112,9 +113,9 @@ export function HandoverForm({ session, api, onCancel, onHandedOver }: { session
   return (
     <div class="handover-form">
       <label>
-        Ziel
-        <select value={target} onChange={(e) => setTarget((e.target as HTMLSelectElement).value)} aria-label="Ziel-Provider">
-          <option value="">— wählen —</option>
+        {t("newsession.target")}
+        <select value={target} onChange={(e) => setTarget((e.target as HTMLSelectElement).value)} aria-label={t("newsession.target_provider")}>
+          <option value="">{t("newsession.choose_dash")}</option>
           {adapters.map((a) => (
             <option key={a.id} value={a.id}>
               {a.id}
@@ -124,9 +125,9 @@ export function HandoverForm({ session, api, onCancel, onHandedOver }: { session
       </label>
       {canPickModel && (
         <label>
-          Modell
-          <select value={model} onChange={(e) => setModel((e.target as HTMLSelectElement).value)} aria-label="Ziel-Modell">
-            <option value="">Standard des Harness</option>
+          {t("common.model")}
+          <select value={model} onChange={(e) => setModel((e.target as HTMLSelectElement).value)} aria-label={t("newsession.target_model")}>
+            <option value="">{t("session.harness_default")}</option>
             {models.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.id}
@@ -136,24 +137,24 @@ export function HandoverForm({ session, api, onCancel, onHandedOver }: { session
         </label>
       )}
       <label>
-        Übergabetext (wird als erste Eingabe gesendet)
-        <textarea rows={8} value={prompt} onInput={(e) => setPrompt((e.target as HTMLTextAreaElement).value)} aria-label="Übergabetext" maxLength={3500} />
+        {t("session.handover_text_first_input")}
+        <textarea rows={8} value={prompt} onInput={(e) => setPrompt((e.target as HTMLTextAreaElement).value)} aria-label={t("session.handover_text")} maxLength={3500} />
       </label>
       {error && <div class="error">{error}</div>}
       <div class="approval-actions">
-        <Button  disabled={busy || tightening || !target || !prompt.trim()} onClick={() => void tighten()} title={target ? `Der Text geht dafür an ${target}` : "Zuerst ein Ziel wählen"} class={tightening ? "busy" : undefined}>
-          {tightening ? "formuliert…" : "Mit Modell straffen"}
+        <Button  disabled={busy || tightening || !target || !prompt.trim()} onClick={() => void tighten()} title={target ? t("session.text_goes_to", { "target": target }) : t("session.choose_target_first")} class={tightening ? "busy" : undefined}>
+          {tightening ? t("session.formulating") : t("session.tighten_with_model")}
         </Button>
         {beforeTighten !== null && (
           <Button onClick={() => { setPrompt(beforeTighten); setBeforeTighten(null); }}>
-            Rückgängig
+            {t("session.undo")}
           </Button>
         )}
         <Button  disabled={busy || !target || !prompt.trim()} onClick={() => void go()} variant="primary" class={busy ? "busy" : undefined}>
-          {busy ? "startet…" : "Übergeben"}
+          {busy ? t("session.starting") : t("session.hand_over")}
         </Button>
         <Button disabled={busy} onClick={onCancel}>
-          Abbrechen
+          {t("common.cancel")}
         </Button>
       </div>
     </div>

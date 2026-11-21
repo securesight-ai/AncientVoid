@@ -60,7 +60,6 @@ export const en = {
   "common.loading_short": "loading…",
   "common.media": "Media",
   "common.metrics": "Metrics",
-  "common.more": "more",
   "common.n_sessions": "{n} sessions",
   "common.never": "never",
   "common.new": "new",

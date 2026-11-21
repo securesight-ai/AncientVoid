@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
 import { Button, Card } from "../../shared/ui/index.ts";
@@ -30,7 +31,7 @@ export function BudgetTopUp({ sessionId, currentBudgetUsd }: { sessionId: string
     setMessage("");
     try {
       await api.requestBudgetTopUp(sessionId, value);
-      setMessage("Budget erhöht — Session läuft weiter.");
+      setMessage(t("session.budget_topped_up"));
     } catch (err) {
       // A pending-approval response (422) throws here (see api.ts) — the
       // exact reason is still worth showing even though it's a real
@@ -43,7 +44,7 @@ export function BudgetTopUp({ sessionId, currentBudgetUsd }: { sessionId: string
 
   return (
     <Card style="margin: 10px 0; display: grid; gap: 8px">
-      <div>Session wegen Budget pausiert.</div>
+      <div>{t("session.paused_for_budget")}</div>
       <div style="display: flex; gap: 8px; align-items: center">
         <input
           type="number"
@@ -53,10 +54,10 @@ export function BudgetTopUp({ sessionId, currentBudgetUsd }: { sessionId: string
           onInput={(e) => setAmount((e.target as HTMLInputElement).value)}
           style="width: 100px"
         />
-        <span>$ neues Budget</span>
+        <span>{t("composer.budget_example")}</span>
       </div>
       <Button  aria-busy={busy} onClick={submit} disabled={busy} variant="primary" class={busy ? "busy" : undefined}>
-        {busy ? "lädt…" : "Budget erhöhen"}
+        {busy ? t("common.loading_dots") : t("session.budget_top_up")}
       </Button>
       {message && <div class="dim" style="font-size: calc(12px * var(--font-scale, 1))">{message}</div>}
     </Card>

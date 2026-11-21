@@ -213,8 +213,9 @@ hart verdrahtet. Für „praktisch alle Sprachen" gilt:
   negativem Fixture; `docs/check-context.md`-Eintrag „script-ref" erfüllt.
 - [x] **T61.4** Migration Shell/Übersicht/Status/Benachrichtigungen
   (häufigste Erstkontakt-Flächen) inkl. `fmt*`-Ersatz der `"de-DE"`-Literale.
-- [ ] **T61.5** Migration Session/Composer/Approvals/Neue Session/Setup-
-  und Onboarding-Pfade.
+- [x] **T61.5** Migration Session/Composer/Approvals/Neue Session/Setup-
+  und Onboarding-Pfade. (2026-11-22: 29 Dateien migriert, Baseline
+  105/1330 → 71/1025; Restposten in diesen Dateien sind Daten-/Icon-Keys.)
 - [ ] **T61.6** Migration übrige Features (Workspace, Files, Vault, Graph,
   Fleet, Teams, Automations, Forge, Media, Metriken, Settings …) — je
   Feature-Bereich ein MR, Baseline sinkt nachweisbar.

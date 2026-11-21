@@ -4,11 +4,13 @@
 import { de as dock } from "./de/dock.ts";
 import { de as notifications } from "./de/notifications.ts";
 import { de as common } from "./de/common.ts";
+import { de as features } from "./de/features.ts";
 
 export const de = {
   ...dock,
   ...notifications,
   ...common,
+  ...features,
 
   "settings.language.title": "Sprache",
   "settings.language.hint": "Gerät-Einstellung; folgt dem System beim ersten Start. Ein Wechsel lädt neu — Entwürfe bleiben erhalten.",

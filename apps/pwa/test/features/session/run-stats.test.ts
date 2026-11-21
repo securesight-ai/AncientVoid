@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+// EPIC-P61: Sprache auf Deutsch fixiert — Intl-Format und Katalogtexte der Tests sind de.
+vi.stubGlobal("localStorage", { getItem: (k: string) => (k === "ancientvoid.language" ? "de" : null), setItem: () => {}, removeItem: () => {} });
 import { contextWindowFromEvents, latestModelName, turnTokenStats, tokenParts, compactTokens, turnStatsText } from "../../../src/features/session/run-stats.ts";
 import type { NormalizedEvent } from "../../../src/shared/ws.ts";
 

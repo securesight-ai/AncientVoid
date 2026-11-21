@@ -285,8 +285,9 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 | [BUG-0249](bug-0249-continue-link-faellt-auf-root.md) | Continue-Link im Bericht fällt auf `#/` zurück (nur der Link, nicht das Kommando) | done | S3 | pwa | [#251](https://github.com/securesight-ai/AncientVoid/issues/251) |
 | [BUG-0250](bug-0250-e2e-anker-chip-statusfilter-verwaist.md) | E2E-Anker `.chip.status-filter` verwaist nach Baustein-Migration (Chip rendert `ui-chip`) | done | S3 | pwa, e2e | [#252](https://github.com/securesight-ai/AncientVoid/issues/252) |
 | [BUG-0251](bug-0251-gefunden-einstieg-doppelt.md) | „Gefunden“-Einstieg doppelt in der Übersicht (Tab + Chip) | done | S4 | pwa | [#253](https://github.com/securesight-ai/AncientVoid/issues/253) |
+| [BUG-0252](bug-0252-sw-js-kommentarzeile-ohne-kommentarzeichen.md) | sw.js-Kommentarzeile ohne `//` — ServiceWorker-Eval schlägt fehl | fixed | S3 | pwa | — |
 
-Die nächste freie Nummer ist **0244** (gemerged, 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
+Die nächste freie Nummer ist **0253** (gemerged, 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
 0183 mit PR #50, 0184 mit PR #48 und 0185 mit dem Nightly-Fix aus den Issues #54–#57 gemerged,
 0180 mit PR #40; 0186 ist das eingemauerte Manifest auf dem Handy; 0187 sind die Geister-Tokens
 aus der P63-Planung; 0188 ist **doppelt belegt** (Hermes-Stumm/#133 done + host-ignorierendes Projekt-Anlegen in der Neuanlage);

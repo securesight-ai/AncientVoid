@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { Sheet, Button } from "../../shared/ui/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
@@ -100,7 +101,7 @@ export function SkillPicker({
     api
       .skills(project)
       .then((res) => alive && setItems(res.items))
-      .catch((err) => alive && setError(err instanceof Error ? err.message : "Skills konnten nicht geladen werden"));
+      .catch((err) => alive && setError(err instanceof Error ? err.message : t("composer.skills_load_failed")));
     return () => {
       alive = false;
     };
@@ -137,8 +138,8 @@ export function SkillPicker({
 
   if (!supported) {
     return (
-      <div class="skill-chip dim" title="Für diesen Adapter nicht verfügbar">
-        Skills/Agents: für diesen Adapter nicht verfügbar
+      <div class="skill-chip dim" title={t("composer.not_available")}>
+        {t("composer.skills_unavailable")}
       </div>
     );
   }
@@ -146,24 +147,24 @@ export function SkillPicker({
   return (
     <div>
       <Button onClick={openOverlay} class="skill-chip">
-        {selection ? `${selection.kind === "agent" ? "Agent" : "Skill"}: ${selection.name}` : "+ Skill/Agent"}
+        {selection ? `${selection.kind === "agent" ? t("common.kind_agent") : t("common.kind_skill")}: ${selection.name}` : t("newsession.add_skill_agent")}
       </Button>
 
       {open && (
-        <Sheet open onClose={() => setOpen(false)} label="Skill oder Agent wählen">
+        <Sheet open onClose={() => setOpen(false)} label={t("composer.choose_skill")}>
             <div class="row" style="justify-content: space-between; align-items: center">
-              <strong>Senden mit …</strong>
+              <strong>{t("composer.send_with")}</strong>
               <Button onClick={() => setOpen(false)}>
                 ✕
               </Button>
             </div>
             {error && <div style="color: var(--err)">{error}</div>}
             {!project && items === null ? (
-              <div class="dim">Projekt wird noch geladen …</div>
+              <div class="dim">{t("composer.project_loading")}</div>
             ) : items === null && !error ? (
-              <div class="dim">lade…</div>
+              <div class="dim">{t("common.loading_short")}</div>
             ) : items && items.length === 0 ? (
-              <div class="dim">Keine Skills/Agents in diesem Projekt gefunden.</div>
+              <div class="dim">{t("composer.no_skills_found")}</div>
             ) : (
               <div class="skill-list">
                 {items
@@ -185,7 +186,7 @@ export function SkillPicker({
               </div>
             )}
             <Button onClick={clear}>
-              Ohne Skill/Agent senden
+              {t("composer.send_without_skill")}
             </Button>
         </Sheet>
       )}

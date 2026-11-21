@@ -2,7 +2,7 @@
 
 **Art:** erklaerung
 
-Stand: 2026-11-17. Basis: PRD §4 und `epics/EPIC-P0-hub-kern.md` ff.; Epics
+Stand: 2026-11-21. Basis: PRD §4 und `epics/EPIC-P0-hub-kern.md` ff.; Epics
 bis P56 (Statistik) und strukturrelevante Nachfolger (u. a. Teams P60,
 Live-Deltas ADR-0083) sind eingearbeitet, soweit sie Struktur verändern —
 fachliche Details und Verlauf leben in `epics/` (Index: `epics/README.md`).
@@ -191,7 +191,11 @@ Statistik-Modul + Rollup (P56, ADR-0079), Agenten-Teams (P60,
 ADR-0077), einheitliche UI-Bausteine unter `shared/ui` als einzige Form der
 Button-/Form-Sprache (P63), Terminal-Tab mit Allowlist-SSH über den Hub —
 keine nativen PTY-Module (ADR-0087) und Status-Sounds rein clientseitig als
-WebAudio-Synthese, ohne Contract-Änderung und ohne Assets (P65).
+WebAudio-Synthese, ohne Contract-Änderung und ohne Assets (P65),
+Mehrsprachigkeit nach ADR-0101: typisierte Textkataloge statt Framework —
+PWA in `apps/pwa/src/shared/i18n/`, serverseitiger Push-Katalog in
+`packages/core/src/modules/notifications/i18n/`, `de` als Einzelsprungmarke,
+`en` typgeprüft dagegen; `check:i18n` mit Baseline-Ratchet (P61).
 
 ### Adapter-Flotte (P1/P3)
 
