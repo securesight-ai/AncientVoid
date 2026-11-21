@@ -1,7 +1,7 @@
 ---
 id: BUG-0246
 slug: session-delete-orphan-projekt
-status: fixed
+status: done
 severity: S2
 area: core, hub
 instance: live

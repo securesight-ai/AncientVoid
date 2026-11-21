@@ -1,7 +1,7 @@
 ---
 id: BUG-0244
 slug: neue-session-kachel1-layout
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev

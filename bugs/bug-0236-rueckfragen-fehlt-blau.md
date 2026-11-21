@@ -1,7 +1,7 @@
 ---
 id: BUG-0236
 slug: rueckfragen-fehlt-blau
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev

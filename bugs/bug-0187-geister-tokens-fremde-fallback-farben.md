@@ -1,7 +1,7 @@
 ---
 id: BUG-0187
 slug: geister-tokens-fremde-fallback-farben
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev

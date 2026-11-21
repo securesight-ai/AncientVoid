@@ -1,18 +1,23 @@
 ---
 id: BUG-0225
 slug: gerät-hält-an-der-cloud-erkennung-fest
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
 commit: ""
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/pull/199"
 epic: ""
 created: 2026-11-19
 reporter: Kai
 ---
 
 # BUG-0225 — ein Gerät hält an der Browser-/Cloud-Erkennung fest, obwohl längst lokal erkannt wird
+
+## Fix
+
+Behoben: ADR-0095 / PR #199. Doku-Abschluss 2026-11-21 (Status-Nachzug).
+
 
 ## Gesehen
 

@@ -1,7 +1,7 @@
 ---
 id: BUG-0220
 slug: activity-begin-herzschlag-flutet-eventstore
-status: open
+status: done
 severity: S2
 area: core
 instance: dev
@@ -12,6 +12,11 @@ reporter: Nutzer
 ---
 
 # BUG-0220 — Wiederholte Running-Reports fluten den EventStore mit `session.activity_begin`
+
+## Fix
+
+Behoben: PR #185 (`6899e0dc`). Doku-Abschluss 2026-11-21 (Status-Nachzug).
+
 
 ## Gesehen
 

@@ -1,7 +1,7 @@
 ---
 id: BUG-0215
 slug: live-woerter-enden-nach-einer-minute
-status: open
+status: done
 severity: S2
 area: hub
 instance: dev
@@ -66,6 +66,11 @@ Streaming-Brücke 127.0.0.1:8095.
 
 `apps/hub/test/modules/voice/stt-routes.test.ts`: hundert Sekunden PCM-Rahmen einsenden, dann
 `finish` — erwartet `final`, nicht `error`. Ohne den Fix: `error` nach sechzig Sekunden.
+
+
+## Fix
+
+Behoben: `ca56c3d9` (60 s → 180 s). Doku-Abschluss 2026-11-21 (Status-Nachzug).
 
 ## Handoff
 

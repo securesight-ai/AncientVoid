@@ -1,7 +1,7 @@
 ---
 id: BUG-0235
 slug: claude-steering-hintergrundarbeit
-status: fixed
+status: done
 severity: S2
 area: adapters
 instance: dev

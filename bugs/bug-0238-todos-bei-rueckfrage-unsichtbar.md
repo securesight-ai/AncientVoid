@@ -1,7 +1,7 @@
 ---
 id: BUG-0238
 slug: todos-bei-rueckfrage-unsichtbar
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev

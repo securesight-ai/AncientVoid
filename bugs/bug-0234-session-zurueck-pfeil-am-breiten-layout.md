@@ -1,7 +1,7 @@
 ---
 id: BUG-0234
 slug: session-zurueck-pfeil-am-breiten-layout
-status: fixed
+status: done
 severity: S4
 area: pwa
 instance: dev

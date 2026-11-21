@@ -1,7 +1,7 @@
 ---
 id: BUG-0240
 slug: kontextfenster-nativ-fehlt
-status: fixed
+status: done
 severity: S3
 area: adapters, pwa
 instance: dev

@@ -1,12 +1,12 @@
 ---
 id: BUG-0211
 slug: chat-spitze-nicht-erreichbar
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
 commit: ""
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/pull/150"
 epic: "EPIC-P43 (Lesbarkeit des Chats), ADR-0085 (betroffen: Lesestelle halten)"
 created: 2026-11-18
 reporter: Nutzer (Kai, Handy/PWA) + Agent (Harness nachgemessen)
@@ -70,6 +70,11 @@ Unterkanze wird nichts mehr verworfen, darüber gilt weiter die Grenze von 500.
 Neu seit der Schwanz-Grenze von 500 (K2-Arbeit an den Kacheln); im fokussierten Chat wirkte
 sie als hartes Abschneiden. Daten gehen nicht verloren — der Hub hat alles, es war nur nie
 holbar.
+
+
+## Fix
+
+Behoben: `9ca279b9` / PR #150. Doku-Abschluss 2026-11-21 (Status-Nachzug).
 
 ## Handoff
 
