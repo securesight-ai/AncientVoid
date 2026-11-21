@@ -87,14 +87,23 @@ Handy-Zugang zum Agenten) wegbleibt.
   Formel (≈59 GiB) sind verschiedene Rechnungen — `Mlocked` ≈ 26,6 GiB und
   Shmem werden doppelt gezählt. Werkzeug: Skill `linux-ram-attribution`.
 
+## Einsatzstand (21.11., verifiziert)
+- PR #264 ist gemerged (`11aeb4fe`), Quellzweig gelöscht. Der Hub läuft auf `main`
+  (`4fa1f921`), ausgelieferte `version.json` == HEAD, `dirty:false`, health 200 nach 2 s.
+- Nach dem Neustart rekonstruiert der Tracker die Request-Historie aus dem JSONL
+  (`inference: 179 Requests rekonstruiert`) und schreibt weiter — K7 im Live-Betrieb.
+- Wachhund: `/tmp/hub-neustart.sh` (Rückfall auf den zuletzt gesunden Stand, danach
+  `git checkout main`).
+
 ## Wiederaufnahme nach Hub-Neustart (falls diese Antwort abbricht)
 - Der Hub ist ein systemd-User-Service (`ancientvoid-hub.service`, `Restart=always`,
   `KillMode=process`) — Session-Worker überleben, der Hub kommt von allein hoch.
 - Nach dem Neustart prüfen: `systemctl --user is-active ancientvoid-hub`,
   `curl -s 127.0.0.1:7373/api/health`, `curl -s 127.0.0.1:7373/version.json`
   (sha muss auf `feat/p79-inferenz-token-tempo` zeigen), `/tmp/hub-neustart.log`.
-- Falls der Wachhund zurückgerollt hat (`HEAD` = `30be05d7`): Branch zurücksetzen mit
-  `git checkout feat/p79-inferenz-token-tempo`, Ursache im Log suchen, neu starten.
+- Falls der Wachhund zurückgerollt hat (`HEAD` = Rückfall-Stand): `git checkout main`,
+  Ursache im Log suchen, dann neu starten. Der Zweige-Zweig `feat/p79-…` existiert
+  nicht mehr — P79 liegt in `main` (PR #264).
 - Konfigurations-Backup: `/tmp/hub.config.vor-p79.json`.
 
 ## Nächste Schritte
