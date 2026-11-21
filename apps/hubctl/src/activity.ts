@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { ACTIVITY_HEARTBEAT_MS, ActivityReport, type Ack } from "@ancientvoid/contracts";
 import { api } from "./api.ts";
+import { t } from "./i18n/index.ts";
 
 /** External work uses the same journal and heartbeat as provider activity. */
 export async function activityCommand(args: string[]): Promise<void> {
@@ -9,15 +10,15 @@ export async function activityCommand(args: string[]): Promise<void> {
   const report = async (state: "running" | "completed" | "failed") => {
     const body = ActivityReport.parse({ id, kind: "job", state, label: id.slice(0, 160) });
     const ack = await api<Ack>(`/api/sessions/${encodeURIComponent(sessionId)}/activity`, { method: "POST", body: JSON.stringify(body) });
-    if (!ack.ok) throw new Error(ack.detail ?? "Aktivität nicht angenommen");
+    if (!ack.ok) throw new Error(ack.detail ?? t("activity_not_accepted"));
   };
   if (action !== "run") {
-    if (action !== "running" && action !== "completed" && action !== "failed") throw new Error("Unbekannter Aktivitätszustand");
+    if (action !== "running" && action !== "completed" && action !== "failed") throw new Error(t("unknown_activity_state"));
     await report(action);
     return;
   }
   const argv = command[0] === "--" ? command.slice(1) : command;
-  if (!argv[0]) throw new Error("activity run braucht ein Kommando");
+  if (!argv[0]) throw new Error(t("activity_run_needs_cmd"));
   await report("running");
   let heartbeatFailure: unknown;
   let reporting: Promise<void> | null = null;
@@ -34,7 +35,7 @@ export async function activityCommand(args: string[]): Promise<void> {
     if (reporting) return;
     reporting = report("running").catch(async (err: unknown) => {
       heartbeatFailure = err;
-      console.error("Activity-Heartbeat fehlgeschlagen:", err instanceof Error ? err.message : String(err));
+      console.error(t("heartbeat_failed"), err instanceof Error ? err.message : String(err));
       const state = await api<{ status: string }>(`/api/sessions/${encodeURIComponent(sessionId)}`).catch(() => null);
       if (state && ["stopped", "stopping", "parked"].includes(state.status)) terminate();
     }).finally(() => { reporting = null; });
@@ -57,5 +58,5 @@ export async function activityCommand(args: string[]): Promise<void> {
     await report(code === 0 ? "completed" : "failed");
   }
   if (code !== 0) process.exitCode = code;
-  if (heartbeatFailure) throw new Error("Job beendet; mindestens eine Heartbeat-Meldung ist fehlgeschlagen.");
+  if (heartbeatFailure) throw new Error(t("job_heartbeat_failed"));
 }

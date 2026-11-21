@@ -10,6 +10,7 @@ import { pathToFileURL } from "node:url";
 import type { NormalizedEvent } from "@ancientvoid/contracts";
 import { DEFAULT_SERVER, findOrphanedWorkers, pruneOrphanedWorkers } from "@ancientvoid/workers";
 import { BASE, TOKEN, api } from "./api.ts";
+import { setCliLang, t } from "./i18n/index.ts";
 
 /** Exported for unit testing — building this by hand (vs. the URL API) is
  * exactly how BUG-0005 (ws:://host, an invalid URL) slipped in unnoticed. */
@@ -40,55 +41,7 @@ export function formatHealth(h: {
 }
 
 function usage(): never {
-  console.log(`hubctl — AncientVoid reference client
-
-Usage:
-  hubctl health
-  hubctl adapters
-  hubctl sessions                         includes interrupted/unknown status as text
-  hubctl activity <sessionId> <id> running|completed|failed
-  hubctl activity <sessionId> <id> run -- <command> [args...]  registers a job with heartbeat
-  hubctl discover
-  hubctl inventory
-  hubctl show <sessionId>
-  hubctl events <sessionId> [afterSeq]
-  hubctl tail <sessionId> [-f]             includes session.interrupted and its reason
-  hubctl token issue <label> [--agent|--display [--answer-questions]] [--db <hub.db>]   (--agent: label agent:<label>, writes need approval; --display: label display:<label>, reads and decides write approvals only)
-  hubctl token list [--db <hub.db>]
-  hubctl token revoke <label> [--db <hub.db>]
-  hubctl fleet invite [--db <hub.db>]     one-time code for another hub to pair (10 min)
-  hubctl fleet peers [--db <hub.db>]      hubs this one is paired with
-  hubctl workers list                     verwaiste ancientvoid-Worker anzeigen (lokal, BUG-0034)
-  hubctl workers prune                    verwaigte ancientvoid-Worker entfernen (lokal)
-  hubctl worktrees [--db <hub.db>]        Session-Worktrees mit Zustand und Größe (lokal, EPIC-P14)
-  hubctl worktrees prune [--apply] [--db <hub.db>]   saubere Worktrees beendeter/archivierter Sessions; Trockenlauf ohne --apply
-  hubctl workspace <sessionId>                      Workspace-Phase/Services (EPIC-P29)
-  hubctl workspace logs <sessionId> <serviceId>     Service-Logs (gekürzter Schwanz)
-  hubctl workspace retry <sessionId>                menschlicher Retry nach fehlgeschlagenem Setup
-  hubctl workspace preview <sessionId> <serviceId>  Preview-URL mit 5-Minuten-Ticket
-  hubctl main-sync <sessionId> [--check|--apply]    Messung/Probelauf oder origin/main einmischen (EPIC-P67)
-  hubctl main-sync --project <pfad> [--check|--apply]   alle Worktree-Sessions des Projekts
-  hubctl main-sync --settings                       Main-Sync-Einstellungen (global + Overrides)
-  hubctl browser <sessionId>                        Browser-Status/Ziele/Console (EPIC-P39, nur Lesen)
-  hubctl browser tests <sessionId>                  Testläufe mit Status (EPIC-P39)
-  hubctl devices                                    Android-Geräte: SDK/KVM, Inventar, AVDs, Leases (EPIC-P42, nur Lesen)
-  hubctl devices tests <serial>                     Geräte-Testläufe mit Status (EPIC-P42)
-  hubctl automations list                           geplante Läufe mit nächstem Termin und letztem Ergebnis (EPIC-P41)
-  hubctl automations show <id>                      Definition und Verlauf (Claims, Session-/Team-Verweise)
-  hubctl automations create <definition.json> [prompt.txt]   legt deaktiviert an; Session-Ziele brauchen den Prompt
-  hubctl automations update <id> <patch.json> [prompt.txt]  Änderungen speichern, neue Freigabe nötig
-  hubctl automations preview <id>                    nächste Termine mit Ortszeit und UTC
-  hubctl automations enable <id>                    Aktivierung = menschliche Freigabe (Generation bleibt)
-  hubctl automations disable <id>                   stoppt zukünftige Termine, laufende Arbeit unverändert
-  hubctl automations run-now <id>                   eigener Lauf jetzt; Ergebnis kommt aus der referenzierten Ausführung
-  hubctl automations resolve <id> <claimKey> --note <text>  unklaren Start ohne Referenz aufgeben, gibt den Plan frei (ADR-0072)
-  hubctl backup create --config <hub.config.json> --out <file> --key-file <file>
-  hubctl backup restore --archive <file> --data-dir <empty-dir> --config-out <file> --key-file <file>
-  hubctl backup prune --dir <archive-dir> --keep <count> [--apply]   preview unless --apply
-
-Env:
-  ANCIENTVOID_URL   hub base url (default http://127.0.0.1:7373)
-  ANCIENTVOID_TOKEN device token`);
+  console.log(t("usage_cli"));
   process.exit(1);
 }
  
@@ -139,7 +92,15 @@ async function* followWs(sessionId: string): AsyncGenerator<NormalizedEvent> {
 }
 
 async function main(): Promise<void> {
-  const [cmd, ...args] = process.argv.slice(2);
+  // EPIC-P61: --lang wird vor dem Dispatch aus argv entfernt — Unterbefehle sehen den Flag nicht.
+  const raw = process.argv.slice(2);
+  const argv: string[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === "--lang") { setCliLang(raw[i + 1]); i++; continue; }
+    if (raw[i]?.startsWith("--lang=")) { setCliLang(raw[i]!.slice("--lang=".length)); continue; }
+    argv.push(raw[i]!);
+  }
+  const [cmd, ...args] = argv;
   switch (cmd) {
     case "activity": {
       const { activityCommand } = await import("./activity.ts");
@@ -172,7 +133,7 @@ async function main(): Promise<void> {
     }
     case "sessions": {
       const sessions = await api<SessionRow[]>("/api/sessions");
-      if (sessions.length === 0) console.log("(no sessions)");
+      if (sessions.length === 0) console.log(t("no_sessions"));
       for (const s of sessions) printSession(s);
       break;
     }
@@ -180,7 +141,7 @@ async function main(): Promise<void> {
       const page = await api<{
         items: { hubSessionId: string | null; adapter: string; status: string; nativeSessionId: string | null; unsupportedResume: boolean; fork: boolean; parentSessionId: string | null }[];
       }>("/api/discovery?limit=50");
-      if (page.items.length === 0) console.log("(no sessions)");
+      if (page.items.length === 0) console.log(t("no_sessions"));
       for (const item of page.items) {
         const id = item.hubSessionId ?? item.nativeSessionId ?? "?";
         const flags = [
@@ -206,7 +167,7 @@ async function main(): Promise<void> {
       // ADR-0057: Arbeitsort samt Drift gegen die Start-Baseline (read-only).
       try {
         const place = await api<{ mode: string; path: string; drift: { headMoved: boolean; branchChanged: boolean } | null }>(`/api/sessions/${id}/workplace`);
-        const drift = place.drift ? (place.drift.headMoved || place.drift.branchChanged ? " (Drift: HEAD/Branch haben sich seit dem Start bewegt)" : " (kein Drift)") : "";
+        const drift = place.drift ? (place.drift.headMoved || place.drift.branchChanged ? t("drift_yes") : t("drift_no")) : "";
         console.log(`workplace: ${place.mode} ${place.path}${drift}`);
       } catch {
         // ältere Hubs kennen die Route nicht
@@ -265,7 +226,7 @@ async function main(): Promise<void> {
         const { DISPLAY_ANSWER_CAPABILITY } = await import("@ancientvoid/contracts");
         const tokens = new TokenService(new HubDatabase(dbPath));
         const issued = tokens.issue(label, answerQuestions ? [DISPLAY_ANSWER_CAPABILITY] : []);
-        console.log(`token for "${label}"${answerQuestions ? " (darf Optionsfragen beantworten)" : ""} (shown once):\n  ${issued.token}`);
+        console.log(`token for "${label}"${answerQuestions ? t("aq_note") : ""} (shown once):\n  ${issued.token}`);
       } else if (sub === "list") {
         const { TokenService, HubDatabase } = await import("@ancientvoid/core");
         const tokens = new TokenService(new HubDatabase(dbPath));
@@ -313,21 +274,21 @@ async function main(): Promise<void> {
         const { loadConfig } = await import("@ancientvoid/core");
         const { config } = await loadConfig(configFile);
         await createBackup({ dataDir: config.dataDir, configFile, outputFile, keyFile });
-        console.log(`verschlüsseltes Backup erstellt: ${outputFile}`);
+        console.log(t("backup_created", { file: outputFile }));
       } else if (sub === "restore") {
         const archiveFile = option("--archive");
         const targetDir = option("--data-dir");
         const configOut = option("--config-out");
         const keyFile = option("--key-file");
         await restoreBackup({ archiveFile, targetDir, configOut, keyFile });
-        console.log(`Restore geprüft: ${targetDir}\nConfig geschrieben: ${configOut}`);
+        console.log(t("restore_checked", { a: targetDir, b: configOut }));
       } else if (sub === "prune") {
         const directory = option("--dir");
         const keep = Number(option("--keep"));
         const apply = args.includes("--apply");
         const removed = await pruneBackups({ directory, keep, ...(apply ? { apply: true } : {}) });
-        if (removed.length === 0) console.log("keine alten Backups zum Entfernen");
-        else for (const path of removed) console.log(`${apply ? "entfernt" : "würde entfernen"}: ${path}`);
+        if (removed.length === 0) console.log(t("bt_keine_entfernen"));
+        else for (const path of removed) console.log(t("prune_removed", { verb: apply ? t("verb_removed") : t("verb_would_remove"), path }));
       } else {
         usage();
       }
@@ -353,14 +314,14 @@ async function main(): Promise<void> {
       if (args[0] === "tests") {
         const id = args[1] ?? usage();
         const { runs } = await api<{ runs: { id: string; name: string; state: string; viewport: string; startedAt: string; note: string | null }[] }>(`/api/sessions/${id}/browser/tests`);
-        if (runs.length === 0) console.log("keine Testläufe");
+        if (runs.length === 0) console.log(t("no_test_runs"));
         for (const r of runs) console.log(`${r.id.slice(0, 8)} ${r.state.padEnd(9)} ${r.viewport.padEnd(8)} ${r.startedAt} ${r.name}${r.note ? ` — ${r.note}` : ""}`);
         break;
       }
       const id = args[0] ?? usage();
       const st = await api<{ state: string; url: string | null; viewport: string; allowedOrigins: string[]; unavailableReason: string | null; log: unknown[] }>(`/api/sessions/${id}/browser`);
       console.log(`browser: ${st.state}${st.unavailableReason ? ` (${st.unavailableReason})` : ""} url=${st.url ?? "-"} viewport=${st.viewport} console=${st.log.length}`);
-      console.log(`ziele: ${st.allowedOrigins.join(", ") || "keine (kein laufender Workspace-Service, keine browserOrigins)"}`);
+      console.log(t("targets_line", { list: st.allowedOrigins.join(", ") || t("no_targets") }));
       break;
     }
     case "devices": {
@@ -368,21 +329,21 @@ async function main(): Promise<void> {
       if (args[0] === "tests") {
         const serial = args[1] ?? usage();
         const { runs } = await api<{ runs: { id: string; name: string; state: string; startedAt: string; note: string | null; env: { apiVersion: string | null; avdName: string | null } }[] }>(`/api/devices/tests?serial=${encodeURIComponent(serial)}`);
-        if (runs.length === 0) console.log("keine Testläufe");
+        if (runs.length === 0) console.log(t("no_test_runs"));
         for (const r of runs) console.log(`${r.id.slice(0, 8)} ${r.state.padEnd(9)} ${r.startedAt} ${r.name} · API ${r.env.apiVersion ?? "?"} · ${r.env.avdName ?? "?"}${r.note ? ` — ${r.note}` : ""}`);
         break;
       }
       const st = await api<{ capabilities: { ready: boolean; sdkRoot: string | null; reasons: string[] }; devices: { serial: string; state: string; rawState: string; owned: boolean; physical: boolean; foreignEmulator: boolean; instance: { avdName: string; state: string } | null }[]; avds: { name: string; allowed: boolean }[]; leases: { serial: string; owner: string; generation: number }[] }>("/api/devices");
       const caps = st.capabilities;
-      console.log(`sdk: ${caps.sdkRoot ?? "-"}${caps.ready ? " · bereit" : " · NICHT bereit:"}`);
+      console.log(`sdk: ${caps.sdkRoot ?? "-"}${caps.ready ? t("dev_ready") : t("dev_not_ready")}`);
       for (const r of caps.reasons) console.log(`  ! ${r}`);
-      console.log(`avds: ${st.avds.map((a) => (a.allowed ? a.name : `${a.name} (gesperrt)`)).join(", ") || "keine"}`);
+      console.log(`avds: ${st.avds.map((a) => (a.allowed ? a.name : `${a.name} ${t("blocked")}`)).join(", ") || t("none")}`);
       for (const d of st.devices) {
-        const who = d.instance ? `av-eigen ${d.instance.avdName} (${d.instance.state})` : d.physical ? "physisch — keine Steuerung" : d.foreignEmulator ? "fremder Emulator — keine Steuerung" : d.state;
+        const who = d.instance ? `av-eigen ${d.instance.avdName} (${d.instance.state})` : d.physical ? t("phys_no_control") : d.foreignEmulator ? t("foreign_emu_no_control") : d.state;
         console.log(`${d.serial.padEnd(16)} ${who}`);
       }
-      if (st.devices.length === 0) console.log("geräte: keine");
-      for (const l of st.leases) console.log(`lease: ${l.serial} → „${l.owner}“ (Generation ${l.generation})`);
+      if (st.devices.length === 0) console.log(t("devices_none"));
+      for (const l of st.leases) console.log(t("lease_line", { serial: l.serial, owner: l.owner, gen: l.generation }));
       break;
     }
     case "automations": {
@@ -396,8 +357,8 @@ async function main(): Promise<void> {
       // machine the tmux servers live on.
       const sub = args[0];
       if (sub !== "list" && sub !== "prune") {
-        console.log("hubctl workers list   verwaiste ancientvoid-Worker anzeigen (tmux-Server und -Sessions)");
-        console.log("hubctl workers prune  verwaigte ancientvoid-Worker entfernen");
+        console.log(t("workers_usage_list"));
+        console.log(t("workers_usage_prune"));
         break;
       }
       const found = sub === "prune" ? await pruneOrphanedWorkers() : await findOrphanedWorkers();
@@ -405,8 +366,8 @@ async function main(): Promise<void> {
         console.log("keine verwaisten ancientvoid-Worker");
         break;
       }
-      for (const server of found.killServers) console.log(`${sub === "prune" ? "tmux-Server entfernt" : "verwaister tmux-Server"}: ${server}`);
-      for (const s of found.killSessions) console.log(`${sub === "prune" ? "Session entfernt" : "verwaite Session"}: ${s.name} (${s.server === DEFAULT_SERVER ? "Standard-Server" : s.server})`);
+      for (const server of found.killServers) console.log(`${t(sub === "prune" ? "removed_server" : "orphan_server")}: ${server}`);
+      for (const s of found.killSessions) console.log(`${t(sub === "prune" ? "removed_session" : "orphan_session")}: ${s.name} (${s.server === DEFAULT_SERVER ? t("default_server") : s.server})`);
       break;
     }
     default:

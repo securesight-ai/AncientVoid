@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { formatWorkspaceStatus } from "../src/workspace.ts";
 import type { WorkspaceStatus } from "@ancientvoid/contracts";
 
+// Ausgabe-Assertions sind deutsch festgemacht (EPIC-P61 T61.8).
+process.env.AV_LANG = "de";
+
 /** EPIC-P29 T29.6: hubctl workspace — Status-Formatierung (rein, K5-kurz). */
 describe("hubctl workspace", () => {
   const base: WorkspaceStatus = {

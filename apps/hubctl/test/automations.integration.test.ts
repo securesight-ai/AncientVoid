@@ -4,6 +4,9 @@ import { promisify } from "node:util";
 import { resolve } from "node:path";
 import { expect, it } from "vitest";
 
+// Ausgabe-Assertions sind sprachfest — Sprache hier pinnen (EPIC-P61 T61.8).
+process.env.AV_LANG = "de";
+
 /** EPIC-P41 T41.5: hubctl automations gegen einen Fake-Hub — list/show/enable/run-now/create. */
 
 const INFO = {

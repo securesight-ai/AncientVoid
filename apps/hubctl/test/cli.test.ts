@@ -6,6 +6,9 @@ import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { buildWsUrl, formatHealth } from "../src/cli.ts";
 
+// usage-Assertions erwarten Englisch (Default) — Umgebungssprache nicht durchgreifen lassen (EPIC-P61 T61.8).
+process.env.AV_LANG = "en";
+
 /**
  * BUG-0005: `followWs()` built its WS URL with `BASE.replace(/^https?/, "")`
  * — that regex strips "http(s)" but not the trailing ":", so
@@ -74,7 +77,7 @@ describe("token issue label validation (BUG-0108)", () => {
       const err = await run(["token", "issue", "pixel", "--answer-questions", "--db", db]).catch((e: unknown) => e as { code?: number });
       expect((err as { code?: number }).code).toBe(1);
       const issued = await run(["token", "issue", "kiosk", "--display", "--answer-questions", "--db", db]);
-      expect(issued.stdout).toContain('token for "display:kiosk" (darf Optionsfragen beantworten)');
+      expect(issued.stdout).toContain('token for "display:kiosk" (may answer option questions)');
       await run(["token", "issue", "nyx", "--display", "--db", db]);
       const list = (await run(["token", "list", "--db", db])).stdout.split("\n");
       expect(list.find((l) => l.startsWith("display:kiosk"))).toContain("capabilities=display.answer_questions");

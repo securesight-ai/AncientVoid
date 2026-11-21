@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { formatMainSyncApply, formatMainSyncCheck } from "../src/main-sync.ts";
 import type { MainSyncApplyResult, MainSyncCheckResult } from "@ancientvoid/contracts";
 
+// Ausgabe-Assertions sind sprachfest — Sprache hier pinnen (EPIC-P61 T61.8).
+process.env.AV_LANG = "de";
+
 const check = (patch: Partial<MainSyncCheckResult>): MainSyncCheckResult => ({
   sessionId: "s1",
   branch: "main",

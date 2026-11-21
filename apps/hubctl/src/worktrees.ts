@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 import { dirname, join, resolve, sep } from "node:path";
 import { DEFAULT_SERVER, discoverTmuxServers, listServerWorkers } from "@ancientvoid/workers";
 import { HubDatabase, pruneWorktrees, scanWorktrees, WorktreeManager, type WorktreeEntry, type WorktreeSessionRow } from "@ancientvoid/core";
+import { t } from "./i18n/index.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -74,8 +75,8 @@ function rowsOf(dbPath: string): WorktreeSessionRow[] {
 const mib = (bytes: number): string => `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
 
 function line(e: WorktreeEntry): string {
-  const note = e.prunable ? "entfernbar" : e.state !== "clean" ? "Arbeit — bleibt" : e.inUse ? "Prozess aktiv — bleibt" : "aktive Session — bleibt";
-  return `${e.sessionId.slice(0, 8)}  ${e.status.padEnd(16)} ${(e.archived ? "archiviert" : "aktiv").padEnd(10)} ${e.state.padEnd(7)} ${mib(e.sizeBytes).padStart(10)}  ${note}  ${e.project}`;
+  const note = e.prunable ? t("wt_entfernbar") : e.state !== "clean" ? t("wt_arbeit_bleibt") : e.inUse ? t("wt_prozess_aktiv") : t("wt_session_aktiv");
+  return `${e.sessionId.slice(0, 8)}  ${e.status.padEnd(16)} ${(e.archived ? t("wt_archiviert") : t("wt_aktiv")).padEnd(10)} ${e.state.padEnd(7)} ${mib(e.sizeBytes).padStart(10)}  ${note}  ${e.project}`;
 }
 
 /** `hubctl worktrees [prune [--apply]] [--db <hub.db>]`. Local, like `workers`:
@@ -84,7 +85,7 @@ export async function runWorktrees(args: string[], print: (text: string) => void
   const dbIdx = args.indexOf("--db");
   const dbPath = dbIdx >= 0 ? (args[dbIdx + 1] ?? "data/hub.db") : "data/hub.db";
   const sub = args[0] && !args[0].startsWith("--") ? args[0] : "list";
-  if (sub !== "list" && sub !== "prune") throw new Error(`unbekannter Unterbefehl: ${sub}`);
+  if (sub !== "list" && sub !== "prune") throw new Error(t("unknown_subcommand", { sub }));
   const worktrees = new WorktreeManager(resolve(dirname(dbPath), "worktrees"));
   const sessions = rowsOf(dbPath);
   const servers = [DEFAULT_SERVER, ...discoverTmuxServers()];
@@ -100,18 +101,18 @@ export async function runWorktrees(args: string[], print: (text: string) => void
     return false;
   };
   const entries = await scanWorktrees(worktrees, sessions, inUse);
-  if (entries.length === 0) return void print("keine Session-Worktrees");
+  if (entries.length === 0) return void print(t("no_session_worktrees"));
   for (const e of entries) print(line(e));
   const total = entries.reduce((sum, e) => sum + e.sizeBytes, 0);
   const free = entries.filter((e) => e.prunable).reduce((sum, e) => sum + e.sizeBytes, 0);
-  print(`${entries.length} Worktrees, ${mib(total)}; entfernbar: ${entries.filter((e) => e.prunable).length} (${mib(free)})`);
+  print(t("wt_summary", { n: entries.length, m: mib(total), p: entries.filter((e) => e.prunable).length, m2: mib(free) }));
   if (heuristicHits > 0) {
-    print(`Hinweis: ${heuristicHits} Worktree(s) nur über cwd-Heuristik als aktiv erkannt — kein @ancientvoid_session-Marker (Hub vor T17.5?)`);
+    print(t("wt_hint", { h: heuristicHits }));
   }
   if (sub === "list") return;
   const apply = args.includes("--apply");
   const result = await pruneWorktrees(worktrees, sessions, entries, inUse, apply);
-  for (const path of result.removed) print(`${apply ? "entfernt" : "würde entfernen"}: ${path}`);
-  for (const f of result.failed) print(`FEHLER ${f.path}: ${f.error}`);
-  if (!apply && result.removed.length > 0) print("Trockenlauf — mit --apply wirklich entfernen.");
+  for (const path of result.removed) print(t("prune_removed", { verb: apply ? t("verb_removed") : t("verb_would_remove"), path }));
+  for (const f of result.failed) print(t("wt_error", { path: f.path, err: f.error }));
+  if (!apply && result.removed.length > 0) print(t("trockenlauf"));
 }

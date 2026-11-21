@@ -1,5 +1,6 @@
 import type { MainSyncApplyResult, MainSyncCheckResult } from "@ancientvoid/contracts";
 import { api } from "./api.ts";
+import { t } from "./i18n/index.ts";
 
 /**
  * EPIC-P67 T67.9: `hubctl main-sync` — Messung/Probelauf und Einmischen für
@@ -17,11 +18,11 @@ interface SessionRow {
 /** Rein, für Tests: die Messung als Zeilen. */
 export function formatMainSyncCheck(check: MainSyncCheckResult, sessionId: string): string[] {
   const lines = [
-    `${sessionId} · origin/${check.branch}: ${check.behind === 0 ? "aktuell" : `${check.behind} hinten, ${check.ahead} vorn`}${check.clean ? "" : " · Worktree hat Ungesichertes"}`,
+    `${sessionId} · origin/${check.branch}: ${check.behind === 0 ? t("ms_aktuell") : t("ms_hinten_vorn", { behind: check.behind, ahead: check.ahead })}${check.clean ? "" : t("ms_dirty")}`,
   ];
-  if (check.conflicts && check.conflicts.length > 0) lines.push(`konflikt (Probelauf): ${check.conflicts.join(", ")}`);
-  else lines.push("probelauf: sauber");
-  lines.push(`zuletzt abgeglichen: ${check.lastSyncedAt ? new Date(check.lastSyncedAt).toLocaleString() : "nie"}`);
+  if (check.conflicts && check.conflicts.length > 0) lines.push(t("ms_konflikt_probelauf", { files: check.conflicts.join(", ") }));
+  else lines.push(t("ms_probelauf_sauber"));
+  lines.push(t("ms_zuletzt", { x: check.lastSyncedAt ? new Date(check.lastSyncedAt).toLocaleString() : t("ms_nie") }));
   return lines;
 }
 
@@ -29,26 +30,18 @@ export function formatMainSyncCheck(check: MainSyncCheckResult, sessionId: strin
 export function formatMainSyncApply(result: MainSyncApplyResult): string {
   switch (result.outcome) {
     case "applied":
-      return `ok: origin/main eingemischt (${result.from} → ${result.to}, ${result.files.length} Datei${result.files.length === 1 ? "" : "en"})`;
+      return t("ms_applied", { mixed: t("ms_mixed"), from: result.from, to: result.to, n: result.files.length, files: result.files.length === 1 ? t("ms_files_one") : t("ms_files_many") });
     case "conflict":
-      return `konflikt in ${result.files.join(", ")} — nichts verändert, in der Session lösen`;
+      return t("ms_conflict", { files: result.files.join(", ") });
     case "skipped":
-      return `übersprungen (${result.reason}${result.detail ? `: ${result.detail}` : ""})`;
+      return t("ms_skipped", { reason: result.reason, detail: result.detail ? `: ${result.detail}` : "" });
     case "failed":
-      return `gescheitert (${result.reason}${result.detail ? `: ${result.detail}` : ""})`;
+      return t("ms_failed", { reason: result.reason, detail: result.detail ? `: ${result.detail}` : "" });
   }
 }
 
 function usage(): never {
-  console.log(`hubctl main-sync — EPIC-P67 (ADR-0088)
-
-Usage:
-  hubctl main-sync <sessionId> [--check|--apply]   Messung + Probelauf (Standard) oder Einmischen
-  hubctl main-sync --project <pfad> [--check|--apply]   alle Worktree-Sessions des Projekts
-  hubctl main-sync --settings                      globale Einstellungen und Projekt-Overrides
-
-Einmischen nur auf wartenden Sessions (Gating im Hub, AC-P67-6);
-Konflikte werden nie aufgelöst, nur benannt — der Hub mischt nichts halb ein.`);
+  console.log(t("usage_main_sync"));
   process.exit(1);
 }
 
@@ -59,11 +52,11 @@ export async function runMainSync(args: string[]): Promise<void> {
 
   if (args[0] === "--settings") {
     const settings = await api<{ global: { value: Record<string, unknown>; fallback: string }; projects: { value: Record<string, Record<string, unknown>>; fallback: string } }>("/api/settings/main-sync");
-    console.log(`global (${settings.global.fallback === "none" ? "gespeichert" : `Defaults, Eintrag ${settings.global.fallback}`}):`);
+    console.log(t("ms_global_line", { x: settings.global.fallback === "none" ? t("ms_saved") : t("ms_defaults_entry", { x: settings.global.fallback }) }));
     for (const [key, value] of Object.entries(settings.global.value)) console.log(`  ${key}: ${JSON.stringify(value)}`);
     const paths = Object.keys(settings.projects.value);
-    if (paths.length === 0) console.log("projekt-overrides: keine");
-    for (const path of paths) console.log(`projekt ${path}: ${JSON.stringify(settings.projects.value[path])}`);
+    if (paths.length === 0) console.log(t("ms_proj_overrides_none"));
+    for (const path of paths) console.log(`${t("ms_proj_word")} ${path}: ${JSON.stringify(settings.projects.value[path])}`);
     return;
   }
 
@@ -74,7 +67,7 @@ export async function runMainSync(args: string[]): Promise<void> {
     const sessions = await api<SessionRow[]>("/api/sessions");
     sessionIds = sessions.filter((s) => s.project === project).map((s) => ({ id: s.id, label: s.id }));
     if (sessionIds.length === 0) {
-      console.log(`keine Sessions für ${project}`);
+      console.log(t("ms_no_sessions_for", { project }));
       return;
     }
   } else {
@@ -95,7 +88,7 @@ export async function runMainSync(args: string[]): Promise<void> {
         for (const line of formatMainSyncCheck(checkResult, id)) console.log(line);
       } catch (err) {
         anyFailure = true;
-        console.log(`${id}: messung gescheitert (${err instanceof Error ? err.message : String(err)})`);
+        console.log(t("ms_messung_gescheitert", { id, err: err instanceof Error ? err.message : String(err) }));
       }
     }
   }
