@@ -8,6 +8,9 @@ import { Writable } from "node:stream";
 import { EventStore, HubDatabase } from "@ancientvoid/core";
 import { createBackup, pruneBackups, restoreBackup } from "../src/backup.ts";
 
+// Ausgabe-Assertions sind sprachfest — Sprache hier pinnen (EPIC-P61 T61.8).
+process.env.AV_LANG = "de";
+
 // ADR-0002-Muster: ohne tmux sichtbar übersprungen, nie als Pass gezählt.
 const hasTmux = spawnSync("tmux", ["-V"]).status === 0;
 

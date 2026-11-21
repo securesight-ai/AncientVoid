@@ -10,6 +10,9 @@ import { HubDatabase, WorktreeManager } from "@ancientvoid/core";
 import { TmuxRunner } from "@ancientvoid/workers";
 import { cwdInside, runWorktrees } from "../src/worktrees.ts";
 
+// Ausgabe-Assertions sind sprachfest — Sprache hier pinnen (EPIC-P61 T61.8).
+process.env.AV_LANG = "de";
+
 const git = promisify(execFile);
 
 // top-level await is only legal at module level (ADR-0002 skip pattern)

@@ -222,8 +222,11 @@ hart verdrahtet. Für „praktisch alle Sprachen" gilt:
   migriert, Baseline 71/1025 → 0/0; als ein Wave-MR statt je-Bereich-MRs.)
 - [x] **T61.7** Contract + Hub: `messageKey`/`params` an Notifications,
   `error.<code>`-Mapping, `locale` am Push-Abo, Server-Push-Katalog. (K5, K7)
-- [ ] **T61.8** `hubctl`-Katalog und `--lang`; Referenz-Doku neu generieren
-  (`npm run docs:reference`).
+- [x] **T61.8** `hubctl`-Katalog und `--lang`; Referenz-Doku neu generieren
+  (`npm run docs:reference`). (2026-11-22: Katalog `apps/hubctl/src/i18n/`
+  (de/en, 149 Schlüssel), Sprachkette `--lang` > `AV_LANG` > `LANG` > `en`;
+  Generator pinnt `en`; Referenz-Doku neu generiert; betroffene Tests pinnen
+  ihre Sprache.
 - [ ] **T61.9** Sprache für STT/Quick-Commands/Nyx; K6-Messlauf mit `en`. (K6)
 - [ ] **T61.10** E2E: Locale-Fixture für Bestands-Specs, neue
   `i18n-language.spec.ts`; Eintrag in `docs/funktionsinventar.md`.

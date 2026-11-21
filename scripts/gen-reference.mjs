@@ -59,7 +59,7 @@ export function renderConfig(jsonSchema) {
 async function generate(root) {
   let usage;
   try {
-    execFileSync("node", ["apps/hubctl/src/cli.ts"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    execFileSync("node", ["apps/hubctl/src/cli.ts"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, AV_LANG: "en" } }); // Referenzdocs sind sprachfest (EPIC-P61 T61.8)
   } catch (e) {
     usage = e.stdout; // usage() beendet mit Exit 1 und schreibt auf stdout
   }

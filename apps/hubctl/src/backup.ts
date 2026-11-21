@@ -7,6 +7,11 @@ import type { Writable } from "node:stream";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { acquireBackupLock, HubDatabase } from "@ancientvoid/core";
+import { t } from "./i18n/index.ts";
+
+/** Eigene Fehlerklasse für sprachvariablen Text: die catch-Weiche prüft Instanzen
+ * statt Katalogtexte (EPIC-P61 — Meldungen sind sprachvariabel). */
+class BackupLogicError extends Error {}
 
 const MAGIC = Buffer.from("AncientVoidBK01", "ascii");
 const SALT_BYTES = 16;
@@ -38,10 +43,10 @@ export interface PruneBackupsOptions {
 async function backupKey(file: string): Promise<Buffer> {
   const path = resolve(file);
   const info = await lstat(path);
-  if (!info.isFile() || info.isSymbolicLink()) throw new Error("Backup-Schlüssel muss eine reguläre Datei sein.");
-  if ((info.mode & 0o077) !== 0) throw new Error("Backup-Schlüsseldatei ist nicht privat (erwartet Modus 0600).");
+  if (!info.isFile() || info.isSymbolicLink()) throw new Error(t("bk_key_regular"));
+  if ((info.mode & 0o077) !== 0) throw new Error(t("bk_key_not_private"));
   const passphrase = (await readFile(path, "utf8")).trim();
-  if (Buffer.byteLength(passphrase) < 16) throw new Error("Backup-Schlüsseldatei braucht mindestens 16 UTF-8-Bytes.");
+  if (Buffer.byteLength(passphrase) < 16) throw new Error(t("bk_key_min_bytes"));
   return Buffer.from(passphrase, "utf8");
 }
 
@@ -62,17 +67,17 @@ function contains(root: string, path: string): boolean {
 async function validateSourceTree(root: string, current = root): Promise<void> {
   const entries = await readdir(current, { withFileTypes: true });
   for (const entry of entries) {
-    if (/[\n\r]/.test(entry.name)) throw new Error(`Backup kann keinen Pfad mit Zeilenumbruch sichern: ${JSON.stringify(entry.name)}`);
+    if (/[\n\r]/.test(entry.name)) throw new Error(t("bk_no_newline_path", { name: JSON.stringify(entry.name) }));
     const path = join(current, entry.name);
     const info = await lstat(path);
     if (info.isSymbolicLink()) {
       const target = await readlink(path);
       const resolved = resolve(dirname(path), target);
-      if (!contains(root, resolved)) throw new Error(`Symlink zeigt aus dem Datadir: ${relative(root, path)} → ${target}`);
+      if (!contains(root, resolved)) throw new Error(t("symlink_out", { rel: relative(root, path), target }));
     } else if (info.isDirectory()) {
       await validateSourceTree(root, path);
     } else if (!info.isFile()) {
-      throw new Error(`Backup unterstützt nur reguläre Dateien und Verzeichnisse: ${relative(root, path)}`);
+      throw new Error(t("only_regular_dirs", { rel: relative(root, path) }));
     }
   }
 }
@@ -82,13 +87,13 @@ function tar(args: string[]): Promise<void> {
     const child = spawn("tar", args, { stdio: ["ignore", "ignore", "pipe"] });
     let err = "";
     const stderr = child.stderr;
-    if (!stderr) return reject(new Error("tar stderr pipe fehlt."));
+    if (!stderr) return reject(new Error(t("tar_stderr_pipe")));
     stderr.setEncoding("utf8");
     stderr.on("data", (chunk: string) => { if (err.length < 8000) err += chunk; });
     child.once("error", reject);
     child.once("close", (code, signal) => {
       if (code === 0) resolvePromise();
-      else reject(new Error(`tar schlug fehl (${code ?? signal ?? "unbekannt"}): ${err.trim().slice(0, 500)}`));
+      else reject(new Error(t("tar_fail", { cs: String(code ?? signal ?? t("unknown_fallback")), err: err.trim().slice(0, 500) })));
     });
   });
 }
@@ -97,7 +102,7 @@ function waitForTar(child: ReturnType<typeof spawn>): Promise<void> {
   return new Promise((resolvePromise, reject) => {
     let err = "";
     const stderr = child.stderr;
-    if (!stderr) return reject(new Error("tar stderr pipe fehlt."));
+    if (!stderr) return reject(new Error(t("tar_stderr_pipe")));
     stderr.setEncoding("utf8");
     stderr.on("data", (chunk: string) => { if (err.length < 8000) err += chunk; });
     child.once("error", reject);
@@ -123,21 +128,21 @@ async function assertHubStopped(dataDir: string, ownsBackupLock = false): Promis
       if (Number.isInteger(pid) && pid > 0) {
         try {
           process.kill(pid, 0);
-          throw new Error(`${match?.[1] === "backup" ? "Ein Backup" : "Der Hub"} läuft noch (PID ${pid}).`);
+          throw new BackupLogicError(t("still_running", { a: match?.[1] === "backup" ? t("running_backup") : t("running_hub"), pid }));
         } catch (err) {
-          if (err instanceof Error && err.message.includes("läuft noch (PID")) throw err;
-          if ((err as NodeJS.ErrnoException).code !== "ESRCH") throw new Error(`Hub-PID-Lock kann nicht geprüft werden: ${String(err)}`, { cause: err });
+          if (err instanceof BackupLogicError) throw err;
+          if ((err as NodeJS.ErrnoException).code !== "ESRCH") throw new BackupLogicError(t("pid_lock_uncheckable", { err: String(err) }), { cause: err });
         }
       }
-      throw new Error("Veralteter Hub-PID-Lock gefunden. Hub starten und sauber stoppen, dann erneut sichern.");
+      throw new BackupLogicError(t("stale_pid_lock"));
     }
   }
   for (const suffix of ["-wal", "-shm"]) {
     try {
       await lstat(join(dataDir, `hub.db${suffix}`));
-      throw new Error(`hub.db${suffix} existiert. Hub möglicherweise aktiv oder nicht sauber beendet; erst sauber stoppen.`);
+      throw new BackupLogicError(t("hub_db_exists", { suffix }));
     } catch (err) {
-      if (err instanceof Error && err.message.includes("existiert")) throw err;
+      if (err instanceof BackupLogicError) throw err;
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
   }
@@ -159,21 +164,21 @@ async function assertNoActiveWorkers(dataDir: string): Promise<void> {
   });
   // tmux 3.5, wenn das Socket-Verzeichnis noch nie angelegt wurde: „error connecting … (No such file or directory)“.
   if (result.code !== 0 && !/no server running|can't connect to server|no such file or directory/i.test(result.stderr)) {
-    throw new Error(`tmux-Worker-Status nicht prüfbar; Backup abgebrochen: ${result.stderr.trim()}`);
+    throw new Error(t("tmux_status_uncheckable", { x: result.stderr.trim() }));
   }
   if (result.stdout.split("\n").some((line) => {
     const [workerOwner, paneDead] = line.split("|");
     return workerOwner === owner && paneDead === "0";
   })) {
-    throw new Error("Ein tmux-Worker dieses Hubs läuft noch. Erst Session beenden, dann sichern.");
+    throw new Error(t("tmux_still_running"));
   }
 }
 
 function checkedArchiveName(name: string): string {
   const clean = name.replace(/^\.\//, "").replace(/\/$/, "");
   if (!clean || clean === ".") return "";
-  if (clean.startsWith("/") || clean.split("/").some((part) => part === ".." || part === "")) throw new Error(`Unsicherer Pfad im Backup-Archiv: ${name}`);
-  if (clean.includes("\0") || /[\n\r]/.test(clean)) throw new Error("Ungültiger Pfad im Backup-Archiv.");
+  if (clean.startsWith("/") || clean.split("/").some((part) => part === ".." || part === "")) throw new Error(t("unsafe_path", { name }));
+  if (clean.includes("\0") || /[\n\r]/.test(clean)) throw new Error(t("invalid_path"));
   return clean;
 }
 
@@ -185,16 +190,16 @@ async function verifyRestoredTree(dataDir: string): Promise<void> {
   const db = new HubDatabase(join(dataDir, "hub.db"));
   try {
     const check = db.prepare("PRAGMA integrity_check").get() as { integrity_check?: string } | undefined;
-    if (check?.integrity_check !== "ok") throw new Error(`SQLite-Integrität: ${check?.integrity_check ?? "kein Ergebnis"}`);
+    if (check?.integrity_check !== "ok") throw new Error(t("sqlite_integrity", { x: check?.integrity_check ?? t("no_result") }));
     for (const row of db.prepare("SELECT id, bytes FROM attachments").all() as { id: string; bytes: number }[]) {
-      if (!/^[a-f0-9]{64}$/.test(row.id)) throw new Error(`Ungültige Attachment-ID in SQLite: ${row.id}`);
+      if (!/^[a-f0-9]{64}$/.test(row.id)) throw new Error(t("invalid_attachment_id", { id: row.id }));
       const path = join(attachmentsDir, row.id);
       const info = await stat(path);
-      if (info.size !== row.bytes || await hashFile(path) !== row.id) throw new Error(`Attachment fehlt oder Hash weicht ab: ${row.id}`);
+      if (info.size !== row.bytes || await hashFile(path) !== row.id) throw new Error(t("attachment_missing", { id: row.id }));
     }
     for (const row of db.prepare("SELECT attachment_ids FROM drafts").all() as { attachment_ids: string }[]) {
       const ids = JSON.parse(row.attachment_ids) as unknown;
-      if (!Array.isArray(ids) || !ids.every((id) => typeof id === "string" && /^[a-f0-9]{64}$/.test(id))) throw new Error("Ungültige Attachment-Referenz in einem Entwurf.");
+      if (!Array.isArray(ids) || !ids.every((id) => typeof id === "string" && /^[a-f0-9]{64}$/.test(id))) throw new Error(t("invalid_attachment_ref"));
       for (const id of ids) await stat(join(attachmentsDir, id));
     }
   } finally {
@@ -212,9 +217,9 @@ async function verifyRestoredTree(dataDir: string): Promise<void> {
       catch { continue; } // EventStore recovery deliberately skips a torn line.
       if (typeof ev.blobRef !== "string") continue;
       const match = /^sha256:([a-f0-9]{64})$/.exec(ev.blobRef);
-      if (!match) throw new Error(`Unbekanntes Blob-Referenzformat in Session ${session.name}.`);
+      if (!match) throw new Error(t("unknown_blob_format", { name: session.name }));
       const path = join(sessionsDir, session.name, "blobs", match[1]!);
-      if (await hashFile(path) !== match[1]) throw new Error(`Blob fehlt oder Hash weicht ab: ${session.name}/${match[1]}`);
+      if (await hashFile(path) !== match[1]) throw new Error(t("blob_missing", { name: `${session.name}/${match[1]}` }));
     }
   }
 }
@@ -246,9 +251,9 @@ export async function createBackup(options: CreateBackupOptions, outputStream: (
   const outputFile = resolve(options.outputFile);
   const configFile = resolve(options.configFile);
   const keyFile = resolve(options.keyFile);
-  if (contains(dataDir, outputFile)) throw new Error("Backup-Datei muss außerhalb des Datadirs liegen.");
-  if (contains(dataDir, keyFile)) throw new Error("Backup-Schlüssel muss außerhalb des Datadirs liegen.");
-  if (contains(dataDir, configFile)) throw new Error("Config-Datei muss außerhalb des Datadirs liegen.");
+  if (contains(dataDir, outputFile)) throw new Error(t("bk_file_outside"));
+  if (contains(dataDir, keyFile)) throw new Error(t("bk_key_outside"));
+  if (contains(dataDir, configFile)) throw new Error(t("bk_config_outside"));
   await assertHubStopped(dataDir);
   const releaseBackupLock = await acquireBackupLock(dataDir);
   let tmpDir: string | undefined;
@@ -285,7 +290,7 @@ export async function createBackup(options: CreateBackupOptions, outputStream: (
     await writeFile(tmpFile, cipher.getAuthTag(), { flag: "a", mode: 0o600 });
     await mkdir(dirname(outputFile), { recursive: true, mode: 0o700 });
     await link(tmpFile, outputFile).catch((err: NodeJS.ErrnoException) => {
-      if (err.code === "EEXIST") throw new Error(`Backup-Datei existiert bereits: ${outputFile}`);
+      if (err.code === "EEXIST") throw new Error(t("bk_exists", { file: outputFile }));
       throw err;
     });
     await unlink(tmpFile);
@@ -301,9 +306,9 @@ export async function restoreBackup(options: RestoreBackupOptions): Promise<void
   const targetDir = resolve(options.targetDir);
   const configOut = resolve(options.configOut);
   const keyFile = resolve(options.keyFile);
-  if (contains(targetDir, archiveFile) || contains(targetDir, keyFile) || contains(targetDir, configOut)) throw new Error("Archiv, Schlüssel und Config-Ziel müssen außerhalb des neuen Datadirs liegen.");
-  await lstat(targetDir).then(() => { throw new Error(`Restore-Ziel existiert bereits: ${targetDir}`); }, (err: NodeJS.ErrnoException) => { if (err.code !== "ENOENT") throw err; });
-  await lstat(configOut).then(() => { throw new Error(`Config-Ziel existiert bereits: ${configOut}`); }, (err: NodeJS.ErrnoException) => { if (err.code !== "ENOENT") throw err; });
+  if (contains(targetDir, archiveFile) || contains(targetDir, keyFile) || contains(targetDir, configOut)) throw new Error(t("archive_key_config_outside"));
+  await lstat(targetDir).then(() => { throw new Error(t("restore_target_exists", { file: targetDir })); }, (err: NodeJS.ErrnoException) => { if (err.code !== "ENOENT") throw err; });
+  await lstat(configOut).then(() => { throw new Error(t("config_target_exists", { file: configOut })); }, (err: NodeJS.ErrnoException) => { if (err.code !== "ENOENT") throw err; });
   const key = await backupKey(keyFile);
   let stagingRoot: string | undefined;
   let configTemp: string | undefined;
@@ -340,7 +345,7 @@ export async function restoreBackup(options: RestoreBackupOptions): Promise<void
     const listing = await listTar(tarFile);
     const names = listing.split("\n").filter(Boolean).map(checkedArchiveName);
     if (!names.includes("hub.db") || !names.some((name) => name === "sessions" || name.startsWith("sessions/")) || !names.includes("config/hub.config.json")) {
-      throw new Error("Backup fehlt hub.db, Sessions oder hub.config.json.");
+      throw new Error(t("backup_missing_core"));
     }
     await mkdir(extracted, { mode: 0o700 });
     await tar(["--extract", "--gzip", "--file", tarFile, "--directory", extracted, "--no-same-owner", "--no-same-permissions"]);
@@ -397,6 +402,6 @@ function listTar(archive: string): Promise<string> {
     child.stdout.on("data", (chunk: string) => { stdout += chunk; if (stdout.length > 8 * 1024 * 1024) child.kill("SIGKILL"); });
     child.stderr.on("data", (chunk: string) => { if (stderr.length < 8000) stderr += chunk; });
     child.once("error", reject);
-    child.once("close", (code, signal) => code === 0 ? resolvePromise(stdout) : reject(new Error(`Backup-Archiv lässt sich nicht lesen (${code ?? signal}): ${stderr.trim().slice(0, 500)}`)));
+    child.once("close", (code, signal) => code === 0 ? resolvePromise(stdout) : reject(new Error(t("bk_read_fail", { cs: String(code ?? signal), err: stderr.trim().slice(0, 500) }))));
   });
 }

@@ -3,6 +3,9 @@ import { createHash } from "node:crypto";
 import { buildAutomationDefinition, buildAutomationUpdate, formatAutomationLine, formatHistoryLine, type AutomationInfo } from "../src/automations.ts";
 import type { AutomationDefinition } from "@ancientvoid/contracts";
 
+// Ausgabe-Assertions sind sprachfest — Sprache hier pinnen (EPIC-P61 T61.8).
+process.env.AV_LANG = "de";
+
 /** EPIC-P41 T41.5: Definitions- und Format-Helfer des hubctl-automations-Commands. */
 
 const SESSION_JSON = {
