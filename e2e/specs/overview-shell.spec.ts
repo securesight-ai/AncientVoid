@@ -87,7 +87,7 @@ test.describe("Übersichts-Ansichten (EPIC-P47)", () => {
   test("Toggle wechselt Sessions → Projekte → Hosts und behält die Wahl über Reload", async ({ app, hub }) => {
     await hub.createSession({ adapter: "dummy", prompt: "Für die Ansichten" });
     await app.goto(`${hub.origin}/#/`);
-    await expect(app.locator("[data-testid=overview-switch-btn]")).toHaveText(["Sessions", "Projekte", "Hosts", "Gefunden"]);
+    await expect(app.locator("[data-testid=overview-switch-btn]")).toHaveText(["Sessions", "Projekte", "Hosts"]);
     await expect(app.locator(".session-card").first()).toBeVisible();
 
     await app.locator("[data-testid=overview-switch-btn]", { hasText: "Projekte" }).click();
@@ -101,12 +101,13 @@ test.describe("Übersichts-Ansichten (EPIC-P47)", () => {
     await expect(app.locator(".host-card").first()).toBeVisible(); // gerätelokal gemerkt
   });
 
-  test("Der vierte Umschalter ist die Discovery; Chip und Hash springen darauf, die Wahl überlebt Reload (T47.5)", async ({ app, hub }) => {
+  test("Discovery liegt am Chip „Gefunden“ neben Archiv — kein vierter Tab; Hash bleibt Deeplink, Wahl überlebt Reload (T47.5)", async ({ app, hub }) => {
     await hub.createSession({ adapter: "dummy", prompt: "Für die Discovery" });
     await app.goto(`${hub.origin}/#/`);
+    // Nutzerentscheid 2026-11-21: genau ein „Gefunden“-Einstieg — der Chip, kein Tab im Umschalter.
+    await expect(app.locator("[data-testid=overview-switch-btn]", { hasText: "Gefunden" })).toHaveCount(0);
     await app.locator(".dashboard-summary").getByRole("button", { name: "Gefunden" }).click();
     await expect(app.locator(".discovery")).toBeVisible();
-    await expect(app.locator("[data-testid=overview-switch-btn]", { hasText: "Gefunden" })).toHaveClass(/active/);
     await app.reload();
     await expect(app.locator(".discovery")).toBeVisible(); // gerätelokal gemerkt
     // Der alte Hash bleibt als Deeplink erhalten und leitet auf denselben State —

@@ -17,8 +17,8 @@ test.describe("Deep-Link und Attach (AC-P5-5)", () => {
 
   test("#/gefunden ist kein eigener Page-Slug mehr, sondern der Alias auf den Discovery-Zustand der Übersicht (EPIC-P47 §3.4)", async ({ app, hub }) => {
     await app.goto(`${hub.origin}/#/gefunden`);
-    await expect(app.locator("[data-testid=overview-switch-btn]", { hasText: "Gefunden" })).toHaveClass(/active/);
     await expect(app.locator(".discovery")).toBeVisible();
+    await expect(app.locator("[data-testid=overview-switch-btn]")).toHaveCount(3); // „Gefunden“ ist kein Tab (Nutzerentscheid 2026-11-21)
   });
 
   test("ohne tmux gibt es nie einen Attach-Befehl", async ({ app, hub }) => {
