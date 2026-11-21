@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { getTheme, type Theme } from "../../app/theme.ts";
 import {
@@ -66,7 +67,7 @@ export function AccentSetting() {
   }, []);
   const hex = appearance.accent[theme] ?? DEFAULT_ACCENT[theme];
   return (
-    <SettingRow label="Akzentfarbe" hint="Dunkel und Hell haben je eine eigene">
+    <SettingRow label={t("settings.accent_color")} hint="Dunkel und Hell haben je eine eigene">
       <button type="button" class="accent-trigger" aria-label={`Akzentfarbe wählen, aktuell ${hex}`} onClick={() => setOpen(true)}>
         <span class="cp-swatch" style={{ background: hex }} />
         <span class="mono">{hex}</span>
@@ -151,20 +152,20 @@ function AccentDialog({ theme, original, onClose }: { theme: Theme; original: Ap
       onClick={(e) => e.target === e.currentTarget && cancel()}
     >
       <div class="color-dialog-body">
-        <h3 id="accent-title">Akzentfarbe · {themeLabel(theme)}</h3>
+        <h3 id="accent-title">{t("settings.accent_frag")} {themeLabel(theme)}</h3>
         <SvPlane hsv={hsv} onChange={pick} />
         <HueBar hsv={hsv} onChange={pick} />
         <div class="cp-compare">
-          <button type="button" class="cp-old" aria-label="Alte Farbe wiederherstellen" title="Alte Farbe wiederherstellen" onClick={() => pickHex(start)} style={{ background: start }}>
-            Alt
+          <button type="button" class="cp-old" aria-label={t("settings.restore_old_color")} title={t("settings.restore_old_color")} onClick={() => pickHex(start)} style={{ background: start }}>
+            {t("settings.alt")}
           </button>
           <span class="cp-new" style={{ background: hex ?? "transparent", color: hex ? (hexToHsv(hex).v > 60 && hexToHsv(hex).s < 70 ? "#000" : "#fff") : "inherit" }}>
-            Neu
+            {t("settings.new")}
           </span>
         </div>
         <div class="cp-fields">
           <label class="cp-field cp-hex">
-            <span>Hex</span>
+            <span>{t("settings.hex")}</span>
             <input value={hexText} aria-invalid={hex === null} spellcheck={false} autocapitalize="off" autocomplete="off" onInput={(e) => pickHex((e.currentTarget as HTMLInputElement).value)} />
           </label>
           {(["r", "g", "b"] as const).map((c) => (
@@ -180,15 +181,15 @@ function AccentDialog({ theme, original, onClose }: { theme: Theme; original: Ap
             </label>
           ))}
         </div>
-        <div class="cp-swatches" role="group" aria-label="Vorgaben">
+        <div class="cp-swatches" role="group" aria-label={t("settings.presets")}>
           <button type="button" class="cp-preset" aria-label={`Vorgabe ${defaultHex}`} title={`Standard ${defaultHex}`} style={{ background: defaultHex }} onClick={() => pickHex(defaultHex)} />
           {PRESETS[theme].map((p) => (
             <button key={p} type="button" class="cp-preset" aria-label={`Vorgabe ${p}`} title={p} style={{ background: p }} onClick={() => pickHex(p)} />
           ))}
         </div>
         {recent.length > 0 && (
-          <div class="cp-swatches" role="group" aria-label="Zuletzt benutzt">
-            <span class="dim cp-recent-label">zuletzt</span>
+          <div class="cp-swatches" role="group" aria-label={t("settings.recently_used")}>
+            <span class="dim cp-recent-label">{t("settings.last ")}</span>
             {recent.map((p) => (
               <button key={p} type="button" class="cp-preset" aria-label={`Zuletzt ${p}`} title={p} style={{ background: p }} onClick={() => pickHex(p)} />
             ))}
@@ -203,14 +204,14 @@ function AccentDialog({ theme, original, onClose }: { theme: Theme; original: Ap
         )}
         <div class="cp-actions">
           <Button onClick={() => { setHexText(defaultHex); setHsv(hexToHsv(defaultHex)); setUseDefault(true); }}>
-            Standard
+            {t("common.standard")}
           </Button>
           <span class="cp-spacer" />
           <Button onClick={cancel}>
-            Abbrechen
+            {t("common.cancel")}
           </Button>
           <Button disabled={hex === null} onClick={apply} variant="primary">
-            Übernehmen
+            {t("common.apply")}
           </Button>
         </div>
       </div>
@@ -230,7 +231,7 @@ function SvPlane({ hsv, onChange }: { hsv: Hsv; onChange: (next: Hsv) => void })
       class="cp-plane"
       role="slider"
       tabIndex={0}
-      aria-label="Sättigung und Helligkeit"
+      aria-label={t("settings.saturation_brightness")}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(hsv.s)}
@@ -273,7 +274,7 @@ function HueBar({ hsv, onChange }: { hsv: Hsv; onChange: (next: Hsv) => void }) 
       class="cp-hue"
       role="slider"
       tabIndex={0}
-      aria-label="Farbton"
+      aria-label={t("settings.hue")}
       aria-valuemin={0}
       aria-valuemax={360}
       aria-valuenow={Math.round(hsv.h)}

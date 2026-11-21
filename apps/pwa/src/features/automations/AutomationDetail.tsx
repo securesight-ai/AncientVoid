@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { AutomationHistoryEntry, AutomationInfo, TeamStart } from "@ancientvoid/contracts";
 import { useApi } from "../../shared/api-context.ts";
@@ -48,39 +49,39 @@ export function AutomationDetail({ info, offline, cacheKey, host }: { info: Auto
   const target = definition.target;
   return <div class="team-detail" data-testid="automation-detail">
     <h3>{definition.label}</h3>
-    <p class="team-meta">Zeitplan {scheduleText(info)} · Maximal parallel: {definition.grant.maxParallel} · Nachholfenster: {definition.grant.missedGraceMs / 60_000} Minuten · Freigabeversion: {definition.generation}</p>
-    <p class="team-meta">Vorprüfung: {definition.precheckActionId ?? "keine"} (Frist {definition.precheckDeadlineMs / 1000} s)</p>
-    <p class="team-meta">Ziel: {target.kind === "session" ? `${target.harness}${target.model ? ` · ${target.model}` : ""} · ${target.workdir} · ${target.project}` : target.kind === "script" ? `Skript ${target.actionId} · ${target.project}` : `Team-Vorlage ${target.templateId}`}</p>
+    <p class="team-meta">{t("automations.schedule")} {scheduleText(info)} {t("automations.max_parallel_frag")} {definition.grant.maxParallel} {t("automations.catchup_frag")} {definition.grant.missedGraceMs / 60_000} {t("automations.minutes_approval_version")} {definition.generation}</p>
+    <p class="team-meta">{t("automations.precheck")} {definition.precheckActionId ?? "keine"} {t("automations.deadline_open")} {definition.precheckDeadlineMs / 1000} s)</p>
+    <p class="team-meta">{t("automations.target")} {target.kind === "session" ? `${target.harness}${target.model ? ` · ${target.model}` : ""} · ${target.workdir} · ${target.project}` : target.kind === "script" ? `Skript ${target.actionId} · ${target.project}` : `Team-Vorlage ${target.templateId}`}</p>
     {templateError && <p role="alert">{templateError}</p>}
-    {template && <div><p>Eingefrorener Rahmen: {template.project} · Worker: {template.frame.adapters.join(", ")} · höchstens {template.frame.maxParallel} parallel</p>{template.plan?.tasks.map(task => <details key={task.id}><summary>{task.title} · {task.adapter}{task.model ? ` · ${task.model}` : ""}</summary><pre>{task.prompt}</pre></details>)}</div>}
-    {offline && target.kind === "team" && <p>Der vollständige Team-Rahmen ist online über die eingefrorene Vorlage abrufbar.</p>}
-    <h4>Nächste Termine</h4>
+    {template && <div><p>{t("automations.frozen_frame")} {template.project} {t("automations.worker_frag")} {template.frame.adapters.join(", ")} {t("automations.at_most_frag")} {template.frame.maxParallel} {t("automations.parallel")}</p>{template.plan?.tasks.map(task => <details key={task.id}><summary>{task.title} · {task.adapter}{task.model ? ` · ${task.model}` : ""}</summary><pre>{task.prompt}</pre></details>)}</div>}
+    {offline && target.kind === "team" && <p>{t("automations.team_frame_online")}</p>}
+    <h4>{t("automations.next_occurrences")}</h4>
     <ul class="automation-occurrences" data-testid="automation-preview">{info.nextOccurrences.map(o => <li key={o.utc}>{o.local} ({o.utc})</li>)}</ul>
-    {info.nextOccurrences.length === 0 && <p>Kein Termin im unterstützten Kalenderhorizont.</p>}
-    <h4>Verlauf</h4>
+    {info.nextOccurrences.length === 0 && <p>{t("automations.no_occurrence")}</p>}
+    <h4>{t("session.history")}</h4>
     {error && <div class="files-error" role="alert">{error}</div>}
-    {cachedAt && history && <p data-testid="automation-history-asof">Gespeicherter Verlauf vom <time dateTime={cachedAt}>{new Date(cachedAt).toLocaleString("de-DE")}</time> (höchstens 100 Einträge){offline ? "" : " — aktueller Abruf fehlgeschlagen"}.</p>}
-    {!history && !error && <div class="ui-empty">lade…</div>}
-    {history?.length === 0 && !error && <div class="ui-empty">Noch keine Läufe.</div>}
+    {cachedAt && history && <p data-testid="automation-history-asof">{t("automations.saved_history")} <time dateTime={cachedAt}>{new Date(cachedAt).toLocaleString("de-DE")}</time> {t("automations.at_most_100")}{offline ? "" : " — aktueller Abruf fehlgeschlagen"}.</p>}
+    {!history && !error && <div class="ui-empty">{t("common.loading_short")}</div>}
+    {history?.length === 0 && !error && <div class="ui-empty">{t("automations.no_runs")}</div>}
     {!!history?.length && <ul class="team-tasks" data-testid="automation-history">{history.map(entry => <li key={entry.claimKey} class="team-task">
       <div class="team-task-head"><span class="team-pill">{STATE_LABEL[entry.state] ?? entry.state}</span><span>{entry.occurrenceUtc}</span></div>
       <div class="team-task-meta">
-        {entry.reason && <>Grund: {REASON_LABEL[entry.reason] ?? entry.reason} · </>}
-        {entry.outcome && <>Ergebnis: {outcomeLabel(entry.outcome)} · </>}
+        {entry.reason && <>{t("automations.reason")} {REASON_LABEL[entry.reason] ?? entry.reason} · </>}
+        {entry.outcome && <>{t("automations.result")} {outcomeLabel(entry.outcome)} · </>}
         {entry.detail && <p>{entry.detail}</p>}
-        {entry.missedThroughUtc && <p>Verpasste Termine bis {entry.missedThroughUtc}</p>}
-        {entry.sessionId && <a href={sessionHash(entry.sessionId, remoteHost(host))}>Session ↗</a>}
-        {entry.teamId && <a href={`#/teams?team=${encodeURIComponent(entry.teamId)}${host ? `&host=${encodeURIComponent(host)}` : ""}`}>Team ↗</a>}
+        {entry.missedThroughUtc && <p>{t("automations.missed_until")} {entry.missedThroughUtc}</p>}
+        {entry.sessionId && <a href={sessionHash(entry.sessionId, remoteHost(host))}>{t("automations.session_arrow")}</a>}
+        {entry.teamId && <a href={`#/teams?team=${encodeURIComponent(entry.teamId)}${host ? `&host=${encodeURIComponent(host)}` : ""}`}>{t("automations.team_arrow")}</a>}
       </div>
       {/* ADR-0072: ohne Referenz gibt es keinen Abgleich — nur ein Mensch kann den Plan wieder freigeben. */}
       {entry.state === "unknown" && !entry.sessionId && !entry.teamId && (resolving === entry.claimKey
         ? <form  onSubmit={e => { e.preventDefault(); void resolve(entry.claimKey); }}>
-          <label>Notiz (warum aufgeben?)<input value={note} maxLength={300} required onInput={e => setNote(e.currentTarget.value)} /></label>
-          <Button type="submit" disabled={offline || !note.trim()}>Als aufgegeben abschließen</Button>
-          <Button onClick={() => { setResolving(null); setNote(""); setResolveError(""); }}>Abbrechen</Button>
+          <label>{t("automations.abandon_note")}<input value={note} maxLength={300} required onInput={e => setNote(e.currentTarget.value)} /></label>
+          <Button type="submit" disabled={offline || !note.trim()}>{t("automations.close_abandoned")}</Button>
+          <Button onClick={() => { setResolving(null); setNote(""); setResolveError(""); }}>{t("common.cancel")}</Button>
           {resolveError && <div class="files-error" role="alert">{resolveError}</div>}
         </form>
-        : <Button disabled={offline} onClick={() => { setResolving(entry.claimKey); setNote(""); setResolveError(""); }}>Aufgeben…</Button>)}
+        : <Button disabled={offline} onClick={() => { setResolving(entry.claimKey); setNote(""); setResolveError(""); }}>{t("automations.abandon_ab")}</Button>)}
     </li>)}</ul>}
   </div>;
 }

@@ -147,7 +147,7 @@ export function App({
         <h1>
           <button class="brand-link" type="button" title={t("app.to_overview")} onClick={() => setPage("dashboard")}>
             <img class="brand-logo" src="/assets/logo.webp" alt="" width="28" height="28" />
-            <span class="brand-name">AncientVoid</span>
+            <span class="brand-name">{t("app.ancientvoid")}</span>
           </button>
         </h1>
         <div style="display: flex; gap: 10px; align-items: center">

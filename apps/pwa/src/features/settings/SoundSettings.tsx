@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useState } from "preact/hooks";
 import { SOUND_OPTIONS, loadSoundSettings, saveSoundSettings, soundPlayer, type SoundCategory, type SoundSettings as SoundSettingsState } from "../../shared/audio.ts";
 import { Select, Switch } from "../../shared/forms.tsx";
@@ -28,9 +29,9 @@ export function SoundSettings() {
   };
 
   return (
-    <SettingsSection title="Töne" testid="settings-sounds">
-      <SettingRow label="Töne insgesamt" hint="Der Master gilt für alle Kategorien — derselbe Schalter wie am Benachrichtigungs-Panel. VoidWarden aktiv? Sounds hier abschalten.">
-        <Switch label="Töne insgesamt" checked={settings.master} onChange={(next) => save({ ...settings, master: next })} />
+    <SettingsSection title={t("settings.sounds")} testid="settings-sounds">
+      <SettingRow label={t("settings.sounds_overall")} hint="Der Master gilt für alle Kategorien — derselbe Schalter wie am Benachrichtigungs-Panel. VoidWarden aktiv? Sounds hier abschalten.">
+        <Switch label={t("settings.sounds_overall")} checked={settings.master} onChange={(next) => save({ ...settings, master: next })} />
       </SettingRow>
       {ORDER.map((cat) => {
         const row = settings.categories[cat]!;
@@ -41,7 +42,7 @@ export function SoundSettings() {
             <SettingRow label={LABELS[cat]}>
               <Switch label={`Ton ${LABELS[cat]}`} checked={row.enabled} onChange={(next) => patch({ enabled: next })} />
             </SettingRow>
-            <SettingRow label="Variante" hint="Klick auf ▶ ist die Hörprobe — und entsperrt die Wiedergabe im Browser.">
+            <SettingRow label={t("settings.variant")} hint="Klick auf ▶ ist die Hörprobe — und entsperrt die Wiedergabe im Browser.">
               <Select
                 label={`Variante ${LABELS[cat]}`}
                 hideLabel
@@ -51,7 +52,7 @@ export function SoundSettings() {
                 disabled={!row.enabled}
               />
             </SettingRow>
-            <SettingRow label="Lautstärke">
+            <SettingRow label={t("settings.volume")}>
               <input
                 type="range"
                 min="0"
@@ -62,7 +63,7 @@ export function SoundSettings() {
                 onInput={(e) => patch({ volume: Number((e.currentTarget as HTMLInputElement).value) / 100 })}
               />
             </SettingRow>
-            <SettingRow label="Vorschau">
+            <SettingRow label={t("settings.preview")}>
               <Button
                 size="sm"
                 onClick={() => soundPlayer.preview(cat, row.variant)}

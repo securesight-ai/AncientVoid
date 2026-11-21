@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { startRegistration } from "@simplewebauthn/browser";
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/browser";
@@ -50,12 +51,12 @@ export function SecuritySettings({ onSwitchToken }: { onSwitchToken: () => void 
   };
 
   return (
-    <SettingsSection title="Sicherheit & Verbindung">
-      <SettingRow label="Passkey" hint="für destruktive Freigaben (T2.5)">
+    <SettingsSection title={t("settings.security_connection")}>
+      <SettingRow label={t("settings.passkey")} hint="für destruktive Freigaben (T2.5)">
         {passkey === undefined ? (
-          <span class="dim">nicht konfiguriert</span>
+          <span class="dim">{t("settings.not_configured")}</span>
         ) : passkey === true ? (
-          <span class="dim">✓ registriert</span>
+          <span class="dim">{t("settings.registered")}</span>
         ) : (
           <Button  aria-busy={passkeyBusy} onClick={registerPasskey} disabled={passkeyBusy} class={passkeyBusy ? "busy" : undefined}>
             {passkeyBusy ? "lädt…" : "Passkey registrieren"}
@@ -63,16 +64,16 @@ export function SecuritySettings({ onSwitchToken }: { onSwitchToken: () => void 
         )}
       </SettingRow>
       {passkeyError && <div class="reply-error">{passkeyError}</div>}
-      <SettingRow label="Geräte-Token">
+      <SettingRow label={t("settings.device_token")}>
         <span class="dim">{getToken() ? "•••• aktiv" : "kein Token"}</span>
         <Button onClick={onSwitchToken}>
-          Geräte-Token wechseln
+          {t("settings.change_device_token")}
         </Button>
       </SettingRow>
-      <SettingRow label="Erreichbar über">
+      <SettingRow label={t("settings.reachable_via")}>
         <span class="mono dim">{location.host}</span>
       </SettingRow>
-      <SettingRow label="Projekt-Wurzeln">
+      <SettingRow label={t("settings.project_roots")}>
         <span class="dim">{projectCount === null ? "n/a" : `${projectCount} Projekte gefunden`}</span>
       </SettingRow>
     </SettingsSection>

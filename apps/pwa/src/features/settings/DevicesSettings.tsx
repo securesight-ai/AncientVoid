@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useState } from "preact/hooks";
 import { applyPinchZoom, pinchZoomAllowed } from "../../app/zoom.ts";
 import { InstallStatus } from "./InstallStatus.tsx";
@@ -8,10 +9,10 @@ import { SettingRow, SettingsSection, Switch } from "./parts.tsx";
 export function DevicesSettings() {
   const [zoom, setZoom] = useState<boolean>(pinchZoomAllowed());
   return (
-    <SettingsSection title="Geräte">
-      <SettingRow label="Pinch-Zoom" hint="Feld-Zoom bleibt aus">
+    <SettingsSection title={t("session.devices")}>
+      <SettingRow label={t("settings.pinch_zoom")} hint="Feld-Zoom bleibt aus">
         <Switch
-          label="Pinch-Zoom"
+          label={t("settings.pinch_zoom")}
           checked={zoom}
           onChange={(next) => {
             applyPinchZoom(next);

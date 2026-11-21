@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { ApiContext, useApi } from "../../shared/api-context.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Team } from "@ancientvoid/contracts";
@@ -83,19 +84,19 @@ function TaskCard({ task, teamTitle }: { task: Team["tasks"][number]; teamTitle:
       </div>
       <p class="session-where dim">
         <span class="team-chip">{task.id}</span> {task.adapter}{task.model ? ` · ${task.model}` : " · Standardmodell"}
-        {current && <> · Versuch {current.generation} ({label(current.status)})</>}
+        {current && <> {t("team.attempt_frag")} {current.generation} ({label(current.status)})</>}
       </p>
-      {task.dependsOn.length > 0 && <p class="session-where dim">hängt ab von {task.dependsOn.join(" → ")}</p>}
+      {task.dependsOn.length > 0 && <p class="session-where dim">{t("team.depends_on")} {task.dependsOn.join(" → ")}</p>}
       <p class="session-where dim">{label(task.status)}{task.result ? ` · ${task.result.bytes} Bytes` : ""}</p>
       {task.result && (
         <div class="team-result">
           <pre>{task.result.text.slice(0, 400)}{task.result.text.length > 400 ? "…" : ""}</pre>
-          {task.result.blobRef && <p class="team-blob dim">Ergebnis als Blob abgelegt: {task.result.blobRef}</p>}
+          {task.result.blobRef && <p class="team-blob dim">{t("team.result_blob")} {task.result.blobRef}</p>}
         </div>
       )}
       {current && (
         <div class="team-task-card-actions">
-          <a class="link-btn row-action" href={sessionHash(current.sessionId)} title={current.sessionId}>Session ↗</a>
+          <a class="link-btn row-action" href={sessionHash(current.sessionId)} title={current.sessionId}>{t("team.session_arrow")}</a>
         </div>
       )}
       <span class="sr-only">{teamTitle}</span>
@@ -118,15 +119,15 @@ function TeamDetail({ team, onAnswer, onCancel, busy, offline }: { team: Team; o
       </header>
       <p class="team-goal">{team.goal}</p>
       <p class="team-meta">
-        Projekt: <span class="team-chip">{team.project}</span> · Plan: {team.planSource === "coordinator" ? "Koordinator" : "übergeben"} · Adapter: {team.frame.adapters.join(", ")} · Parallelität: {team.frame.maxParallel}
-        {team.frame.models.length > 0 && (<> · Modelle: {team.frame.models.join(", ")}</>)}
+        {t("team.project_colon")} <span class="team-chip">{team.project}</span> {t("team.plan_frag")} {team.planSource === "coordinator" ? t("team.coordinator") : "übergeben"} {t("team.adapter_frag")} {team.frame.adapters.join(", ")} {t("team.parallelism_frag")} {team.frame.maxParallel}
+        {team.frame.models.length > 0 && (<> {t("team.models_frag")} {team.frame.models.join(", ")}</>)}
         {team.coordinatorSessionId && (
-          <> · <a href={sessionHash(team.coordinatorSessionId)}>Koordinator-Session</a></>
+          <> · <a href={sessionHash(team.coordinatorSessionId)}>{t("team.coordinator_session")}</a></>
         )}
       </p>
       <div class="card-plan" data-testid="team-progress" role="img" aria-label={`${done} von ${team.tasks.length} Aufgaben erledigt`}>
         <div class="card-plan-bar"><div class="card-plan-fill" style={{ transform: `scaleX(${progress})` }} /></div>
-        <span class="dim">{done}/{team.tasks.length} erledigt</span>
+        <span class="dim">{done}/{team.tasks.length} {t("session.done")}</span>
       </div>
 
       {openGates.length > 0 && (
@@ -141,7 +142,7 @@ function TeamDetail({ team, onAnswer, onCancel, busy, offline }: { team: Team; o
                   </Button>
                 ))}
                 <Button disabled={busy || offline} onClick={onCancel} class="team-cancel">
-                  Team stoppen
+                  {t("team.stop_team")}
                 </Button>
               </div>
             </Card>
@@ -155,7 +156,7 @@ function TeamDetail({ team, onAnswer, onCancel, busy, offline }: { team: Team; o
           {team.tasks.map((task) => <TaskCard key={task.id} task={task} teamTitle={team.title} />)}
         </div>
       )}
-      <p class="team-meta dim">{done}/{team.tasks.length} Tasks erledigt · {team.deliveries.length} Lieferungen</p>
+      <p class="team-meta dim">{done}/{team.tasks.length} {t("team.tasks_done")} {team.deliveries.length} {t("team.deliveries")}</p>
     </div>
   );
 }
@@ -211,16 +212,16 @@ function NewTeamForm({ adapters, projects, onCreated, offline }: { adapters: Ada
   /** Schrittfolge nach dem „Neue Session"-Muster (T60.5): Ziel → Projekt → Rahmen → Start. */
   return (
     <form class="ui-card form-grid team-new" data-testid="team-new" onSubmit={(e) => { e.preventDefault(); void start(); }}>
-      <h3>Neues Team</h3>
-      <label>Titel <input value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} /></label>
-      <label>Ziel <textarea rows={3} value={goal} onInput={(e) => setGoal((e.target as HTMLTextAreaElement).value)} /></label>
-      <label>Projekt
+      <h3>{t("team.new_team")}</h3>
+      <label>{t("team.title")} <input value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} /></label>
+      <label>{t("newsession.target")} <textarea rows={3} value={goal} onInput={(e) => setGoal((e.target as HTMLTextAreaElement).value)} /></label>
+      <label>{t("newsession.project")}
         <select value={project} onChange={(e) => setProject((e.currentTarget as HTMLSelectElement).value)}>
           {projects.map((p) => <option value={p.path} key={p.path}>{p.name}</option>)}
         </select>
       </label>
       <fieldset>
-        <legend>Worker-Adapter</legend>
+        <legend>{t("team.worker_adapter")}</legend>
         {adapters.map((a) => (
           <label class="team-adapter">
             <input type="checkbox" checked={selected.includes(a.id)} onChange={() => toggle(a.id)} /> {a.id}
@@ -228,12 +229,12 @@ function NewTeamForm({ adapters, projects, onCreated, offline }: { adapters: Ada
         ))}
       </fieldset>
       <div class="team-new-row">
-        <label>Koordinator <input value={coordinatorAdapter} onInput={(e) => setCoordinatorAdapter((e.target as HTMLInputElement).value)} /></label>
-        <label>Parallelität <input type="number" min={1} max={8} value={maxParallel} onInput={(e) => setMaxParallel(Number((e.target as HTMLInputElement).value))} /></label>
+        <label>{t("team.coordinator")} <input value={coordinatorAdapter} onInput={(e) => setCoordinatorAdapter((e.target as HTMLInputElement).value)} /></label>
+        <label>{t("team.parallelism")} <input type="number" min={1} max={8} value={maxParallel} onInput={(e) => setMaxParallel(Number((e.target as HTMLInputElement).value))} /></label>
       </div>
-      <label>Erlaubte Modelle <input value={modelsText} placeholder="leer = Standardmodell je Adapter; mehrere per Komma" onInput={(e) => setModelsText((e.target as HTMLInputElement).value)} /></label>
+      <label>{t("team.allowed_models")} <input value={modelsText} placeholder={t("team.empty_default")} onInput={(e) => setModelsText((e.target as HTMLInputElement).value)} /></label>
       {error && <div class="files-error" role="alert">{error}</div>}
-      <Button type="submit" disabled={busy || offline} variant="primary">Team starten</Button>
+      <Button type="submit" disabled={busy || offline} variant="primary">{t("team.start_team")}</Button>
     </form>
   );
 }
@@ -372,13 +373,13 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
     <div class="teams-pane" data-testid="teams-pane">
       <div class="teams-list">
         <div class="teams-list-head">
-          <h3>Teams</h3>
-          <Button disabled={offline || busy} onClick={() => setShowNew((v) => !v)}>{showNew ? "Abbrechen" : "Neues Team"}</Button>
+          <h3>{t("team.teams")}</h3>
+          <Button disabled={offline || busy} onClick={() => setShowNew((v) => !v)}>{showNew ? "Abbrechen" : t("team.new_team")}</Button>
         </div>
-        {at && !offline && <p class="dim">Stand: {ago(at)}</p>}
+        {at && !offline && <p class="dim">{t("team.as_of")} {ago(at)}</p>}
         {offline && (
           <p role="status" data-testid="teams-offline">
-            Offline / Host nicht erreichbar — letzter Stand{at ? <> vom <time dateTime={at}>{new Date(at).toLocaleString("de-DE")}</time></> : ""}, Änderungen gesperrt.
+            {t("team.offline_last")}{at ? <> {t("team.from_the")} <time dateTime={at}>{new Date(at).toLocaleString("de-DE")}</time></> : ""}{t("team.changes_locked")}
           </p>
         )}
         {error && !offline && <div class="files-error" role="alert">{error}</div>}
@@ -398,9 +399,9 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
           <div class="ui-empty">{offline ? "Kein gespeicherter Stand vorhanden." : "lade…"}</div>
         ) : teams.length === 0 ? (
           <Card data-testid="teams-empty">
-            <h3>Noch keine Teams</h3>
-            <p class="dim">Ein Team ist ein großer Auftrag, den der Hub auf mehrere Agenten-Sessions verteilt.</p>
-            <Button disabled={offline} onClick={() => setShowNew(true)} variant="primary">Neues Team anlegen</Button>
+            <h3>{t("team.no_teams")}</h3>
+            <p class="dim">{t("team.team_explain")}</p>
+            <Button disabled={offline} onClick={() => setShowNew(true)} variant="primary">{t("team.create_team")}</Button>
           </Card>
         ) : (
           <ul >
@@ -414,7 +415,7 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
                       <strong class="session-title">{team.title}</strong>
                       <StatusDot {...teamDisplay(team.status)} label={false} />
                     </span>
-                    <span class="session-where dim">{team.project || "—"} · {done}/{team.tasks.length} erledigt · {team.frame.adapters.join(", ")}</span>
+                    <span class="session-where dim">{team.project || "—"} · {done}/{team.tasks.length} {t("team.done_frag")} {team.frame.adapters.join(", ")}</span>
                     <span class="session-ago dim">{ago(team.createdAt)}</span>
                   </button>
                 </li>

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { Sheet, Button } from "../../shared/ui/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
@@ -66,8 +67,8 @@ export function AttachmentPicker({ attachments, onChange, disabled }: { attachme
 
   return (
     <>
-      <input ref={input} type="file" multiple hidden aria-label="Dateien anhängen" data-testid="attachment-input" onChange={(e) => void pick(Array.from((e.target as HTMLInputElement).files ?? []))} />
-      <Button disabled={disabled} onClick={() => input.current?.click()} title="Dateien oder Bilder anhängen" aria-label="Anhang hinzufügen" class="attach-btn">
+      <input ref={input} type="file" multiple hidden aria-label={t("attachments.attach_files")} data-testid="attachment-input" onChange={(e) => void pick(Array.from((e.target as HTMLInputElement).files ?? []))} />
+      <Button disabled={disabled} onClick={() => input.current?.click()} title={t("attachments.attach_files_images")} aria-label={t("attachments.add_attachment")} class="attach-btn">
         📎
       </Button>
       {(attachments.length > 0 || uploading.length > 0) && (
@@ -142,10 +143,10 @@ function AttachmentViewer({ attachment, onClose }: { attachment: AttachmentRef; 
         </div>
         {url && <img class="attachment-preview" src={url} alt={attachment.name} />}
         {text === null ? (
-          <div class="dim">lädt…</div>
+          <div class="dim">{t("common.loading_dots")}</div>
         ) : text.text ? (
           <>
-            <div class="dim" style="font-size: calc(11px * var(--font-scale, 1))">Ausgelesen · {extractionLabel(text)}</div>
+            <div class="dim" style="font-size: calc(11px * var(--font-scale, 1))">{t("attachments.parsed")} {extractionLabel(text)}</div>
             <pre class="attachment-text">{text.text}</pre>
           </>
         ) : (

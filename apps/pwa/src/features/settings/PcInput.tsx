@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useState } from "preact/hooks";
 import { DesktopPage } from "../desktop/DesktopPage.tsx";
 
@@ -10,7 +11,7 @@ export function PcInput() {
   const [open, setOpen] = useState(false);
   return (
     <details class="setting-details" data-testid="pc-input" onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
-      <summary>PC-Eingabe</summary>
+      <summary>{t("settings.pc_input")}</summary>
       {open && <DesktopPage />}
     </details>
   );

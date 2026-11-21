@@ -50,7 +50,7 @@ export function PcOpenNotice({ sessionId, api, resume }: { sessionId: string; ap
       <strong>{t("session.open_on_pc")}{pc.name ? ` (${pc.name})` : ""}.</strong>{" "}
       {pc.kind === "background" ? (
         <>
-          {t("session.background_session_live_with")} <code>claude attach {short}</code>.
+          {t("session.background_session_live_with")} <code>{t("session.claude_attach")} {short}</code>.
         </>
       ) : (
         <>

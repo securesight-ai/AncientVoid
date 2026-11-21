@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { GraphDiagnosis, GraphGroup, GraphReport } from "@ancientvoid/contracts";
 import { hostApi } from "../../shared/api.ts";
@@ -851,44 +852,44 @@ export function GraphPane({ target, hostId = null, onOpenFile, onFullscreen }: {
             )}
             {counts.dead > 0 && (
               <span class="graph-chip graph-chip-dead">
-                Tote Dateien {counts.dead}
+                {t("graph.dead_files")} {counts.dead}
               </span>
             )}
             {layout && (
               <span class="graph-chip" data-testid="graph-systems">
-                Systeme {layout.systems.length}
+                {t("graph.systems")} {layout.systems.length}
               </span>
             )}
-            <nav class="graph-crumb" aria-label="Ort">
-              <button type="button" onClick={() => { setSystemId(null); fitAll(); }}>Repo</button>
+            <nav class="graph-crumb" aria-label={t("graph.location")}>
+              <button type="button" onClick={() => { setSystemId(null); fitAll(); }}>{t("graph.repo")}</button>
               {systemId && <span> › {systemLabel(systemId)}</span>}
             </nav>
             {simplified && (
-              <span class="graph-chip graph-chip-simplified" data-testid="graph-simplified" title="Bildrate zu niedrig — Namen, Pulse und Leuchten reduziert">
-                Vereinfacht
+              <span class="graph-chip graph-chip-simplified" data-testid="graph-simplified" title={t("graph.low_framerate")}>
+                {t("graph.simplified")}
               </span>
             )}
           </div>
         )}
         {report && (
           <div class="graph-actions">
-            <Button aria-label="Ganze Galaxie zeigen" onClick={fitAll} class="graph-fit">
-              Einpassen
+            <Button aria-label={t("graph.show_entire")} onClick={fitAll} class="graph-fit">
+              {t("graph.fit")}
             </Button>
-            <Button aria-label="Graph prüfen" onClick={runCheck} disabled={checking} class="graph-check">
+            <Button aria-label={t("graph.check_graph")} onClick={runCheck} disabled={checking} class="graph-check">
               {checking ? "Prüfe …" : "Prüfen"}
             </Button>
             {!full && (
-              <Button aria-label="Vollbild" onClick={() => setFull(true)}>
-                Vollbild
+              <Button aria-label={t("graph.fullscreen")} onClick={() => setFull(true)}>
+                {t("graph.fullscreen")}
               </Button>
             )}
             <input
               ref={searchRef}
               class="graph-search"
               type="search"
-              aria-label="Dateien suchen"
-              placeholder="Datei suchen"
+              aria-label={t("graph.search_files")}
+              placeholder={t("graph.search_file")}
               value={query}
               onInput={(e) => { setQuery((e.target as HTMLInputElement).value); setSheet("open"); }}
               onFocus={() => setSheet("open")}
@@ -896,7 +897,7 @@ export function GraphPane({ target, hostId = null, onOpenFile, onFullscreen }: {
           </div>
         )}
       </div>
-      {query.trim() && hits.length === 0 && <p class="graph-empty">Kein Treffer</p>}
+      {query.trim() && hits.length === 0 && <p class="graph-empty">{t("graph.no_match")}</p>}
       {hits.length > 0 && (
         <ul class="graph-results">
           {hits.map((h) => (
@@ -910,7 +911,7 @@ export function GraphPane({ target, hostId = null, onOpenFile, onFullscreen }: {
       )}
       {report?.meta.truncated && (
         <div class="graph-banner">
-          Graph gekappt: {report.meta.files}/{report.meta.maxFiles} Dateien gezeigt — Filter verfeinern.
+          {t("graph.graph_capped")} {report.meta.files}/{report.meta.maxFiles} {t("graph.files_shown")}
           {report.meta.unresolved > 0 && ` (${report.meta.unresolved} Spezifikatoren unaufgelöst)`}
         </div>
       )}
@@ -924,21 +925,21 @@ export function GraphPane({ target, hostId = null, onOpenFile, onFullscreen }: {
               </div>
             ))}
           </div>
-          <div data-testid="graph-errors">{errorTotal} Fehler in {diag.byFile.filter((f) => f.errors > 0).length} Dateien</div>
+          <div data-testid="graph-errors">{errorTotal} {t("graph.errors_in")} {diag.byFile.filter((f) => f.errors > 0).length} {t("graph.files")}</div>
         </div>
       )}
-      {loadErr && <div class="files-error">Graph nicht ladbar: {loadErr}</div>}
-      {diagErr && <div class="files-error">Prüfung fehlgeschlagen: {diagErr}</div>}
+      {loadErr && <div class="files-error">{t("graph.graph_not_loadable")} {loadErr}</div>}
+      {diagErr && <div class="files-error">{t("graph.check_failed")} {diagErr}</div>}
       <div class="graph-body">
       {/* Zoom an der ganzen Fläche: über einem Stern liegt dessen Klick-Knopf, nicht das Canvas. */}
       <div class="graph-wrap" ref={wrapRef} onWheel={onWheel} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={onPointerLeave}>
         {full && (
-          <Button aria-label="Vollbild verlassen" title="Vollbild verlassen (Esc)" onClick={() => setFull(false)} class="graph-fullclose">
-            ✕ Vollbild verlassen
+          <Button aria-label={t("graph.exit_fullscreen")} title={t("graph.exit_fullscreen_esc")} onClick={() => setFull(false)} class="graph-fullclose">
+            {t("graph.exit_fullscreen_x")}
           </Button>
         )}
-        {!report && !loadErr && <div class="graph-state">Lade Graph …</div>}
-        {report && report.nodes.length === 0 && <div class="graph-state">Keine Dateien im Ziel gefunden.</div>}
+        {!report && !loadErr && <div class="graph-state">{t("graph.loading_graph")}</div>}
+        {report && report.nodes.length === 0 && <div class="graph-state">{t("graph.no_files_target")}</div>}
         <canvas ref={canvasRef} class="graph-canvas" />
         <div class={`graph-node-hits${dragging ? " graph-node-hits-dragging" : ""}`}>
           {!systemId && layout && layout.systems.map((s) => {
@@ -976,7 +977,7 @@ export function GraphPane({ target, hostId = null, onOpenFile, onFullscreen }: {
           <div class="graph-tooltip" style={{ left: `${hover.x + 12}px`, top: `${hover.y + 12}px` }}>
             <div class="graph-tooltip-path">{hover.path}</div>
             <div>
-              {GROUP_LABEL[hover.group]} · Zufluss {hover.in} · Ausgehend {hover.out}
+              {GROUP_LABEL[hover.group]} {t("graph.inflow_frag")} {hover.in} {t("graph.outgoing_frag")} {hover.out}
             </div>
           </div>
         )}

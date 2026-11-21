@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { deviceStatusLines, gatherDeviceStatus } from "../../shared/device-status.ts";
 import { sendOrientationReport } from "../../shared/device-report.ts";
@@ -55,10 +56,10 @@ export function InstallStatus() {
     };
   }, [check]);
   return (
-    <SettingRow label="Installierter Stand" hint="Anzeigemodus, Ausrichtung, Manifest und die Worker-Stufe dahinter">
+    <SettingRow label={t("settings.installed_state")} hint="Anzeigemodus, Ausrichtung, Manifest und die Worker-Stufe dahinter">
       <div class="install-status" data-testid="install-status">
         {lines === null ? (
-          <span class="dim">geprüft…</span>
+          <span class="dim">{t("settings.checked")}</span>
         ) : (
           lines.map((line) => (
             <div class="install-status__line dim" key={line}>
@@ -67,14 +68,14 @@ export function InstallStatus() {
           ))
         )}
         <Button data-testid="install-status-refresh" onClick={() => setCheck((n) => n + 1)}>
-          Stand neu prüfen
+          {t("settings.recheck")}
         </Button>
         <span class="settings-row-actions">
           <Button data-testid="install-orient-landscape" onClick={() => void orient("landscape")} class="small">
-            Querformat erzwingen
+            {t("settings.force_landscape")}
           </Button>
           <Button data-testid="install-orient-auto" onClick={() => void orient("any")} class="small">
-            Wieder automatisch
+            {t("settings.automatic_again")}
           </Button>
         </span>
         {lockMsg !== null && (

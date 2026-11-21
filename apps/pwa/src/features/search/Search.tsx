@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { createPortal } from "preact/compat";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
@@ -118,14 +119,14 @@ export function SearchPane({ project }: { project: string }) {
     <div class="search-pane">
       {status === "unavailable" ? (
         <div class="dim search-status">
-          Volltextsuche nicht verfügbar — <span class="mono">qmd</span> ist auf diesem Hub nicht installiert. Die Dokumente unten lassen sich trotzdem öffnen.
+          {t("search.fulltext_unavailable")} <span class="mono">{t("search.qmd")}</span> {t("search.not_installed")}
         </div>
       ) : (
         <form class="search-form" onSubmit={onSubmit}>
           <input
             class="search-input"
             type="text"
-            placeholder="Doku durchsuchen (Markdown)…"
+            placeholder={t("search.search_docs")}
             value={query}
             onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
           />
@@ -136,11 +137,11 @@ export function SearchPane({ project }: { project: string }) {
       )}
 
       {status === "indexing" && (
-        <div class="dim search-status">Erstindex wird aufgebaut — das kann bei einem großen Projekt einige Minuten dauern…</div>
+        <div class="dim search-status">{t("search.initial_index")}</div>
       )}
-      {status === "searching" && <div class="dim search-status">Suche läuft…</div>}
+      {status === "searching" && <div class="dim search-status">{t("search.search_running")}</div>}
       {status === "error" && <div class="reply-error">{errorMsg}</div>}
-      {status === "ready" && results.length === 0 && <div class="ui-empty">keine Treffer</div>}
+      {status === "ready" && results.length === 0 && <div class="ui-empty">{t("search.no_hits")}</div>}
 
       {status === "ready" && results.length > 0 && (
         <div class="search-results">
@@ -152,7 +153,7 @@ export function SearchPane({ project }: { project: string }) {
             >
               <div class="search-result-head">
                 <span class="mono search-result-file">{r.file}</span>
-                <span class="dim">Zeile {r.line}</span>
+                <span class="dim">{t("search.line")} {r.line}</span>
               </div>
               <div class="search-result-title">{r.title}</div>
               <pre class="search-result-snippet mono">{r.snippet}</pre>
@@ -162,8 +163,8 @@ export function SearchPane({ project }: { project: string }) {
       )}
 
       <div class="doc-overview">
-        <div class="doc-overview-head dim">Dokumente · {docs === null ? "lädt…" : `${docs.length}`}</div>
-        {docs !== null && docs.length === 0 && <div class="ui-empty">keine Markdown-Dokumente im Projekt</div>}
+        <div class="doc-overview-head dim">{t("search.documents")} {docs === null ? "lädt…" : `${docs.length}`}</div>
+        {docs !== null && docs.length === 0 && <div class="ui-empty">{t("search.no_md")}</div>}
         {docs !== null &&
           groupDocs(docs).map((group) => (
             <div key={group.dir} class="doc-group">
@@ -233,12 +234,12 @@ function DocViewer({ project, path, snippet, onClose }: { project: string; path:
         <div class="file-viewer-head">
           <span class="mono">{path}</span>
           <Button onClick={onClose}>
-            Schließen
+            {t("common.close")}
           </Button>
         </div>
         <div class="file-viewer-body" ref={bodyRef}>
           {error && <div class="ui-empty">{error}</div>}
-          {!error && !file && <div class="ui-empty">lädt …</div>}
+          {!error && !file && <div class="ui-empty">{t("common.loading")}</div>}
           {file && (
             <div class="doc-prose">
               <Markdown text={file.content} />

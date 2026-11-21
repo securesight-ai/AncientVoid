@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { createPortal } from "preact/compat";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { hubApi, remoteHost, type MediaInfo, type MediaJob, type MediaResult, type SessionRecord } from "../../shared/api.ts";
@@ -49,7 +50,7 @@ function Frame({ jobId, file, alt }: { jobId: string; file: string; alt: string 
       if (url) URL.revokeObjectURL(url);
     };
   }, [jobId, file]);
-  return src ? <img class="media-frame-img" src={src} alt={alt} loading="lazy" /> : <span class="media-frame-img placeholder">Bild lädt…</span>;
+  return src ? <img class="media-frame-img" src={src} alt={alt} loading="lazy" /> : <span class="media-frame-img placeholder">{t("media.image_loading")}</span>;
 }
 
 function ResultView({ job, result, sessions }: { job: MediaJob; result: MediaResult; sessions: SessionRecord[] }) {
@@ -101,11 +102,11 @@ function ResultView({ job, result, sessions }: { job: MediaJob; result: MediaRes
     <div class="media-result">
       <Card class="media-use">
         <label class="dim" for="media-target">
-          Als Anhang verwenden in
+          {t("media.use_as_attachment")}
         </label>
         <div class="row" style="gap: 8px; flex-wrap: wrap">
-          <select id="media-target" value={target} onChange={(e) => setTarget((e.target as HTMLSelectElement).value)} aria-label="Ziel-Session">
-            <option value="new">neuer Session</option>
+          <select id="media-target" value={target} onChange={(e) => setTarget((e.target as HTMLSelectElement).value)} aria-label={t("media.target_session")}>
+            <option value="new">{t("media.new_session")}</option>
             {local.slice(0, 20).map((s) => (
               <option key={s.id} value={s.id}>
                 {(s.title ?? projectName(s.project) ?? s.id).slice(0, 50)} · {s.adapter}
@@ -113,13 +114,13 @@ function ResultView({ job, result, sessions }: { job: MediaJob; result: MediaRes
             ))}
           </select>
           <Button disabled={!job.resultAttachmentId} onClick={() => void use()} variant="primary">
-            In Session verwenden
+            {t("media.use_in_session")}
           </Button>
         </div>
       </Card>
       {result.summary && (
         <section>
-          <h3>Zusammenfassung</h3>
+          <h3>{t("approvals.summary")}</h3>
           <p>{result.summary}</p>
           {result.keyPoints.length > 0 && (
             <ul>
@@ -128,12 +129,12 @@ function ResultView({ job, result, sessions }: { job: MediaJob; result: MediaRes
               ))}
             </ul>
           )}
-          <div class="dim">von {result.summaryVia}</div>
+          <div class="dim">{t("common.word_of")} {result.summaryVia}</div>
         </section>
       )}
       {result.chapters.length > 0 && (
         <section>
-          <h3>Kapitel</h3>
+          <h3>{t("media.chapters")}</h3>
           <ol class="media-chapters">
             {result.chapters.map((c) => (
               <li key={c.startMs}>
@@ -145,7 +146,7 @@ function ResultView({ job, result, sessions }: { job: MediaJob; result: MediaRes
       )}
       {result.frames.length > 0 && (
         <section>
-          <h3>Schlüsselbilder ({result.frames.length})</h3>
+          <h3>{t("media.keyframes")}{result.frames.length})</h3>
           <div class="media-frames">
             {result.frames.map((f, i) => (
               <figure key={f.file} class="media-frame">
@@ -154,8 +155,8 @@ function ResultView({ job, result, sessions }: { job: MediaJob; result: MediaRes
                 </button>
                 <figcaption>
                   <Stamp ms={f.atMs} />
-                  {f.description && <div class="media-desc">Beschreibung ({f.via ?? "Modell"}, kann irren): {f.description}</div>}
-                  {f.ocr && <div class="media-ocr">Text im Bild: {f.ocr.slice(0, 300)}</div>}
+                  {f.description && <div class="media-desc">{t("media.description_open")}{f.via ?? "Modell"}{t("media.may_err")} {f.description}</div>}
+                  {f.ocr && <div class="media-ocr">{t("media.text_in_image")} {f.ocr.slice(0, 300)}</div>}
                 </figcaption>
               </figure>
             ))}
@@ -172,9 +173,9 @@ function ResultView({ job, result, sessions }: { job: MediaJob; result: MediaRes
         </section>
       )}
       <section>
-        <h3>Transkript {result.transcriptVia ? <span class="dim">· {result.transcriptVia}</span> : null}</h3>
+        <h3>{t("media.transcript")} {result.transcriptVia ? <span class="dim">· {result.transcriptVia}</span> : null}</h3>
         <div class="media-transcript" ref={transcript}>
-          {result.transcript.length === 0 && <div class="dim">kein Transkript</div>}
+          {result.transcript.length === 0 && <div class="dim">{t("media.no_transcript")}</div>}
           {result.transcript.map((s, i) => (
             <div key={i} class={`media-line ${focus === i ? "focus" : ""}`}>
               <Stamp ms={s.startMs} /> {s.text}
@@ -188,9 +189,9 @@ function ResultView({ job, result, sessions }: { job: MediaJob; result: MediaRes
         <div class="media-lightbox" data-testid="media-lightbox" onClick={() => setFocusFrameIndex(null)}>
           <figure onClick={(e) => e.stopPropagation()}>
             <Frame jobId={job.id} file={focusFrame.file} alt={`Bild bei ${formatTimestamp(focusFrame.atMs)}`} />
-            <figcaption>Bild bei {formatTimestamp(focusFrame.atMs)}</figcaption>
+            <figcaption>{t("media.image_at")} {formatTimestamp(focusFrame.atMs)}</figcaption>
             <Button onClick={() => setFocusFrameIndex(null)}>
-              Schließen
+              {t("common.close")}
             </Button>
           </figure>
         </div>,
@@ -290,27 +291,27 @@ export function MediaPage({ sessions }: { sessions: SessionRecord[] }) {
   return (
     <div class="media-page">
       <form class="ui-card media-form" onSubmit={(e) => void submitUrl(e)}>
-        <h2>Video analysieren</h2>
+        <h2>{t("media.analyze_video")}</h2>
         <div class="row" style="gap: 8px; flex-wrap: wrap">
-          <input class="media-url" type="url" inputMode="url" placeholder="YouTube- oder Video-Link" aria-label="Video-Link" value={url} onInput={(e) => setUrl((e.target as HTMLInputElement).value)} />
+          <input class="media-url" type="url" inputMode="url" placeholder={t("media.youtube_link")} aria-label={t("media.video_link")} value={url} onInput={(e) => setUrl((e.target as HTMLInputElement).value)} />
           <Button type="submit" disabled={busy || !url.trim() || info?.tools.ytDlp === false} variant="primary">
             {busy ? "…" : "Analysieren"}
           </Button>
-          <input ref={fileInput} type="file" accept="video/*,audio/*" hidden aria-label="Videodatei" onChange={(e) => void pickFile((e.target as HTMLInputElement).files)} />
+          <input ref={fileInput} type="file" accept="video/*,audio/*" hidden aria-label={t("media.video_file")} onChange={(e) => void pickFile((e.target as HTMLInputElement).files)} />
           <Button disabled={busy} onClick={() => fileInput.current?.click()}>
-            Datei wählen
+            {t("media.choose_file")}
           </Button>
         </div>
         <div class="row" style="gap: 12px; flex-wrap: wrap; align-items: center">
           <label>
-            <input type="checkbox" checked={allowCloud} disabled={!info?.gemini} onChange={(e) => setAllowCloud((e.target as HTMLInputElement).checked)} /> Cloud (Gemini) erlauben
+            <input type="checkbox" checked={allowCloud} disabled={!info?.gemini} onChange={(e) => setAllowCloud((e.target as HTMLInputElement).checked)} /> {t("media.allow_cloud")}
           </label>
           <label>
-            Sprache{" "}
-            <select value={language} onChange={(e) => setLanguage((e.target as HTMLSelectElement).value)} aria-label="Sprache">
-              <option value="auto">automatisch</option>
-              <option value="de">Deutsch</option>
-              <option value="en">Englisch</option>
+            {t("media.language")}{" "}
+            <select value={language} onChange={(e) => setLanguage((e.target as HTMLSelectElement).value)} aria-label={t("media.language")}>
+              <option value="auto">{t("media.automatic")}</option>
+              <option value="de">{t("media.german")}</option>
+              <option value="en">{t("media.english")}</option>
             </select>
           </label>
         </div>
@@ -319,7 +320,7 @@ export function MediaPage({ sessions }: { sessions: SessionRecord[] }) {
             {can(info.stt, "Transkript lokal")} {can(info.summary, "Zusammenfassung lokal")} {can(info.vision, "Bildbeschreibung lokal")} {can(info.gemini, "Gemini-Schlüssel")} {can(info.tools.ytDlp, "Links (yt-dlp)")}
           </div>
         )}
-        {info && !info.gemini && <div class="dim">Ohne Gemini-Schlüssel (Einstellungen) bleibt alles lokal; Bilder werden dann nur per OCR gelesen.</div>}
+        {info && !info.gemini && <div class="dim">{t("media.no_gemini")}</div>}
         {error && <div class="reply-error">{error}</div>}
       </form>
 
@@ -337,13 +338,13 @@ export function MediaPage({ sessions }: { sessions: SessionRecord[] }) {
                   <StepList job={j} />
                   {j.error && <div class="reply-error">{j.error}</div>}
                   <div class="dim media-egress">
-                    Hat den Hub verlassen:{" "}
+                    {t("media.left_hub")}{" "}
                     {j.egress.length === 0 ? "nichts" : j.egress.map((e) => `${e.service} (${MEDIA_STEP_LABELS[e.step]}${e.own ? ", eigene Hardware" : ""})`).join(" · ")}
                   </div>
                   <div class="row" style="gap: 8px">
                     {(j.status === "running" || j.status === "queued") && (
                       <Button onClick={() => void hubApi.cancelMediaJob(j.id).then((x) => setJobs((all) => all.map((y) => (y.id === x.id ? x : y))))}>
-                        Abbrechen
+                        {t("common.cancel")}
                       </Button>
                     )}
                     {j.status !== "running" && j.status !== "queued" && (
@@ -355,13 +356,13 @@ export function MediaPage({ sessions }: { sessions: SessionRecord[] }) {
                           })
                         }
                        class="subtle">
-                        Löschen
+                        {t("common.delete")}
                       </Button>
                     )}
                   </div>
                   {j.status === "done" && result?.jobId !== j.id && resultError && (
                     <div class="reply-error" role="alert">
-                      Zusammenfassung nicht ladbar: {resultError}
+                      {t("media.summary_unloadable")} {resultError}
                     </div>
                   )}
                   {j.status === "done" && result?.jobId === j.id && <ResultView job={j} result={result} sessions={sessions} />}

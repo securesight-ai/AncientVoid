@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { hubApi, type DiscoveredSession, type SessionRecord } from "../../shared/api.ts";
 import { adapterCounts, discoveryState, filterDiscovery, groupDiscovery, stateCounts, type DiscoveryState } from "./groups.ts";
@@ -126,12 +127,12 @@ export function DiscoveryPane({ onOpen }: { onOpen: (session: SessionRecord) => 
       <input
         class="discovery-search"
         type="search"
-        placeholder="Sessions durchsuchen: Titel, letzte Nachricht, Projekt …"
-        aria-label="Sessions durchsuchen"
+        placeholder={t("discovery.search_sessions_hint")}
+        aria-label={t("discovery.search_sessions")}
         value={query}
         onInput={(e) => setQuery((e.currentTarget as HTMLInputElement).value)}
       />
-      <div class="discovery-kpis" role="group" aria-label="Nach Zustand filtern">
+      <div class="discovery-kpis" role="group" aria-label={t("discovery.filter_state")}>
         {KPI.map(({ state, label }) => (
           <button key={state} type="button" class={`discovery-kpi state-${state}`} aria-pressed={stateFilter === state} onClick={() => setStateFilter(stateFilter === state ? null : state)}>
             <span class="discovery-kpi-count">{counts[state]}</span>
@@ -139,7 +140,7 @@ export function DiscoveryPane({ onOpen }: { onOpen: (session: SessionRecord) => 
           </button>
         ))}
       </div>
-      <div class="discovery-providers" role="group" aria-label="Nach Provider filtern">
+      <div class="discovery-providers" role="group" aria-label={t("discovery.filter_provider")}>
         {adapterCounts(items).map(({ adapter, count }) => (
           <Chip key={adapter}  aria-pressed={adapterFilter.has(adapter)} onClick={() => toggleAdapter(adapter)} active={adapterFilter.has(adapter)}>
             {adapter} <span class="dim">{count}</span>
@@ -148,17 +149,17 @@ export function DiscoveryPane({ onOpen }: { onOpen: (session: SessionRecord) => 
       </div>
       <div class="dashboard-summary dim">
         <span>{stateFilter || adapterFilter.size > 0 ? `${shown.length} von ${items.length} gefunden` : `${items.length} gefunden`}</span>
-        {unsupported > 0 && <span class="badge risk-destructive">{unsupported} unbekanntes Format</span>}
+        {unsupported > 0 && <span class="badge risk-destructive">{unsupported} {t("discovery.unknown_format")}</span>}
       </div>
       {error && <div class="reply-error">{error}</div>}
       {items.length === 0 && <div class="ui-empty">{searching ? "keine Session passt zur Suche" : "keine Sessions gefunden"}</div>}
-      {items.length > 0 && shown.length === 0 && <div class="ui-empty">keine Session passt zum Filter</div>}
+      {items.length > 0 && shown.length === 0 && <div class="ui-empty">{t("discovery.no_match")}</div>}
       {groups.map((group, i) => (
         <details key={`${group.project}|${searching}`} class="project-tile" open={(i === 0 && !group.temporary) || searching}>
           <summary class="project-tile-header">
             <span class="project-tile-name">{group.project}</span>
             <span class="dim">
-              {group.total} Session{group.total === 1 ? "" : "en"} · zuletzt {observedAgo(group.newestAt)}
+              {group.total} {t("common.session_cap")}{group.total === 1 ? "" : "en"} {t("discovery.last_frag")} {observedAgo(group.newestAt)}
             </span>
           </summary>
           <div class="discovery-grid">
@@ -171,7 +172,7 @@ export function DiscoveryPane({ onOpen }: { onOpen: (session: SessionRecord) => 
                 {subs.length > 0 && (
                   <details class="discovery-subagents">
                     <summary class="dim">
-                      {subs.length} Subagent{subs.length === 1 ? "" : "en"}
+                      {subs.length} {t("discovery.subagent")}{subs.length === 1 ? "" : "en"}
                     </summary>
                     {subs.map(row)}
                   </details>
@@ -215,7 +216,7 @@ const STATE_LABEL: Record<DiscoveryState, string> = {
   hub: "Im Hub",
   resumable: "fortsetzbar",
   observed: "nur beobachtet",
-  unknown: "unbekanntes Format",
+  unknown: t("discovery.unknown_format"),
 };
 
 function DiscoveredRow({ item, onOpen, onAdopt, onMirror }: { item: DiscoveredSession; onOpen: (id: string) => void; onAdopt?: (item: DiscoveredSession, asCopy: boolean) => void; onMirror?: (item: DiscoveredSession) => void }) {
@@ -243,8 +244,8 @@ function DiscoveredRow({ item, onOpen, onAdopt, onMirror }: { item: DiscoveredSe
         <span>{item.adapter}</span>
         <span>{observedAgo(item.observedAt)}</span>
         <span>{item.hubSessionId ? "Hub" : "extern · nur beobachtet"}</span>
-        {item.worktree && <span title="Lief in einem Worktree des Projekts">Worktree {item.worktree.slice(0, 12)}</span>}
-        {item.parentSessionId && <span>Subagent von {item.parentSessionId.slice(0, 8)}</span>}
+        {item.worktree && <span title={t("discovery.ran_worktree")}>{t("common.worktree")} {item.worktree.slice(0, 12)}</span>}
+        {item.parentSessionId && <span>{t("discovery.subagent_of")} {item.parentSessionId.slice(0, 8)}</span>}
       </div>
     </>
   );
@@ -277,15 +278,15 @@ function DiscoveredRow({ item, onOpen, onAdopt, onMirror }: { item: DiscoveredSe
               {item.live ? "Als Kopie fortsetzen" : "Fortsetzen"}
             </Button>
             {!item.live && copyCapable && (
-              <Button onClick={() => onAdopt!(item, true)} title="Eigene Kopie fortsetzen — das Original bleibt unverändert" class="subtle">
-                Als Kopie
+              <Button onClick={() => onAdopt!(item, true)} title={t("discovery.own_copy")} class="subtle">
+                {t("discovery.as_copy")}
               </Button>
             )}
           </>
         )}
         {!item.hubSessionId && onMirror && item.nativeSessionId && !unknown && (
-          <Button onClick={() => onMirror(item)} title="Verlauf lesbar im Hub spiegeln — ohne Übernahme, nur lesen">
-            Spiegeln
+          <Button onClick={() => onMirror(item)} title={t("discovery.mirror_history")}>
+            {t("discovery.mirror")}
           </Button>
         )}
         {hint && !item.hubSessionId && (
@@ -294,20 +295,20 @@ function DiscoveredRow({ item, onOpen, onAdopt, onMirror }: { item: DiscoveredSe
           </span>
         )}
         <details class="card-menu">
-          <summary aria-label="Weitere Angaben und Aktionen">⋯</summary>
+          <summary aria-label={t("discovery.more_details")}>⋯</summary>
           <div class="card-menu-body">
             <div class="card-menu-row">
-              <span class="dim">ID</span>
+              <span class="dim">{t("discovery.id")}</span>
               <span class="mono discovery-id">{id || "—"}</span>
             </div>
             <div class="card-menu-row">
-              <span class="dim">Harness</span>
+              <span class="dim">{t("status.harness")}</span>
               <span>{item.harness}</span>
             </div>
             {item.fork && (
               <div class="card-menu-row">
-                <span class="dim">Art</span>
-                <span>Fork</span>
+                <span class="dim">{t("discovery.type")}</span>
+                <span>{t("discovery.fork")}</span>
               </div>
             )}
             <Button disabled={!id} onClick={copyId} class="subtle">

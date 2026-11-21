@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { GitGraphReport } from "@ancientvoid/contracts";
 import { hostApi } from "../../shared/api.ts";
@@ -69,7 +70,7 @@ export function GitGraphPane({
     <div class="git-graph-pane" data-testid="git-graph-pane">
       {report?.truncated && (
         <div class="graph-banner">
-          Verlauf gekappt: neueste {report.maxCommits} Commits — ältere fehlen sichtbar.
+          {t("git-graph.history_capped")} {report.maxCommits} {t("git-graph.commits_missing")}
         </div>
       )}
       {visibleBranches.length > 0 && (
@@ -91,13 +92,12 @@ export function GitGraphPane({
       )}
       {report && !report.error && (
         <p class="git-graph-legend dim" data-testid="git-graph-legend">
-          Farben = Spurlinien (Lanes), nicht Hosts. Chips = Branch-/Tag-Tips im geladenen Verlauf.
-          Worktree-Sessions erscheinen als „Session …“ (Hover = voller Ref).
+          {t("git-graph.lanes_note")}
         </p>
       )}
-      {error && <div class="files-error">Git-Graph nicht ladbar: {error}</div>}
+      {error && <div class="files-error">{t("git-graph.gitgraph_not_loadable")} {error}</div>}
       {report?.error && <div class="files-error">{report.error}</div>}
-      {!report && !error && <div class="ui-empty">Lade Git-Graph …</div>}
+      {!report && !error && <div class="ui-empty">{t("git-graph.gitgraph_loading")}</div>}
       {report && !report.error && (
         <ul class="git-graph-list" role="list">
           {rows.map((row) => {
@@ -182,8 +182,8 @@ export function GitGraphPane({
                           </button>
                         </li>
                       ))}
-                      {row.commit.files.length === 0 && <li class="dim">keine Dateiänderungen</li>}
-                      {row.commit.filesTruncated && <li class="dim">… weitere Dateien gekappt</li>}
+                      {row.commit.files.length === 0 && <li class="dim">{t("git-graph.no_file_changes")}</li>}
+                      {row.commit.filesTruncated && <li class="dim">{t("git-graph.more_files_capped")}</li>}
                     </ul>
                   )}
                 </div>

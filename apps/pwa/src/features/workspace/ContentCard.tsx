@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect } from "preact/hooks";
 import { setHere } from "../../shared/command-context.ts";
 import { CommandBar } from "../commands/CommandBar.tsx";
@@ -19,7 +20,7 @@ export function ContentCard({ card, active, onClose, onSwitchToken, onPopout }: 
   if (content.kind === "browser") return <BrowserPanel sessionId={card.sessionId || null} label={card.sessionId || null} hostId={card.hostId ?? null} onClose={onClose} />;
   if (content.kind === "devices") return <DevicePanel sessionId={card.sessionId || null} label={card.sessionId || null} hostId={card.hostId ?? null} onClose={onClose} />;
   return <div class="file-card">
-    <header class="tile-head"><strong>{content.path}</strong><button type="button" aria-label="Dateikarte schließen" onClick={(e) => { e.stopPropagation(); onClose(); }}>×</button></header>
+    <header class="tile-head"><strong>{content.path}</strong><button type="button" aria-label={t("workspace.close_file_card")} onClick={(e) => { e.stopPropagation(); onClose(); }}>×</button></header>
     {content.sha ? <HistoricalBlobView target={content.target} hostId={card.hostId ?? null} path={content.path} sha={content.sha} /> : <FileViewer target={content.target} path={content.path} hostId={card.hostId ?? null} sessionId={card.sessionId || null} />}
   </div>;
 }

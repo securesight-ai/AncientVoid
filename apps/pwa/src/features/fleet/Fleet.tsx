@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { hubApi, type FleetPeer } from "../../shared/api.ts";
 import { InviteQr, QrScanner } from "./InviteQr.tsx";
@@ -81,8 +82,8 @@ export function FleetSettings() {
   };
 
   return (
-    <SettingsSection title="Flotte" >
-      <SettingRow label="Dieser Hub" hint="Name in der Flotte">
+    <SettingsSection title={t("shell.fleet")} >
+      <SettingRow label={t("fleet.this_hub")} hint="Name in der Flotte">
         <span class="mono dim" data-testid="fleet-self">{self ?? "…"}</span>
       </SettingRow>
 
@@ -96,16 +97,16 @@ export function FleetSettings() {
               {confirmRemove === p.hostId ? (
                 <span class="row setting-control" style="gap: 6px">
                   <Button onClick={() => void removePeer(p.hostId)} variant="danger">
-                    Wirklich entfernen
+                    {t("fleet.really_remove")}
                   </Button>
                   <Button onClick={() => setConfirmRemove(null)}>
-                    Abbrechen
+                    {t("common.cancel")}
                   </Button>
                 </span>
               ) : (
                 <span class="setting-control">
                   <Button onClick={() => setConfirmRemove(p.hostId)}>
-                    Entfernen
+                    {t("fleet.remove")}
                   </Button>
                 </span>
               )}
@@ -119,21 +120,21 @@ export function FleetSettings() {
       </Button>
       {scanning && <QrScanner onResult={onScan} onClose={() => setScanning(false)} />}
       <label>
-        Host hinzufügen — Adresse
-        <input value={url} onInput={(e) => setUrl((e.target as HTMLInputElement).value)} placeholder="https://home-server.<tailnet>.ts.net" autocapitalize="off" autocorrect="off" spellcheck={false} />
+        {t("fleet.add_host")}
+        <input value={url} onInput={(e) => setUrl((e.target as HTMLInputElement).value)} placeholder={t("fleet.tailnet_placeholder")} autocapitalize="off" autocorrect="off" spellcheck={false} />
       </label>
       <label>
-        Einladungscode vom anderen Hub
-        <input value={code} onInput={(e) => setCode((e.target as HTMLInputElement).value)} placeholder="ABCD-EFGH-JKLM" autocapitalize="characters" autocorrect="off" spellcheck={false} />
+        {t("fleet.code_from_other")}
+        <input value={code} onInput={(e) => setCode((e.target as HTMLInputElement).value)} placeholder={t("fleet.code_placeholder")} autocapitalize="characters" autocorrect="off" spellcheck={false} />
       </label>
       <Button disabled={busy || !url.trim() || !code.trim()} onClick={() => void addPeer()} variant="primary" class={busy ? "busy" : undefined}>
         {busy ? "lädt…" : "Host verbinden"}
       </Button>
       {message && <div class={message.ok ? "fleet-message ok" : "fleet-message reply-error"}>{message.text}</div>}
 
-      <SettingRow label="Diesen Hub von einem anderen aus verbinden">
+      <SettingRow label={t("fleet.connect_from_other")}>
         <Button onClick={() => void createInvite()}>
-          Einladungscode erzeugen
+          {t("fleet.generate_code")}
         </Button>
       </SettingRow>
       {invite && (
@@ -141,10 +142,10 @@ export function FleetSettings() {
           <InviteQr text={pairLink(location.origin, invite.code)} />
           <code class="mono">{invite.code}</code>
           <span class="dim">
-            einmalig, gültig bis {new Date(invite.expiresAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+            {t("fleet.onetime_until")} {new Date(invite.expiresAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
           </span>
           <span class="dim fleet-invite-origin">
-            Adresse im QR-Code: <span class="mono">{location.origin}</span>
+            {t("fleet.address_qr")} <span class="mono">{location.origin}</span>
             {/^https?:\/\/(localhost|127\.|\[::1\])/.test(location.origin) && " — nur auf diesem Rechner erreichbar; für den QR-Code den Hub über seine Tailnet-Adresse öffnen."}
           </span>
         </div>

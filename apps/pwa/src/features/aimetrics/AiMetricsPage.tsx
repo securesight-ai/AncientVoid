@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { AiMetricsReport, AiMetricsSourceReport } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
@@ -46,10 +47,10 @@ export function AiMetricsPage() {
     };
   }, []);
   if (!report) return <EmptyState text={stale ? "keine Daten — der Hub meldet nicht" : "lädt …"} />;
-  if (report.sources.length === 0) return <EmptyState text="Keine Quellen konfiguriert — der Hub beprobt nur Konfiguriertes (aiMetrics)." />;
+  if (report.sources.length === 0) return <EmptyState text={t("aimetrics.no_sources2")} />;
   return (
     <div class="status-page">
-      {stale && <p  role="status">Keine frischen Daten — letzte bekannte Werte.</p>}
+      {stale && <p  role="status">{t("aimetrics.no_fresh")}</p>}
       {report.sources.map((source) => (
         <SourceCard key={source.id} source={source} />
       ))}
@@ -62,10 +63,10 @@ function SourceCard({ source }: { source: AiMetricsSourceReport }) {
     <Card aria-label={`Metrik-Quelle ${source.label}`}>
       <strong>{source.label}</strong>
       {source.url && <> · <code>{source.url}</code></>}
-      {!source.status.ok && <p  role="status">Probe fehlgeschlagen: {source.status.error}</p>}
+      {!source.status.ok && <p  role="status">{t("aimetrics.probe_failed")} {source.status.error}</p>}
       <table>
         <thead>
-          <tr><th>Feld</th><th>Wert</th><th>p50 / p95</th><th>Quelle</th><th>Alter</th></tr>
+          <tr><th>{t("aimetrics.field")}</th><th>{t("aimetrics.value")}</th><th>p50 / p95</th><th>{t("composer.source")}</th><th>{t("aimetrics.age")}</th></tr>
         </thead>
         <tbody>
           {source.fields.map((field) => (

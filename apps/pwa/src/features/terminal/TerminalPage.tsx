@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
@@ -189,24 +190,24 @@ export function TerminalPage() {
     <div class="terminal-page" data-testid="terminal-page">
       <header class="terminal-toolbar">
         <label class="terminal-target">
-          <span class="sr-only">Ziel</span>
+          <span class="sr-only">{t("newsession.target")}</span>
           <select
             value={selected}
             disabled={!targets?.length || state === "connecting" || state === "open"}
             onChange={(e) => setSelected((e.target as HTMLSelectElement).value)}
-            aria-label="Terminal-Ziel"
+            aria-label={t("terminal.terminal_target")}
           >
             {(targets ?? []).map((t) => (
               <option key={t.id} value={t.id}>{t.label}</option>
             ))}
-            {empty && <option value="">Keine Ziele</option>}
+            {empty && <option value="">{t("terminal.no_targets2")}</option>}
           </select>
         </label>
         {state === "open" || state === "connecting" ? (
-          <Button onClick={endSession} disabled={state === "connecting"}>Beenden</Button>
+          <Button onClick={endSession} disabled={state === "connecting"}>{t("terminal.quit")}</Button>
         ) : (
           <Button variant="primary" onClick={() => void connect(selected)} disabled={!selected || empty}>
-            Verbinden
+            {t("common.connect")}
           </Button>
         )}
         <span class="terminal-state dim" aria-live="polite">
@@ -219,7 +220,7 @@ export function TerminalPage() {
       </header>
       {empty && (
         <div data-testid="terminal-empty">
-          <EmptyState text='Keine Terminal-Ziele. In hub.config.json unter terminals z. B. { "id": "evo", "label": "evox2", "ssh": "evo" } eintragen (ADR-0087).' />
+          <EmptyState text={t("terminal.no_targets")} />
         </div>
       )}
       {error && <p class="ui-error" role="alert">{error}</p>}

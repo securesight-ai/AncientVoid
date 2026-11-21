@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import type { AiMetricsReport, StatisticsDistribution, StatisticsReport, TurnStatistics, SessionStatistics, SessionAnomaly } from "@ancientvoid/contracts";
@@ -204,41 +205,41 @@ export function StatisticsPage() {
   };
 
   if (error) return <EmptyState text={`Statistik nicht erreichbar — ${error}`} />;
-  if (!report) return <EmptyState text="lädt …" />;
+  if (!report) return <EmptyState text={t("common.loading")} />;
   const filtered = project !== "" || host !== "" || harness !== "" || period !== "all";
   const host2 = ai?.sources.find(s => s.kind === "hub-host") ?? null;
   const servers = ai === null ? null : ai.sources.filter(s => s.kind === "model-server");
 
   return (
-    <div class="status-page" aria-label="Statistik">
+    <div class="status-page" aria-label={t("common.statistics")}>
       <div class="stat-bar">
         <Button variant="subtle" onClick={() => setAll(!allCollapsed)}>
           {allCollapsed ? "alle auf" : "alle zu"}
         </Button>
         <Button variant="subtle" onClick={resetFilter} disabled={!filtered}>
-          Schnitt zurücksetzen
+          {t("statistics.reset_cut")}
         </Button>
       </div>
 
-      <Section id="schnitt" title="Schnitt" note="Zeitraum · Projekt · Host · Harness" collapsed={collapsed.schnitt ?? false} onToggle={() => toggle("schnitt")}>
-        <Segmented label="Zeitraum" value={period} options={PERIOD_OPTIONS} onChange={setPeriod} />
+      <Section id="schnitt" title={t("statistics.cut")} note="Zeitraum · Projekt · Host · Harness" collapsed={collapsed.schnitt ?? false} onToggle={() => toggle("schnitt")}>
+        <Segmented label={t("statistics.period")} value={period} options={PERIOD_OPTIONS} onChange={setPeriod} />
         <div class="stat-filters">
           <Select
-            label="Projekt"
+            label={t("newsession.project")}
             value={project}
             onChange={setProject}
             disabled={report.slices.projects.length === 0}
             options={[{ value: "", label: "alle Projekte" }, ...report.slices.projects.map(p => ({ value: p, label: p.split("/").filter(Boolean).pop() ?? p }))]}
           />
           <Select
-            label="Host"
+            label={t("common.host")}
             value={host}
             onChange={setHost}
             disabled={report.slices.hosts.length === 0}
             options={[{ value: "", label: "alle Hosts" }, ...report.slices.hosts.map(h => ({ value: h, label: h }))]}
           />
           <Select
-            label="Harness"
+            label={t("status.harness")}
             value={harness}
             onChange={setHarness}
             disabled={report.slices.harnesses.length === 0}
@@ -246,28 +247,28 @@ export function StatisticsPage() {
           />
         </div>
         <p>
-          Rollup-Stand: {report.updatedAt === null ? "noch kein Lauf" : new Date(report.updatedAt).toLocaleString("de-DE")} · Zahlen beschreiben, sie empfehlen kein Modell.
+          {t("statistics.rollup")} {report.updatedAt === null ? "noch kein Lauf" : new Date(report.updatedAt).toLocaleString("de-DE")} {t("statistics.numbers_describe")}
         </p>
         <Button variant="subtle" onClick={() => exportCsv(report)}>
-          CSV herunterladen
+          {t("statistics.download_csv")}
         </Button>
       </Section>
 
-      <Section id="system" title="System (Hub-Host)" note="unabhängig vom Schnitt" collapsed={collapsed.system ?? true} onToggle={() => toggle("system")}>
+      <Section id="system" title={t("statistics.system_hub")} note="unabhängig vom Schnitt" collapsed={collapsed.system ?? true} onToggle={() => toggle("system")}>
         {ai === null ? (
-          <p class="stat-note">Metrik-Quelle nicht erreichbar — der Hub meldet nicht.</p>
+          <p class="stat-note">{t("statistics.source_unreachable")}</p>
         ) : host2 === null ? (
-          <p class="stat-note">Host-Probe nicht konfiguriert — in der Hub-Config `aiMetrics.hostProbe` einschalten. Keine Zahl wird geraten.</p>
+          <p class="stat-note">{t("statistics.host_probe")}</p>
         ) : (
           <MetricsTable source={host2} />
         )}
       </Section>
 
-      <Section id="kiserver" title="KI-Server" note="unabhängig vom Schnitt" collapsed={collapsed.kiserver ?? true} onToggle={() => toggle("kiserver")}>
+      <Section id="kiserver" title={t("statistics.ai_servers")} note="unabhängig vom Schnitt" collapsed={collapsed.kiserver ?? true} onToggle={() => toggle("kiserver")}>
         {ai === null ? (
-          <p class="stat-note">Metrik-Quelle nicht erreichbar — der Hub meldet nicht.</p>
+          <p class="stat-note">{t("statistics.source_unreachable")}</p>
         ) : servers !== null && servers.length === 0 ? (
-          <p class="stat-note">Keine Quellen konfiguriert — der Hub beprobt nur Konfiguriertes (`aiMetrics` in der Hub-Config).</p>
+          <p class="stat-note">{t("statistics.no_sources")}</p>
         ) : (
           servers?.map(s => <MetricsTable key={s.id} source={s} />)
         )}
@@ -277,26 +278,26 @@ export function StatisticsPage() {
         <EmptyState text={filtered ? "Keine Session in diesem Schnitt — der Schnitt ist echt leer, nicht kaputt." : "Noch keine Session ausgewertet — der Rollup läuft mit dem ersten Abruf."} />
       ) : (
         <>
-          <Section id="sessions" title="Sessions" note="je Adapter und Modell" collapsed={collapsed.sessions ?? false} onToggle={() => toggle("sessions")}>
+          <Section id="sessions" title={t("common.sessions_cap")} note="je Adapter und Modell" collapsed={collapsed.sessions ?? false} onToggle={() => toggle("sessions")}>
             <SessionTable sessions={report.sessions} />
           </Section>
-          <Section id="zuege" title="Züge und Tokens" note="je Adapter und Modell" collapsed={collapsed.zuege ?? true} onToggle={() => toggle("zuege")}>
+          <Section id="zuege" title={t("statistics.turns_tokens")} note="je Adapter und Modell" collapsed={collapsed.zuege ?? true} onToggle={() => toggle("zuege")}>
             <TurnTable turns={report.turns} />
-            <p class="stat-note">Cloud-Modelle: Tokens je Zug mit Herkunft (gemeldet oder geschätzt). Input-/Output- und Cache-Token sind über die Provider nicht kanonisch belegt; EUR-Kosten folgen mit P31.</p>
+            <p class="stat-note">{t("statistics.cloud_models")}</p>
           </Section>
-          <Section id="gates" title="Freigaben" note="Wartezeiten" collapsed={collapsed.gates ?? true} onToggle={() => toggle("gates")}>
+          <Section id="gates" title={t("common.approvals")} note="Wartezeiten" collapsed={collapsed.gates ?? true} onToggle={() => toggle("gates")}>
             <GateTable report={report} />
           </Section>
-          <Section id="tools" title="Tools" note="Aufrufe und Fehlerquoten" collapsed={collapsed.tools ?? true} onToggle={() => toggle("tools")}>
+          <Section id="tools" title={t("statistics.tools")} note="Aufrufe und Fehlerquoten" collapsed={collapsed.tools ?? true} onToggle={() => toggle("tools")}>
             <ToolTable report={report} />
           </Section>
-          <Section id="teams" title="Teams" note="Projekt-/Zeitraum-Schnitt" collapsed={collapsed.teams ?? true} onToggle={() => toggle("teams")}>
+          <Section id="teams" title={t("statistics.teams")} note="Projekt-/Zeitraum-Schnitt" collapsed={collapsed.teams ?? true} onToggle={() => toggle("teams")}>
             <TeamTable report={report} filtered={filtered} />
           </Section>
-          <Section id="anomalien" title="Anomalien" note="über Gruppen-p95" collapsed={collapsed.anomalien ?? true} onToggle={() => toggle("anomalien")}>
+          <Section id="anomalien" title={t("statistics.anomalies")} note="über Gruppen-p95" collapsed={collapsed.anomalien ?? true} onToggle={() => toggle("anomalien")}>
             <AnomalyTable anomalies={report.anomalies} />
           </Section>
-          <Section id="vergleich" title="Zeitraum-Vergleich (A/B)" note="gleicher Schnitt" collapsed={collapsed.vergleich ?? true} onToggle={() => toggle("vergleich")}>
+          <Section id="vergleich" title={t("statistics.period_ab")} note="gleicher Schnitt" collapsed={collapsed.vergleich ?? true} onToggle={() => toggle("vergleich")}>
             <CompareBody report={report} project={project} host={host} harness={harness} periodA={period} />
           </Section>
         </>
@@ -310,11 +311,11 @@ function MetricsTable({ source }: { source: AiMetricsReport["sources"][number] }
     <div class="stat-metrics">
       <p class="stat-metrics-head">
         <strong>{source.label}</strong>
-        {!source.status.ok && <span role="status">Probe fehlgeschlagen: {source.status.error}</span>}
+        {!source.status.ok && <span role="status">{t("statistics.probe_failed")} {source.status.error}</span>}
       </p>
       <table>
         <thead>
-          <tr><th>Feld</th><th>Wert</th><th>p50 / p95</th><th>Quelle</th><th>Alter</th></tr>
+          <tr><th>{t("statistics.field")}</th><th>{t("statistics.value")}</th><th>p50 / p95</th><th>{t("composer.source")}</th><th>{t("statistics.age")}</th></tr>
         </thead>
         <tbody>
           {source.fields.map(field => (
@@ -348,8 +349,8 @@ function exportCsv(report: StatisticsReport): void {
   }
   rows.push("# Züge und Tokens je Adapter/Modell");
   rows.push(line(["adapter", "modell", "zuge", "fehlgeschlagen", "dauer_p50_ms", "dauer_p95_ms", "tokens_p50", "tokens_p95", "tokens_n", "tokens_fehlend", "geschaetzte_token_zuge"]));
-  for (const t of report.turns) {
-    rows.push(line([t.adapter, t.model, t.turns, t.failedTurns, t.durationMs.p50, t.durationMs.p95, t.tokens.p50, t.tokens.p95, t.tokens.n, t.tokens.missing, t.estimatedTokenTurns]));
+  for (const tr of report.turns) {
+    rows.push(line([tr.adapter, tr.model, tr.turns, tr.failedTurns, tr.durationMs.p50, tr.durationMs.p95, tr.tokens.p50, tr.tokens.p95, tr.tokens.n, tr.tokens.missing, tr.estimatedTokenTurns]));
   }
   rows.push("# Gates");
   if (report.gateWait) {
@@ -359,17 +360,17 @@ function exportCsv(report: StatisticsReport): void {
   }
   rows.push("# Tools");
   rows.push(line(["tool", "calls", "fehler", "ok", "iserror_unbelegt", "ohne_ergebnis", "fehlerquote"]));
-  for (const t of report.tools) {
-    rows.push(line([t.tool, t.calls, t.failed, t.ok, t.errorStatusUnknown, t.unanswered, t.failureRate]));
+  for (const tr of report.tools) {
+    rows.push(line([tr.tool, tr.calls, tr.failed, tr.ok, tr.errorStatusUnknown, tr.unanswered, tr.failureRate]));
   }
   rows.push("# Recovery");
   rows.push(line(["p50_ms", "p90_ms", "p95_ms", "n", "fehlend"]));
   rows.push(line([report.recovery.p50, report.recovery.p90, report.recovery.p95, report.recovery.n, report.recovery.missing]));
   if (report.team) {
-    const t = report.team;
+    const tm = report.team;
     rows.push("# Teams (nur Projekt-/Zeitraum-Schnitt)");
-    rows.push(line(["teams", "aufgaben", "offen", "unbekannt", "done", "failed", "worker_ende_quote", "retry_rate"]));
-    rows.push(line([t.teams, t.tasks, t.open, t.unknown, t.done, t.failed, t.workerEndRate, t.retryRate]));
+    rows.push(line(["teams", "aufgaben", "offen", "unbekannt", t("statistics.done"), "failed", "worker_ende_quote", "retry_rate"]));
+    rows.push(line([tm.teams, tm.tasks, tm.open, tm.unknown, tm.done, tm.failed, tm.workerEndRate, tm.retryRate]));
   }
   rows.push("# Anomalien (über Gruppen-p95; Klein-n-Gruppen melden keine)");
   rows.push(line(["session", "adapter", "modell", "projekt", "wall_ms", "wall_p95", "zuge", "zuge_p95"]));
@@ -386,17 +387,17 @@ function exportCsv(report: StatisticsReport): void {
 }
 
 function SessionTable({ sessions }: { sessions: SessionStatistics[] }) {
-  if (sessions.length === 0) return <p class="stat-note">Keine Sessions in diesem Schnitt.</p>;
+  if (sessions.length === 0) return <p class="stat-note">{t("statistics.no_sessions")}</p>;
   return (
     <table>
       <thead>
         <tr>
-          <th>Adapter · Modell</th>
-          <th>Sessions</th>
-          <th>Ende</th>
-          <th>Wallzeit</th>
-          <th>Aktiv</th>
-          <th>Züge/Session</th>
+          <th>{t("statistics.adapter_model")}</th>
+          <th>{t("common.sessions_cap")}</th>
+          <th>{t("statistics.end")}</th>
+          <th>{t("statistics.wall_time")}</th>
+          <th>{t("statistics.active")}</th>
+          <th>{t("statistics.turns_session")}</th>
         </tr>
       </thead>
       <tbody>
@@ -425,15 +426,15 @@ function SessionTable({ sessions }: { sessions: SessionStatistics[] }) {
 }
 
 function TurnTable({ turns }: { turns: TurnStatistics[] }) {
-  if (turns.length === 0) return <p class="stat-note">Keine Züge in diesem Schnitt.</p>;
+  if (turns.length === 0) return <p class="stat-note">{t("statistics.no_turns")}</p>;
   return (
     <table>
       <thead>
         <tr>
-          <th>Adapter · Modell</th>
-          <th>Züge</th>
-          <th>Zugdauer</th>
-          <th>Tokens/Zug</th>
+          <th>{t("statistics.adapter_model")}</th>
+          <th>{t("statistics.turns")}</th>
+          <th>{t("statistics.turn_duration")}</th>
+          <th>{t("statistics.tokens_turn")}</th>
         </tr>
       </thead>
       <tbody>
@@ -459,43 +460,43 @@ function TurnTable({ turns }: { turns: TurnStatistics[] }) {
 
 function GateTable({ report }: { report: StatisticsReport }) {
   const g = report.gateWait;
-  if (g === null) return <p class="stat-note">Keine Freigaben in diesem Schnitt.</p>;
+  if (g === null) return <p class="stat-note">{t("statistics.no_approvals")}</p>;
   return (
     <table>
       <tbody>
-        <tr><th scope="row">Gates</th><td>{formatCount(g.gates)}</td></tr>
-        <tr><th scope="row">Antworten</th><td>{formatCount(g.answered)} ({ratio(g.answered, g.gates)})</td></tr>
-        <tr><th scope="row">Abgelaufen</th><td>{formatCount(g.timedOut)}</td></tr>
-        <tr><th scope="row">Offen ohne Antwort</th><td>{formatCount(g.open)}</td></tr>
-        <tr><th scope="row">Sofort erlaubt</th><td>{formatCount(g.autoApproved)}</td></tr>
-        <tr><th scope="row">Wartezeit</th><td><Distribution d={g.waitMs} unit="ms" /></td></tr>
+        <tr><th scope="row">{t("statistics.gates")}</th><td>{formatCount(g.gates)}</td></tr>
+        <tr><th scope="row">{t("approvals.answer_verb")}</th><td>{formatCount(g.answered)} ({ratio(g.answered, g.gates)})</td></tr>
+        <tr><th scope="row">{t("statistics.expired")}</th><td>{formatCount(g.timedOut)}</td></tr>
+        <tr><th scope="row">{t("statistics.open_no_answer")}</th><td>{formatCount(g.open)}</td></tr>
+        <tr><th scope="row">{t("statistics.immediately_allowed")}</th><td>{formatCount(g.autoApproved)}</td></tr>
+        <tr><th scope="row">{t("statistics.wait_time")}</th><td><Distribution d={g.waitMs} unit="ms" /></td></tr>
       </tbody>
     </table>
   );
 }
 
 function ToolTable({ report }: { report: StatisticsReport }) {
-  if (report.tools.length === 0) return <p class="stat-note">Keine Tool-Aufrufe in diesem Schnitt.</p>;
+  if (report.tools.length === 0) return <p class="stat-note">{t("statistics.no_tools")}</p>;
   return (
     <table>
       <thead>
         <tr>
-          <th>Tool</th>
-          <th>Calls</th>
-          <th>Fehler / belegte Ergebnisse</th>
-          <th>Ohne Ergebnis</th>
+          <th>{t("statistics.tool")}</th>
+          <th>{t("statistics.calls")}</th>
+          <th>{t("statistics.errors_evidenced")}</th>
+          <th>{t("statistics.without_result")}</th>
         </tr>
       </thead>
       <tbody>
-        {report.tools.map(t => (
-          <tr key={t.tool ?? ""}>
-            <td>{t.tool ?? "Name unbelegt"}</td>
-            <td>{formatCount(t.calls)}</td>
+        {report.tools.map((tl) => (
+          <tr key={tl.tool ?? ""}>
+            <td>{tl.tool ?? t("statistics.name_unbelegt")}</td>
+            <td>{formatCount(tl.calls)}</td>
             <td>
-              {t.failureRate === null ? "—" : `${Math.round(t.failureRate * 100)} %`}
-              <small> ({formatCount(t.failed + t.ok)} belegt, {formatCount(t.errorStatusUnknown)} unbekannt)</small>
+              {tl.failureRate === null ? "—" : `${Math.round(tl.failureRate * 100)} %`}
+              <small> ({formatCount(tl.failed + tl.ok)} {t("statistics.evidenced")} {formatCount(tl.errorStatusUnknown)} {t("statistics.unknown_paren")}</small>
             </td>
-            <td>{formatCount(t.unanswered)}</td>
+            <td>{formatCount(tl.unanswered)}</td>
           </tr>
         ))}
       </tbody>
@@ -504,33 +505,33 @@ function ToolTable({ report }: { report: StatisticsReport }) {
 }
 
 function TeamTable({ report, filtered }: { report: StatisticsReport; filtered: boolean }) {
-  const t = report.team;
-  if (t === null) return <p class="stat-note">Keine Teams in diesem Schnitt.</p>;
+  const tm = report.team;
+  if (tm === null) return <p class="stat-note">{t("statistics.no_teams")}</p>;
   return (
     <div>
       <table>
         <tbody>
-          <tr><th scope="row">Teams · Aufgaben</th><td>{formatCount(t.teams)} · {formatCount(t.tasks)}</td></tr>
-          <tr><th scope="row">Enden</th><td>done {formatCount(t.done)}, failed {formatCount(t.failed)}, offen {formatCount(t.open)}, unbekannt {formatCount(t.unknown)}</td></tr>
-          <tr><th scope="row">Worker-Ende-Quote</th><td>{t.workerEndRate === null ? "—" : `${Math.round(t.workerEndRate * 100)} %`}</td></tr>
-          <tr><th scope="row">Retry-Rate</th><td>{t.retryRate === null ? "—" : `${Math.round(t.retryRate * 100)} %`}</td></tr>
+          <tr><th scope="row">{t("statistics.teams_tasks")}</th><td>{formatCount(tm.teams)} · {formatCount(tm.tasks)}</td></tr>
+          <tr><th scope="row">{t("statistics.ends")}</th><td>{t("statistics.done")} {formatCount(tm.done)}{t("statistics.failed")} {formatCount(tm.failed)}{t("statistics.open")} {formatCount(tm.open)}{t("statistics.unknown")} {formatCount(tm.unknown)}</td></tr>
+          <tr><th scope="row">{t("statistics.worker_end_rate")}</th><td>{tm.workerEndRate === null ? "—" : `${Math.round(tm.workerEndRate * 100)} %`}</td></tr>
+          <tr><th scope="row">{t("statistics.retry_rate")}</th><td>{tm.retryRate === null ? "—" : `${Math.round(tm.retryRate * 100)} %`}</td></tr>
         </tbody>
       </table>
-      <p class="stat-note">done ist worker_done, kein bestandenes Gate (P40). Team-Zahlen folgen dem Projekt- und Zeitschnitt{filtered ? "" : " (hier ungeschnitten)"}, aber keinem Host- oder Harness-Schnitt.</p>
+      <p class="stat-note">{t("statistics.done_note")}{filtered ? "" : " (hier ungeschnitten)"}{t("statistics.but_no_cut")}</p>
     </div>
   );
 }
 
 function AnomalyTable({ anomalies }: { anomalies: SessionAnomaly[] }) {
-  if (anomalies.length === 0) return <p class="stat-note">Keine Anomalien — entweder unauffällig oder zu wenige Sessions je Gruppe für eine Aussage (Klein-n).</p>;
+  if (anomalies.length === 0) return <p class="stat-note">{t("statistics.no_anomalies")}</p>;
   return (
     <table>
       <thead>
         <tr>
-          <th>Session</th>
-          <th>Adapter · Modell</th>
-          <th>Wall vs p95</th>
-          <th>Züge vs p95</th>
+          <th>{t("common.session_cap")}</th>
+          <th>{t("statistics.adapter_model")}</th>
+          <th>{t("statistics.wall_p95")}</th>
+          <th>{t("statistics.turns_p95")}</th>
         </tr>
       </thead>
       <tbody>
@@ -542,7 +543,7 @@ function AnomalyTable({ anomalies }: { anomalies: SessionAnomaly[] }) {
               {a.model !== null ? ` · ${a.model}` : ""}
             </td>
             <td>{a.wallMs === null || a.wallP95 === null ? "—" : `${formatMs(a.wallMs)} > ${formatMs(a.wallP95)}`}</td>
-            <td>{formatCount(a.turns)} &gt; {formatCount(a.turnsP95)}</td>
+            <td>{formatCount(a.turns)} {t("statistics.gt")} {formatCount(a.turnsP95)}</td>
           </tr>
         ))}
       </tbody>
@@ -585,14 +586,14 @@ function CompareBody({ report, project, host, harness, periodA }: { report: Stat
 
   return (
     <div>
-      <Segmented label="Vergleichszeitraum B" value={periodB} options={PERIOD_OPTIONS} onChange={setPeriodB} />
+      <Segmented label={t("statistics.comparison_b")} value={periodB} options={PERIOD_OPTIONS} onChange={setPeriodB} />
       <table>
         <thead>
           <tr>
-            <th>Adapter · Modell</th>
-            <th>Sessions A/B</th>
-            <th>Wall p50 A/B</th>
-            <th>Züge/Session p50 A/B</th>
+            <th>{t("statistics.adapter_model")}</th>
+            <th>{t("statistics.sessions_ab")}</th>
+            <th>{t("statistics.wall_p50")}</th>
+            <th>{t("statistics.turns_session_p50")}</th>
           </tr>
         </thead>
         <tbody>
@@ -618,7 +619,7 @@ function CompareBody({ report, project, host, harness, periodA }: { report: Stat
           })}
         </tbody>
       </table>
-      <p class="stat-note">A ist der obige Zeitraum, B dieser Vergleichszeitraum — gleiche Projekt-/Host-/Harness-Wahl. Beschreibender Vergleich, kein Rang.</p>
+      <p class="stat-note">{t("statistics.ab_explain")}</p>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { SessionRecord } from "../../shared/api.ts";
 import { isDetached, type TileRef, type Workspace } from "../workspace/tiles.ts";
@@ -41,15 +42,15 @@ export function RestoreBar({
   return (
     <div class="restore-bar" role="status">
       <span>
-        {missing.length} Fenster {missing.length === 1 ? "ist" : "sind"} nicht mehr offen
+        {missing.length} {t("common.windows")} {missing.length === 1 ? "ist" : "sind"} {t("windows.no_longer_open")}
       </span>
       {missing.map((ref) => (
         <Button key={targetKey(targetOf(ref))} onClick={() => onOpen(ref)}>
-          ⧉ {label(ref)} öffnen
+          ⧉ {label(ref)} {t("windows.open")}
         </Button>
       ))}
       <button type="button" class="link-btn" onClick={() => onDiscard(missing)}>
-        Verwerfen
+        {t("composer.discard")}
       </button>
     </div>
   );

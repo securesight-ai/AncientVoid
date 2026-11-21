@@ -1,3 +1,4 @@
+import { t } from "../../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { HubApi } from "../../../shared/api.ts";
 import { useApi } from "../../../shared/api-context.ts";
@@ -31,7 +32,7 @@ const SERVICE_LABEL: Record<string, string> = {
 const FAILURE_KIND_LABEL: Record<string, string> = {
   exit: "Exitcode",
   timeout: "Frist überschritten",
-  port: "Port",
+  port: t("workspace.port"),
   ownership: "Eigentum",
   include: "Dateiübernahme",
   unknown: "unbekannt",
@@ -146,7 +147,7 @@ export function WorkspaceRuntimePane({ sessionId, refreshSeq }: { sessionId: str
 
   if (noWorkspace) {
     return (
-      <EmptyState text="Diese Session hat keinen Workspace — ohne `ancientvoid.workspace.json` gilt der unveränderte alte Ablauf (ADR-0051 §7)." />
+      <EmptyState text={t("workspace.no_workspace")} />
     );
   }
   if (!status) {
@@ -161,7 +162,7 @@ export function WorkspaceRuntimePane({ sessionId, refreshSeq }: { sessionId: str
       <div class="workspace-head">
         <span class={`pill ws-phase-${status.phase}`}>{PHASE_LABEL[status.phase] ?? status.phase}</span>
         <span class="dim">
-          Basis {status.baseSha.slice(0, 8)} · Manifest {status.manifestHash.slice(0, 8)}
+          {t("workspace.base")} {status.baseSha.slice(0, 8)} {t("workspace.manifest_frag")} {status.manifestHash.slice(0, 8)}
         </span>
         {/* K10: Standuruhr — offline bleibt der letzte Stand lesbar markiert */}
         <span class={`stand${offline ? " offline" : ""}`}>
@@ -172,11 +173,11 @@ export function WorkspaceRuntimePane({ sessionId, refreshSeq }: { sessionId: str
       {status.failure && (
         <div class="ws-failure" role="alert">
           <strong>
-            {FAILURE_KIND_LABEL[status.failure.kind] ?? status.failure.kind} in „{status.failure.step}"
+            {FAILURE_KIND_LABEL[status.failure.kind] ?? status.failure.kind} {t("workspace.in_quote")}{status.failure.step}"
             {typeof status.failure.exitCode === "number" ? ` (Exit ${status.failure.exitCode})` : ""}
           </strong>
           {status.failure.detail && <div class="dim">{status.failure.detail}</div>}
-          {status.failure.logBlobRef && <div class="dim">Vollständige Ausgabe als Blob {status.failure.logBlobRef}</div>}
+          {status.failure.logBlobRef && <div class="dim">{t("workspace.full_output_blob")} {status.failure.logBlobRef}</div>}
         </div>
       )}
 
@@ -186,10 +187,10 @@ export function WorkspaceRuntimePane({ sessionId, refreshSeq }: { sessionId: str
             <div class="ws-service-row">
               <span class="ws-service-id">{service.id}</span>
               <span class="pill">{SERVICE_LABEL[service.state] ?? service.state}</span>
-              {service.port !== null && <span class="dim">Port {service.port}</span>}
+              {service.port !== null && <span class="dim">{t("workspace.port")} {service.port}</span>}
               <span class="ws-actions">
                 <Chip onClick={() => setLogsFor(logsFor === service.id ? null : service.id)} aria-expanded={logsFor === service.id}>
-                  Logs
+                  {t("workspace.logs")}
                 </Chip>
                 {service.state === "ready" && (
                   <Chip disabled={busy === `preview:${service.id}`} onClick={() => void openPreview(service.id)}>
@@ -212,7 +213,7 @@ export function WorkspaceRuntimePane({ sessionId, refreshSeq }: { sessionId: str
                 {/* Sandboxed: das Projekt-App-Preview bekommt keinen Zugriff auf
                     Hub-Origin-Ressourcen (kein localStorage, kein Token). */}
                 <iframe src={preview.src} title={`Preview ${service.id}`} sandbox="allow-scripts allow-forms" loading="lazy" />
-                <div class="dim">Ticket gültig bis {new Date(preview.expiresAt).toLocaleTimeString("de-DE")} — danach neu öffnen.</div>
+                <div class="dim">{t("workspace.ticket_valid")} {new Date(preview.expiresAt).toLocaleTimeString("de-DE")} {t("workspace.then_reopen")}</div>
               </div>
             )}
           </li>
@@ -221,7 +222,7 @@ export function WorkspaceRuntimePane({ sessionId, refreshSeq }: { sessionId: str
 
       <div class="ws-footer">
         <Chip onClick={reload}>
-          Aktualisieren
+          {t("workspace.refresh")}
         </Chip>
         {canRetry && (
           <Button disabled={busy === "retry"} onClick={() => void retry()}>

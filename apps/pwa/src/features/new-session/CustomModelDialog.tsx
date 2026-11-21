@@ -98,11 +98,11 @@ export function CustomModelDialog({ adapter, canEndpoint, api, onClose, onChange
           <>
             <label style={field}>
               {t("newsession.model_id")}
-              <input value={id} onInput={(e) => setId((e.target as HTMLInputElement).value)} placeholder="anthropic/claude-opus-5-5" autocapitalize="off" autocorrect="off" spellcheck={false} />
+              <input value={id} onInput={(e) => setId((e.target as HTMLInputElement).value)} placeholder={t("new-session.anthropic_model")} autocapitalize="off" autocorrect="off" spellcheck={false} />
             </label>
             <label style={field}>
               {t("newsession.display_name_optional")}
-              <input value={label} onInput={(e) => setLabel((e.target as HTMLInputElement).value)} placeholder="Opus 5.5" />
+              <input value={label} onInput={(e) => setLabel((e.target as HTMLInputElement).value)} placeholder={t("new-session.opus")} />
             </label>
             <label class="row" style="gap: 8px; font-size: calc(13px * var(--font-scale, 1))">
               <input type="checkbox" checked={everywhere} onChange={(e) => setEverywhere((e.target as HTMLInputElement).checked)} />
@@ -121,11 +121,11 @@ export function CustomModelDialog({ adapter, canEndpoint, api, onClose, onChange
           <>
             <label style={field}>
               {t("newsession.provider_name")}
-              <input value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} placeholder="gpubox" autocapitalize="off" spellcheck={false} />
+              <input value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} placeholder={t("new-session.gpubox")} autocapitalize="off" spellcheck={false} />
             </label>
             <label style={field}>
               {t("newsession.base_url")}
-              <input value={baseUrl} onInput={(e) => setBaseUrl((e.target as HTMLInputElement).value)} placeholder="http://100.64.0.10:8100/v1" inputMode="url" autocapitalize="off" spellcheck={false} />
+              <input value={baseUrl} onInput={(e) => setBaseUrl((e.target as HTMLInputElement).value)} placeholder={t("new-session.endpoint_url")} inputMode="url" autocapitalize="off" spellcheck={false} />
             </label>
             <label style={field}>
               {t("newsession.interface")}
@@ -137,11 +137,11 @@ export function CustomModelDialog({ adapter, canEndpoint, api, onClose, onChange
             </label>
             <label style={field}>
               {t("newsession.api_key_env")}
-              <input value={apiKey} onInput={(e) => setApiKey((e.target as HTMLInputElement).value)} placeholder="$GPUBOX_KEY" autocapitalize="off" spellcheck={false} />
+              <input value={apiKey} onInput={(e) => setApiKey((e.target as HTMLInputElement).value)} placeholder={t("new-session.gpubox_key")} autocapitalize="off" spellcheck={false} />
             </label>
             <label style={field}>
               {t("newsession.model_id_at_endpoint")}
-              <input value={modelId} onInput={(e) => setModelId((e.target as HTMLInputElement).value)} placeholder="halogen-qwen3.8-flash-next-uncensored-iq4xs" autocapitalize="off" spellcheck={false} />
+              <input value={modelId} onInput={(e) => setModelId((e.target as HTMLInputElement).value)} placeholder={t("new-session.halogen_model")} autocapitalize="off" spellcheck={false} />
             </label>
             <label style={field}>
               {t("newsession.context_window_tokens")}

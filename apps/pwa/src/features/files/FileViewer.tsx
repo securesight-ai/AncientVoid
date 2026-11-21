@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { DiagnosticsResult, FileMeta } from "@ancientvoid/contracts";
 import { hostApi, type HubApi } from "../../shared/api.ts";
@@ -62,7 +63,7 @@ export function FileViewer({ target, path, hostId = null, sessionId = null, onCh
   };
 
   if (error) return <div class="files-error" role="alert">{error}</div>;
-  if (!meta) return <EmptyState text="lädt …" />;
+  if (!meta) return <EmptyState text={t("common.loading")} />;
   const kind = renderKindOf(meta);
   const local = !hostId;
   const canPreview = meta.family === "image" || meta.family === "pdf" || meta.family === "audio" || meta.family === "video";
@@ -71,23 +72,23 @@ export function FileViewer({ target, path, hostId = null, sessionId = null, onCh
       <div class="file-viewer-head">
         <span class="mono file-viewer-path" title={meta.path}>{meta.path}</span>
         <span class="dim">{metaSummary(meta)}</span>
-        <span class="file-viewer-modes" role="group" aria-label="Ansicht">
-          {kind && <Chip  onClick={() => setMode("rendered")} active={mode === "rendered"}>Ansicht</Chip>}
-          {canPreview && <Chip  onClick={() => setMode("preview")} active={mode === "preview"}>Vorschau</Chip>}
-          {meta.family === "text" && <Chip  onClick={() => setMode("source")} active={mode === "source"}>Text</Chip>}
-          <Chip  onClick={() => setMode("hex")} active={mode === "hex"}>Hex</Chip>
-          {meta.family === "text" && local && <Chip  aria-pressed={showDiag} onClick={() => setShowDiag(!showDiag)} active={showDiag}>Diagnose</Chip>}
+        <span class="file-viewer-modes" role="group" aria-label={t("files.view")}>
+          {kind && <Chip  onClick={() => setMode("rendered")} active={mode === "rendered"}>{t("files.view")}</Chip>}
+          {canPreview && <Chip  onClick={() => setMode("preview")} active={mode === "preview"}>{t("files.preview")}</Chip>}
+          {meta.family === "text" && <Chip  onClick={() => setMode("source")} active={mode === "source"}>{t("files.text")}</Chip>}
+          <Chip  onClick={() => setMode("hex")} active={mode === "hex"}>{t("files.hex")}</Chip>
+          {meta.family === "text" && local && <Chip  aria-pressed={showDiag} onClick={() => setShowDiag(!showDiag)} active={showDiag}>{t("files.diagnose")}</Chip>}
           <DownloadButton api={api} target={target} meta={meta} />
         </span>
       </div>
       <div class="dim file-note" data-testid="file-freshness" role="status">
-        Stand der Datei: {new Date(meta.mtimeMs).toLocaleString("de-DE")} · Revision {meta.revision.slice(0, 8)}
+        {t("files.file_as_of")} {new Date(meta.mtimeMs).toLocaleString("de-DE")} {t("files.revision_frag")} {meta.revision.slice(0, 8)}
         {!online && " · offline — nur bereits geladene Abschnitte, weitere Bereiche folgen nach Reconnect"}
       </div>
       {stale && (
         <div class="files-stale" role="alert">
-          Die Datei hat sich geändert (Agent oder Editor). Bisher gelesene Abschnitte passen nicht mehr zusammen.{" "}
-          <Button onClick={() => setReload((n) => n + 1)}>Neu laden</Button>
+          {t("files.file_changed")}{" "}
+          <Button onClick={() => setReload((n) => n + 1)}>{t("files.reload")}</Button>
         </div>
       )}
       {showDiag && meta.family === "text" && local && (
@@ -114,17 +115,17 @@ function Pager({ offset, length, total, hasPrev, hasNext, onPrev, onNext, onJump
   const [jump, setJump] = useState("");
   return (
     <div class="file-pager">
-      <Button disabled={!hasPrev} onClick={onPrev} aria-label="Voriger Abschnitt">‹</Button>
+      <Button disabled={!hasPrev} onClick={onPrev} aria-label={t("files.prev_section")}>‹</Button>
       <span class="dim" data-testid="file-pager-range">
-        Bytes {offset.toLocaleString("de-DE")}–{(offset + length).toLocaleString("de-DE")} von {total.toLocaleString("de-DE")}
+        {t("files.bytes")} {offset.toLocaleString("de-DE")}–{(offset + length).toLocaleString("de-DE")} {t("common.word_of")} {total.toLocaleString("de-DE")}
         {!hasNext && " · Ende"}
       </span>
-      <Button disabled={!hasNext} onClick={onNext} aria-label="Nächster Abschnitt">›</Button>
+      <Button disabled={!hasNext} onClick={onNext} aria-label={t("files.next_section")}>›</Button>
       <input
         class="file-pager-jump"
         inputMode="numeric"
-        placeholder="Byte-Offset"
-        aria-label="Zu Byte-Offset springen"
+        placeholder={t("files.byte_offset")}
+        aria-label={t("files.jump_byte")}
         value={jump}
         onInput={(e) => setJump((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => {
@@ -157,8 +158,8 @@ function HexPages({ api, target, meta, onStale }: { api: HubApi; target: string;
     };
   }, [target, meta.path, meta.revision, at]);
   if (error) return <div class="files-error" role="alert">{error}</div>;
-  if (meta.bytes === 0) return <EmptyState text="Leere Datei (0 Bytes)." />;
-  if (!rows) return <EmptyState text="lädt …" />;
+  if (meta.bytes === 0) return <EmptyState text={t("files.empty_file")} />;
+  if (!rows) return <EmptyState text={t("common.loading")} />;
   return (
     <>
       <Pager
@@ -198,14 +199,14 @@ function MediaPreview({ api, target, meta, onUnplayable }: { api: HubApi; target
       if (made) URL.revokeObjectURL(made);
     };
   }, [target, meta.path, meta.revision]);
-  if (tooBig) return <div class="files-error" role="status">{formatBytes(meta.bytes)} ist zu groß für eine Vorschau (Grenze {formatBytes(BLOB_MAX_BYTES)}). Die Hex-Ansicht liest die Datei bis zum letzten Byte.</div>;
-  if (error) return <div class="files-error" role="alert">{error} — Hex zeigt die Originalbytes.</div>;
-  if (!url) return <EmptyState text="lädt …" />;
+  if (tooBig) return <div class="files-error" role="status">{formatBytes(meta.bytes)} {t("files.too_large_preview")} {formatBytes(BLOB_MAX_BYTES)}{t("files.hex_reads_to2")}</div>;
+  if (error) return <div class="files-error" role="alert">{error} {t("files.hex_original")}</div>;
+  if (!url) return <EmptyState text={t("common.loading")} />;
   if (playError) {
     return (
       <div class="files-error" role="status">
-        Dieser Browser kann die Datei nicht abspielen/anzeigen (Codec/Format). Download oder Hex zeigen die Originalbytes.{" "}
-        <Button onClick={onUnplayable}>Hex öffnen</Button>
+        {t("files.codec_missing")}{" "}
+        <Button onClick={onUnplayable}>{t("files.open_hex")}</Button>
       </div>
     );
   }
@@ -215,14 +216,14 @@ function MediaPreview({ api, target, meta, onUnplayable }: { api: HubApi; target
   if (meta.family === "video") return <video class="file-media" src={url} controls onError={() => setPlayError(true)} />;
   // PDF braucht einen eingebauten Viewer; ohne ihn bleibt der Download (kein stilles Leerfeld).
   if (typeof navigator !== "undefined" && navigator.pdfViewerEnabled === false) {
-    return <div class="files-error" role="status">Dieser Browser zeigt PDFs nicht inline an — bitte „Download“ nutzen.</div>;
+    return <div class="files-error" role="status">{t("files.no_inline_pdf")}</div>;
   }
   return <iframe class="file-pdf" title={meta.path} src={url} sandbox="" />;
 }
 
 function DownloadButton({ api, target, meta }: { api: HubApi; target: string; meta: FileMeta }) {
   const [busy, setBusy] = useState(false);
-  if (meta.bytes > BLOB_MAX_BYTES * 4) return <span class="dim" title="Zu groß für den Browser-Speicher — Hex liest bis zum letzten Byte">kein Download</span>;
+  if (meta.bytes > BLOB_MAX_BYTES * 4) return <span class="dim" title={t("files.too_big_hex")}>{t("files.no_download")}</span>;
   return (
     <Chip
       disabled={busy}
@@ -240,7 +241,7 @@ function DownloadButton({ api, target, meta }: { api: HubApi; target: string; me
         }
       }}
     >
-      Download
+      {t("files.download")}
     </Chip>
   );
 }

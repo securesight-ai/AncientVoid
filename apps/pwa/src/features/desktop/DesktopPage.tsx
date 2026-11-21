@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { hubApi, type CompanionState, type DesktopAction } from "../../shared/api.ts";
 import { Button, Card, EmptyState } from "../../shared/ui/index.ts";
@@ -85,14 +86,14 @@ export function DesktopPage() {
     }
   };
 
-  if (companions === null) return <EmptyState text="lade…" />;
+  if (companions === null) return <EmptyState text={t("common.loading_short")} />;
   if (companions.length === 0)
     return (
       <Card data-testid="desktop-setup">
-        <h2>Am PC eintippen</h2>
-        <p>Kein PC verbunden. So richtest du den Companion ein (auf dem PC):</p>
-        <pre class="desktop-cmd">{"node apps/hubctl/src/cli.ts token issue companion:mein-pc > ~/.config/ancientvoid/companion.token\nnode apps/companion/src/cli.ts run --hub http://127.0.0.1:7373"}</pre>
-        <p class="dim">Not-Stopp am PC: „ancientvoid-companion stop“ (z. B. auf Super+Shift+Esc legen).</p>
+        <h2>{t("common.type_at_pc")}</h2>
+        <p>{t("desktop.no_pc_set_up")}</p>
+        <pre class="desktop-cmd">{t("desktop.SKIP")}</pre>
+        <p class="dim">{t("desktop.estop_hint")}</p>
       </Card>
     );
 
@@ -100,7 +101,7 @@ export function DesktopPage() {
     <div class="desktop-page">
       <Card data-testid="desktop-target">
         {companions.length > 1 && (
-          <select aria-label="PC" value={c?.name ?? ""} onChange={(e) => setChosen((e.target as HTMLSelectElement).value)}>
+          <select aria-label={t("desktop.pc")} value={c?.name ?? ""} onChange={(e) => setChosen((e.target as HTMLSelectElement).value)}>
             {companions.map((x) => (
               <option key={x.name} value={x.name}>
                 {x.name} {x.online ? "" : "(offline)"}
@@ -114,7 +115,7 @@ export function DesktopPage() {
           <span class="dim">{c?.backend}</span>
         </div>
         <div class="desktop-focus" aria-live="polite">
-          Ziel: {c?.focus ? (
+          {t("desktop.target")} {c?.focus ? (
             <>
               <strong>{c.focus.app}</strong> — {c.focus.title}
             </>
@@ -122,28 +123,28 @@ export function DesktopPage() {
             "kein Fenster im Fokus"
           )}
         </div>
-        {c?.paused && <div class="reply-error">Not-Stopp am PC aktiv — dort mit „ancientvoid-companion resume“ freigeben.</div>}
-        {c?.locked && <div class="reply-error">Bildschirm am PC gesperrt.</div>}
+        {c?.paused && <div class="reply-error">{t("desktop.estop_active")}</div>}
+        {c?.locked && <div class="reply-error">{t("desktop.pc_locked")}</div>}
         {c?.blocked && <div class="reply-error">{c.blocked}</div>}
       </Card>
 
       <Card class="desktop-input">
-        <textarea rows={4} value={text} placeholder="Text, der am PC ins fokussierte Feld getippt wird" aria-label="Text für den PC" maxLength={2000} onInput={(e) => setText((e.target as HTMLTextAreaElement).value)} />
+        <textarea rows={4} value={text} placeholder={t("desktop.text_typed_pc")} aria-label={t("desktop.text_for_pc")} maxLength={2000} onInput={(e) => setText((e.target as HTMLTextAreaElement).value)} />
         {c?.backend === "hyprland" && (
           <div class="dim" style="margin: 8px 0">
             <label style="display: flex; gap: 8px; align-items: flex-start">
               <input type="checkbox" checked={inputMode === "targeted-paste"} onChange={(e) => setInputMode((e.target as HTMLInputElement).checked ? "targeted-paste" : "keystroke")} />
-              <span>Gezielt einfügen (Clipboard vorübergehend ersetzen; Clipboard-Manager können den Text übernehmen. Paste gilt fürs angezeigte Fenster.)</span>
+              <span>{t("desktop.targeted_paste")}</span>
             </label>
-            {textNeedsTargetedPaste && <div role="status">Text bleibt gesperrt, bis du das adressierte Einfügen ausdrücklich einschaltest. Normale Hyprland-Tasten würden dem Fokus folgen.</div>}
+            {textNeedsTargetedPaste && <div role="status">{t("desktop.text_locked")}</div>}
           </div>
         )}
         <div class="row" style="gap: 8px; flex-wrap: wrap">
           <Button disabled={!ready || busy || !text.trim() || textNeedsTargetedPaste} onClick={() => void send("insert")} variant="primary">
-            Eintippen
+            {t("desktop.type")}
           </Button>
-          <Button disabled={!ready || busy || !text.trim() || textNeedsTargetedPaste} onClick={() => void send("replace")} title="Feldinhalt markieren (Strg+A) und ersetzen">
-            Ersetzen
+          <Button disabled={!ready || busy || !text.trim() || textNeedsTargetedPaste} onClick={() => void send("replace")} title={t("desktop.select_replace")}>
+            {t("desktop.replace")}
           </Button>
         </div>
         <div class="row" style="gap: 6px; flex-wrap: wrap">
@@ -164,7 +165,7 @@ export function DesktopPage() {
               {a.detail && <div class="dim">{a.detail}</div>}
               {(a.status === "running" || a.status === "delivered" || a.status === "pending") && (
                 <Button onClick={() => void hubApi.cancelDesktopAction(a.id)} class="subtle">
-                  Abbrechen
+                  {t("common.cancel")}
                 </Button>
               )}
             </div>

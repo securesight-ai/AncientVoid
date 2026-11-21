@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { WorkspaceTile } from "./WorkspaceTile.tsx";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Page } from "../../app/Dock.tsx";
@@ -116,7 +117,7 @@ export function TileWorkspace({
 
   return (
     <div class="tile-workspace">
-      <div class="tile-bar" role="toolbar" aria-label="Kachel-Layout">
+      <div class="tile-bar" role="toolbar" aria-label={t("workspace.tile_layout")}>
         <button type="button" class="tile-list-toggle" onClick={onToggleList} aria-expanded={!listCollapsed}>
           {listCollapsed ? "☰ Liste ausklappen" : "⟨ Liste einklappen"}
         </button>
@@ -143,24 +144,24 @@ export function TileWorkspace({
           <span class="tile-glyph layout-fix" aria-hidden="true"><span /></span>
         </Button>
         {/* Dieselben Aktionen wie die Tastenkürzel, damit sie auch per Tipp gehen (Tablet, Touch). */}
-        <div class="tile-actions" role="group" aria-label="Kachel-Aktionen">
+        <div class="tile-actions" role="group" aria-label={t("workspace.tile_actions")}>
           <Chip title={`Fokus auf die vorige Kachel (${comboLabel("workspace.tile-1")}–4 wählt direkt)`} data-shortcut="workspace.tile-1" disabled={count < 2} onClick={() => onChange(focusTile(ws, (ws.focus + count - 1) % count))}>
-            ‹ Fokus
+            {t("workspace.focus_left")}
           </Chip>
           <Chip title={`Fokus auf die nächste Kachel (${comboLabel("workspace.tile-1")}–4 wählt direkt)`} data-shortcut="workspace.tile-1" disabled={count < 2} onClick={() => onChange(focusTile(ws, (ws.focus + 1) % count))}>
-            Fokus ›
+            {t("workspace.focus_right")}
           </Chip>
           <Chip title={`Kachel mit der nächsten tauschen (${comboLabel("workspace.tile-swap-1")}–4)`} data-shortcut="workspace.tile-swap-1" disabled={count < 2} onClick={() => onChange(swapWith(ws, (ws.focus + 1) % count))}>
-            ⇄ Tauschen
+            {t("workspace.swap")}
           </Chip>
           <Chip title={`Nächstes Layout (${comboLabel("workspace.layout")})`} data-shortcut="workspace.layout" onClick={() => onChange(cycleLayout(ws, 1))}>
-            ⟳ Layout
+            {t("workspace.layout")}
           </Chip>
           <Chip title={`Fokussierte Kachel schließen (${comboLabel("workspace.tile-close")})`} data-shortcut="workspace.tile-close" onClick={() => onChange(closeTile(ws, ws.focus))}>
-            ✕ Schließen
+            {t("workspace.close_x")}
           </Chip>
           {/* EPIC-P51 T51.7: detaillierte Kürzelzeile durch ?-Übersicht ersetzt (aus T43.6 hierher gezogen). */}
-          <span class="tile-keys dim">Tastatur: ? zeigt alle Kürzel · Öffnen: {isLayoutFixed(ws) ? "Raster fixiert" : "neue Kachel"}</span>
+          <span class="tile-keys dim">{t("workspace.keyboard_hint")} {isLayoutFixed(ws) ? "Raster fixiert" : "neue Kachel"}</span>
         </div>
       </div>
       <div ref={gridRef} class={`tile-grid ${overflow ? "layout-overflow" : `layout-${ws.layout.replace("+", "p")}`}`} style={overflow ? undefined : template}>
@@ -186,7 +187,7 @@ export function TileWorkspace({
             class="tile-divider col"
             role="separator"
             aria-orientation="vertical"
-            aria-label="Kachelbreite ändern"
+            aria-label={t("workspace.resize_tile_width")}
             onPointerDown={startDrag("col")}
           />
         )}
@@ -195,7 +196,7 @@ export function TileWorkspace({
             class="tile-divider col second"
             role="separator"
             aria-orientation="vertical"
-            aria-label="Kachelbreite ändern"
+            aria-label={t("workspace.resize_tile_width")}
             onPointerDown={startDrag("col2")}
           />
         )}
@@ -204,7 +205,7 @@ export function TileWorkspace({
             class={`tile-divider row${ws.layout === "1+2" ? " right-only" : ""}`}
             role="separator"
             aria-orientation="horizontal"
-            aria-label="Kachelhöhe ändern"
+            aria-label={t("workspace.resize_tile_height")}
             onPointerDown={startDrag("row")}
           />
         )}

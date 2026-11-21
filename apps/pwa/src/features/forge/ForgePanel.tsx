@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { sessionHash } from "../../app/route.ts";
 import { remoteHost } from "../../shared/api.ts";
 import { useCallback, useEffect, useState } from "preact/hooks";
@@ -232,27 +233,27 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
     <div class="forge-panel">
       {error && <div class="fp-warn">{error}</div>}
       {overview?.staleError === null && overview?.cachedAt && (
-        <div class="dim fp-cached">Daten vom {time(overview.cachedAt)}</div>
+        <div class="dim fp-cached">{t("app.data_from")} {time(overview.cachedAt)}</div>
       )}
 
       {!overview?.link ? (
         <section class="fp-section">
-          <h3>MR verknüpfen</h3>
+          <h3>{t("forge.link_mr")}</h3>
           <div class="fp-link-row">
-            <input type="url" placeholder="https://gitlab.example/team/proj/-/merge_requests/7" value={linkUrl} onInput={(e) => setLinkUrl((e.target as HTMLInputElement).value)} />
-            <button class="fp-btn" disabled={!linkUrl.trim()} onClick={() => void link()}>verknüpfen</button>
+            <input type="url" placeholder={t("forge.gitlab_placeholder")} value={linkUrl} onInput={(e) => setLinkUrl((e.target as HTMLInputElement).value)} />
+            <button class="fp-btn" disabled={!linkUrl.trim()} onClick={() => void link()}>{t("forge.link")}</button>
           </div>
           <details>
-            <summary>Issues dieses Projekts als Session-Quelle</summary>
-            <button class="fp-btn" onClick={() => void loadIssues()}>Issues laden</button>
+            <summary>{t("forge.issues_source")}</summary>
+            <button class="fp-btn" onClick={() => void loadIssues()}>{t("forge.load_issues")}</button>
             {issues === null ? null : issues.length === 0 ? (
-              <div class="dim">Keine offenen Issues.</div>
+              <div class="dim">{t("forge.no_open_issues")}</div>
             ) : (
               <ul class="fp-issue-list">
                 {issues.map((issue) => (
                   <li key={issue.iid}>
                     <span class="mono">#{issue.iid}</span> {issue.title}
-                    <button class="fp-btn small" onClick={() => void startFromIssue(issue)}>Session starten</button>
+                    <button class="fp-btn small" onClick={() => void startFromIssue(issue)}>{t("forge.start_session")}</button>
                   </li>
                 ))}
               </ul>
@@ -264,26 +265,26 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
           <section class="fp-section">
             <div class="fp-mr-head">
               <span class={`fp-chip ${mr?.state === "opened" ? "fp-run" : "fp-neutral"}`}>{mr?.state ?? "?"}</span>
-              {mr?.draft && <span class="fp-chip fp-neutral">Draft</span>}
+              {mr?.draft && <span class="fp-chip fp-neutral">{t("forge.draft")}</span>}
               <a href={mr?.webUrl} target="_blank" rel="noreferrer noopener" class="fp-mr-title">
                 {mr?.title ?? "MR"} <span class="dim mono">!{overview.link.mr.mrIid}</span>
               </a>
-              <button class="fp-btn small" onClick={() => void unlink()}>lösen</button>
+              <button class="fp-btn small" onClick={() => void unlink()}>{t("forge.resolve")}</button>
             </div>
             <div class="fp-meta mono">
-              {mr?.sourceBranch} → {mr?.targetBranch} · MR-Head {short(mr?.sha ?? null)}
-              {overview.shaDrift && <span class="fp-fail-text"> MR hat neue Commits (veraltet — neu laden)</span>}
+              {mr?.sourceBranch} → {mr?.targetBranch} {t("forge.mr_head")} {short(mr?.sha ?? null)}
+              {overview.shaDrift && <span class="fp-fail-text"> {t("forge.mr_new_commits")}</span>}
             </div>
             <div class="fp-meta dim mono">
-              Session: {overview.sessionBranch ?? "?"}@{short(overview.sessionHead)}{" "}
+              {t("forge.session_colon")} {overview.sessionBranch ?? "?"}@{short(overview.sessionHead)}{" "}
               {overview.sessionHead && mr?.sha && overview.sessionHead !== mr.sha ? "(weicht vom MR-Head ab)" : ""}
             </div>
           </section>
 
           <section class="fp-section">
-            <h3>Pipelines</h3>
+            <h3>{t("forge.pipelines")}</h3>
             {overview.pipelines.length === 0 ? (
-              <div class="dim">Keine Pipelines für den Branch.</div>
+              <div class="dim">{t("forge.no_pipelines")}</div>
             ) : (
               <ul class="fp-pipeline-list">
                 {overview.pipelines.map((p: ForgePipelineSummary) => (
@@ -296,16 +297,16 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
                     {jobsOf === p.id && (
                       <div class="fp-jobs">
                         {jobs === null ? (
-                          <div class="dim">lädt…</div>
+                          <div class="dim">{t("common.loading_dots")}</div>
                         ) : (
                           jobs.map((j) => (
                             <div key={j.id} class="fp-job">
                               <span class={`fp-chip ${statusClass(j.status)}`}>{statusLabel(j.status)}</span>
                               <span class="mono">{j.name}</span>
-                              {j.kind === "bridge" && j.downstreamPipelineId && <span class="dim">→ Child-Pipeline #{j.downstreamPipelineId}</span>}
+                              {j.kind === "bridge" && j.downstreamPipelineId && <span class="dim">{t("forge.child_pipeline")}{j.downstreamPipelineId}</span>}
                               {j.status === "failed" && (
                                 <>
-                                  <button class="fp-btn small" onClick={() => void openTrace(j)}>Trace</button>
+                                  <button class="fp-btn small" onClick={() => void openTrace(j)}>{t("forge.trace")}</button>
                                   <button
                                     class="fp-btn small"
                                     onClick={() => {
@@ -313,7 +314,7 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
                                       setFinding(`Job ${j.name} (Pipeline #${p.id}) fehlgeschlagen — Trace-Ausschnitt prüfen:\n`);
                                     }}
                                   >
-                                    als Befund
+                                    {t("forge.as_finding")}
                                   </button>
                                 </>
                               )}
@@ -326,16 +327,16 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
                 ))}
               </ul>
             )}
-            {overview.pipelineStaleError && <div class="fp-warn">Pipelines: {overview.pipelineStaleError}</div>}
+            {overview.pipelineStaleError && <div class="fp-warn">{t("forge.pipelines_colon")} {overview.pipelineStaleError}</div>}
           </section>
 
           <section class="fp-section">
-            <h3>Threads</h3>
-            <button class="fp-btn small" onClick={() => void loadThreads()}>laden</button>
-            {threadsTruncated && <div class="dim"> Weitere Diskussionen als gezeigt — Liste gekappt.</div>}
-            {threads?.map((t) => (
-              <div key={t.id} class="fp-thread">
-                {t.notes.slice(0, 3).map((n, i) => (
+            <h3>{t("forge.threads")}</h3>
+            <button class="fp-btn small" onClick={() => void loadThreads()}>{t("forge.load")}</button>
+            {threadsTruncated && <div class="dim"> {t("forge.more_discussions")}</div>}
+            {threads?.map((th) => (
+              <div key={th.id} class="fp-thread">
+                {th.notes.slice(0, 3).map((n, i) => (
                   <div key={i} class={n.system ? "fp-note system" : "fp-note"}>
                     <span class="mono dim">{n.author}</span>
                     <blockquote>{n.body}</blockquote>
@@ -344,33 +345,33 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
                 <button
                   class="fp-btn small"
                   onClick={() => {
-                    setFindingSource({ threadId: t.id });
-                    setFinding(`Review-Thread (erste Notiz von ${t.notes[0]?.author ?? "?"}):\n${t.notes[0]?.body.slice(0, 1_000) ?? ""}\n\nBitte Stellung nehmen und beheben.`);
+                    setFindingSource({ threadId: th.id });
+                    setFinding(`Review-Thread (erste Notiz von ${th.notes[0]?.author ?? "?"}):\n${th.notes[0]?.body.slice(0, 1_000) ?? ""}\n\nBitte Stellung nehmen und beheben.`);
                   }}
                 >
-                  als Befund
+                  {t("forge.as_finding")}
                 </button>
               </div>
             ))}
           </section>
 
           <section class="fp-section">
-            <h3>Befund an Agenten senden</h3>
+            <h3>{t("forge.send_finding")}</h3>
             <textarea
               class="fp-finding"
               rows={4}
-              placeholder="Befund (Daten — wird dem Agenten im Quellenrahmen zitiert) …"
+              placeholder={t("forge.finding_data")}
               value={finding}
               maxLength={8000}
               onInput={(e) => setFinding((e.target as HTMLTextAreaElement).value)}
             />
             <div class="fp-meta dim">
-              Quelle: {findingSource.pipelineId ? `Pipeline #${findingSource.pipelineId}` : ""}{" "}
+              {t("forge.source")} {findingSource.pipelineId ? `Pipeline #${findingSource.pipelineId}` : ""}{" "}
               {findingSource.jobId ? `· Job ${findingSource.jobId}` : ""} {findingSource.threadId ? `· Thread` : ""}{" "}
               {findingSource.pipelineId || findingSource.jobId || findingSource.threadId ? "" : "(noch keine — über Pipeline/Thread wählen)"}
             </div>
             <div class="fp-row">
-              <button class="fp-btn" disabled={!finding.trim()} onClick={() => void preparePreview()}>Vorschau</button>
+              <button class="fp-btn" disabled={!finding.trim()} onClick={() => void preparePreview()}>{t("forge.preview")}</button>
               <button
                 class="fp-btn"
                 disabled={!finding.trim()}
@@ -389,14 +390,14 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
                   setNote("Als Quelle im Composer — dort prüfen und mit dem nächsten Absenden mitgeben.");
                 }}
               >
-                In den Composer
+                {t("forge.into_composer")}
               </button>
             </div>
             {previewPrompt !== null && (
               <div class="fp-preview">
                 <pre class="mono">{previewPrompt}</pre>
                 <div class="fp-row">
-                  <button class="fp-btn small" onClick={() => setPreviewPrompt(null)}>abbrechen</button>
+                  <button class="fp-btn small" onClick={() => setPreviewPrompt(null)}>{t("common.cancel_lower")}</button>
                   <button class="fp-btn primary" disabled={sendBusy} onClick={() => void sendFeedback()}>
                     {sendBusy ? "sendet…" : "an Agenten senden"}
                   </button>
@@ -409,9 +410,9 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
           </section>
 
           <section class="fp-section">
-            <h3>Draft-MR</h3>
+            <h3>{t("forge.draft_mr")}</h3>
             {plan === null ? (
-              <button class="fp-btn" onClick={() => void prepareMr()}>vorbereiten (read-only)</button>
+              <button class="fp-btn" onClick={() => void prepareMr()}>{t("forge.prepare")}</button>
             ) : (
               <div class="fp-plan">
                 <div class="fp-meta mono">
@@ -422,10 +423,10 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
                     <li key={c.sha} class="mono dim">{c.sha.slice(0, 8)} {c.subject}</li>
                   ))}
                 </ul>
-                <input type="text" value={mrTitle} maxLength={120} onInput={(e) => setMrTitle((e.target as HTMLInputElement).value)} aria-label="MR-Titel (Commit-Notation)" />
-                <textarea rows={4} value={mrDescription} maxLength={20000} onInput={(e) => setMrDescription((e.target as HTMLTextAreaElement).value)} aria-label="MR-Beschreibung" />
+                <input type="text" value={mrTitle} maxLength={120} onInput={(e) => setMrTitle((e.target as HTMLInputElement).value)} aria-label={t("forge.mr_title")} />
+                <textarea rows={4} value={mrDescription} maxLength={20000} onInput={(e) => setMrDescription((e.target as HTMLTextAreaElement).value)} aria-label={t("forge.mr_description")} />
                 <div class="fp-row">
-                  <button class="fp-btn small" onClick={() => setPlan(null)}>abbrechen</button>
+                  <button class="fp-btn small" onClick={() => setPlan(null)}>{t("common.cancel_lower")}</button>
                   <button class="fp-btn primary" disabled={mrBusy || mrTitle.trim().length < 3} onClick={() => void createMr()}>
                     {mrBusy ? "erstellt…" : plan.pushNeeded ? "pushen & Draft-MR erstellen" : "Draft-MR erstellen"}
                   </button>
@@ -436,7 +437,7 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
           </section>
 
           <section class="fp-section">
-            <h3>Operationen</h3>
+            <h3>{t("forge.operations")}</h3>
             <button
               class="fp-btn small"
               onClick={async () => {
@@ -444,12 +445,12 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
                 setOperations(ops.items);
               }}
             >
-              laden
+              {t("forge.load")}
             </button>
             {operations?.map((op) => (
               <div key={op.id} class="fp-op">
                 <span class={`fp-chip ${op.state === "done" ? "fp-ok" : op.state === "uncertain" ? "fp-fail" : "fp-neutral"}`}>{op.state}</span>
-                <span class="mono dim">{op.kind === "draft_mr" ? "Draft-MR" : "Feedback"} · {short(op.sha)}{op.jobId ? ` · Job ${op.jobId}` : ""}</span>
+                <span class="mono dim">{op.kind === "draft_mr" ? t("forge.draft_mr") : "Feedback"} · {short(op.sha)}{op.jobId ? ` · Job ${op.jobId}` : ""}</span>
                 {op.detail && <span class="dim">{op.detail.slice(0, 160)}</span>}
               </div>
             ))}
@@ -458,12 +459,12 @@ export function ForgePanel({ session, onOpenSession }: { session: SessionRecord;
       )}
 
       {trace !== null && (
-        <Sheet open onClose={() => setTrace(null)} label="Job-Trace" variant="modal" testid="modal" class="fp-trace-dialog">
-          <h3>Trace Job {trace.jobId}{trace.truncated ? " (gekürzt)" : ""}</h3>
-          <div class="dim">Abruf {time(trace.fetchedAt)} · {(trace.sizeBytes / 1024).toFixed(1)} KB · SHA {short(trace.sha)}</div>
+        <Sheet open onClose={() => setTrace(null)} label={t("forge.job_trace")} variant="modal" testid="modal" class="fp-trace-dialog">
+          <h3>{t("forge.trace_job")} {trace.jobId}{trace.truncated ? " (gekürzt)" : ""}</h3>
+          <div class="dim">{t("forge.fetch")} {time(trace.fetchedAt)} · {(trace.sizeBytes / 1024).toFixed(1)} {t("forge.kb_sha")} {short(trace.sha)}</div>
           <pre class="mono fp-trace">{trace.preview}</pre>
           <div class="fp-row right">
-            <button class="fp-btn" onClick={() => setTrace(null)}>schließen</button>
+            <button class="fp-btn" onClick={() => setTrace(null)}>{t("forge.close")}</button>
           </div>
         </Sheet>
       )}
