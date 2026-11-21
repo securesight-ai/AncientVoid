@@ -1,3 +1,5 @@
+import { t } from "../../shared/i18n/index.ts";
+import { fmtDateTime, fmtTime, fmtNumber } from "../../shared/i18n/format.ts";
 import { useMemo, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
 import { type SessionDiffResult, type SessionDiffFile, type DiffCommit, type DiffHunk } from "../../shared/api.ts";
@@ -45,7 +47,7 @@ function Segs({ segs }: { segs: WordSeg[] }) {
           <span
             key={k}
             class={seg.t === "add" ? "wd-add" : "wd-del"}
-            aria-label={seg.t === "add" ? `hinzugefuegt: ${seg.s.trim()}` : `entfernt: ${seg.s.trim()}`}
+            aria-label={seg.t === "add" ? t("session.added_label", { "s": seg.s.trim() }) : t("session.removed_label", { "s": seg.s.trim() })}
           >
             <span class="wd-mark" aria-hidden="true">
               {seg.t === "add" ? "+" : "−"}
@@ -114,7 +116,7 @@ function HunkCard({
         <span class="hunk-fn">{active.functionContext ?? "—"}</span>
         {active.collapsed && (
           <Button  aria-busy={loading} onClick={onExpand} disabled={loading} class={loading ? "hunk-expand-btn busy" : "hunk-expand-btn"}>
-            {loading ? "lädt…" : "ganzer Hunk"}
+            {loading ? t("common.loading_dots") : t("session.whole_hunk")}
           </Button>
         )}
       </div>
@@ -172,7 +174,7 @@ function CommitHeading({ commit }: { commit: DiffCommit }) {
       <span class="mono diff-commit-sha">{commit.shortSha}</span>
       <span class="diff-commit-subject">{commit.subject}</span>
       <span class="dim diff-commit-meta">
-        {commit.author} · {new Date(commit.date).toLocaleString("de-DE")}
+        {commit.author} · {fmtDateTime(commit.date)}
       </span>
       {commit.oversize && <div class="diff-oversize">{oversizeNote(commit.oversize)}</div>}
     </div>
@@ -189,7 +191,7 @@ export function DiffPane({
   /** EPIC-P36: optionale Review-Hooks — ohne sie rendert DiffPane wie vorher. */
   review?: ReviewHooks;
 }) {
-  if (diff === null) return <EmptyState text="lädt …" />;
+  if (diff === null) return <EmptyState text={t("common.loading")} />;
   if (diff.error) return <EmptyState text={diff.error} />;
   // AC-P2-1: ein Abschnitt pro Commit (ältester zuerst), danach der
   // uncommittete Rest. `diff.files` trägt seit der Umstellung nur noch
@@ -214,7 +216,7 @@ export function DiffPane({
         <div key={f.path} class="diff-file-group" id={fileAnchor(i)}>
           <div class="diff-file-heading mono">
             {f.path}
-            {preexisting.has(f.path) && <span class="diff-preexisting" title="Schon vor dem Start geändert — nicht von dieser Session">vor Start geändert</span>}
+            {preexisting.has(f.path) && <span class="diff-preexisting" title={t("session.changed_before_start")}>{t("session.changed_before_start_short")}</span>}
             {review && review.noteCount(f.path) > 0 && <span class="review-note-badge">{review.noteCount(f.path)}</span>}
           </div>
           {f.hunks.map((h, j) => (
@@ -233,7 +235,7 @@ export function DiffPane({
     <div class="diff-pane">
       {diff.baseline && diff.baseline.dirtyAtStart.length > 0 && (
         <div class="workplace-warn" role="note">
-          Projekt direkt: {diff.baseline.dirtyAtStart.length}{diff.baseline.dirtyTruncated ? "+" : ""} Datei(en) waren beim Start schon geändert und sind markiert — sie zählen nicht als Leistung der Session.
+          {t("session.project_direct_colon")} {diff.baseline.dirtyAtStart.length}{diff.baseline.dirtyTruncated ? "+" : ""} {t("session.files_prechanged")}
         </div>
       )}
       <div class="diff-files">
@@ -253,7 +255,7 @@ export function DiffPane({
           >
             <span class="mono">{f.path}</span>
             {f.binary ? (
-              <span class="dim">binär</span>
+              <span class="dim">{t("session.binary")}</span>
             ) : (
               <span class="diff-file-counts">
                 <span class="diff-add-count">+{f.additions}</span> <span class="diff-del-count">-{f.deletions}</span>
@@ -270,21 +272,21 @@ export function DiffPane({
       <div class="diff-main">
         <div class="diff-legend" aria-hidden="true">
           <span class="wd-add">
-            <span class="wd-mark">+</span>neu
+            <span class="wd-mark">+</span>{t("common.new")}
           </span>
           <span class="wd-del">
-            <span class="wd-mark">−</span>entfernt
+            <span class="wd-mark">−</span>{t("session.removed")}
           </span>
-          <span class="diff-legend-hint">markiert ist nur, was sich wirklich ändert</span>
+          <span class="diff-legend-hint">{t("session.marked_only_real_changes")}</span>
         </div>
         {diff.truncated && (
           <div class="dim" style="margin: 8px 0">
-            Große Hunks gekürzt — „ganzer Hunk“ antippen, um einen einzelnen vollständig zu laden.
+            {t("session.big_hunks_trimmed")}
           </div>
         )}
         {diff.commitsTruncated && (
           <div class="dim" style="margin: 8px 0">
-            Mehr als 200 Commits seit {diff.baseRef} — nur die jüngsten werden gegliedert.
+            {t("session.more_than_200_commits")} {diff.baseRef} {t("session.only_recent_grouped")}
           </div>
         )}
         {commits.map((c) => (
@@ -294,7 +296,7 @@ export function DiffPane({
           </section>
         ))}
         {commits.length > 0 && diff.files.length > 0 && (
-          <div class="diff-section-heading">Nicht committete Änderungen</div>
+          <div class="diff-section-heading">{t("session.uncommitted_changes")}</div>
         )}
         {groups(diff.files)}
       </div>

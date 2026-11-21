@@ -1,0 +1,3882 @@
+{
+ "area": "features",
+ "entries": [
+  {
+   "match": "$ neues Budget",
+   "key": "composer.budget_example",
+   "de": "$ neues Budget",
+   "en": "$ top up budget"
+  },
+  {
+   "match": "abbrechen",
+   "key": "common.cancel_lower",
+   "de": "abbrechen",
+   "en": "cancel"
+  },
+  {
+   "match": "Abbrechen",
+   "key": "common.cancel",
+   "de": "Abbrechen",
+   "en": "Cancel"
+  },
+  {
+   "match": "Ablehnen",
+   "key": "approvals.decline",
+   "de": "Ablehnen",
+   "en": "Decline"
+  },
+  {
+   "match": "ADR-0084: Summe dessen, was die Modell-Aufrufe bekommen haben — nicht das, was geschrieben wurde",
+   "key": "session.adr0084_sum",
+   "de": "ADR-0084: Summe dessen, was die Modell-Aufrufe bekommen haben — nicht das, was geschrieben wurde",
+   "en": "ADR-0084: the sum of what the model calls received — not what was written"
+  },
+  {
+   "match": "Agent fragt:",
+   "key": "session.agent_asks",
+   "de": "Agent fragt:",
+   "en": "Agent asks:"
+  },
+  {
+   "match": "Aktive Hintergrundaufgaben",
+   "key": "session.active_background_tasks",
+   "de": "Aktive Hintergrundaufgaben",
+   "en": "Active background tasks"
+  },
+  {
+   "match": "Aktueller Inhalt ·",
+   "key": "composer.current_content",
+   "de": "Aktueller Inhalt ·",
+   "en": "Current content ·"
+  },
+  {
+   "match": "+ als Vorlage merken",
+   "key": "composer.save_as_template",
+   "de": "+ als Vorlage merken",
+   "en": "+ save as template"
+  },
+  {
+   "match": "Älter",
+   "key": "approvals.older",
+   "de": "Älter",
+   "en": "Older"
+  },
+  {
+   "match": "ältere Einträge — Kachel anklicken zeigt alle",
+   "key": "session.older_entries",
+   "de": "ältere Einträge — Kachel anklicken zeigt alle",
+   "en": "older entries — click the tile to show all"
+  },
+  {
+   "match": "Am Desktop weiterarbeiten — dieselbe Session, nicht eine Kopie. Funktioniert\n        sicher, während der Agent gerade aktiv einen Zug ausführt; dazwischen evtl.\n        „session not found\", falls gerade kein Prozess läuft:",
+   "key": "session.continue_on_desktop",
+   "de": "Am Desktop weiterarbeiten — dieselbe Session, nicht eine Kopie. Funktioniert\n        sicher, während der Agent gerade aktiv einen Zug ausführt; dazwischen evtl.\n        „session not found\", falls gerade kein Prozess läuft:",
+   "en": "Continue on the desktop — the same session, not a copy. Works\n        safely while the agent is actively running a turn; in between possibly\n        \"session not found\", if no process is running just then:"
+  },
+  {
+   "match": "💻 Am PC offen",
+   "key": "session.open_on_pc",
+   "de": "💻 Am PC offen",
+   "en": "💻 Open on the PC"
+  },
+  {
+   "match": "An andere Session übergeben…",
+   "key": "session.hand_over_to_other",
+   "de": "An andere Session übergeben…",
+   "en": "Hand over to another session…"
+  },
+  {
+   "match": "Änderungen anderer Programme (Editor, Terminal) kann AncientVoid nicht sperren, nur erkennen.",
+   "key": "session.other_program_changes",
+   "de": "Änderungen anderer Programme (Editor, Terminal) kann AncientVoid nicht sperren, nur erkennen.",
+   "en": "AncientVoid cannot lock changes made by other programs (editor, terminal), only detect them."
+  },
+  {
+   "match": "Änderungen landen in einer eigenen Git-Kopie, dein Projekt bleibt unberührt. Standard.",
+   "key": "session.changes_in_git_copy",
+   "de": "Änderungen landen in einer eigenen Git-Kopie, dein Projekt bleibt unberührt. Standard.",
+   "en": "Changes land in their own Git copy, your project stays untouched. Default."
+  },
+  {
+   "match": "Anker unklar:",
+   "key": "session.anchor_unclear",
+   "de": "Anker unklar:",
+   "en": "Anchor unclear:"
+  },
+  {
+   "match": "Annahme unklar — Verlauf prüfen",
+   "key": "session.assumption_unclear",
+   "de": "Annahme unklar — Verlauf prüfen",
+   "en": "Assumption unclear — check history"
+  },
+  {
+   "match": "Anpassen",
+   "key": "composer.adapt",
+   "de": "Anpassen",
+   "en": "Customize"
+  },
+  {
+   "match": "Ansichten",
+   "key": "session.views",
+   "de": "Ansichten",
+   "en": "Views"
+  },
+  {
+   "match": "Anthropic-kompatibel",
+   "key": "newsession.anthropic_compatible",
+   "de": "Anthropic-kompatibel",
+   "en": "Anthropic-compatible"
+  },
+  {
+   "match": "Antworten…",
+   "key": "session.answer_ph",
+   "de": "Antworten…",
+   "en": "Answer…"
+  },
+  {
+   "match": "antwortet",
+   "key": "session.answering",
+   "de": "antwortet",
+   "en": "answered"
+  },
+  {
+   "match": "Antwortvorlagen",
+   "key": "composer.reply_templates",
+   "de": "Antwortvorlagen",
+   "en": "Reply templates"
+  },
+  {
+   "match": "Anzeigename (optional)",
+   "key": "newsession.display_name_optional",
+   "de": "Anzeigename (optional)",
+   "en": "Display name (optional)"
+  },
+  {
+   "match": "API-Schlüssel (optional, als $UMGEBUNGSVARIABLE)",
+   "key": "newsession.api_key_env",
+   "de": "API-Schlüssel (optional, als $UMGEBUNGSVARIABLE)",
+   "en": "API key (optional, as $ENV_VAR)"
+  },
+  {
+   "match": "Arbeitet direkt im Projektordner",
+   "key": "session.works_in_project_folder",
+   "de": "Arbeitet direkt im Projektordner",
+   "en": "Works directly in the project folder"
+  },
+  {
+   "match": "Arbeitsnotiz",
+   "key": "session.work_note",
+   "de": "Arbeitsnotiz",
+   "en": "Work note"
+  },
+  {
+   "match": "Arbeitsnotiz (dieses Gerät)",
+   "key": "session.work_note_this_device",
+   "de": "Arbeitsnotiz (dieses Gerät)",
+   "en": "Work note (this device)"
+  },
+  {
+   "match": "Arbeitsort",
+   "key": "newsession.workplace",
+   "de": "Arbeitsort",
+   "en": "Workplace"
+  },
+  {
+   "match": "Arbeitsort direkt im Ordner",
+   "key": "newsession.workplace_direct",
+   "de": "Arbeitsort direkt im Ordner",
+   "en": "Workplace: directly in the folder"
+  },
+  {
+   "match": "Arbeitsort ungeklärt",
+   "key": "session.workplace_unsettled",
+   "de": "Arbeitsort ungeklärt",
+   "en": "Workplace unsettled"
+  },
+  {
+   "match": "Arbeitsort Worktree",
+   "key": "newsession.workplace_worktree",
+   "de": "Arbeitsort Worktree",
+   "en": "Workplace: worktree"
+  },
+  {
+   "match": "Aufgaben ·",
+   "key": "composer.tasks",
+   "de": "Aufgaben ·",
+   "en": "Tasks ·"
+  },
+  {
+   "match": "Aufgabe übergeben",
+   "key": "session.hand_over_task",
+   "de": "Aufgabe übergeben",
+   "en": "Hand over task"
+  },
+  {
+   "match": "Ausgabe",
+   "key": "composer.output",
+   "de": "Ausgabe",
+   "en": "Output"
+  },
+  {
+   "match": "Ausgabelimit",
+   "key": "session.output_limit",
+   "de": "Ausgabelimit",
+   "en": "Output limit"
+  },
+  {
+   "match": "Automatik aus",
+   "key": "session.automation_off",
+   "de": "Automatik aus",
+   "en": "Automation off"
+  },
+  {
+   "match": "Basis-Skill — hier nur lesbar. Eine Anpassung gehört als Projekt-Erweiterung ins Projekt.",
+   "key": "composer.base_skill_readonly",
+   "de": "Basis-Skill — hier nur lesbar. Eine Anpassung gehört als Projekt-Erweiterung ins Projekt.",
+   "en": "Base skill — read-only here. A customization belongs in the project as a project extension."
+  },
+  {
+   "match": "Basis-URL",
+   "key": "newsession.base_url",
+   "de": "Basis-URL",
+   "en": "Base URL"
+  },
+  {
+   "match": "beantwortet",
+   "key": "approvals.answered",
+   "de": "beantwortet",
+   "en": "answered"
+  },
+  {
+   "match": "bearbeiten",
+   "key": "common.edit_lower",
+   "de": "bearbeiten",
+   "en": "edit"
+  },
+  {
+   "match": "Befunde)",
+   "key": "session.findings_close",
+   "de": "Befunde)",
+   "en": "findings)"
+  },
+  {
+   "match": "Befund notieren …",
+   "key": "session.note_finding_ph",
+   "de": "Befund notieren …",
+   "en": "Note a finding …"
+  },
+  {
+   "match": "Begründung:",
+   "key": "approvals.reason_colon",
+   "de": "Begründung:",
+   "en": "Reason:"
+  },
+  {
+   "match": "Begründung (Pflicht)…",
+   "key": "approvals.reason_required_ph",
+   "de": "Begründung (Pflicht)…",
+   "en": "Reason (required)…"
+  },
+  {
+   "match": "Beobachtung beenden",
+   "key": "session.end_observation",
+   "de": "Beobachtung beenden",
+   "en": "End observation"
+  },
+  {
+   "match": "Bericht",
+   "key": "session.report",
+   "de": "Bericht",
+   "en": "Report"
+  },
+  {
+   "match": "Bestätigung",
+   "key": "approvals.confirmation",
+   "de": "Bestätigung",
+   "en": "Confirmation"
+  },
+  {
+   "match": "binär",
+   "key": "session.binary",
+   "de": "binär",
+   "en": "binary"
+  },
+  {
+   "match": "Branch",
+   "key": "common.branch",
+   "de": "Branch",
+   "en": "Branch"
+  },
+  {
+   "match": "Browser",
+   "key": "session.browser",
+   "de": "Browser",
+   "en": "Browser"
+  },
+  {
+   "match": "Commands",
+   "key": "composer.commands",
+   "de": "Commands",
+   "en": "Commands"
+  },
+  {
+   "match": "Committet alle Änderungen auf",
+   "key": "session.commits_all_changes_on",
+   "de": "Committet alle Änderungen auf",
+   "en": "Commits all changes on"
+  },
+  {
+   "match": "Dateibaum",
+   "key": "session.file_tree",
+   "de": "Dateibaum",
+   "en": "File tree"
+  },
+  {
+   "match": "Dateibaum (Strg+Umschalt+E)",
+   "key": "session.file_tree_shortcut",
+   "de": "Dateibaum (Strg+Umschalt+E)",
+   "en": "File tree (Ctrl+Shift+E)"
+  },
+  {
+   "match": "Dateien geändert",
+   "key": "session.files_changed",
+   "de": "Dateien geändert",
+   "en": "Files changed"
+  },
+  {
+   "match": "Datei(en) waren beim Start schon geändert und sind markiert — sie zählen nicht als Leistung der Session.",
+   "key": "session.files_prechanged",
+   "de": "Datei(en) waren beim Start schon geändert und sind markiert — sie zählen nicht als Leistung der Session.",
+   "en": "File(s) were already changed at start and are marked — they do not count as the session's work."
+  },
+  {
+   "match": "Datei in eigenes Fenster",
+   "key": "session.file_in_own_window",
+   "de": "Datei in eigenes Fenster",
+   "en": "File in own window"
+  },
+  {
+   "match": "Dauer",
+   "key": "common.duration",
+   "de": "Dauer",
+   "en": "Duration"
+  },
+  {
+   "match": "den bestehenden Provider in pi ersetzen",
+   "key": "newsession.replace_existing_provider",
+   "de": "den bestehenden Provider in pi ersetzen",
+   "en": "replace the existing provider in pi"
+  },
+  {
+   "match": "Der Agent arbeitet im Projektordner selbst. In Git-Projekten schreibt höchstens eine Session; Ordner ohne Git können mehrere Sessions teilen — nach ausdrücklicher Bestätigung.",
+   "key": "newsession.agent_works_in_project",
+   "de": "Der Agent arbeitet im Projektordner selbst. In Git-Projekten schreibt höchstens eine Session; Ordner ohne Git können mehrere Sessions teilen — nach ausdrücklicher Bestätigung.",
+   "en": "The agent works in the project folder itself. In Git projects at most one session writes; folders without Git can be shared by several sessions — after explicit confirmation."
+  },
+  {
+   "match": "Der Anbieter liefert keinen Denktext",
+   "key": "session.provider_no_thinking_text",
+   "de": "Der Anbieter liefert keinen Denktext",
+   "en": "The provider supplies no thinking text"
+  },
+  {
+   "match": "Deren übernehmen",
+   "key": "session.accept_theirs",
+   "de": "Deren übernehmen",
+   "en": "Accept theirs"
+  },
+  {
+   "match": "Der Harness hat keine beantwortbare Frage mitgeliefert.",
+   "key": "approvals.no_question",
+   "de": "Der Harness hat keine beantwortbare Frage mitgeliefert.",
+   "en": "The harness did not include an answerable question."
+  },
+  {
+   "match": "Der Hub antwortet nicht — noch einmal versuchen.",
+   "key": "session.hub_not_answering",
+   "de": "Der Hub antwortet nicht — noch einmal versuchen.",
+   "en": "The hub is not answering — try again."
+  },
+  {
+   "match": "Der Hub reicht die Id unverändert weiter. Kennt der Harness sie nicht oder fehlt die Anmeldung beim Anbieter, scheitert der Zug sichtbar — es läuft nie ein anderes Modell.",
+   "key": "newsession.hub_passes_id",
+   "de": "Der Hub reicht die Id unverändert weiter. Kennt der Harness sie nicht oder fehlt die Anmeldung beim Anbieter, scheitert der Zug sichtbar — es läuft nie ein anderes Modell.",
+   "en": "The hub passes the id through unchanged. If the harness does not know it or the provider sign-in is missing, the turn fails visibly — a different model never runs."
+  },
+  {
+   "match": "Der letzte Auftrag konnte nicht geladen werden.",
+   "key": "session.last_prompt_unloadable",
+   "de": "Der letzte Auftrag konnte nicht geladen werden.",
+   "en": "The last prompt could not be loaded."
+  },
+  {
+   "match": "destruktiv · Biometrie",
+   "key": "approvals.destructive_biometric",
+   "de": "destruktiv · Biometrie",
+   "en": "destructive · biometric"
+  },
+  {
+   "match": "Die Änderungen dieser Session liegen in einem eigenen Git-Worktree",
+   "key": "session.changes_in_own_worktree",
+   "de": "Die Änderungen dieser Session liegen in einem eigenen Git-Worktree",
+   "en": "This session's changes live in their own Git worktree"
+  },
+  {
+   "match": ", dieselbe Provider-Session. Solange sie dort läuft, hier nichts senden.",
+   "key": "session.same_provider_session",
+   "de": ", dieselbe Provider-Session. Solange sie dort läuft, hier nichts senden.",
+   "en": ", the same provider session. While it runs there, send nothing here."
+  },
+  {
+   "match": "Dieser Adapter setzt ohne natives Resume fort — Weitermachen sendet eine Fortsetzungsnachricht.",
+   "key": "session.no_native_resume",
+   "de": "Dieser Adapter setzt ohne natives Resume fort — Weitermachen sendet eine Fortsetzungsnachricht.",
+   "en": "This adapter continues without native resume — Continue sends a continuation message."
+  },
+  {
+   "match": "(diese Session)",
+   "key": "session.this_session",
+   "de": "(diese Session)",
+   "en": "(this session)"
+  },
+  {
+   "match": "Diese Session hat noch nichts geändert.",
+   "key": "session.nothing_changed_yet",
+   "de": "Diese Session hat noch nichts geändert.",
+   "en": "This session has not changed anything yet."
+  },
+  {
+   "match": "Diff-Stand",
+   "key": "session.diff_state",
+   "de": "Diff-Stand",
+   "en": "Diff state"
+  },
+  {
+   "match": "Eigene Antwort",
+   "key": "approvals.own_answer",
+   "de": "Eigene Antwort",
+   "en": "Own answer"
+  },
+  {
+   "match": "Eigene Antwort…",
+   "key": "approvals.own_answer_ph",
+   "de": "Eigene Antwort…",
+   "en": "Own answer…"
+  },
+  {
+   "match": "Eigene Modelle",
+   "key": "newsession.own_models",
+   "de": "Eigene Modelle",
+   "en": "Own models"
+  },
+  {
+   "match": "Eigene Notiz, kein Laufzeit- oder Gate-Nachweis. Wird nicht automatisch gesendet.",
+   "key": "session.own_note_not_sent",
+   "de": "Eigene Notiz, kein Laufzeit- oder Gate-Nachweis. Wird nicht automatisch gesendet.",
+   "en": "Own note, not a runtime or gate proof. Not sent automatically."
+  },
+  {
+   "match": "Eigener Git-Worktree — trennt Dateien, keine Sandbox",
+   "key": "session.own_git_worktree",
+   "de": "Eigener Git-Worktree — trennt Dateien, keine Sandbox",
+   "en": "Own Git worktree — separates files, not a sandbox"
+  },
+  {
+   "match": "eigener Pfad (siehe unten)",
+   "key": "newsession.own_path_below",
+   "de": "eigener Pfad (siehe unten)",
+   "en": "own path (see below)"
+  },
+  {
+   "match": "Eigener Worktree",
+   "key": "newsession.own_worktree",
+   "de": "Eigener Worktree",
+   "en": "Own worktree"
+  },
+  {
+   "match": "⧉ Eigenes Fenster",
+   "key": "session.own_window",
+   "de": "⧉ Eigenes Fenster",
+   "en": "⧉ Own window"
+  },
+  {
+   "match": "＋ Eigenes Modell / Endpunkt",
+   "key": "newsession.add_own_model_endpoint",
+   "de": "＋ Eigenes Modell / Endpunkt",
+   "en": "＋ Own model / endpoint"
+  },
+  {
+   "match": "Eigenes Modell oder Endpunkt",
+   "key": "newsession.own_model_endpoint",
+   "de": "Eigenes Modell oder Endpunkt",
+   "en": "Own model or endpoint"
+  },
+  {
+   "match": "Eingabe",
+   "key": "composer.input",
+   "de": "Eingabe",
+   "en": "Input"
+  },
+  {
+   "match": "Einige Schrittdetails konnten nicht geladen werden.",
+   "key": "session.some_step_details_unloadable",
+   "de": "Einige Schrittdetails konnten nicht geladen werden.",
+   "en": "Some step details could not be loaded."
+  },
+  {
+   "match": "Ein Worktree trennt nur Git-Dateien — keine Prozess- oder Netzwerkrechte. Was der Agent darf, regelt der Modus („Modus“ / Sandbox des Harness) unabhängig davon.",
+   "key": "newsession.worktree_separates_files_only",
+   "de": "Ein Worktree trennt nur Git-Dateien — keine Prozess- oder Netzwerkrechte. Was der Agent darf, regelt der Modus („Modus“ / Sandbox des Harness) unabhängig davon.",
+   "en": "A worktree separates only Git files — not process or network rights. What the agent may do is governed by the mode (“Mode” / harness sandbox), independently of that."
+  },
+  {
+   "match": "Empfänger",
+   "key": "session.recipient",
+   "de": "Empfänger",
+   "en": "Recipient"
+  },
+  {
+   "match": "Endpunkt (pi)",
+   "key": "newsession.endpoint_pi",
+   "de": "Endpunkt (pi)",
+   "en": "Endpoint (pi)"
+  },
+  {
+   "match": "entfernt",
+   "key": "session.removed",
+   "de": "entfernt",
+   "en": "removed"
+  },
+  {
+   "match": "entschieden von",
+   "key": "approvals.decided_by",
+   "de": "entschieden von",
+   "en": "decided by"
+  },
+  {
+   "match": "erledigt",
+   "key": "session.done",
+   "de": "erledigt",
+   "en": "done"
+  },
+  {
+   "match": "Erneut laden",
+   "key": "session.reload",
+   "de": "Erneut laden",
+   "en": "Reload"
+  },
+  {
+   "match": "). Erst beenden oder „Eigener Worktree“ wählen.",
+   "key": "newsession.stop_or_choose",
+   "de": "). Erst beenden oder „Eigener Worktree“ wählen.",
+   "en": ") — end it first or choose “Own worktree”."
+  },
+  {
+   "match": "Fachliche Statusnotiz",
+   "key": "session.fachliche_statusnotiz",
+   "de": "Fachliche Statusnotiz",
+   "en": "Status note"
+  },
+  {
+   "match": "Factory ·",
+   "key": "session.factory_dash",
+   "de": "Factory ·",
+   "en": "Factory ·"
+  },
+  {
+   "match": "Factory-Treiber läuft nur mit claude oder maki — „",
+   "key": "newsession.factory_driver_only",
+   "de": "Factory-Treiber läuft nur mit claude oder maki — „",
+   "en": "Factory driver only runs with claude or maki — “"
+  },
+  {
+   "match": "Fenster zeigen",
+   "key": "session.show_window",
+   "de": "Fenster zeigen",
+   "en": "Show window"
+  },
+  {
+   "match": "Freigabe-Warteschlange ist auf diesem Hub nicht konfiguriert.",
+   "key": "session.approval_queue_unconfigured",
+   "de": "Freigabe-Warteschlange ist auf diesem Hub nicht konfiguriert.",
+   "en": "The approval queue is not configured on this hub."
+  },
+  {
+   "match": "Für diese ältere Session ist der Arbeitsort nicht belegt",
+   "key": "session.workplace_unproven",
+   "de": "Für diese ältere Session ist der Arbeitsort nicht belegt",
+   "en": "For this older session the workplace is not proven"
+  },
+  {
+   "match": "Für diesen Adapter nicht verfügbar",
+   "key": "composer.not_available",
+   "de": "Für diesen Adapter nicht verfügbar",
+   "en": "Not available for this adapter"
+  },
+  {
+   "match": ") — geht raus, sobald der Zug endet",
+   "key": "session.goes_out_when_turn_ends",
+   "de": ") — geht raus, sobald der Zug endet",
+   "en": ") — goes out as soon as the turn ends"
+  },
+  {
+   "match": "Geräte",
+   "key": "session.devices",
+   "de": "Geräte",
+   "en": "Devices"
+  },
+  {
+   "match": "gesendet",
+   "key": "session.sent",
+   "de": "gesendet",
+   "en": "sent"
+  },
+  {
+   "match": "Gespeicherter Stand vom",
+   "key": "session.saved_state_from",
+   "de": "Gespeicherter Stand vom",
+   "en": "Saved state from"
+  },
+  {
+   "match": "· Gestartet mit",
+   "key": "session.started_with",
+   "de": "· Gestartet mit",
+   "en": "· started with"
+  },
+  {
+   "match": "Google-kompatibel",
+   "key": "newsession.google_compatible",
+   "de": "Google-kompatibel",
+   "en": "Google-compatible"
+  },
+  {
+   "match": "Graph in eigenes Fenster",
+   "key": "session.graph_in_own_window",
+   "de": "Graph in eigenes Fenster",
+   "en": "Graph in own window"
+  },
+  {
+   "match": "Große Hunks gekürzt — „ganzer Hunk“ antippen, um einen einzelnen vollständig zu laden.",
+   "key": "session.big_hunks_trimmed",
+   "de": "Große Hunks gekürzt — „ganzer Hunk“ antippen, um einen einzelnen vollständig zu laden.",
+   "en": "Large hunks trimmed — tap “full hunk” to load a single one completely."
+  },
+  {
+   "match": "hat den\n                        Entwurf geändert:",
+   "key": "session.has_changed_draft",
+   "de": "hat den\n                        Entwurf geändert:",
+   "en": "has changed the\n                        draft:"
+  },
+  {
+   "match": "Hauptbranch ist vorgerückt — Aktionen im Menü (⋯)",
+   "key": "session.main_moved_ahead",
+   "de": "Hauptbranch ist vorgerückt — Aktionen im Menü (⋯)",
+   "en": "Main branch has moved ahead — actions in the menu (⋯)"
+  },
+  {
+   "match": "Hier schreibt bereits eine andere AncientVoid-Session (",
+   "key": "newsession.other_session_writes",
+   "de": "Hier schreibt bereits eine andere AncientVoid-Session (",
+   "en": "Another AncientVoid session is already writing here ("
+  },
+  {
+   "match": "Hintergrundarbeit aktiv ·",
+   "key": "session.background_work_active",
+   "de": "Hintergrundarbeit aktiv ·",
+   "en": "Background work active ·"
+  },
+  {
+   "match": "Hintergrund-Session — am PC live mit",
+   "key": "session.background_session_live_with",
+   "de": "Hintergrund-Session — am PC live mit",
+   "en": "Background session — live on the PC with"
+  },
+  {
+   "match": "hinter main",
+   "key": "session.behind_main",
+   "de": "hinter main",
+   "en": "behind main"
+  },
+  {
+   "match": "Host",
+   "key": "common.host",
+   "de": "Host",
+   "en": "Host"
+  },
+  {
+   "match": "im Verlauf ansehen",
+   "key": "session.view_in_history",
+   "de": "im Verlauf ansehen",
+   "en": "view in history"
+  },
+  {
+   "match": "in allen Harnesses anbieten (sonst nur in",
+   "key": "newsession.offer_in_all_harnesses",
+   "de": "in allen Harnesses anbieten (sonst nur in",
+   "en": "offer in all harnesses (otherwise only in"
+  },
+  {
+   "match": "in den Composer",
+   "key": "session.into_the_composer",
+   "de": "in den Composer",
+   "en": "into the composer"
+  },
+  {
+   "match": "In diesem Ordner",
+   "key": "newsession.in_this_folder",
+   "de": "In diesem Ordner",
+   "en": "In this folder"
+  },
+  {
+   "match": "In eigenes Fenster",
+   "key": "session.in_own_window",
+   "de": "In eigenes Fenster",
+   "en": "In own window"
+  },
+  {
+   "match": "Ins Projekt übernehmen",
+   "key": "session.apply_into_project",
+   "de": "Ins Projekt übernehmen",
+   "en": "Apply into the project"
+  },
+  {
+   "match": "In Zwischenablage kopiert",
+   "key": "common.copied_to_clipboard",
+   "de": "In Zwischenablage kopiert",
+   "en": "Copied to clipboard"
+  },
+  {
+   "match": "Ja",
+   "key": "common.yes",
+   "de": "Ja",
+   "en": "Yes"
+  },
+  {
+   "match": "Ja/Nein antworten",
+   "key": "session.answer_yes_no",
+   "de": "Ja/Nein antworten",
+   "en": "Answer yes/no"
+  },
+  {
+   "match": "Jetzt in den laufenden Zug senden",
+   "key": "composer.send_into_running_turn",
+   "de": "Jetzt in den laufenden Zug senden",
+   "en": "Send into the running turn now"
+  },
+  {
+   "match": "Journal enthält",
+   "key": "session.journal_contains",
+   "de": "Journal enthält",
+   "en": "Journal contains"
+  },
+  {
+   "match": "keine offenen Freigaben",
+   "key": "approvals.no_open",
+   "de": "keine offenen Freigaben",
+   "en": "no open approvals"
+  },
+  {
+   "match": "keine Projekt-Wurzeln konfiguriert — siehe docs/configuration.md, oder Pfad direkt eintippen",
+   "key": "newsession.no_project_roots",
+   "de": "keine Projekt-Wurzeln konfiguriert — siehe docs/configuration.md, oder Pfad direkt eintippen",
+   "en": "no project roots configured — see docs/configuration.md, or type a path directly"
+  },
+  {
+   "match": "Keine Skills/Agents in diesem Projekt gefunden.",
+   "key": "composer.no_skills_found",
+   "de": "Keine Skills/Agents in diesem Projekt gefunden.",
+   "en": "No skills/agents found in this project."
+  },
+  {
+   "match": "kein Git-Repo in den Wurzeln (",
+   "key": "newsession.no_git_repo_in_roots",
+   "de": "kein Git-Repo in den Wurzeln (",
+   "en": "no Git repo in the roots ("
+  },
+  {
+   "match": "Kontextfenster",
+   "key": "session.context_window",
+   "de": "Kontextfenster",
+   "en": "Context window"
+  },
+  {
+   "match": "Kontextfenster in Tokens (optional)",
+   "key": "newsession.context_window_tokens",
+   "de": "Kontextfenster in Tokens (optional)",
+   "en": "Context window in tokens (optional)"
+  },
+  {
+   "match": "Kontingent (Adapter-weit)",
+   "key": "session.quota_adapter_wide",
+   "de": "Kontingent (Adapter-weit)",
+   "en": "Quota (adapter-wide)"
+  },
+  {
+   "match": "Kürzlich entschieden",
+   "key": "approvals.recently_decided",
+   "de": "Kürzlich entschieden",
+   "en": "Recently decided"
+  },
+  {
+   "match": "läuft ab in",
+   "key": "approvals.expires_in",
+   "de": "läuft ab in",
+   "en": "expires in"
+  },
+  {
+   "match": "läuft in einem eigenen Fenster.",
+   "key": "session.runs_in_own_window",
+   "de": "läuft in einem eigenen Fenster.",
+   "en": "runs in its own window."
+  },
+  {
+   "match": "läuft seit",
+   "key": "session.running_since",
+   "de": "läuft seit",
+   "en": "running since"
+  },
+  {
+   "match": "Laya:",
+   "key": "approvals.laya_colon",
+   "de": "Laya:",
+   "en": "Laya:"
+  },
+  {
+   "match": "Letzter Auftrag",
+   "key": "session.last_prompt",
+   "de": "Letzter Auftrag",
+   "en": "Last prompt"
+  },
+  {
+   "match": "Letzter Zug:",
+   "key": "session.last_turn",
+   "de": "Letzter Zug:",
+   "en": "Last turn:"
+  },
+  {
+   "match": "lokal ·",
+   "key": "session.local_dash",
+   "de": "lokal ·",
+   "en": "local ·"
+  },
+  {
+   "match": "Macht automatisch weiter, sobald das Limit frei ist",
+   "key": "session.auto_resumes_when_free",
+   "de": "Macht automatisch weiter, sobald das Limit frei ist",
+   "en": "Continues automatically as soon as the limit frees up"
+  },
+  {
+   "match": "Main einmischen",
+   "key": "session.merge_main",
+   "de": "Main einmischen",
+   "en": "Merge main"
+  },
+  {
+   "match": "Main prüfen",
+   "key": "session.check_main",
+   "de": "Main prüfen",
+   "en": "Check main"
+  },
+  {
+   "match": "markiert ist nur, was sich wirklich ändert",
+   "key": "session.marked_only_real_changes",
+   "de": "markiert ist nur, was sich wirklich ändert",
+   "en": "only real changes are marked"
+  },
+  {
+   "match": "Mehr",
+   "key": "common.more",
+   "de": "Mehr",
+   "en": "More"
+  },
+  {
+   "match": "Mehr als 200 Commits seit",
+   "key": "session.more_than_200_commits",
+   "de": "Mehr als 200 Commits seit",
+   "en": "More than 200 commits since"
+  },
+  {
+   "match": "Mehrere Sessions in diesem Ordner — ich nehme das Überschreibrisiko in Kauf.",
+   "key": "newsession.multiple_sessions_accept",
+   "de": "Mehrere Sessions in diesem Ordner — ich nehme das Überschreibrisiko in Kauf.",
+   "en": "Multiple sessions in this folder — I accept the overwrite risk."
+  },
+  {
+   "match": "Meinen behalten",
+   "key": "session.keep_mine",
+   "de": "Meinen behalten",
+   "en": "Keep mine"
+  },
+  {
+   "match": "Mitgesendet beim nächsten Absenden (",
+   "key": "composer.sent_with_next",
+   "de": "Mitgesendet beim nächsten Absenden (",
+   "en": "Sent with the next submission ("
+  },
+  {
+   "match": "möchte ausführen:",
+   "key": "approvals.wants_to_run",
+   "de": "möchte ausführen:",
+   "en": "wants to run:"
+  },
+  {
+   "match": "Modell",
+   "key": "common.model",
+   "de": "Modell",
+   "en": "Model"
+  },
+  {
+   "match": "Modell denkt (Reasoning)",
+   "key": "newsession.model_thinks",
+   "de": "Modell denkt (Reasoning)",
+   "en": "Model thinks (reasoning)"
+  },
+  {
+   "match": "Modell-Id",
+   "key": "newsession.model_id",
+   "de": "Modell-Id",
+   "en": "Model id"
+  },
+  {
+   "match": "Modell-Id am Endpunkt",
+   "key": "newsession.model_id_at_endpoint",
+   "de": "Modell-Id am Endpunkt",
+   "en": "Model id at the endpoint"
+  },
+  {
+   "match": "Modus",
+   "key": "common.mode",
+   "de": "Modus",
+   "en": "Mode"
+  },
+  {
+   "match": "Nach Limit automatisch weitermachen",
+   "key": "session.auto_continue_after_limit",
+   "de": "Nach Limit automatisch weitermachen",
+   "en": "Automatically continue after limit"
+  },
+  {
+   "match": "Name",
+   "key": "composer.name",
+   "de": "Name",
+   "en": "Name"
+  },
+  {
+   "match": "Name des Providers",
+   "key": "newsession.provider_name",
+   "de": "Name des Providers",
+   "en": "Provider name"
+  },
+  {
+   "match": ".\n        Branch",
+   "key": "session.dot_branch",
+   "de": ".\n        Branch",
+   "en": ".\n        Branch"
+  },
+  {
+   "match": "Nein",
+   "key": "common.no",
+   "de": "Nein",
+   "en": "No"
+  },
+  {
+   "match": "neu erkennen",
+   "key": "composer.redetect",
+   "de": "neu erkennen",
+   "en": "Redetect"
+  },
+  {
+   "match": "Neuer Titel",
+   "key": "session.new_title",
+   "de": "Neuer Titel",
+   "en": "New title"
+  },
+  {
+   "match": "neues Projekt (Name)",
+   "key": "newsession.new_project_name",
+   "de": "neues Projekt (Name)",
+   "en": "new project (name)"
+  },
+  {
+   "match": "neu seit deinem letzten Besuch",
+   "key": "session.new_since_last_visit",
+   "de": "neu seit deinem letzten Besuch",
+   "en": "new since your last visit"
+  },
+  {
+   "match": "Neu seit deinem letzten Besuch",
+   "key": "session.new_since_last_visit_cap",
+   "de": "Neu seit deinem letzten Besuch",
+   "en": "New since your last visit"
+  },
+  {
+   "match": "Nicht committete Änderungen",
+   "key": "session.uncommitted_changes",
+   "de": "Nicht committete Änderungen",
+   "en": "Uncommitted changes"
+  },
+  {
+   "match": "nicht erfasst — kein Adapter meldet ein strukturiertes Test-Signal",
+   "key": "session.no_test_signal",
+   "de": "nicht erfasst — kein Adapter meldet ein strukturiertes Test-Signal",
+   "en": "not captured — no adapter reports a structured test signal"
+  },
+  {
+   "match": ", nicht in",
+   "key": "session.not_in",
+   "de": ", nicht in",
+   "en": ", not in"
+  },
+  {
+   "match": "Nicht möglich: kein Git-Projekt.",
+   "key": "newsession.not_possible_no_git",
+   "de": "Nicht möglich: kein Git-Projekt.",
+   "en": "Not possible: no Git project."
+  },
+  {
+   "match": "noch",
+   "key": "approvals.still",
+   "de": "noch",
+   "en": "still"
+  },
+  {
+   "match": "noch nicht gesendet",
+   "key": "session.not_yet_sent",
+   "de": "noch nicht gesendet",
+   "en": "not yet sent"
+  },
+  {
+   "match": "nur beobachten — der Harness läuft außerhalb des Hubs",
+   "key": "session.observe_only",
+   "de": "nur beobachten — der Harness läuft außerhalb des Hubs",
+   "en": "observe only — the harness runs outside the hub"
+  },
+  {
+   "match": "nur beobachten — der Harness läuft außerhalb des\n                            Hubs",
+   "key": "session.observe_only_multiline",
+   "de": "nur beobachten — der Harness läuft außerhalb des\n                            Hubs",
+   "en": "observe only — the harness runs outside the\n                            hub"
+  },
+  {
+   "match": "— nur die jüngsten werden gegliedert.",
+   "key": "session.only_recent_grouped",
+   "de": "— nur die jüngsten werden gegliedert.",
+   "en": "— only the most recent are grouped."
+  },
+  {
+   "match": "offene Aktivität",
+   "key": "session.open_activity",
+   "de": "offene Aktivität",
+   "en": "open activity"
+  },
+  {
+   "match": "Offline — Änderungen werden lokal gehalten und mit Zeitstempel nachgezogen; Versand gesperrt.",
+   "key": "session.offline_local_kept",
+   "de": "Offline — Änderungen werden lokal gehalten und mit Zeitstempel nachgezogen; Versand gesperrt.",
+   "en": "Offline — changes are kept locally and caught up with timestamps; sending blocked."
+  },
+  {
+   "match": "Offline — Senden ist gesperrt, dein Entwurf bleibt.",
+   "key": "composer.offline_draft_kept",
+   "de": "Offline — Senden ist gesperrt, dein Entwurf bleibt.",
+   "en": "Offline — sending is blocked, your draft is kept."
+  },
+  {
+   "match": ". Ohne Git gibt es keine Trennung — beide können sich gegenseitig überschreiben.",
+   "key": "newsession.no_git_no_separation",
+   "de": ". Ohne Git gibt es keine Trennung — beide können sich gegenseitig überschreiben.",
+   "en": ". Without Git there is no separation — both can overwrite each other."
+  },
+  {
+   "match": "Ohne Skill/Agent senden",
+   "key": "composer.send_without_skill",
+   "de": "Ohne Skill/Agent senden",
+   "en": "Send without skill/agent"
+  },
+  {
+   "match": "OK",
+   "key": "common.ok",
+   "de": "OK",
+   "en": "OK"
+  },
+  {
+   "match": "OpenAI-kompatibel",
+   "key": "newsession.openai_compatible",
+   "de": "OpenAI-kompatibel",
+   "en": "OpenAI-compatible"
+  },
+  {
+   "match": "Optional",
+   "key": "approvals.optional",
+   "de": "Optional",
+   "en": "Optional"
+  },
+  {
+   "match": "Original",
+   "key": "composer.original",
+   "de": "Original",
+   "en": "Original"
+  },
+  {
+   "match": "Original senden",
+   "key": "composer.send_original",
+   "de": "Original senden",
+   "en": "Send original"
+  },
+  {
+   "match": "Pause",
+   "key": "session.pause",
+   "de": "Pause",
+   "en": "Pause"
+  },
+  {
+   "match": "Pfad",
+   "key": "newsession.path",
+   "de": "Pfad",
+   "en": "Path"
+  },
+  {
+   "match": ") — Pfad eintippen; ein noch fehlender Ordner wird beim Start angelegt",
+   "key": "newsession.type_path_note",
+   "de": ") — Pfad eintippen; ein noch fehlender Ordner wird beim Start angelegt",
+   "en": ") — type a path; a folder that is still missing gets created at start"
+  },
+  {
+   "match": "Projekt",
+   "key": "newsession.project",
+   "de": "Projekt",
+   "en": "Project"
+  },
+  {
+   "match": "Projekt direkt",
+   "key": "newsession.project_direct",
+   "de": "Projekt direkt",
+   "en": "Project direct"
+  },
+  {
+   "match": "Projekt direkt:",
+   "key": "session.project_direct_colon",
+   "de": "Projekt direkt:",
+   "en": "Project direct:"
+  },
+  {
+   "match": "Projekt wird noch geladen …",
+   "key": "composer.project_loading",
+   "de": "Projekt wird noch geladen …",
+   "en": "Project is still loading …"
+  },
+  {
+   "match": "Prompt (optional)",
+   "key": "newsession.prompt_optional",
+   "de": "Prompt (optional)",
+   "en": "Prompt (optional)"
+  },
+  {
+   "match": "Prompt wird verbessert",
+   "key": "composer.prompt_being_improved",
+   "de": "Prompt wird verbessert",
+   "en": "Prompt is being improved"
+  },
+  {
+   "match": "Quelle",
+   "key": "composer.source",
+   "de": "Quelle",
+   "en": "Source"
+  },
+  {
+   "match": "Refactore den Auth-Flow…",
+   "key": "newsession.example_prompt",
+   "de": "Refactore den Auth-Flow…",
+   "en": "Refactor the auth flow…"
+  },
+  {
+   "match": "Review-Notizen",
+   "key": "session.review_notes",
+   "de": "Review-Notizen",
+   "en": "Review notes"
+  },
+  {
+   "match": "Rückgängig",
+   "key": "session.undo",
+   "de": "Rückgängig",
+   "en": "Undo"
+  },
+  {
+   "match": "Sammelversand (",
+   "key": "composer.batch_send_open",
+   "de": "Sammelversand (",
+   "en": "Batch send ("
+  },
+  {
+   "match": "Sammelversand",
+   "key": "composer.batch_send",
+   "de": "Sammelversand",
+   "en": "Batch send"
+  },
+  {
+   "match": "Schnittstelle",
+   "key": "newsession.interface",
+   "de": "Schnittstelle",
+   "en": "Interface"
+  },
+  {
+   "match": "Schon vor dem Start geändert — nicht von dieser Session",
+   "key": "session.changed_before_start",
+   "de": "Schon vor dem Start geändert — nicht von dieser Session",
+   "en": "Already changed before start — not by this session"
+  },
+  {
+   "match": "Schreibt in pi's models.json (mit Sicherung davor). Andere Provider dort bleiben unberührt; pi lädt die Datei beim Öffnen der Modellwahl neu.",
+   "key": "newsession.writes_pi_models_json",
+   "de": "Schreibt in pi's models.json (mit Sicherung davor). Andere Provider dort bleiben unberührt; pi lädt die Datei beim Öffnen der Modellwahl neu.",
+   "en": "Writes into pi's models.json (with a backup beforehand). Other providers there stay untouched; pi reloads the file when the model picker opens."
+  },
+  {
+   "match": "· seit",
+   "key": "session.since_dash",
+   "de": "· seit",
+   "en": "· since"
+  },
+  {
+   "match": "Senden mit …",
+   "key": "composer.send_with",
+   "de": "Senden mit …",
+   "en": "Send with …"
+  },
+  {
+   "match": "Session wegen Budget pausiert.",
+   "key": "session.paused_for_budget",
+   "de": "Session wegen Budget pausiert.",
+   "en": "Session paused for budget."
+  },
+  {
+   "match": "· signiert",
+   "key": "approvals.signed",
+   "de": "· signiert",
+   "en": "· signed"
+  },
+  {
+   "match": "Skill oder Agent wählen",
+   "key": "composer.choose_skill",
+   "de": "Skill oder Agent wählen",
+   "en": "Choose skill or agent"
+  },
+  {
+   "match": "Skills/Agents: für diesen Adapter nicht verfügbar",
+   "key": "composer.skills_unavailable",
+   "de": "Skills/Agents: für diesen Adapter nicht verfügbar",
+   "en": "Skills/agents: not available for this adapter"
+  },
+  {
+   "match": "— spätestens ab",
+   "key": "session.at_earliest_from",
+   "de": "— spätestens ab",
+   "en": "— at the earliest from"
+  },
+  {
+   "match": "speichern",
+   "key": "common.save_lower",
+   "de": "speichern",
+   "en": "save"
+  },
+  {
+   "match": "Speichern",
+   "key": "common.save",
+   "de": "Speichern",
+   "en": "Save"
+  },
+  {
+   "match": "Standard",
+   "key": "common.standard",
+   "de": "Standard",
+   "en": "Default"
+  },
+  {
+   "match": "Standard des Harness",
+   "key": "session.harness_default",
+   "de": "Standard des Harness",
+   "en": "Harness default"
+  },
+  {
+   "match": "Standard des Hubs",
+   "key": "common.hub_default",
+   "de": "Standard des Hubs",
+   "en": "Hub default"
+  },
+  {
+   "match": "Stop",
+   "key": "session.stop",
+   "de": "Stop",
+   "en": "Stop"
+  },
+  {
+   "match": "Streichen",
+   "key": "session.strikethrough",
+   "de": "Streichen",
+   "en": "Strikethrough"
+  },
+  {
+   "match": "· Taste 1–",
+   "key": "approvals.key_hint",
+   "de": "· Taste 1–",
+   "en": "· key 1–"
+  },
+  {
+   "match": "Terminal-Befehl erscheint zwischen zwei Zügen, sobald die Provider-Session bekannt ist.",
+   "key": "session.terminal_between_turns",
+   "de": "Terminal-Befehl erscheint zwischen zwei Zügen, sobald die Provider-Session bekannt ist.",
+   "en": "Terminal command appears between two turns once the provider session is known."
+  },
+  {
+   "match": "Tests",
+   "key": "common.tests",
+   "de": "Tests",
+   "en": "Tests"
+  },
+  {
+   "match": "· thinking",
+   "key": "session.dot_thinking",
+   "de": "· thinking",
+   "en": "· thinking"
+  },
+  {
+   "match": "To-do-Liste des Agenten — klicken zum Aufklappen",
+   "key": "session.todo_list_hint",
+   "de": "To-do-Liste des Agenten — klicken zum Aufklappen",
+   "en": "Agent's to-do list — click to expand"
+  },
+  {
+   "match": "Tokens",
+   "key": "common.tokens",
+   "de": "Tokens",
+   "en": "Tokens"
+  },
+  {
+   "match": "Tokens verarbeitet",
+   "key": "session.tokens_processed",
+   "de": "Tokens verarbeitet",
+   "en": "Tokens processed"
+  },
+  {
+   "match": "· tool_result",
+   "key": "session.dot_tool_result",
+   "de": "· tool_result",
+   "en": "· tool_result"
+  },
+  {
+   "match": ": Tools laufen ungefragt, ohne Rückfrage an dich.",
+   "key": "newsession.tools_run_unasked",
+   "de": ": Tools laufen ungefragt, ohne Rückfrage an dich.",
+   "en": ": tools run unprompted, without asking you."
+  },
+  {
+   "match": "· tool_use",
+   "key": "session.dot_tool_use",
+   "de": "· tool_use",
+   "en": "· tool_use"
+  },
+  {
+   "match": "Trotzdem neu anlegen",
+   "key": "composer.create_anyway",
+   "de": "Trotzdem neu anlegen",
+   "en": "Create anyway"
+  },
+  {
+   "match": "Trotzdem starten — diese Änderungen bleiben unangetastet und gelten nicht als Leistung der Session.",
+   "key": "newsession.start_anyway_untouched",
+   "de": "Trotzdem starten — diese Änderungen bleiben unangetastet und gelten nicht als Leistung der Session.",
+   "en": "Start anyway — these changes stay untouched and do not count as the session's work."
+  },
+  {
+   "match": "Übergabetext",
+   "key": "session.handover_text",
+   "de": "Übergabetext",
+   "en": "Handover text"
+  },
+  {
+   "match": "Übergabetext (wird als erste Eingabe gesendet)",
+   "key": "session.handover_text_first_input",
+   "de": "Übergabetext (wird als erste Eingabe gesendet)",
+   "en": "Handover text (sent as the first input)"
+  },
+  {
+   "match": "Übernehmen",
+   "key": "common.apply",
+   "de": "Übernehmen",
+   "en": "Apply"
+  },
+  {
+   "match": "Umbenennen",
+   "key": "session.rename",
+   "de": "Umbenennen",
+   "en": "Rename"
+  },
+  {
+   "match": "und merged sie in den ausgecheckten Branch von",
+   "key": "session.and_merges_into",
+   "de": "und merged sie in den ausgecheckten Branch von",
+   "en": "and merges them into the checked-out branch of"
+  },
+  {
+   "match": "Ungesicherte Änderungen im Projekt (",
+   "key": "newsession.unsaved_changes_in_project",
+   "de": "Ungesicherte Änderungen im Projekt (",
+   "en": "Unsaved changes in the project ("
+  },
+  {
+   "match": "unlesbare Zeile(n) — Recovery-Report im Hub.",
+   "key": "session.unreadable_lines_recovery",
+   "de": "unlesbare Zeile(n) — Recovery-Report im Hub.",
+   "en": "unreadable line(s) — recovery report in the hub."
+  },
+  {
+   "match": "veraltet:",
+   "key": "session.outdated_colon",
+   "de": "veraltet:",
+   "en": "outdated:"
+  },
+  {
+   "match": "Verbessern",
+   "key": "composer.improve",
+   "de": "Verbessern",
+   "en": "Improve"
+  },
+  {
+   "match": "Verbessert",
+   "key": "composer.improved",
+   "de": "Verbessert",
+   "en": "Improved"
+  },
+  {
+   "match": "Verbessertes übernehmen",
+   "key": "composer.apply_improved",
+   "de": "Verbessertes übernehmen",
+   "en": "Apply improved version"
+  },
+  {
+   "match": "Versand nur online",
+   "key": "composer.send_online_only",
+   "de": "Versand nur online",
+   "en": "Send only when online"
+  },
+  {
+   "match": "Verwerfen",
+   "key": "composer.discard",
+   "de": "Verwerfen",
+   "en": "Discard"
+  },
+  {
+   "match": "von",
+   "key": "common.word_of",
+   "de": "von",
+   "en": "of"
+  },
+  {
+   "match": "Vorgemerkt (",
+   "key": "session.preset_open",
+   "de": "Vorgemerkt (",
+   "en": "Preset ("
+  },
+  {
+   "match": "Vorgemerkt",
+   "key": "session.preset",
+   "de": "Vorgemerkt",
+   "en": "Preset"
+  },
+  {
+   "match": "vor Start geändert",
+   "key": "session.changed_before_start_short",
+   "de": "vor Start geändert",
+   "en": "changed before start"
+  },
+  {
+   "match": "— wählen —",
+   "key": "newsession.choose_dash",
+   "de": "— wählen —",
+   "en": "— choose —"
+  },
+  {
+   "match": "Wartet auf dich (",
+   "key": "approvals.waiting_for_you",
+   "de": "Wartet auf dich (",
+   "en": "Waiting for you ("
+  },
+  {
+   "match": "Was du hier schickst, steht im Verlauf; die offene PC-Ansicht zeigt es erst nach",
+   "key": "session.what_you_send_shows_later",
+   "de": "Was du hier schickst, steht im Verlauf; die offene PC-Ansicht zeigt es erst nach",
+   "en": "What you send here ends up in the history; the open PC view only shows it after"
+  },
+  {
+   "match": "weg",
+   "key": "composer.gone",
+   "de": "weg",
+   "en": "gone"
+  },
+  {
+   "match": "Weiterarbeiten auf einem anderen Gerät",
+   "key": "session.continue_on_other_device",
+   "de": "Weiterarbeiten auf einem anderen Gerät",
+   "en": "Continue on another device"
+  },
+  {
+   "match": "Weitere Aktionen",
+   "key": "session.more_actions",
+   "de": "Weitere Aktionen",
+   "en": "More actions"
+  },
+  {
+   "match": "Weitere Ansichten",
+   "key": "session.more_views",
+   "de": "Weitere Ansichten",
+   "en": "More views"
+  },
+  {
+   "match": "Weitermachen",
+   "key": "session.continue",
+   "de": "Weitermachen",
+   "en": "Continue"
+  },
+  {
+   "match": "Worktree",
+   "key": "common.worktree",
+   "de": "Worktree",
+   "en": "Worktree"
+  },
+  {
+   "match": "“ wurde ersetzt.",
+   "key": "newsession.was_replaced",
+   "de": "“ wurde ersetzt.",
+   "en": "” was replaced."
+  },
+  {
+   "match": "Ziel",
+   "key": "newsession.target",
+   "de": "Ziel",
+   "en": "Target"
+  },
+  {
+   "match": "Ziel-Modell",
+   "key": "newsession.target_model",
+   "de": "Ziel-Modell",
+   "en": "Target model"
+  },
+  {
+   "match": "Ziel-Provider",
+   "key": "newsession.target_provider",
+   "de": "Ziel-Provider",
+   "en": "Target provider"
+  },
+  {
+   "match": "zuletzt abgeglichen:",
+   "key": "session.last_reconciled",
+   "de": "zuletzt abgeglichen:",
+   "en": "last reconciled:"
+  },
+  {
+   "match": "↑ zum Aufruf",
+   "key": "session.up_to_call",
+   "de": "↑ zum Aufruf",
+   "en": "↑ to the call"
+  },
+  {
+   "match": "Zum Chat",
+   "key": "session.to_chat",
+   "de": "Zum Chat",
+   "en": "To the chat"
+  },
+  {
+   "match": "zum Ergebnis ↓",
+   "key": "session.to_result_down",
+   "de": "zum Ergebnis ↓",
+   "en": "to the result ↓"
+  },
+  {
+   "match": "Zusammenfassung",
+   "key": "approvals.summary",
+   "de": "Zusammenfassung",
+   "en": "Summary"
+  },
+  {
+   "match": "Mehrere möglich",
+   "key": "approvals.multiple_possible",
+   "de": "Mehrere möglich",
+   "en": "Multiple answers possible",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "Eine Antwort",
+   "key": "approvals.one_answer",
+   "de": "Eine Antwort",
+   "en": "One answer",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "Antworten",
+   "key": "approvals.answer_verb",
+   "de": "Antworten",
+   "en": "Answer",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "Entscheidung fehlgeschlagen",
+   "key": "approvals.decision_failed",
+   "de": "Entscheidung fehlgeschlagen",
+   "en": "Decision failed",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "Erlauben",
+   "key": "approvals.allow",
+   "de": "Erlauben",
+   "en": "Allow",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "Freigeben",
+   "key": "approvals.approve",
+   "de": "Freigeben",
+   "en": "Approve",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "🔒 Mit Passkey freigeben",
+   "key": "approvals.passkey_approve",
+   "de": "🔒 Mit Passkey freigeben",
+   "en": "🔒 Approve with passkey",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "Biometrische Freigabe fehlgeschlagen",
+   "key": "approvals.biometric_failed",
+   "de": "Biometrische Freigabe fehlgeschlagen",
+   "en": "Biometric approval failed",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "zerstörerisch",
+   "key": "approvals.risk_destructive",
+   "de": "zerstörerisch",
+   "en": "destructive",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "sendet nach außen",
+   "key": "approvals.risk_outbound",
+   "de": "sendet nach außen",
+   "en": "sends outbound",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "unauffällig",
+   "key": "approvals.risk_benign",
+   "de": "unauffällig",
+   "en": "inconspicuous",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "kritisch — Passkey",
+   "key": "approvals.risk_critical",
+   "de": "kritisch — Passkey",
+   "en": "critical — passkey",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "Regeln",
+   "key": "approvals.source_rules",
+   "de": "Regeln",
+   "en": "rules",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "vorsichtshalber strenger",
+   "key": "approvals.source_stricter",
+   "de": "vorsichtshalber strenger",
+   "en": "stricter to be safe",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "wird ausgeführt",
+   "key": "approvals.will_execute",
+   "de": "wird ausgeführt",
+   "en": "will execute",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "ausgeführt",
+   "key": "approvals.executed",
+   "de": "ausgeführt",
+   "en": "executed",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "nicht ausgeführt",
+   "key": "approvals.not_executed",
+   "de": "nicht ausgeführt",
+   "en": "not executed",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "Ausführung ungewiss",
+   "key": "approvals.execution_uncertain",
+   "de": "Ausführung ungewiss",
+   "en": "execution uncertain",
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": "`Eigene Antwort auf „${q.question}“`",
+   "key": "approvals.own_answer_q",
+   "de": "Eigene Antwort auf „{q}“",
+   "en": "Own answer to “{q}”",
+   "params": {
+    "q.question": "q"
+   },
+   "only": [
+    "Approvals.tsx"
+   ]
+  },
+  {
+   "match": ", Erkennung fehlgeschlagen",
+   "key": "composer.detection_failed",
+   "de": ", Erkennung fehlgeschlagen",
+   "en": ", detection failed",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Ablage öffnen, noch leer",
+   "key": "composer.shelf_empty",
+   "de": "Ablage öffnen, noch leer",
+   "en": "Open clipboard shelf — empty",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Zwischenablage-Ablage — noch nichts kopiert",
+   "key": "composer.shelf_none",
+   "de": "Zwischenablage-Ablage — noch nichts kopiert",
+   "en": "Clipboard shelf — nothing copied yet",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Eingabe verkleinern",
+   "key": "composer.shrink_input",
+   "de": "Eingabe verkleinern",
+   "en": "Shrink input",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Eingabe maximieren",
+   "key": "composer.maximize_input",
+   "de": "Eingabe maximieren",
+   "en": "Maximize input",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Eingabe wieder verkleinern",
+   "key": "composer.unmaximize_input",
+   "de": "Eingabe wieder verkleinern",
+   "en": "Restore input size",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Eingabe groß machen",
+   "key": "composer.enlarge_input",
+   "de": "Eingabe groß machen",
+   "en": "Enlarge input",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "⌘/Ctrl+Enter senden",
+   "key": "composer.send_hint",
+   "de": "⌘/Ctrl+Enter senden",
+   "en": "⌘/Ctrl+Enter to send",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Prompt verbessern (lokales Modell zuerst, sonst Kontingent des Adapters)",
+   "key": "composer.improve_title",
+   "de": "Prompt verbessern (lokales Modell zuerst, sonst Kontingent des Adapters)",
+   "en": "Improve prompt (local model first, otherwise adapter quota)",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Vorschlag hat keinen Entwurf",
+   "key": "composer.suggestion_no_draft",
+   "de": "Vorschlag hat keinen Entwurf",
+   "en": "Suggestion has no draft",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Verbessern fehlgeschlagen",
+   "key": "composer.improve_failed",
+   "de": "Verbessern fehlgeschlagen",
+   "en": "Improve failed",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Empfehlung fehlgeschlagen",
+   "key": "composer.recommend_failed",
+   "de": "Empfehlung fehlgeschlagen",
+   "en": "Recommendation failed",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Workflows haben keinen Adapter-Aufruf. Der Name kommt in den Prompt.",
+   "key": "composer.workflow_no_call",
+   "de": "Workflows haben keinen Adapter-Aufruf. Der Name kommt in den Prompt.",
+   "en": "Workflows have no adapter call. The name goes into the prompt.",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Dieser Adapter übernimmt den Eintrag nicht direkt. Der Name kommt in den Prompt.",
+   "key": "composer.adapter_no_direct",
+   "de": "Dieser Adapter übernimmt den Eintrag nicht direkt. Der Name kommt in den Prompt.",
+   "en": "This adapter does not take the entry directly. The name goes into the prompt.",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Nutzen legt die Datei an und nimmt sie für diesen Prompt. Als Standard merkt sie fürs Projekt.",
+   "key": "composer.use_creates_file",
+   "de": "Nutzen legt die Datei an und nimmt sie für diesen Prompt. Als Standard merkt sie fürs Projekt.",
+   "en": "Use creates the file and includes it in this prompt. As default it remembers it for the project.",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Nutzen gilt für diesen Prompt. Als Standard merkt sie fürs Projekt.",
+   "key": "composer.use_applies",
+   "de": "Nutzen gilt für diesen Prompt. Als Standard merkt sie fürs Projekt.",
+   "en": "Use applies to this prompt. As default it remembers it for the project.",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "erkennt neu …",
+   "key": "composer.redetects",
+   "de": "erkennt neu …",
+   "en": "redetects …",
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "`Ablage öffnen, ${shelfCount} Stufen`",
+   "key": "composer.shelf_open_n",
+   "de": "Ablage öffnen, {n} Einträge",
+   "en": "Open clipboard shelf, {n} entries",
+   "params": {
+    "shelfCount": "n"
+   },
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "`Zwischenablage-Ablage (${shelfCount} Stufen)`",
+   "key": "composer.shelf_tooltip",
+   "de": "Zwischenablage-Ablage ({n} Einträge)",
+   "en": "Clipboard shelf ({n} entries)",
+   "params": {
+    "shelfCount": "n"
+   },
+   "only": [
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Agent",
+   "key": "common.kind_agent",
+   "de": "Agent",
+   "en": "Agent",
+   "only": [
+    "SkillOverlay.tsx",
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Skill",
+   "key": "common.kind_skill",
+   "de": "Skill",
+   "en": "Skill",
+   "only": [
+    "SkillOverlay.tsx",
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Skills konnten nicht geladen werden",
+   "key": "composer.skills_load_failed",
+   "de": "Skills konnten nicht geladen werden",
+   "en": "Could not load skills",
+   "only": [
+    "SkillOverlay.tsx"
+   ]
+  },
+  {
+   "match": "Als Standard",
+   "key": "skillrec.set_default",
+   "de": "Als Standard",
+   "en": "As default",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Datei bearbeiten",
+   "key": "skillrec.edit_file",
+   "de": "Datei bearbeiten",
+   "en": "Edit file",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Datei nicht lesbar",
+   "key": "skillrec.file_unreadable",
+   "de": "Datei nicht lesbar",
+   "en": "File not readable",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Datei speichern",
+   "key": "skillrec.save_file",
+   "de": "Datei speichern",
+   "en": "Save file",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Anpassung vorschlagen",
+   "key": "skillrec.suggest_adjustment",
+   "de": "Anpassung vorschlagen",
+   "en": "Suggest adjustment",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Neu statt Anpassen.",
+   "key": "skillrec.new_instead",
+   "de": "Neu statt Anpassen.",
+   "en": "New instead of adjust.",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Nutzen",
+   "key": "skillrec.use",
+   "de": "Nutzen",
+   "en": "Use",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Speichern fehlgeschlagen",
+   "key": "skillrec.save_failed",
+   "de": "Speichern fehlgeschlagen",
+   "en": "Save failed",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Vorschlag fehlgeschlagen",
+   "key": "skillrec.suggest_failed",
+   "de": "Vorschlag fehlgeschlagen",
+   "en": "Suggestion failed",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Entwurf",
+   "key": "skillrec.draft",
+   "de": "Entwurf",
+   "en": "Draft",
+   "only": [
+    "SkillRecommendCard.tsx",
+    "Composer.tsx"
+   ]
+  },
+  {
+   "match": "Workflow",
+   "key": "skillrec.workflow",
+   "de": "Workflow",
+   "en": "Workflow",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Die Datei wurde inzwischen geändert. Aktueller Stand ist geladen — Änderung erneut prüfen.",
+   "key": "skillrec.file_changed",
+   "de": "Die Datei wurde inzwischen geändert. Aktueller Stand ist geladen — Änderung erneut prüfen.",
+   "en": "The file changed in the meantime. Current state loaded — check the change again.",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Vorschau nicht verfügbar",
+   "key": "newsession.preview_unavailable",
+   "de": "Vorschau nicht verfügbar",
+   "en": "Preview unavailable",
+   "only": [
+    "WorkplaceChoice.tsx"
+   ]
+  },
+  {
+   "match": " (Standard)",
+   "key": "newsession.default_suffix",
+   "de": " (Standard)",
+   "en": " (default)",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": " (dieser)",
+   "key": "newsession.this_suffix",
+   "de": " (dieser)",
+   "en": " (this one)",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": " (nur beobachten)",
+   "key": "newsession.observe_only_suffix",
+   "de": " (nur beobachten)",
+   "en": " (observe only)",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": " · eigenes",
+   "key": "newsession.own_suffix",
+   "de": " · eigenes",
+   "en": " · own",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": "(alle)",
+   "key": "newsession.all_paren",
+   "de": "(alle)",
+   "en": "(all)",
+   "only": [
+    "CustomModelDialog.tsx"
+   ]
+  },
+  {
+   "match": "+ Anlegen",
+   "key": "newsession.add_create",
+   "de": "+ Anlegen",
+   "en": "+ Create",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": "+ Skill/Agent",
+   "key": "newsession.add_skill_agent",
+   "de": "+ Skill/Agent",
+   "en": "+ Skill/Agent",
+   "only": [
+    "SkillOverlay.tsx"
+   ]
+  },
+  {
+   "match": "Adapter",
+   "key": "newsession.adapter",
+   "de": "Adapter",
+   "en": "Adapter",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": "Eintragen",
+   "key": "newsession.add_entry",
+   "de": "Eintragen",
+   "en": "Add entry",
+   "only": [
+    "CustomModelDialog.tsx"
+   ]
+  },
+  {
+   "match": "Factory-Treiber",
+   "key": "newsession.factory_driver",
+   "de": "Factory-Treiber",
+   "en": "Factory driver",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": "Linie wird angelegt … das kann eine Minute dauern.",
+   "key": "newsession.line_creating",
+   "de": "Linie wird angelegt … das kann eine Minute dauern.",
+   "en": "Line is being created … this may take a minute.",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": "Starten",
+   "key": "newsession.start",
+   "de": "Starten",
+   "en": "Start",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": "Treiber-Modell",
+   "key": "newsession.driver_model",
+   "de": "Treiber-Modell",
+   "en": "Driver model",
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": "Endpunkt in pi eingetragen — das Modell steht im Dropdown.",
+   "key": "newsession.endpoint_added",
+   "de": "Endpunkt in pi eingetragen — das Modell steht im Dropdown.",
+   "en": "Endpoint added in pi — the model is in the dropdown.",
+   "only": [
+    "CustomModelDialog.tsx"
+   ]
+  },
+  {
+   "match": "Endpunkt in pi ersetzt.",
+   "key": "newsession.endpoint_replaced",
+   "de": "Endpunkt in pi ersetzt.",
+   "en": "Endpoint replaced in pi.",
+   "only": [
+    "CustomModelDialog.tsx"
+   ]
+  },
+  {
+   "match": "Gespeichert — das Modell steht jetzt im Dropdown.",
+   "key": "newsession.model_saved",
+   "de": "Gespeichert — das Modell steht jetzt im Dropdown.",
+   "en": "Saved — the model is now in the dropdown.",
+   "only": [
+    "CustomModelDialog.tsx"
+   ]
+  },
+  {
+   "match": "`Projekt eingerichtet, aber noch nicht bereit: ${made.detail ?? \"Checkliste der Factory prüfen\"}. Es wurde kein Lauf gestartet — nach der Klärung erneut „Starten“.`",
+   "key": "newsession.setup_incomplete",
+   "de": "Projekt eingerichtet, aber noch nicht bereit: {detail}. Es wurde kein Lauf gestartet — nach der Klärung erneut „Starten“.",
+   "en": "Project set up but not ready: {detail}. No run was started — after clarifying, press “Start” again.",
+   "params": {
+    "made.detail ?? \"Checkliste der Factory prüfen\"": "detail"
+   },
+   "only": [
+    "CreateSession.tsx"
+   ]
+  },
+  {
+   "match": "(leer)",
+   "key": "session.empty_paren",
+   "de": "(leer)",
+   "en": "(empty)",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": " · ohne Plan kein Fortschritt messbar",
+   "key": "session.no_plan_suffix",
+   "de": " · ohne Plan kein Fortschritt messbar",
+   "en": " · without a plan no progress measurable",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": " · uncommittet",
+   "key": "session.uncommitted_suffix",
+   "de": " · uncommittet",
+   "en": " · uncommitted",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": " — offline",
+   "key": "session.offline_suffix",
+   "de": " — offline",
+   "en": " — offline",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": " — verbinde…",
+   "key": "session.connecting_suffix",
+   "de": " — verbinde…",
+   "en": " — connecting…",
+   "only": [
+    "SkillRecommendCard.tsx"
+   ]
+  },
+  {
+   "match": "Alles erlauben",
+   "key": "session.allow_all",
+   "de": "Alles erlauben",
+   "en": "Allow everything",
+   "only": [
+    "SessionConfigure.tsx"
+   ]
+  },
+  {
+   "match": "Auto",
+   "key": "session.auto",
+   "de": "Auto",
+   "en": "Auto",
+   "only": [
+    "SessionConfigure.tsx"
+   ]
+  },
+  {
+   "match": "Antwort fehlgeschlagen",
+   "key": "session.answer_failed",
+   "de": "Antwort fehlgeschlagen",
+   "en": "Answer failed",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Anheften fehlgeschlagen.",
+   "key": "session.pin_failed",
+   "de": "Anheften fehlgeschlagen.",
+   "en": "Pinning failed.",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Anker wählen (Zeile antippen)",
+   "key": "session.choose_anchor",
+   "de": "Anker wählen (Zeile antippen)",
+   "en": "Choose anchor (tap line)",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Archivieren fehlgeschlagen.",
+   "key": "session.archive_failed",
+   "de": "Archivieren fehlgeschlagen.",
+   "en": "Archiving failed.",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Befehle",
+   "key": "session.commands",
+   "de": "Befehle",
+   "en": "Commands",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Befund",
+   "key": "session.finding",
+   "de": "Befund",
+   "en": "finding",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Befunde",
+   "key": "session.findings",
+   "de": "Befunde",
+   "en": "findings",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Befunde zum Versand auswählen",
+   "key": "session.select_findings",
+   "de": "Befunde zum Versand auswählen",
+   "en": "Select findings for sending",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Beobachter (Fortschritt)",
+   "key": "session.observer_progress",
+   "de": "Beobachter (Fortschritt)",
+   "en": "Observer (progress)",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Bitte markieren",
+   "key": "session.please_mark",
+   "de": "Bitte markieren",
+   "en": "Please mark",
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "Budget erhöhen",
+   "key": "session.budget_top_up",
+   "de": "Budget erhöhen",
+   "en": "Increase budget",
+   "only": [
+    "BudgetTopUp.tsx"
+   ]
+  },
+  {
+   "match": "Budget erhöht — Session läuft weiter.",
+   "key": "session.budget_topped_up",
+   "de": "Budget erhöht — Session läuft weiter.",
+   "en": "Budget increased — session continues.",
+   "only": [
+    "BudgetTopUp.tsx"
+   ]
+  },
+  {
+   "match": "Chat",
+   "key": "session.chat_tab",
+   "de": "Chat",
+   "en": "Chat",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Datei",
+   "key": "session.file_tab",
+   "de": "Datei",
+   "en": "File",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Der Hub kann Meldungen noch nicht nachträglich ändern — Hub aktualisieren",
+   "key": "session.hub_cannot_update",
+   "de": "Der Hub kann Meldungen noch nicht nachträglich ändern — Hub aktualisieren",
+   "en": "The hub cannot update messages yet — update the hub",
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "Der Hub kann die Reihe noch nicht speichern — Hub aktualisieren",
+   "key": "session.hub_cannot_queue",
+   "de": "Der Hub kann die Reihe noch nicht speichern — Hub aktualisieren",
+   "en": "The hub cannot save the queue yet — update the hub",
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "Details konnten nicht geladen werden.",
+   "key": "session.details_load_failed",
+   "de": "Details konnten nicht geladen werden.",
+   "en": "Could not load details.",
+   "only": [
+    "EventRow.tsx"
+   ]
+  },
+  {
+   "match": "Edits ohne Frage",
+   "key": "session.edits_no_ask",
+   "de": "Edits ohne Frage",
+   "en": "Edits without asking",
+   "only": [
+    "SessionConfigure.tsx"
+   ]
+  },
+  {
+   "match": "Ein anderes Gerät",
+   "key": "session.other_device",
+   "de": "Ein anderes Gerät",
+   "en": "Another device",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Einmischen gescheitert — Remote nicht erreichbar?",
+   "key": "session.merge_failed",
+   "de": "Einmischen gescheitert — Remote nicht erreichbar?",
+   "en": "Merge failed — remote unreachable?",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Erst nach dem laufenden Zug",
+   "key": "session.after_current_turn",
+   "de": "Erst nach dem laufenden Zug",
+   "en": "Only after the current turn",
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "Fasse den Stand kurz zusammen",
+   "key": "session.summarize_template",
+   "de": "Fasse den Stand kurz zusammen",
+   "en": "Briefly summarize the current state",
+   "only": [
+    "ReplyTemplates.tsx"
+   ]
+  },
+  {
+   "match": "Fortschritt öffnen",
+   "key": "session.open_progress",
+   "de": "Fortschritt öffnen",
+   "en": "Open progress",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Fortsetzen fehlgeschlagen.",
+   "key": "session.resume_failed",
+   "de": "Fortsetzen fehlgeschlagen.",
+   "en": "Resuming failed.",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Führe die Tests aus und behebe Fehler",
+   "key": "session.fix_tests_template",
+   "de": "Führe die Tests aus und behebe Fehler",
+   "en": "Run the tests and fix the errors",
+   "only": [
+    "ReplyTemplates.tsx"
+   ]
+  },
+  {
+   "match": "Gekürzt — der volle Text konnte nicht geladen werden.",
+   "key": "session.text_truncated",
+   "de": "Gekürzt — der volle Text konnte nicht geladen werden.",
+   "en": "Truncated — the full text could not be loaded.",
+   "only": [
+    "EventRow.tsx"
+   ]
+  },
+  {
+   "match": "Hier weitermachen (Kontext neu aufbauen)",
+   "key": "session.continue_here",
+   "de": "Hier weitermachen (Kontext neu aufbauen)",
+   "en": "Continue here (rebuild context)",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "Jetzt lenken",
+   "key": "session.steer_now",
+   "de": "Jetzt lenken",
+   "en": "Steer now",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Jetzt lenken — Klick stellt auf Warten bis zum Zugende",
+   "key": "session.steer_now_hint",
+   "de": "Jetzt lenken — Klick stellt auf Warten bis zum Zugende",
+   "en": "Steer now — click switches to wait until end of turn",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Jetzt übernehmen",
+   "key": "session.take_now",
+   "de": "Jetzt übernehmen",
+   "en": "Take now",
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "Kopieren",
+   "key": "session.copy",
+   "de": "Kopieren",
+   "en": "Copy",
+   "only": [
+    "EventRow.tsx",
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "Kopiert",
+   "key": "session.copied",
+   "de": "Kopiert",
+   "en": "Copied",
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "Langer Text wird geladen …",
+   "key": "session.long_text_loading",
+   "de": "Langer Text wird geladen …",
+   "en": "Long text is loading …",
+   "only": [
+    "EventRow.tsx"
+   ]
+  },
+  {
+   "match": "Limit des Providers erreicht",
+   "key": "session.provider_limit",
+   "de": "Limit des Providers erreicht",
+   "en": "Provider limit reached",
+   "only": [
+    "InterruptedBanner.tsx"
+   ]
+  },
+  {
+   "match": "Löschen fehlgeschlagen",
+   "key": "session.delete_failed",
+   "de": "Löschen fehlgeschlagen",
+   "en": "Delete failed",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Mit Modell straffen",
+   "key": "session.tighten_with_model",
+   "de": "Mit Modell straffen",
+   "en": "Tighten with model",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "Nach hinten",
+   "key": "session.to_back",
+   "de": "Nach hinten",
+   "en": "To the back",
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "Nachfragen",
+   "key": "session.ask",
+   "de": "Nachfragen",
+   "en": "Ask",
+   "only": [
+    "SessionConfigure.tsx"
+   ]
+  },
+  {
+   "match": "Nie fragen",
+   "key": "session.never_ask",
+   "de": "Nie fragen",
+   "en": "Never ask",
+   "only": [
+    "SessionConfigure.tsx"
+   ]
+  },
+  {
+   "match": "Notiz an Zeilen",
+   "key": "session.note_on_lines",
+   "de": "Notiz an Zeilen",
+   "en": "Note on lines",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Notiz bearbeiten",
+   "key": "session.edit_note",
+   "de": "Notiz bearbeiten",
+   "en": "Edit note",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Notiz konnte nicht gespeichert werden.",
+   "key": "session.note_save_failed",
+   "de": "Notiz konnte nicht gespeichert werden.",
+   "en": "Note could not be saved.",
+   "only": [
+    "StatusNote.tsx"
+   ]
+  },
+  {
+   "match": "Notizen nicht erreichbar",
+   "key": "session.notes_unreachable",
+   "de": "Notizen nicht erreichbar",
+   "en": "Notes unreachable",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Offline — Versand erst mit Verbindung.",
+   "key": "session.offline_send_later",
+   "de": "Offline — Versand erst mit Verbindung.",
+   "en": "Offline — sending only once connected.",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Pause fehlgeschlagen.",
+   "key": "session.pause_failed",
+   "de": "Pause fehlgeschlagen.",
+   "en": "Pausing failed.",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Prüfen gescheitert — Remote nicht erreichbar?",
+   "key": "session.check_failed",
+   "de": "Prüfen gescheitert — Remote nicht erreichbar?",
+   "en": "Check failed — remote unreachable?",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Reparieren fehlgeschlagen.",
+   "key": "session.repair_failed",
+   "de": "Reparieren fehlgeschlagen.",
+   "en": "Repair failed.",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "Senden",
+   "key": "session.send",
+   "de": "Senden",
+   "en": "Send",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Senden fehlgeschlagen",
+   "key": "session.send_failed",
+   "de": "Senden fehlgeschlagen",
+   "en": "Send failed",
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "Session benötigt Entscheidung",
+   "key": "session.needs_decision",
+   "de": "Session benötigt Entscheidung",
+   "en": "Session needs a decision",
+   "only": [
+    "InterruptedBanner.tsx"
+   ]
+  },
+  {
+   "match": "Session benötigt eine Entscheidung",
+   "key": "session.needs_an_decision",
+   "de": "Session benötigt eine Entscheidung",
+   "en": "Session needs a decision",
+   "only": [
+    "InterruptedBanner.tsx"
+   ]
+  },
+  {
+   "match": "Session endgültig löschen? Eine laufende archivierte Session wird gestoppt. Verlauf, Statistik und Worktree werden entfernt.",
+   "key": "session.delete_forever_q",
+   "de": "Session endgültig löschen? Eine laufende archivierte Session wird gestoppt. Verlauf, Statistik und Worktree werden entfernt.",
+   "en": "Delete session permanently? A running archived session will be stopped. History, statistics and worktree are removed.",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Session unterbrochen",
+   "key": "session.interrupted",
+   "de": "Session unterbrochen",
+   "en": "Session interrupted",
+   "only": [
+    "InterruptedBanner.tsx"
+   ]
+  },
+  {
+   "match": "Steuerung ausblenden",
+   "key": "session.hide_controls",
+   "de": "Steuerung ausblenden",
+   "en": "Hide controls",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Steuerung einblenden",
+   "key": "session.show_controls",
+   "de": "Steuerung einblenden",
+   "en": "Show controls",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Stop fehlgeschlagen.",
+   "key": "session.stop_failed",
+   "de": "Stop fehlgeschlagen.",
+   "en": "Stop failed",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Straffen fehlgeschlagen",
+   "key": "session.tighten_failed",
+   "de": "Straffen fehlgeschlagen",
+   "en": "Tightening failed",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "Streichen fehlgeschlagen — die Nachricht bleibt vorgemerkt.",
+   "key": "session.remove_failed_kept",
+   "de": "Streichen fehlgeschlagen — die Nachricht bleibt vorgemerkt.",
+   "en": "Removal failed — the message stays queued.",
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "Suche",
+   "key": "session.search",
+   "de": "Suche",
+   "en": "Search",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Text bearbeiten",
+   "key": "session.edit_text",
+   "de": "Text bearbeiten",
+   "en": "Edit text",
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "Treiber (Chat)",
+   "key": "session.driver_chat",
+   "de": "Treiber (Chat)",
+   "en": "Driver (chat)",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Treiber-Chat öffnen",
+   "key": "session.open_driver_chat",
+   "de": "Treiber-Chat öffnen",
+   "en": "Open driver chat",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Umbenennen fehlgeschlagen.",
+   "key": "session.rename_failed",
+   "de": "Umbenennen fehlgeschlagen.",
+   "en": "Renaming failed.",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Umgebung",
+   "key": "session.environment",
+   "de": "Umgebung",
+   "en": "Environment",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Umhängen fehlgeschlagen — die Reihe bleibt, wie sie war.",
+   "key": "session.requeue_failed",
+   "de": "Umhängen fehlgeschlagen — die Reihe bleibt, wie sie war.",
+   "en": "Requeue failed — the queue stays as it was.",
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "Unterbrechung erkannt",
+   "key": "session.interruption_detected",
+   "de": "Unterbrechung erkannt",
+   "en": "Interruption detected",
+   "only": [
+    "InterruptedBanner.tsx"
+   ]
+  },
+  {
+   "match": "Unterbrochen — Zug abgebrochen",
+   "key": "session.interrupted_abort",
+   "de": "Unterbrochen — Zug abgebrochen",
+   "en": "Interrupted — turn aborted",
+   "only": [
+    "ReportPane.tsx"
+   ]
+  },
+  {
+   "match": "Verbindung zum Adapter verloren",
+   "key": "session.adapter_lost",
+   "de": "Verbindung zum Adapter verloren",
+   "en": "Connection to adapter lost",
+   "only": [
+    "InterruptedBanner.tsx"
+   ]
+  },
+  {
+   "match": "Verlauf",
+   "key": "session.history",
+   "de": "Verlauf",
+   "en": "History",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Versand abgelehnt",
+   "key": "session.send_rejected",
+   "de": "Versand abgelehnt",
+   "en": "Sending rejected",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Vormerken",
+   "key": "session.queue_up",
+   "de": "Vormerken",
+   "en": "Queue up",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Vorschau fehlgeschlagen",
+   "key": "session.preview_failed",
+   "de": "Vorschau fehlgeschlagen",
+   "en": "Preview failed",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Vorschau lädt …",
+   "key": "session.preview_loading",
+   "de": "Vorschau lädt …",
+   "en": "Preview loading …",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Warten bis der Zug endet — Klick stellt auf jetzt lenken",
+   "key": "session.wait_hint",
+   "de": "Warten bis der Zug endet — Klick stellt auf jetzt lenken",
+   "en": "Wait until the turn ends — click switches to steer now",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Weiter",
+   "key": "session.next",
+   "de": "Weiter",
+   "en": "Continue",
+   "only": [
+    "ReplyTemplates.tsx",
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Zuerst ein Ziel wählen",
+   "key": "session.choose_target_first",
+   "de": "Zuerst ein Ziel wählen",
+   "en": "Choose a target first",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "Zuletzt geladener Stand — Aktualisierung fehlgeschlagen.",
+   "key": "session.stale_loaded",
+   "de": "Zuletzt geladener Stand — Aktualisierung fehlgeschlagen.",
+   "en": "Last loaded state — refresh failed.",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Zustellung unklar (Netzwerk) — erneuter Versuch mit derselben Operations-ID ist sicher.",
+   "key": "session.delivery_unclear",
+   "de": "Zustellung unklar (Netzwerk) — erneuter Versuch mit derselben Operations-ID ist sicher.",
+   "en": "Delivery unclear (network) — a retry with the same operation ID is safe.",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "Zustellung: lenken, jetzt",
+   "key": "session.delivery_steer_now",
+   "de": "Zustellung: lenken, jetzt",
+   "en": "Delivery: steer, now",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Zustellung: warten bis zum Zugende",
+   "key": "session.delivery_wait",
+   "de": "Zustellung: warten bis zum Zugende",
+   "en": "Delivery: wait until end of turn",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "am Zugende",
+   "key": "session.at_turn_end",
+   "de": "am Zugende",
+   "en": "at end of turn",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "formuliert…",
+   "key": "session.formulating",
+   "de": "formuliert…",
+   "en": "formulating…",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "frühere Einträge werden geladen …",
+   "key": "session.older_loading",
+   "de": "frühere Einträge werden geladen …",
+   "en": "older entries are loading …",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "ganzer Hunk",
+   "key": "session.whole_hunk",
+   "de": "ganzer Hunk",
+   "en": "whole hunk",
+   "only": [
+    "DiffPane.tsx"
+   ]
+  },
+  {
+   "match": "keine Meldung",
+   "key": "session.no_report",
+   "de": "keine Meldung",
+   "en": "no report",
+   "only": [
+    "ReportPane.tsx"
+   ]
+  },
+  {
+   "match": "keine Nachrichten",
+   "key": "session.no_messages",
+   "de": "keine Nachrichten",
+   "en": "no messages",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "läuft",
+   "key": "session.running",
+   "de": "läuft",
+   "en": "running",
+   "only": [
+    "ChatTurns.tsx"
+   ]
+  },
+  {
+   "match": "noch keine Meldung",
+   "key": "session.no_report_yet",
+   "de": "noch keine Meldung",
+   "en": "no report yet",
+   "only": [
+    "ReportPane.tsx"
+   ]
+  },
+  {
+   "match": "ohne Ergebnis",
+   "key": "session.no_result",
+   "de": "ohne Ergebnis",
+   "en": "no result",
+   "only": [
+    "ChatTurns.tsx"
+   ]
+  },
+  {
+   "match": "repariert…",
+   "key": "session.repaired",
+   "de": "repariert…",
+   "en": "repaired…",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "sendet …",
+   "key": "session.sending",
+   "de": "sendet …",
+   "en": "sending …",
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "startet…",
+   "key": "session.starting",
+   "de": "startet…",
+   "en": "starting…",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "unbekannte Ereignisse",
+   "key": "session.unknown_events",
+   "de": "unbekannte Ereignisse",
+   "en": "unknown events",
+   "only": [
+    "ChatTurns.tsx"
+   ]
+  },
+  {
+   "match": "unbekanntes Ereignis",
+   "key": "session.unknown_event",
+   "de": "unbekanntes Ereignis",
+   "en": "unknown event",
+   "only": [
+    "ChatTurns.tsx"
+   ]
+  },
+  {
+   "match": "Ändern fehlgeschlagen — die Nachricht bleibt, wie sie vorgemerkt war.",
+   "key": "session.change_failed_kept",
+   "de": "Ändern fehlgeschlagen — die Nachricht bleibt, wie sie vorgemerkt war.",
+   "en": "Change failed — the message stays as it was queued.",
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "Änderung nicht möglich.",
+   "key": "session.change_not_possible",
+   "de": "Änderung nicht möglich.",
+   "en": "Change not possible.",
+   "only": [
+    "SessionConfigure.tsx"
+   ]
+  },
+  {
+   "match": "Änderungen",
+   "key": "session.changes",
+   "de": "Änderungen",
+   "en": "Changes",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Änderungen konnten nicht geladen werden.",
+   "key": "session.changes_load_failed",
+   "de": "Änderungen konnten nicht geladen werden.",
+   "en": "Could not load changes.",
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "Übergeben",
+   "key": "session.hand_over",
+   "de": "Übergeben",
+   "en": "Hand over",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "Übernehmen fehlgeschlagen.",
+   "key": "session.take_over_failed",
+   "de": "Übernehmen fehlgeschlagen.",
+   "en": "Takeover failed.",
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "Agent-Prozess unerwartet beendet",
+   "key": "session.agent_exit_unexpected",
+   "de": "Agent-Prozess unerwartet beendet",
+   "en": "Agent process ended unexpectedly",
+   "only": [
+    "InterruptedBanner.tsx"
+   ]
+  },
+  {
+   "match": "Hub neu gestartet — Agent-Prozess nicht mehr vorhanden",
+   "key": "session.hub_restarted",
+   "de": "Hub neu gestartet — Agent-Prozess nicht mehr vorhanden",
+   "en": "Hub restarted — agent process no longer present",
+   "only": [
+    "InterruptedBanner.tsx"
+   ]
+  },
+  {
+   "match": "Im Terminal am PC",
+   "key": "session.in_terminal_pc",
+   "de": "Im Terminal am PC",
+   "en": "In the terminal on the PC",
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "(bisher)",
+   "key": "session.previous_suffix",
+   "de": "(bisher)",
+   "en": " (previous)",
+   "only": [
+    "ReportPane.tsx"
+   ]
+  },
+  {
+   "match": "erkennt neu …",
+   "key": "session.redetects",
+   "de": "erkennt neu …",
+   "en": "redetects …",
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "`${check.behind} hinter origin/${check.branch} · Probelauf sauber.`",
+   "key": "session.dry_run_clean",
+   "de": "{behind} hinter origin/{branch} · Probelauf sauber.",
+   "en": "{behind} behind origin/{branch} · dry run clean.",
+   "params": {
+    "check.behind": "behind",
+    "check.branch": "branch"
+   },
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "`${check.behind} hinter origin/${check.branch} · Konflikt in ${check.conflicts.join(\", \")} — in der Session lösen.`",
+   "key": "session.conflict_in_session",
+   "de": "{behind} hinter origin/{branch} · Konflikt in {conflicts} — in der Session lösen.",
+   "en": "{behind} behind origin/{branch} · conflict in {conflicts} — resolve in the session.",
+   "params": {
+    "check.behind": "behind",
+    "check.branch": "branch",
+    "check.conflicts.join(\", \")": "conflicts"
+   },
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "`${events[0]!.seq - 1} frühere Einträge — hochscrollen oder tippen`",
+   "key": "session.older_entries",
+   "de": "{n} frühere Einträge — hochscrollen oder tippen",
+   "en": "{n} earlier entries — scroll up or tap",
+   "params": {
+    "events[0]!.seq - 1": "n"
+   },
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "`Aktuell — kein Rückstand auf origin/${check.branch}.`",
+   "key": "session.up_to_date",
+   "de": "Aktuell — kein Rückstand auf origin/{branch}.",
+   "en": "Current — no lag behind origin/{branch}.",
+   "params": {
+    "check.branch": "branch"
+   },
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "`origin/main eingemischt (${result.to}).`",
+   "key": "session.merged_into_main",
+   "de": "origin/main eingemischt ({to}).",
+   "en": "Merged into origin/main ({to}).",
+   "params": {
+    "result.to": "to"
+   },
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "`Konflikt in ${(result.files ?? []).join(\", \")} — nichts verändert.`",
+   "key": "session.conflict_nothing",
+   "de": "Konflikt in {files} — nichts verändert.",
+   "en": "Conflict in {files} — nothing changed.",
+   "params": {
+    "(result.files ?? []).join(\", \")": "files"
+   },
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "`Gescheitert (${result.reason}).`",
+   "key": "session.failed_reason",
+   "de": "Gescheitert ({reason}).",
+   "en": "Failed ({reason}).",
+   "params": {
+    "result.reason": "reason"
+   },
+   "only": [
+    "SessionTail.tsx"
+   ]
+  },
+  {
+   "match": "`Der Text geht dafür an ${target}`",
+   "key": "session.text_goes_to",
+   "de": "Der Text geht dafür an {target}",
+   "en": "The text goes to {target} instead.",
+   "params": {
+    "target": "target"
+   },
+   "only": [
+    "Handover.tsx"
+   ]
+  },
+  {
+   "match": "`Übernommen: ${r.files} Datei(en) nach ${r.into} (${r.commit}).`",
+   "key": "session.taken_over",
+   "de": "Übernommen: {files} Datei(en) nach {into} ({commit}).",
+   "en": "Taken over: {files} file(s) to {into} ({commit}).",
+   "params": {
+    "r.files": "files",
+    "r.into": "into",
+    "r.commit": "commit"
+   },
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "`Im Terminal, per SSH auf ${host}`",
+   "key": "session.terminal_ssh",
+   "de": "Im Terminal, per SSH auf {host}",
+   "en": "In the terminal, via SSH on {host}",
+   "params": {
+    "host": "host"
+   },
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "` auf ${host}`",
+   "key": "session.on_suffix",
+   "de": " auf {host}",
+   "en": " on {host}",
+   "params": {
+    "host": "host"
+   },
+   "only": [
+    "HostCommands.tsx"
+   ]
+  },
+  {
+   "match": "`${m.id} entfernen`",
+   "key": "newsession.remove_entry",
+   "de": "{id} entfernen",
+   "en": "Remove {id}",
+   "params": {
+    "m.id": "id"
+   },
+   "only": [
+    "CustomModelDialog.tsx"
+   ]
+  },
+  {
+   "match": "`Vorlage „${t}“ entfernen`",
+   "key": "newsession.remove_template",
+   "de": "Vorlage „{t}“ entfernen",
+   "en": "Remove template “{t}”",
+   "params": {
+    "t": "t"
+   },
+   "only": [
+    "ReplyTemplates.tsx"
+   ]
+  },
+  {
+   "match": "`Vorgemerkte Nachricht ${i + 1} als nächstes senden`",
+   "key": "session.queue_send_next",
+   "de": "Vorgemerkte Nachricht {n} als nächstes senden",
+   "en": "Send queued message {n} next",
+   "params": {
+    "i + 1": "n"
+   },
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "`Vorgemerkte Nachricht ${i + 1} bearbeiten`",
+   "key": "session.queue_edit",
+   "de": "Vorgemerkte Nachricht {n} bearbeiten",
+   "en": "Edit queued message {n}",
+   "params": {
+    "i + 1": "n"
+   },
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "`Vorgemerkte Nachricht ${i + 1} jetzt senden`",
+   "key": "session.queue_send_now",
+   "de": "Vorgemerkte Nachricht {n} jetzt senden",
+   "en": "Send queued message {n} now",
+   "params": {
+    "i + 1": "n"
+   },
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "`Vorgemerkte Nachricht ${i + 1} nach hinten setzen`",
+   "key": "session.queue_to_back",
+   "de": "Vorgemerkte Nachricht {n} nach hinten setzen",
+   "en": "Move queued message {n} to the back",
+   "params": {
+    "i + 1": "n"
+   },
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "`Vorgemerkte Nachricht ${i + 1} streichen`",
+   "key": "session.queue_remove",
+   "de": "Vorgemerkte Nachricht {n} streichen",
+   "en": "Remove queued message {n}",
+   "params": {
+    "i + 1": "n"
+   },
+   "only": [
+    "QueueList.tsx"
+   ]
+  },
+  {
+   "match": "`Letzter Auftrag: ${text}`",
+   "key": "session.last_order",
+   "de": "Letzter Auftrag: {text}",
+   "en": "Last order: {text}",
+   "params": {
+    "text": "text"
+   },
+   "only": [
+    "PinnedPrompt.tsx"
+   ]
+  },
+  {
+   "match": "`Zeile ${note.anchor.startLine}`",
+   "key": "session.line_n",
+   "de": "Zeile {n}",
+   "en": "Line {n}",
+   "params": {
+    "note.anchor.startLine": "n"
+   },
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "`Zeile ${picked.start}`",
+   "key": "session.line_picked",
+   "de": "Zeile {n}",
+   "en": "Line {n}",
+   "params": {
+    "picked.start": "n"
+   },
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "`Zeilen ${note.anchor.startLine}–${note.anchor.endLine}`",
+   "key": "session.lines_range",
+   "de": "Zeilen {a}–{b}",
+   "en": "Lines {a}–{b}",
+   "params": {
+    "note.anchor.startLine": "a",
+    "note.anchor.endLine": "b"
+   },
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "`Zeilen ${picked.start}–${picked.end}`",
+   "key": "session.lines_picked",
+   "de": "Zeilen {a}–{b}",
+   "en": "Lines {a}–{b}",
+   "params": {
+    "picked.start": "a",
+    "picked.end": "b"
+   },
+   "only": [
+    "DiffReview.tsx"
+   ]
+  },
+  {
+   "match": "composer-replay-hinweis",
+   "key": "composer.replay_saved",
+   "de": "Aufnahme gemerkt ({sec} s{note})",
+   "en": "Recording saved ({sec} s{note})"
+  },
+  {
+   "match": "__manual__tokens_unknown",
+   "key": "session.tokens_unknown_window",
+   "de": "{fill} Tokens — Fenstergröße unbekannt (ADR-0032)",
+   "en": "{fill} tokens — window size unknown (ADR-0032)"
+  },
+  {
+   "match": "__manual__context_pct",
+   "key": "session.context_pct",
+   "de": "{pct} % ({fill} / {window})",
+   "en": "{pct}% ({fill} / {window})"
+  },
+  {
+   "match": "__manual__file_one",
+   "key": "diff.file_one",
+   "de": "1 Datei",
+   "en": "1 file"
+  },
+  {
+   "match": "__manual__files_n",
+   "key": "diff.files_n",
+   "de": "{n} Dateien",
+   "en": "{n} files"
+  },
+  {
+   "match": "__manual__oversize_note",
+   "key": "diff.oversize_note",
+   "de": "{dateien}, {lines} geänderte Zeilen — Patch bewusst nicht geladen (zu groß für diese Ansicht)",
+   "en": "{dateien}, {lines} changed lines — patch deliberately not loaded (too large for this view)"
+  },
+  {
+   "match": "__manual__session_mio",
+   "key": "session.mio",
+   "de": "Mio",
+   "en": "M"
+  },
+  {
+   "match": "genau hinsehen",
+   "key": "approvals.look_closer",
+   "de": "genau hinsehen",
+   "en": "look closer"
+  },
+  {
+   "match": "liest nur",
+   "key": "approvals.reads_only",
+   "de": "liest nur",
+   "en": "reads only"
+  },
+  {
+   "match": "schreibt lokal",
+   "key": "approvals.writes_local",
+   "de": "schreibt lokal",
+   "en": "writes locally"
+  },
+  {
+   "match": "nicht erlaubt",
+   "key": "session.not_allowed",
+   "de": "nicht erlaubt",
+   "en": "not allowed"
+  },
+  {
+   "match": "`Du${typeof device === \"string\" && device ? ` · ${device}` : \"\"}`",
+   "key": "session.you_suffix",
+   "de": "Du{suffix}",
+   "en": "You{suffix}",
+   "params": {
+    "typeof device === \"string\" && device ? ` · ${device}` : \"\"": "suffix"
+   }
+  },
+  {
+   "match": "Als nächstes senden",
+   "key": "session.send_next_now",
+   "de": "Als nächstes senden",
+   "en": "Send next"
+  },
+  {
+   "match": "● läuft",
+   "key": "session.status_running_bullet",
+   "de": "● läuft",
+   "en": "● running"
+  },
+  {
+   "match": "✓ abgeschlossen",
+   "key": "session.status_done_check",
+   "de": "✓ abgeschlossen",
+   "en": "✓ done"
+  },
+  {
+   "match": "Git",
+   "key": "session.git_tab",
+   "de": "Git",
+   "en": "Git"
+  },
+  {
+   "match": "GitLab",
+   "key": "session.gitlab_tab",
+   "de": "GitLab",
+   "en": "GitLab"
+  },
+  {
+   "match": "Graph",
+   "key": "session.graph_tab",
+   "de": "Graph",
+   "en": "Graph"
+  },
+  {
+   "match": "`läuft…${shownModel ? ` · ${shownModel}` : \"\"}`",
+   "key": "session.tail_running",
+   "de": "läuft…{suffix}",
+   "en": "running…{suffix}",
+   "params": {
+    "shownModel ? ` · ${shownModel}` : \"\"": "suffix"
+   }
+  },
+  {
+   "match": "` · Zug hier meist ${formatMinutes(progress.medianTurnMs)} (${progress.turnCount} gelaufen)`",
+   "key": "session.turn_median",
+   "de": " · Zug hier meist {med} ({count} gelaufen)",
+   "en": " · typically {med} per turn here ({count} run)",
+   "params": {
+    "formatMinutes(progress.medianTurnMs)": "med",
+    "progress.turnCount": "count"
+   }
+  },
+  {
+   "match": " · noch ca. ${formatMinutes(progress.etaMs)}",
+   "key": "session.eta_suffix",
+   "de": " · noch ca. {eta}",
+   "en": " · about {eta} left",
+   "params": {
+    "formatMinutes(progress.etaMs)": "eta"
+   }
+  },
+  {
+   "match": "`Übersprungen (${result.reason}${result.detail ? `: ${result.detail}` : \"\"}).`",
+   "key": "session.skipped_detail",
+   "de": "Übersprungen ({reason}{detail}).",
+   "en": "Skipped ({reason}{detail}).",
+   "params": {
+    "result.reason": "reason",
+    "result.detail ? `: ${result.detail}` : \"\"": "detail"
+   }
+  },
+  {
+   "match": "`entfernt: ${seg.s.trim()}`",
+   "key": "session.removed_label",
+   "de": "entfernt: {s}",
+   "en": "removed: {s}",
+   "params": {
+    "seg.s.trim()": "s"
+   }
+  },
+  {
+   "match": "`hinzugefuegt: ${seg.s.trim()}`",
+   "key": "session.added_label",
+   "de": "hinzugefuegt: {s}",
+   "en": "added: {s}",
+   "params": {
+    "seg.s.trim()": "s"
+   }
+  },
+  {
+   "match": "`an ${targetLabel?.title?.slice(0, 24) ?? targetSessionId.slice(0, 8)} senden`",
+   "key": "session.send_to",
+   "de": "an {target} senden",
+   "en": "send to {target}",
+   "params": {
+    "targetLabel?.title?.slice(0, 24) ?? targetSessionId.slice(0, 8)": "target"
+   }
+  },
+  {
+   "match": "`Empfehlung · ${kindLabel}`",
+   "key": "session.recommend_kind",
+   "de": "Empfehlung · {kind}",
+   "en": "Recommendation · {kind}",
+   "params": {
+    "kindLabel": "kind"
+   }
+  },
+  {
+   "match": "`Vorschlag · ${kindLabel} anlegen`",
+   "key": "session.suggestion_create",
+   "de": "Vorschlag · {kind} anlegen",
+   "en": "Suggestion · create {kind}",
+   "params": {
+    "kindLabel": "kind"
+   }
+  },
+  {
+   "match": "`Vorhanden · ${kindLabel} anpassen`",
+   "key": "session.suggestion_adjust",
+   "de": "Vorhanden · {kind} anpassen",
+   "en": "Existing · adjust {kind}",
+   "params": {
+    "kindLabel": "kind"
+   }
+  },
+  {
+   "match": "`Vorschlag ${engineLabel(result.engine)}${skipped ? ` — ${skipped}` : \"\"}`",
+   "key": "session.suggestion_engine",
+   "de": "Vorschlag {engine}{skipped}",
+   "en": "Suggestion {engine}{skipped}",
+   "params": {
+    "engineLabel(result.engine)": "engine",
+    "skipped ? ` — ${skipped}` : \"\"": "skipped"
+   }
+  },
+  {
+   "match": "`Gespeichert: ${saved.path}`",
+   "key": "session.saved_path",
+   "de": "Gespeichert: {path}",
+   "en": "Saved: {path}",
+   "params": {
+    "saved.path": "path"
+   }
+  },
+  {
+   "match": "`Quelle ansehen: ${source.label}`",
+   "key": "session.view_source",
+   "de": "Quelle ansehen: {label}",
+   "en": "View source: {label}",
+   "params": {
+    "source.label": "label"
+   }
+  },
+  {
+   "match": "`Quelle entfernen: ${source.label}`",
+   "key": "session.remove_source",
+   "de": "Quelle entfernen: {label}",
+   "en": "Remove source: {label}",
+   "params": {
+    "source.label": "label"
+   }
+  },
+  {
+   "match": "Checkliste der Factory prüfen",
+   "key": "newsession.check_factory_list",
+   "de": "Checkliste der Factory prüfen",
+   "en": "Check the factory checklist"
+  },
+  {
+   "match": "`Einrichtung: ${made.detail}`",
+   "key": "session.setup_of",
+   "de": "Einrichtung: {detail}",
+   "en": "Setup: {detail}",
+   "params": {
+    "made.detail": "detail"
+   }
+  },
+  {
+   "match": "`Kontext ${fmt.format(fill)} Tokens`",
+   "key": "session.context_tokens_dyn",
+   "de": "Kontext {n} Tokens",
+   "en": "Context {n} tokens",
+   "params": {
+    "fmt.format(fill)": "n"
+   }
+  },
+  {
+   "match": "`Kontext ${pct} % · frei ${fmt.format(Math.max(0, windowTokens - fill))} von ${fmt.format(windowTokens)}`",
+   "key": "session.context_free",
+   "de": "Kontext {pct} % · frei {free} von {window}",
+   "en": "Context {pct}% · free {free} of {window}",
+   "params": {
+    "pct": "pct",
+    "fmt.format(Math.max(0, windowTokens - fill))": "free",
+    "fmt.format(windowTokens)": "window"
+   }
+  },
+  {
+   "match": "`Kontextfenster ${fmt.format(windowTokens)} Tokens`",
+   "key": "session.context_window_tokens",
+   "de": "Kontextfenster {n} Tokens",
+   "en": "Context window {n} tokens",
+   "params": {
+    "fmt.format(windowTokens)": "n"
+   }
+  },
+  {
+   "match": "`schreibt bereits eine andere AncientVoid-Session (${holders.map((h) => h.slice(0, 8)).join(\", \")})`",
+   "key": "session.writers_singular",
+   "de": "schreibt bereits eine andere AncientVoid-Session ({list})",
+   "en": "is already writing to another AncientVoid session ({list})",
+   "params": {
+    "holders.map((h) => h.slice(0, 8)).join(\", \")": "list"
+   }
+  },
+  {
+   "match": "`schreiben bereits ${holders.length} andere AncientVoid-Sessions (${holders.map((h) => h.slice(0, 8)).join(\", \")})`",
+   "key": "session.writers_plural",
+   "de": "schreiben bereits {n} andere AncientVoid-Sessions ({list})",
+   "en": "are already writing to {n} other AncientVoid sessions ({list})",
+   "params": {
+    "holders.length": "n",
+    "holders.map((h) => h.slice(0, 8)).join(\", \")": "list"
+   }
+  },
+  {
+   "match": "Entwurf gespeichert — auch auf deinen anderen Geräten",
+   "key": "session.draft_saved_synced",
+   "de": "Entwurf gespeichert — auch auf deinen anderen Geräten",
+   "en": "Draft saved — also on your other devices"
+  },
+  {
+   "match": "Entwurf nur auf diesem Gerät (Hub nicht erreichbar)",
+   "key": "session.draft_local_only",
+   "de": "Entwurf nur auf diesem Gerät (Hub nicht erreichbar)",
+   "en": "Draft only on this device (hub unreachable)"
+  },
+  {
+   "match": "`lädt…${shownModel ? ` · ${shownModel}` : \"\"}`",
+   "key": "session.tail_loading",
+   "de": "lädt…{suffix}",
+   "en": "loading…{suffix}",
+   "params": {
+    "shownModel ? ` · ${shownModel}` : \"\"": "suffix"
+   }
+  },
+  {
+   "match": "`${selectedNotes.length} ${selectedNotes.length === 1 ? t(\"session.finding\") : t(\"session.findings\")} sammeln und senden`",
+   "key": "session.collect_send",
+   "de": "{n} {word} sammeln und senden",
+   "en": "Collect {n} {word} and send",
+   "params": {
+    "selectedNotes.length": "n",
+    "selectedNotes.length === 1 ? t(\"session.finding\") : t(\"session.findings\")": "word"
+   }
+  }
+ ]
+}

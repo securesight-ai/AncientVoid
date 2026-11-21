@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
 import type { PromptRecommendation, SkillArtifact } from "../../shared/api.ts";
@@ -53,7 +54,7 @@ export function SkillRecommendCard({
       setArtifact(next);
       return next;
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : "Datei nicht lesbar");
+      setLoadError(err instanceof Error ? err.message : t("skillrec.file_unreadable"));
       return null;
     }
   };
@@ -62,9 +63,9 @@ export function SkillRecommendCard({
   }, [current.kind, current.name, current.mode]);
 
   const readOnly = artifact?.layer === "base" || current.layer === "base";
-  const kindLabel = current.kind === "agent" ? "Agent" : current.kind === "workflow" ? "Workflow" : "Skill";
+  const kindLabel = current.kind === "agent" ? t("common.kind_agent") : current.kind === "workflow" ? t("skillrec.workflow") : t("common.kind_skill");
   const heading =
-    current.mode === "match" ? `Empfehlung · ${kindLabel}` : current.mode === "update" ? `Vorhanden · ${kindLabel} anpassen` : `Vorschlag · ${kindLabel} anlegen`;
+    current.mode === "match" ? t("session.recommend_kind", { "kind": kindLabel }) : current.mode === "update" ? t("session.suggestion_adjust", { "kind": kindLabel }) : t("session.suggestion_create", { "kind": kindLabel });
 
   const startEdit = () => {
     if (!artifact) return;
@@ -82,14 +83,14 @@ export function SkillRecommendCard({
       if (artifact && result.baseHash !== artifact.hash) {
         await load();
         setEditing(false);
-        setCardError("Die Datei wurde inzwischen geändert. Aktueller Stand ist geladen — Änderung erneut prüfen.");
+        setCardError(t("skillrec.file_changed"));
         return;
       }
       setDraft(result.draft);
       const skipped = skippedNote(result.skipped);
-      setStatus(`Vorschlag ${engineLabel(result.engine)}${skipped ? ` — ${skipped}` : ""}`);
+      setStatus(t("session.suggestion_engine", { "engine": engineLabel(result.engine), "skipped": skipped ? ` — ${skipped}` : "" }));
     } catch (err) {
-      setCardError(err instanceof Error ? err.message : "Vorschlag fehlgeschlagen");
+      setCardError(err instanceof Error ? err.message : t("skillrec.suggest_failed"));
     } finally {
       setRevising(false);
     }
@@ -102,11 +103,11 @@ export function SkillRecommendCard({
     try {
       const saved = await api.updateArtifact({ project, kind: current.kind, name: current.name, draft, baseHash: artifact.hash });
       setArtifact({ ...artifact, content: draft.endsWith("\n") ? draft : `${draft}\n`, hash: saved.hash });
-      setStatus(`Gespeichert: ${saved.path}`);
+      setStatus(t("session.saved_path", { "path": saved.path }));
       setEditing(false);
     } catch (err) {
       const conflict = (err as { status?: number }).status === 409;
-      setCardError(conflict ? "Die Datei wurde inzwischen geändert. Aktueller Stand ist geladen — Änderung erneut prüfen." : err instanceof Error ? err.message : "Speichern fehlgeschlagen");
+      setCardError(conflict ? t("skillrec.file_changed") : err instanceof Error ? err.message : t("skillrec.save_failed"));
       if (conflict) {
         await load();
         setEditing(false);
@@ -120,7 +121,7 @@ export function SkillRecommendCard({
   const createInstead = () => {
     // A taken name answers 409 on create; the field stays editable.
     const name = `${current.name}-2`;
-    const next: PromptRecommendation = { mode: "create", kind: current.kind, name, description: current.description, reason: "Neu statt Anpassen.", draft: null };
+    const next: PromptRecommendation = { mode: "create", kind: current.kind, name, description: current.description, reason: t("skillrec.new_instead"), draft: null };
     setCurrent(next);
     setArtifact(null);
     setDraft(newArtifactDraft(current.kind, name, current.description, prompt));
@@ -137,7 +138,7 @@ export function SkillRecommendCard({
       <div class="recommend-meta">{heading}</div>
       {current.mode === "create" ? (
         <label class="recommend-name">
-          <span class="recommend-meta">Name</span>
+          <span class="recommend-meta">{t("composer.name")}</span>
           <input
             class="recommend-name-input"
             value={current.name}
@@ -155,11 +156,11 @@ export function SkillRecommendCard({
       <div class="recommend-desc">{current.description}</div>
       <div class="recommend-meta">{current.reason}</div>
       <div class="recommend-meta">{noteFor(current)}</div>
-      {readOnly && <div class="recommend-meta">Basis-Skill — hier nur lesbar. Eine Anpassung gehört als Projekt-Erweiterung ins Projekt.</div>}
+      {readOnly && <div class="recommend-meta">{t("composer.base_skill_readonly")}</div>}
 
       {existing && !editing && artifact && (
         <details class="recommend-current" open={current.mode === "update"}>
-          <summary>Aktueller Inhalt · {artifact.path}</summary>
+          <summary>{t("composer.current_content")} {artifact.path}</summary>
           <pre class="recommend-content">{artifact.content}</pre>
         </details>
       )}
@@ -168,7 +169,7 @@ export function SkillRecommendCard({
       {editing && (
         <textarea
           class="recommend-editor"
-          aria-label={current.mode === "create" ? "Entwurf" : "Datei bearbeiten"}
+          aria-label={current.mode === "create" ? t("skillrec.draft") : t("skillrec.edit_file")}
           value={draft}
           onInput={(e) => setDraft((e.currentTarget as HTMLTextAreaElement).value)}
           rows={10}
@@ -180,13 +181,13 @@ export function SkillRecommendCard({
       {editing && existing ? (
         <div class="row">
           <Button disabled={anyBusy} onClick={() => setEditing(false)}>
-            Abbrechen
+            {t("common.cancel")}
           </Button>
           <Button aria-busy={revising} disabled={anyBusy} onClick={() => void revise()} class={revising ? "busy" : undefined}>
-            {revising ? "lädt…" : "Anpassung vorschlagen"}
+            {revising ? t("common.loading_dots") : t("skillrec.suggest_adjustment")}
           </Button>
           <Button aria-busy={saving} disabled={anyBusy || !draft.trim()} onClick={() => void save()} variant="primary" class={saving ? "busy" : undefined}>
-            {saving ? "lädt…" : "Datei speichern"}
+            {saving ? t("common.loading_dots") : t("skillrec.save_file")}
           </Button>
         </div>
       ) : (
@@ -194,21 +195,21 @@ export function SkillRecommendCard({
           {existing && !readOnly && (
             <div class="row">
               <Button disabled={anyBusy || !artifact} onClick={startEdit}>
-                Anpassen
+                {t("composer.adapt")}
               </Button>
               {current.mode === "update" && (
                 <Button disabled={anyBusy} onClick={createInstead}>
-                  Trotzdem neu anlegen
+                  {t("composer.create_anyway")}
                 </Button>
               )}
             </div>
           )}
           <div class="row">
             <Button disabled={anyBusy} onClick={onDismiss}>
-              Verwerfen
+              {t("composer.discard")}
             </Button>
             <Button aria-busy={busy} disabled={anyBusy || (current.mode === "create" && (!nameValid || !draft.trim()))} onClick={() => use(false)} class={busy ? "busy" : undefined}>
-              {busy ? "lädt…" : "Nutzen"}
+              {busy ? t("common.loading_dots") : t("skillrec.use")}
             </Button>
             <Button
               aria-busy={busy}
@@ -217,7 +218,7 @@ export function SkillRecommendCard({
               variant="primary"
               class={busy ? "busy" : undefined}
             >
-              {busy ? "lädt…" : "Als Standard"}
+              {busy ? t("common.loading_dots") : t("skillrec.set_default")}
             </Button>
           </div>
         </>

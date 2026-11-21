@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { HubApi, QueuedPrompt } from "../../shared/api.ts";
 import { Button } from "../../shared/ui/index.ts";
@@ -55,7 +56,7 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
       // 404 = schon weg (gesendet oder anderswo gestrichen) — alles andere ehrlich zurückstellen.
       if ((err as { status?: unknown })?.status === 404) return;
       setItems((prev) => (prev.some((i) => i.id === item.id) ? prev : [...prev, item].sort((a, b) => a.createdAt.localeCompare(b.createdAt))));
-      setError("Streichen fehlgeschlagen — die Nachricht bleibt vorgemerkt.");
+      setError(t("session.remove_failed_kept"));
     });
   };
   const sendNow = (item: QueuedPrompt) => {
@@ -65,7 +66,7 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
       .then(() => setItems((prev) => prev.filter((i) => i.id !== item.id)))
       // 422 trägt den Ablehnungsgrund (Error-Message); der Hub hat die Nachricht dann wieder vorgemerkt.
       .catch((err) =>
-        setError(`${err instanceof Error && err.message && !/^\d/.test(err.message) ? err.message : "Senden fehlgeschlagen"} — die Nachricht bleibt vorgemerkt.`),
+        setError(`${err instanceof Error && err.message && !/^\d/.test(err.message) ? err.message : t("session.send_failed")} — die Nachricht bleibt vorgemerkt.`),
       );
   };
   /** ADR-0085: umhängen. Optimistisch, damit die Reihe sofort der gewählten folgt. */
@@ -79,7 +80,7 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
     next.splice(to, 0, item);
     replace(next.map((q, i) => ({ ...q, position: i })));
     void api.editQueued(sessionId, item.id, { move: where }).catch(() => {
-      setError("Umhängen fehlgeschlagen — die Reihe bleibt, wie sie war.");
+      setError(t("session.requeue_failed"));
       void api.sessionQueue(sessionId).then((list) => replace(list)).catch(() => undefined);
     });
   };
@@ -93,13 +94,13 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
     setError("");
     replace(items.map((q) => (q.id === editing.id ? { ...q, text } : q)));
     void api.editQueued(sessionId, editing.id, { text }).catch(() => {
-      setError("Ändern fehlgeschlagen — die Nachricht bleibt, wie sie vorgemerkt war.");
+      setError(t("session.change_failed_kept"));
       void api.sessionQueue(sessionId).then((list) => replace(list)).catch(() => undefined);
     });
   };
   return (
-    <div class="queue-list" aria-label="Vorgemerkt">
-      <div class="queue-title dim">Vorgemerkt ({sorted.length}) — geht raus, sobald der Zug endet</div>
+    <div class="queue-list" aria-label={t("session.preset")}>
+      <div class="queue-title dim">{t("session.preset_open")}{sorted.length}{t("session.goes_out_when_turn_ends")}</div>
       {error && <div class="reply-error" role="alert">{error}</div>}
       {sorted.map((item, i) => (
         <div key={item.id} class="queue-item">
@@ -108,24 +109,24 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
             <div class="queue-edit">
               <textarea
                 class="queue-edit-input"
-                aria-label={`Vorgemerkte Nachricht ${i + 1} bearbeiten`}
+                aria-label={t("session.queue_edit", { "n": i + 1 })}
                 value={editing.text}
                 rows={3}
                 onInput={(e) => setEditing({ id: item.id, text: (e.target as HTMLTextAreaElement).value })}
               />
               <div class="queue-edit-actions">
                 <Button variant="primary" data-testid="queue-edit-save" onClick={saveEdit}>
-                  Speichern
+                  {t("common.save")}
                 </Button>
                 <Button onClick={() => setEditing(null)}>
-                  Abbrechen
+                  {t("common.cancel")}
                 </Button>
               </div>
             </div>
           ) : (
             <>
               <span class="queue-text">{item.text.length > 140 ? `${item.text.slice(0, 139)}…` : item.text}</span>
-              {item.delivery === "unknown" && <span role="alert">Annahme unklar — Verlauf prüfen</span>}
+              {item.delivery === "unknown" && <span role="alert">{t("session.assumption_unclear")}</span>}
               {/* ADR-0085 + eigener Review: die Knöpfe unter dem Text — sonst bleibt auf
                   dem Handy (390 px) nur eine fünfzehn Zeichen lange Textspur übrig. */}
               <span class="queue-actions">
@@ -133,8 +134,8 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
                   disabled={item.delivery === "unknown"}
                   class="icon-action"
                   type="button"
-                  aria-label={`Vorgemerkte Nachricht ${i + 1} jetzt senden`}
-                  title="Jetzt in den laufenden Zug senden"
+                  aria-label={t("session.queue_send_now", { "n": i + 1 })}
+                  title={t("composer.send_into_running_turn")}
                   onClick={() => sendNow(item)}
                 >
                   ➤
@@ -145,8 +146,8 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
                   class="icon-action"
                   type="button"
                   data-testid="queue-move-front"
-                  aria-label={`Vorgemerkte Nachricht ${i + 1} als nächstes senden`}
-                  title={speaksQueueOrder ? "Als nächstes senden" : "Der Hub kann die Reihe noch nicht speichern — Hub aktualisieren"}
+                  aria-label={t("session.queue_send_next", { "n": i + 1 })}
+                  title={speaksQueueOrder ? t("session.send_next_now") : t("session.hub_cannot_queue")}
                   onClick={() => move(item, "front")}
                 >
                   ↑
@@ -156,8 +157,8 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
                   class="icon-action"
                   type="button"
                   data-testid="queue-move-back"
-                  aria-label={`Vorgemerkte Nachricht ${i + 1} nach hinten setzen`}
-                  title={speaksQueueOrder ? "Nach hinten" : "Der Hub kann die Reihe noch nicht speichern — Hub aktualisieren"}
+                  aria-label={t("session.queue_to_back", { "n": i + 1 })}
+                  title={speaksQueueOrder ? t("session.to_back") : t("session.hub_cannot_queue")}
                   onClick={() => move(item, "back")}
                 >
                   ↓
@@ -167,13 +168,13 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
                   class="icon-action"
                   type="button"
                   data-testid="queue-edit"
-                  aria-label={`Vorgemerkte Nachricht ${i + 1} bearbeiten`}
-                  title={speaksQueueOrder ? "Text bearbeiten" : "Der Hub kann Meldungen noch nicht nachträglich ändern — Hub aktualisieren"}
+                  aria-label={t("session.queue_edit", { "n": i + 1 })}
+                  title={speaksQueueOrder ? t("session.edit_text") : t("session.hub_cannot_update")}
                   onClick={() => setEditing({ id: item.id, text: item.text })}
                 >
                   ✎
                 </button>
-                <button class="icon-action danger" type="button" aria-label={`Vorgemerkte Nachricht ${i + 1} streichen`} title="Streichen" onClick={() => remove(item)}>
+                <button class="icon-action danger" type="button" aria-label={t("session.queue_remove", { "n": i + 1 })} title={t("session.strikethrough")} onClick={() => remove(item)}>
                   ✕
                 </button>
               </span>

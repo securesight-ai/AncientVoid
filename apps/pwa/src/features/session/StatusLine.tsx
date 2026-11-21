@@ -1,10 +1,12 @@
+import { fmtNumber } from "../../shared/i18n/format.ts";
+import { t } from "../../shared/i18n/index.ts";
 import { useCounted } from "../../shared/useCounted.ts";
 import { ContextBar } from "./ContextBar.tsx";
 import type { QuotaSummary } from "./run-progress.ts";
 import type { SessionTokenTotals } from "../../shared/api.ts";
 import { tokenParts } from "./run-stats.ts";
 
-const fmt = new Intl.NumberFormat("de-DE");
+const fmt = { format: (n: number) => fmtNumber(n) };
 
 /**
  * EPIC-P43 T43.4: die Statuszeile ersetzt das Metrikband — nur Gemessenes (Kleinkram-Regel 1:
@@ -45,9 +47,9 @@ export function StatusLine({
   const windowKnown = fill !== null && windowTokens !== null && windowTokens > 0;
   if (windowKnown) {
     const pct = Math.round((fill / windowTokens) * 100);
-    parts.push(`Kontext ${pct} % · frei ${fmt.format(Math.max(0, windowTokens - fill))} von ${fmt.format(windowTokens)}`);
-  } else if (fill !== null) parts.push(`Kontext ${fmt.format(fill)} Tokens`);
-  else if (windowTokens !== null) parts.push(`Kontextfenster ${fmt.format(windowTokens)} Tokens`);
+    parts.push(t("session.context_free", { "pct": pct, "free": fmt.format(Math.max(0, windowTokens - fill)), "window": fmt.format(windowTokens) }));
+  } else if (fill !== null) parts.push(t("session.context_tokens_dyn", { "n": fmt.format(fill) }));
+  else if (windowTokens !== null) parts.push(t("session.context_window_tokens", { "n": fmt.format(windowTokens) }));
   const quotaKnown = quota.level !== "none";
   if (parts.length === 0 && !quotaKnown && maxOutputTokens === null) return null;
   const text = parts.join(" · ");
@@ -59,7 +61,7 @@ export function StatusLine({
         </span>
       )}
       {windowKnown && <ContextBar fill={fill} windowTokens={windowTokens} />}
-      {maxOutputTokens !== null && <span>Ausgabelimit {fmt.format(maxOutputTokens)} Tokens</span>}
+      {maxOutputTokens !== null && <span>{t("session.output_limit")} {fmt.format(maxOutputTokens)} {t("common.tokens")}</span>}
       {quotaKnown && <span class={`run-quota ${quota.level}`}>{quota.text}</span>}
     </div>
   );

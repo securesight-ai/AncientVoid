@@ -1,3 +1,5 @@
+import { fmtNumber, fmtTime, fmtDateTime } from "../../shared/i18n/format.ts";
+import { t } from "../../shared/i18n/index.ts";
 import { createContextUsageReader } from "@ancientvoid/contracts";
 import type { NormalizedEvent } from "../../shared/ws.ts";
 
@@ -118,7 +120,7 @@ export function latestModelName(events: readonly NormalizedEvent[]): string | nu
   return null;
 }
 
-const fmt = new Intl.NumberFormat("de-DE");
+const fmt = { format: (n: number) => fmtNumber(n) };
 
 /** One honest sentence about the context window (ADR-0032): a percentage
  * and the free room only from two real numbers; a missing number is said,
@@ -152,7 +154,7 @@ export function turnStatsText(turnNo: number, turns: readonly TurnStats[]): stri
 /** Schmale Handyzeile: ab einer Million „272,6 Mio“ statt „272.613.546“. */
 export function compactTokens(n: number): string {
   if (Math.abs(n) < 1_000_000) return fmt.format(n);
-  return `${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 }).format(n / 1_000_000)} Mio`;
+  return `${fmtNumber(n / 1_000_000, { maximumFractionDigits: 1 })} ${t("session.mio")}`;
 }
 
 /** Context level for styling — warn from 80 %, err from 95 %. */

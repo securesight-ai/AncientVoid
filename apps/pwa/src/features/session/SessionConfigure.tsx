@@ -1,14 +1,15 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { HarnessFeatures, HubApi, SessionRecord } from "../../shared/api.ts";
 
 /** ADR-0033: Namen, wie die Oberfläche sie zeigt; unbekannte Modi erscheinen unverändert. */
 const MODE_LABEL: Record<string, string> = {
-  auto: "Auto",
-  manual: "Nachfragen",
-  plan: "Plan",
-  acceptEdits: "Edits ohne Frage",
-  dontAsk: "Nie fragen",
-  bypassPermissions: "Alles erlauben",
+  auto: t("session.auto"),
+  manual: t("session.ask"),
+  plan: t("common.plan"),
+  acceptEdits: t("session.edits_no_ask"),
+  dontAsk: t("session.never_ask"),
+  bypassPermissions: t("session.allow_all"),
 };
 
 /**
@@ -49,10 +50,10 @@ export function SessionConfigure({
   const change = async (patch: { model?: string; permissionMode?: string }) => {
     setBusy(true);
     setError("");
-    const ack = await api.steer(session.id, { kind: "configure", ...patch }).catch((err: unknown) => ({ ok: false, detail: err instanceof Error ? err.message : "Änderung fehlgeschlagen." }));
+    const ack = await api.steer(session.id, { kind: "configure", ...patch }).catch((err: unknown) => ({ ok: false, detail: err instanceof Error ? err.message : t("common.change_failed") }));
     setBusy(false);
     if (ack.ok) onChanged(patch);
-    else setError(ack.detail ?? "Änderung nicht möglich.");
+    else setError(ack.detail ?? t("session.change_not_possible"));
   };
 
   const current = session.model ?? "";
@@ -61,9 +62,9 @@ export function SessionConfigure({
     <div class="session-configure">
       {modes.length > 0 && (
         <label>
-          Modus
+          {t("common.mode")}
           <select
-            aria-label="Modus"
+            aria-label={t("common.mode")}
             disabled={busy}
             value={session.permissionMode ?? ""}
             onChange={(e) => void change({ permissionMode: (e.target as HTMLSelectElement).value })}
@@ -79,10 +80,10 @@ export function SessionConfigure({
       )}
       {canModel && (
         <label>
-          Modell
+          {t("common.model")}
           {models.length > 0 ? (
-            <select aria-label="Modell" disabled={busy} value={current} onChange={(e) => void change({ model: (e.target as HTMLSelectElement).value })}>
-              {!current && <option value="">Standard</option>}
+            <select aria-label={t("common.model")} disabled={busy} value={current} onChange={(e) => void change({ model: (e.target as HTMLSelectElement).value })}>
+              {!current && <option value="">{t("common.standard")}</option>}
               {current && !known && <option value={current}>{current}</option>}
               {models.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -91,7 +92,7 @@ export function SessionConfigure({
               ))}
             </select>
           ) : (
-            <span class="dim">{current || "Standard"}</span>
+            <span class="dim">{current || t("common.standard")}</span>
           )}
         </label>
       )}

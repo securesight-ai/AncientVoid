@@ -1,3 +1,5 @@
+import { fmtDateTime } from "../../shared/i18n/format.ts";
+import { t } from "../../shared/i18n/index.ts";
 import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { StatusNote } from "./StatusNote.tsx";
 import type { ComponentChildren } from "preact";
@@ -405,8 +407,8 @@ export function SessionTail({
   } | null>(null);
   const loadingOlderRef = useRef(false);
   const [olderNote, setOlderNote] = useState<
-    "mehr" | "laden" | "ende" | "fehler"
-  >("mehr");
+    "mehr" /* i18n-ignore: Daten-Key */ | "laden" | "ende" | "fehler"
+  >("mehr" /* i18n-ignore: Daten-Key */);
   /** BUG-0208: Seq des Blocks, der einen Live-Strom eingeholt hat — an seinen Anfang rollen. */
   const jumpSeqRef = useRef<number | null>(null);
   /** laeuft gerade ein Live-Strom? Gezählt wird nach turnId — ein Strom gilt erst mit
@@ -1152,7 +1154,7 @@ export function SessionTail({
       setEvents((prev) =>
         tailWindow([...older, ...prev], TAIL_ROWS, floorSeqRef.current),
       );
-      setOlderNote(older[0]!.seq <= 1 ? "ende" : "mehr");
+      setOlderNote(older[0]!.seq <= 1 ? "ende" : "mehr" /* i18n-ignore: Daten-Key */);
     } catch {
       setOlderNote("fehler");
     } finally {
@@ -1295,7 +1297,7 @@ export function SessionTail({
       setRenaming(false);
     } catch (err) {
       setReplyError(
-        err instanceof Error ? err.message : "Umbenennen fehlgeschlagen.",
+        err instanceof Error ? err.message : t("session.rename_failed"),
       );
     }
   };
@@ -1305,7 +1307,7 @@ export function SessionTail({
       setPinned(updated.pinned === true);
     } catch (err) {
       setReplyError(
-        err instanceof Error ? err.message : "Anheften fehlgeschlagen.",
+        err instanceof Error ? err.message : t("session.pin_failed"),
       );
     }
   };
@@ -1325,7 +1327,7 @@ export function SessionTail({
       if (updated.archived === true) leaveArchived();
     } catch (err) {
       setReplyError(
-        err instanceof Error ? err.message : "Archivieren fehlgeschlagen.",
+        err instanceof Error ? err.message : t("session.archive_failed"),
       );
     }
   };
@@ -1350,10 +1352,10 @@ export function SessionTail({
     // failure the same way a rejected reply already does.
     try {
       const ack = await api.stopSession(session.id);
-      if (!ack.ok) setReplyError("Stop fehlgeschlagen.");
+      if (!ack.ok) setReplyError(t("session.stop_failed"));
     } catch (err) {
       setReplyError(
-        err instanceof Error ? err.message : "Stop fehlgeschlagen.",
+        err instanceof Error ? err.message : t("session.stop_failed"),
       );
     }
   };
@@ -1365,7 +1367,7 @@ export function SessionTail({
       if (!ack.ok) setReplyError(steerRejectText(ack.detail));
     } catch (err) {
       setReplyError(
-        err instanceof Error ? err.message : "Pause fehlgeschlagen.",
+        err instanceof Error ? err.message : t("session.pause_failed"),
       );
     }
   };
@@ -1408,7 +1410,7 @@ export function SessionTail({
       }
     } catch (err) {
       setReplyError(
-        err instanceof Error ? err.message : "Antwort fehlgeschlagen",
+        err instanceof Error ? err.message : t("session.answer_failed"),
       );
     } finally {
       setReplyBusy(false);
@@ -1439,7 +1441,7 @@ export function SessionTail({
       ? modelLabel
       : typeof session.model === "string" && session.model
         ? session.model
-        : "Standardmodell";
+        : t("common.default_model");
   // Ja/Nein-Rückfrage: die letzte Assistant-Nachricht endet auf „?“ —
   // QuickConfirm bietet dann Ja/Nein, solange das Antwortfeld leer ist.
   const agentQuestion = lastAssistantQuestion(shownEvents);
@@ -1456,12 +1458,12 @@ export function SessionTail({
     show: () => void;
     count?: number;
   }[] = [
-    { label: "Chat", icon: "chat", tabs: ["chat"], show: showChatTab },
+    { label: t("session.chat_tab"), icon: "chat", tabs: ["chat"], show: showChatTab },
     ...(noChanges
       ? []
       : [
           {
-            label: "Änderungen",
+            label: t("session.changes"),
             icon: "diff" as TabIconName,
             tabs: ["diff", "bericht"] as Tab[],
             show: showDiffTab,
@@ -1469,7 +1471,7 @@ export function SessionTail({
           },
         ]),
     {
-      label: "Befehle",
+      label: t("session.commands"),
       icon: "datei",
       tabs: ["code", "datei"],
       show: showCodeTab,
@@ -1485,18 +1487,18 @@ export function SessionTail({
       ? [
           {
             id: "diff" as Tab,
-            label: "Änderungen",
+            label: t("session.changes"),
             icon: "diff" as TabIconName,
             show: showDiffTab,
           },
         ]
       : []),
-    { id: "verlauf", label: "Verlauf", icon: "verlauf", show: showVerlaufTab },
-    { id: "bericht", label: "Bericht", icon: "bericht", show: showBerichtTab },
+    { id: "verlauf", label: t("session.history"), icon: "verlauf", show: showVerlaufTab },
+    { id: "bericht", label: t("session.report"), icon: "bericht", show: showBerichtTab },
     // Die aus dem Graph geöffnete Datei (EPIC-P48); ohne Datei sagt die Ansicht das selbst.
     {
       id: "datei",
-      label: "Datei",
+      label: t("session.file_tab"),
       icon: "datei",
       show: () => {
         setActiveTab("datei");
@@ -1505,13 +1507,13 @@ export function SessionTail({
     },
     {
       id: "graph",
-      label: "Graph",
+      label: t("session.graph_tab"),
       icon: "graph",
       show: () => setActiveTab("graph"),
     },
     {
       id: "git",
-      label: "Git",
+      label: t("session.git_tab"),
       icon: "git",
       show: () => {
         setActiveTab("git");
@@ -1520,14 +1522,14 @@ export function SessionTail({
     },
     {
       id: "forge",
-      label: "GitLab",
+      label: t("session.gitlab_tab"),
       icon: "forge",
       show: () => setActiveTab("forge"),
     },
-    { id: "suche", label: "Suche", icon: "suche", show: showSucheTab },
+    { id: "suche", label: t("session.search"), icon: "suche", show: showSucheTab },
     {
       id: "umgebung",
-      label: "Umgebung",
+      label: t("session.environment"),
       icon: "umgebung",
       show: showUmgebungTab,
     },
@@ -1561,21 +1563,21 @@ export function SessionTail({
         <button
           type="button"
           class={inMore ? "active" : ""}
-          title="Mehr"
+          title={t("common.more")}
           aria-haspopup="menu"
           aria-expanded={moreOpen}
           aria-current={inMore ? "page" : undefined}
           onClick={() => setMoreOpen((on) => !on)}
         >
-          <TabIcon name="mehr" />
+          <TabIcon name="mehr" /* i18n-ignore: Icon-Key */ />
           <span class="lb">
             {inMore
-              ? (MORE.find((m) => m.id === activeTab)?.label ?? "Mehr")
-              : "Mehr"}
+              ? (MORE.find((m) => m.id === activeTab)?.label ?? t("common.more"))
+              : t("common.more")}
           </span>
         </button>
         {moreOpen && (
-          <div class="subtabs-more" role="menu" aria-label="Weitere Ansichten">
+          <div class="subtabs-more" role="menu" aria-label={t("session.more_views")}>
             {MORE.map((m) => (
               <button
                 key={m.id}
@@ -1601,7 +1603,7 @@ export function SessionTail({
               }}
             >
               <TabIcon name="browser" />
-              <span>Browser</span>
+              <span>{t("session.browser")}</span>
             </button>
             <button
               type="button"
@@ -1612,7 +1614,7 @@ export function SessionTail({
               }}
             >
               <TabIcon name="geraete" />
-              <span>Geräte</span>
+              <span>{t("session.devices")}</span>
             </button>
           </div>
         )}
@@ -1640,10 +1642,10 @@ export function SessionTail({
   const detachHead = detach ? <div class="view-head">{detach}</div> : null;
   const diffWarning =
     diffErrorId === session.id ? (
-      <p class="dim" role="status" aria-label="Diff-Stand">
+      <p class="dim" role="status" aria-label={t("session.diff_state")}>
         {diff
-          ? "Zuletzt geladener Stand — Aktualisierung fehlgeschlagen."
-          : "Änderungen konnten nicht geladen werden."}
+          ? t("session.stale_loaded")
+          : t("session.changes_load_failed")}
       </p>
     ) : null;
 
@@ -1658,7 +1660,7 @@ export function SessionTail({
       >
         {copyFlash && (
           <div class="copy-flash" role="status">
-            In Zwischenablage kopiert
+            {t("common.copied_to_clipboard")}
           </div>
         )}
         <div>
@@ -1666,8 +1668,8 @@ export function SessionTail({
           <div class={`topbar session-topbar${tile ? " tile-top" : ""}`}>
             {tile?.head?.start}
             <Button
-              aria-label="Zur Übersicht"
-              title="Zur Übersicht"
+              aria-label={t("app.to_overview")}
+              title={t("app.to_overview")}
               onClick={() => onNavigate("dashboard")}
               class="back-btn"
             >
@@ -1683,7 +1685,7 @@ export function SessionTail({
                   }}
                 >
                   <input
-                    aria-label="Neuer Titel"
+                    aria-label={t("session.new_title")}
                     value={titleDraft}
                     maxLength={80}
                     onFocus={() => touchField("session_title")}
@@ -1692,7 +1694,7 @@ export function SessionTail({
                     }
                   />
                   <Button type="submit" variant="primary">
-                    OK
+                    {t("common.ok")}
                   </Button>
                 </form>
               ) : (
@@ -1703,8 +1705,8 @@ export function SessionTail({
               <div class="dim session-top-meta">
                 {mainSync && mainSync.behind > 0 && (
                   <>
-                    <span class="mainsync-badge" data-testid="mainsync-behind" title="Hauptbranch ist vorgerückt — Aktionen im Menü (⋯)">
-                      {mainSync.behind} hinter main
+                    <span class="mainsync-badge" data-testid="mainsync-behind" title={t("session.main_moved_ahead")}>
+                      {mainSync.behind} {t("session.behind_main")}
                     </span>
                     {" · "}
                   </>
@@ -1719,9 +1721,9 @@ export function SessionTail({
                 {session.hostId
                   ? (hostNames.get(session.hostId) ??
                     (session.hostId === "local"
-                      ? "dieser Rechner"
+                      ? t("common.this_machine")
                       : session.hostId.slice(0, 8)))
-                  : "dieser Rechner"}{" "}
+                  : t("common.this_machine")}{" "}
                 · <LiveStatus sessionId={session.id} status={status} />
                 {session.controlMode !== "mirror" && (
                   <>
@@ -1732,7 +1734,7 @@ export function SessionTail({
               </div>
             </div>
             {tile && !tile.only && (
-              <nav class="subtabs-wrap tile-tabs" aria-label="Ansichten">
+              <nav class="subtabs-wrap tile-tabs" aria-label={t("session.views")}>
                 {tabButtons}
               </nav>
             )}
@@ -1742,11 +1744,11 @@ export function SessionTail({
               (status === "working" ||
                 status === "starting" ||
                 status === "waiting_approval") && (
-                <Button onClick={() => void pause()}>Pause</Button>
+                <Button onClick={() => void pause()}>{t("session.pause")}</Button>
               )}
             {!tile?.only && !observerOnly && status !== "stopped" && (
               <Button onClick={stop} variant="danger" class="stop-btn">
-                Stop
+                {t("session.stop")}
               </Button>
             )}
             {!tile?.only && (
@@ -1755,7 +1757,7 @@ export function SessionTail({
                 ref={menuRef}
                 onToggle={(e) => fitSessionMenu(e.currentTarget)}
               >
-                <summary aria-label="Weitere Aktionen" title="Weitere Aktionen">
+                <summary aria-label={t("session.more_actions")} title={t("session.more_actions")}>
                   ⋯
                 </summary>
                 <div class="session-menu-items">
@@ -1774,20 +1776,20 @@ export function SessionTail({
                               setMainSync(check);
                               setMainSyncResult(
                                 check.behind === 0
-                                  ? `Aktuell — kein Rückstand auf origin/${check.branch}.`
+                                  ? t("session.up_to_date", { "branch": check.branch })
                                   : check.conflicts && check.conflicts.length > 0
-                                    ? `${check.behind} hinter origin/${check.branch} · Konflikt in ${check.conflicts.join(", ")} — in der Session lösen.`
-                                    : `${check.behind} hinter origin/${check.branch} · Probelauf sauber.`,
+                                    ? t("session.conflict_in_session", { "behind": check.behind, "branch": check.branch, "conflicts": check.conflicts.join(", ") })
+                                    : t("session.dry_run_clean", { "behind": check.behind, "branch": check.branch }),
                               );
                             } catch {
-                              setMainSyncResult("Prüfen gescheitert — Remote nicht erreichbar?");
+                              setMainSyncResult(t("session.check_failed"));
                             } finally {
                               setMainSyncBusy(false);
                             }
                           })()
                         }
                       >
-                        Main prüfen
+                        {t("session.check_main")}
                       </button>
                       <button
                         type="button"
@@ -1798,24 +1800,24 @@ export function SessionTail({
                             setMainSyncResult(null);
                             try {
                               const result = await api.mainSyncApply(session.id);
-                              if (result.outcome === "applied") setMainSyncResult(`origin/main eingemischt (${result.to}).`);
-                              else if (result.outcome === "conflict") setMainSyncResult(`Konflikt in ${(result.files ?? []).join(", ")} — nichts verändert.`);
-                              else if (result.outcome === "failed") setMainSyncResult(`Gescheitert (${result.reason}).`);
-                              else setMainSyncResult(`Übersprungen (${result.reason}${result.detail ? `: ${result.detail}` : ""}).`);
+                              if (result.outcome === "applied") setMainSyncResult(t("session.merged_into_main", { "to": result.to }));
+                              else if (result.outcome === "conflict") setMainSyncResult(t("session.conflict_nothing", { "files": (result.files ?? []).join(", ") }));
+                              else if (result.outcome === "failed") setMainSyncResult(t("session.failed_reason", { "reason": result.reason }));
+                              else setMainSyncResult(t("session.skipped_detail", { "reason": result.reason, "detail": result.detail ? `: ${result.detail}` : "" }));
                               const check = await api.mainSyncCheck(session.id);
                               setMainSync(check);
                             } catch {
-                              setMainSyncResult("Einmischen gescheitert — Remote nicht erreichbar?");
+                              setMainSyncResult(t("session.merge_failed"));
                             } finally {
                               setMainSyncBusy(false);
                             }
                           })()
                         }
                       >
-                        Main einmischen
+                        {t("session.merge_main")}
                       </button>
                       <span class="dim mainsync-last">
-                        zuletzt abgeglichen: {mainSync.lastSyncedAt ? new Date(mainSync.lastSyncedAt).toLocaleTimeString() : "nie"}
+                        {t("session.last_reconciled")} {mainSync.lastSyncedAt ? new Date(mainSync.lastSyncedAt).toLocaleTimeString() : t("common.never")}
                       </span>
                       {mainSyncResult && (
                         <p class="dim mainsync-result" role="status" data-testid="mainsync-result">
@@ -1833,19 +1835,19 @@ export function SessionTail({
                       })
                     }
                   >
-                    Umbenennen
+                    {t("session.rename")}
                   </button>
                   <button
                     type="button"
                     onClick={() => menuDo(() => void togglePin())}
                   >
-                    {pinned ? "Lösen" : "Anheften"}
+                    {pinned ? t("common.detach") : t("common.pin")}
                   </button>
                   <button
                     type="button"
                     onClick={() => menuDo(() => void toggleArchive())}
                   >
-                    {archived ? "Zurückholen" : "Archivieren"}
+                    {archived ? t("common.unarchive") : t("common.archive_btn")}
                   </button>
                   <button
                     type="button"
@@ -1854,7 +1856,7 @@ export function SessionTail({
                       menuDo(() => {
                         if (
                           !confirm(
-                            "Session endgültig löschen? Eine laufende archivierte Session wird gestoppt. Verlauf, Statistik und Worktree werden entfernt.",
+                            t("session.delete_forever_q"),
                           )
                         )
                           return;
@@ -1865,13 +1867,13 @@ export function SessionTail({
                             setReplyError(
                               err instanceof Error
                                 ? err.message
-                                : "Löschen fehlgeschlagen",
+                                : t("session.delete_failed"),
                             ),
                           );
                       })
                     }
                   >
-                    Löschen
+                    {t("common.delete")}
                   </button>
                 </div>
               </details>
@@ -1882,8 +1884,8 @@ export function SessionTail({
 
           {fromCache && cached && (
             <div class="badge-stale offline-note">
-              Gespeicherter Stand vom{" "}
-              {new Date(cached.at).toLocaleString("de-DE")}
+              {t("session.saved_state_from")}{" "}
+              {fmtDateTime(cached.at)}
               {online ? " — verbinde…" : " — offline"}
             </div>
           )}
@@ -1892,12 +1894,12 @@ export function SessionTail({
               onClick={() => jumpTo("seit-letztem-besuch")}
               class="new-jump"
             >
-              ↓ {newCount} neu seit deinem letzten Besuch
+              ↓ {newCount} {t("session.new_since_last_visit")}
             </Chip>
           )}
           {!online && (
             <div class="badge-stale offline-note">
-              Offline — Senden ist gesperrt, dein Entwurf bleibt.
+              {t("composer.offline_draft_kept")}
             </div>
           )}
           <div class="run-strip">
@@ -1907,7 +1909,7 @@ export function SessionTail({
                   <button
                     type="button"
                     class="run-progress"
-                    title="To-do-Liste des Agenten — klicken zum Aufklappen"
+                    title={t("session.todo_list_hint")}
                     onClick={() => setTodosOpen((v) => !v)}
                   >
                     <div class="run-bar">
@@ -1915,7 +1917,7 @@ export function SessionTail({
                     </div>
                     <span>
                       {todosOpen ? "▾" : "▸"} {progress.done}/{progress.total}{" "}
-                      Aufgaben · {progress.percent} %
+                      {t("composer.tasks")} {progress.percent} %
                       {progress.etaMs !== null
                         ? ` · noch ca. ${formatMinutes(progress.etaMs)}`
                         : ""}
@@ -1947,9 +1949,9 @@ export function SessionTail({
                 </div>
               ) : (
                 <div class="run-progress dim">
-                  läuft seit {formatMinutes(progress.elapsedMs)}
+                  {t("session.running_since")} {formatMinutes(progress.elapsedMs)}
                   {progress.medianTurnMs !== null
-                    ? ` · Zug hier meist ${formatMinutes(progress.medianTurnMs)} (${progress.turnCount} gelaufen)`
+                    ? t("session.turn_median", { "med": formatMinutes(progress.medianTurnMs), "count": progress.turnCount })
                     : " · ohne Plan kein Fortschritt messbar"}
                   {estimateText(estimate, progress.elapsedMs)
                     ? ` · ${estimateText(estimate, progress.elapsedMs)}`
@@ -1968,10 +1970,10 @@ export function SessionTail({
 
           {factoryLink?.partner && (
             <div>
-              Factory ·{" "}
+              {t("session.factory_dash")}{" "}
               {factoryLink.role === "driver"
-                ? "Treiber (Chat)"
-                : "Beobachter (Fortschritt)"}{" "}
+                ? t("session.driver_chat")
+                : t("session.observer_progress")}{" "}
               ·{" "}
               <a
                 href={sessionHash(
@@ -1980,8 +1982,8 @@ export function SessionTail({
                 )}
               >
                 {factoryLink.role === "driver"
-                  ? "Fortschritt öffnen"
-                  : "Treiber-Chat öffnen"}
+                  ? t("session.open_progress")
+                  : t("session.open_driver_chat")}
               </a>
             </div>
           )}
@@ -2006,7 +2008,7 @@ export function SessionTail({
               onResume={async () => {
                 const ack = await api.resumeSession(session.id);
                 if (!ack.ok)
-                  throw new Error(ack.detail ?? "Fortsetzen fehlgeschlagen.");
+                  throw new Error(ack.detail ?? t("session.resume_failed"));
                 const updated = await api.session(session.id);
                 setStatus(updated.status);
                 setRecord(updated);
@@ -2035,13 +2037,13 @@ export function SessionTail({
           {(status === "working" || status === "waiting_approval") && activeBackground.length > 0 && (
             <div class="dim">
               <p role="status">
-                Hintergrundarbeit aktiv · {activeBackground.length} offene Aktivität
+                {t("session.background_work_active")} {activeBackground.length} {t("session.open_activity")}
                 {activeBackground.length === 1 ? "" : "en"}
               </p>
-              <ul aria-label="Aktive Hintergrundaufgaben">
+              <ul aria-label={t("session.active_background_tasks")}>
                 {activeBackground.map(({ id, label, startedAt }) => (
                   <li key={id}>
-                    {label} · seit <time dateTime={startedAt}>{new Date(startedAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })}</time>
+                    {label} {t("session.since_dash")} <time dateTime={startedAt}>{fmtDateTime(startedAt, { dateStyle: "short", timeStyle: "short" })}</time>
                   </li>
                 ))}
               </ul>
@@ -2079,21 +2081,21 @@ export function SessionTail({
           )}
           {activeTab === "chat" && chat.failed && (
             <div class="chat-load-warning" role="status">
-              Einige Schrittdetails konnten nicht geladen werden.{" "}
+              {t("session.some_step_details_unloadable")}{" "}
               <button type="button" class="link-btn" onClick={chat.retry}>
-                Erneut laden
+                {t("session.reload")}
               </button>
             </div>
           )}
           {activeTab === "chat" && recoveredPrompt.failed && (
             <div class="chat-load-warning" role="status">
-              Der letzte Auftrag konnte nicht geladen werden.{" "}
+              {t("session.last_prompt_unloadable")}{" "}
               <button
                 type="button"
                 class="link-btn"
                 onClick={recoveredPrompt.retry}
               >
-                Erneut laden
+                {t("session.reload")}
               </button>
             </div>
           )}
@@ -2146,33 +2148,33 @@ export function SessionTail({
                   onClick={() => void loadOlder()}
                 >
                   {olderNote === "laden"
-                    ? "frühere Einträge werden geladen …"
-                    : `${events[0]!.seq - 1} frühere Einträge — hochscrollen oder tippen`}
+                    ? t("session.older_loading")
+                    : t("session.older_entries", { "n": events[0]!.seq - 1 })}
                 </button>
                 {olderNote === "fehler" && (
                   <span class="tail-older-hint dim">
-                    Der Hub antwortet nicht — noch einmal versuchen.
+                    {t("session.hub_not_answering")}
                   </span>
                 )}
               </div>
             )}
             {viewWindow && viewKind ? (
               <div class="ui-empty detached-placeholder">
-                <p>{VIEW_LABEL[viewKind]} läuft in einem eigenen Fenster.</p>
+                <p>{VIEW_LABEL[viewKind]} {t("session.runs_in_own_window")}</p>
                 <div class="row">
                   <Button
                     onClick={() =>
                       postWindowMessage({ type: "focus", id: viewWindow.id })
                     }
                   >
-                    Fenster zeigen
+                    {t("session.show_window")}
                   </Button>
                   <Button
                     onClick={() =>
                       postWindowMessage({ type: "recall", id: viewWindow.id })
                     }
                   >
-                    Zurückholen
+                    {t("common.unarchive")}
                   </Button>
                 </div>
               </div>
@@ -2204,14 +2206,14 @@ export function SessionTail({
                 {diffWarning}
                 {noChanges ? (
                   <div class="ui-empty">
-                    <p>Diese Session hat noch nichts geändert.</p>
-                    <Button onClick={showChatTab}>Zum Chat</Button>
+                    <p>{t("session.nothing_changed_yet")}</p>
+                    <Button onClick={showChatTab}>{t("session.to_chat")}</Button>
                   </div>
                 ) : (
                   <DiffReview diff={diff} session={session} />
                 )}
-                <section class="changes-report" aria-label="Bericht">
-                  <h3 class="section-title">Bericht</h3>
+                <section class="changes-report" aria-label={t("session.report")}>
+                  <h3 class="section-title">{t("session.report")}</h3>
                   <ReportPane
                     record={record}
                     createdAt={session.createdAt}
@@ -2241,8 +2243,8 @@ export function SessionTail({
               <>
                 <div class="graph-pane-tools">
                   <Button
-                    aria-label="Graph in eigenes Fenster"
-                    title="In eigenes Fenster"
+                    aria-label={t("session.graph_in_own_window")}
+                    title={t("session.in_own_window")}
                     onClick={() =>
                       void openPopout({
                         kind: "graph",
@@ -2253,7 +2255,7 @@ export function SessionTail({
                       })
                     }
                   >
-                    ⧉ Eigenes Fenster
+                    {t("session.own_window")}
                   </Button>
                 </div>
                 <GraphPane
@@ -2287,8 +2289,8 @@ export function SessionTail({
                 {openFile && (
                   <div class="graph-pane-tools">
                     <Button
-                      aria-label="Datei in eigenes Fenster"
-                      title="In eigenes Fenster"
+                      aria-label={t("session.file_in_own_window")}
+                      title={t("session.in_own_window")}
                       onClick={() =>
                         void openPopout({
                           kind: "file",
@@ -2300,7 +2302,7 @@ export function SessionTail({
                         })
                       }
                     >
-                      ⧉ Eigenes Fenster
+                      {t("session.own_window")}
                     </Button>
                   </div>
                 )}
@@ -2329,11 +2331,11 @@ export function SessionTail({
               <>
                 <div class="view-head">
                   <Button
-                    aria-label="Dateibaum öffnen"
-                    title="Dateibaum (Strg+Umschalt+E)"
+                    aria-label={t("common.open_file_tree")}
+                    title={t("session.file_tree_shortcut")}
                     onClick={() => openLayer("files")}
                   >
-                    Dateibaum
+                    {t("session.file_tree")}
                   </Button>
                   {detach}
                 </div>
@@ -2357,8 +2359,8 @@ export function SessionTail({
               chatItems.length === 0 ? (
                 <div class="ui-empty">
                   {live
-                    ? `lädt…${shownModel ? ` · ${shownModel}` : ""}`
-                    : "keine Nachrichten"}
+                    ? t("session.tail_loading", { "suffix": shownModel ? ` · ${shownModel}` : "" })
+                    : t("session.no_messages")}
                 </div>
               ) : (
                 <ChatTurns
@@ -2401,14 +2403,14 @@ export function SessionTail({
             ) : visible.length === 0 ? (
               <div class="ui-empty">
                 {status === "working" || status === "starting"
-                  ? `lädt…${shownModel ? ` · ${shownModel}` : ""}`
-                  : "keine Nachrichten"}
+                  ? t("session.tail_loading", { "suffix": shownModel ? ` · ${shownModel}` : "" })
+                  : t("session.no_messages")}
               </div>
             ) : (
               <>
                 {hiddenOlder > 0 && (
                   <div class="dim" data-testid="older-hidden">
-                    {hiddenOlder} ältere Einträge — Kachel anklicken zeigt alle
+                    {hiddenOlder} {t("session.older_entries")}
                   </div>
                 )}
                 {visible.map((e, i) => {
@@ -2423,7 +2425,7 @@ export function SessionTail({
                     <Fragment key={e.seq}>
                       {e.seq === firstNew?.seq && (
                         <div class="new-divider" id="seit-letztem-besuch">
-                          Neu seit deinem letzten Besuch
+                          {t("session.new_since_last_visit_cap")}
                         </div>
                       )}
                       <EventRow
@@ -2461,13 +2463,13 @@ export function SessionTail({
                 type="button"
                 aria-label={
                   controlsFolded
-                    ? "Steuerung einblenden"
-                    : "Steuerung ausblenden"
+                    ? t("session.show_controls")
+                    : t("session.hide_controls")
                 }
                 title={
                   controlsFolded
-                    ? "Steuerung einblenden"
-                    : "Steuerung ausblenden"
+                    ? t("session.show_controls")
+                    : t("session.hide_controls")
                 }
                 aria-expanded={!controlsFolded}
                 onClick={toggleControls}
@@ -2477,10 +2479,10 @@ export function SessionTail({
               {controlsFolded && observerOnly && status !== "stopped" && (
                 <div class="composer-actions">
                   <span class="observer-note">
-                    nur beobachten — der Harness läuft außerhalb des Hubs
+                    {t("session.observe_only")}
                   </span>
                   <Button onClick={() => void stop()}>
-                    Beobachtung beenden
+                    {t("session.end_observation")}
                   </Button>
                 </div>
               )}
@@ -2523,7 +2525,7 @@ export function SessionTail({
                           onClick={() => void sendReply(true)}
                           disabled={replyBusy}
                         >
-                          Übernehmen
+                          {t("common.apply")}
                         </Button>
                       )}
                       {/* T8.6: a failed send is one tap from the next try — same input id, no double turn. */}
@@ -2534,7 +2536,7 @@ export function SessionTail({
                             onClick={() => void sendReply()}
                             disabled={replyBusy}
                           >
-                            Erneut versuchen
+                            {t("common.retry")}
                           </Button>
                         )}
                     </div>
@@ -2542,18 +2544,17 @@ export function SessionTail({
                   {showReply && draft.conflict && (
                     <div class="draft-conflict" role="alert">
                       <div>
-                        {draft.conflict.device ?? "Ein anderes Gerät"} hat den
-                        Entwurf geändert:{" "}
+                        {draft.conflict.device ?? t("session.other_device")} {t("session.has_changed_draft")}{" "}
                         <em>
                           „{draft.conflict.text.slice(0, 160) || "(leer)"}“
                         </em>
                       </div>
                       <div class="row">
                         <Button onClick={draft.takeTheirs}>
-                          Deren übernehmen
+                          {t("session.accept_theirs")}
                         </Button>
                         <Button onClick={draft.keepMine} variant="primary">
-                          Meinen behalten
+                          {t("session.keep_mine")}
                         </Button>
                       </div>
                     </div>
@@ -2586,7 +2587,7 @@ export function SessionTail({
                       value={reply}
                       onChange={setReply}
                       fieldId="reply"
-                      placeholder="Antworten…"
+                      placeholder={t("session.answer_ph")}
                       disabled={replyBusy}
                       adapter={session.adapter}
                       project={session.project}
@@ -2634,10 +2635,10 @@ export function SessionTail({
                                 class={replyBusy ? "busy" : undefined}
                               >
                                 {replyBusy
-                                  ? "lädt…"
+                                  ? t("common.loading_dots")
                                   : delivery === "now"
-                                    ? "Jetzt lenken"
-                                    : "Vormerken"}
+                                    ? t("session.steer_now")
+                                    : t("session.queue_up")}
                               </Button>
                               {midTurnInput && (
                                 /* Der Name ohne das Wort "vormerken": der Hauptknopf heißt so, und
@@ -2648,13 +2649,13 @@ export function SessionTail({
                                   active={delivery === "now"}
                                   aria-label={
                                     delivery === "now"
-                                      ? "Zustellung: lenken, jetzt"
-                                      : "Zustellung: warten bis zum Zugende"
+                                      ? t("session.delivery_steer_now")
+                                      : t("session.delivery_wait")
                                   }
                                   title={
                                     delivery === "now"
-                                      ? "Jetzt lenken — Klick stellt auf Warten bis zum Zugende"
-                                      : "Warten bis der Zug endet — Klick stellt auf jetzt lenken"
+                                      ? t("session.steer_now_hint")
+                                      : t("session.wait_hint")
                                   }
                                   onClick={() =>
                                     chooseDelivery(
@@ -2667,7 +2668,7 @@ export function SessionTail({
                                   ) : (
                                     <WaitGlyph />
                                   )}
-                                  {delivery === "now" ? "lenken" : "am Zugende"}
+                                  {delivery === "now" ? "lenken" : t("session.at_turn_end")}
                                 </Chip>
                               )}
                             </>
@@ -2684,10 +2685,10 @@ export function SessionTail({
                               class={replyBusy ? "busy" : undefined}
                             >
                               {replyBusy
-                                ? "lädt…"
+                                ? t("common.loading_dots")
                                 : status === "stopped" || status === "parked"
-                                  ? "Weiter"
-                                  : "Senden"}
+                                  ? t("session.next")
+                                  : t("session.send")}
                             </Button>
                           )}
                         </>
@@ -2699,10 +2700,9 @@ export function SessionTail({
                       {observerOnly ? (
                         <>
                           <span class="observer-note">
-                            nur beobachten — der Harness läuft außerhalb des
-                            Hubs
+                            {t("session.observe_only_multiline")}
                           </span>
-                          <Button onClick={stop}>Beobachtung beenden</Button>
+                          <Button onClick={stop}>{t("session.end_observation")}</Button>
                         </>
                       ) : null}
                     </div>
@@ -2726,7 +2726,7 @@ export function SessionTail({
                 </div>
               )}
               {!tile && (
-                <nav class="subtabs-wrap" aria-label="Ansichten">
+                <nav class="subtabs-wrap" aria-label={t("session.views")}>
                   {tabButtons}
                 </nav>
               )}

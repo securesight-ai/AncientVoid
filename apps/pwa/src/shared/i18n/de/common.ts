@@ -59,7 +59,6 @@ export const de = {
   "common.loading_short": "lade…",
   "common.media": "Medien",
   "common.metrics": "Metrik",
-  "common.more": "mehr",
   "common.n_sessions": "{n} sessions",
   "common.never": "nie",
   "common.new": "neu",

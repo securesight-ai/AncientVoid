@@ -1,3 +1,5 @@
+import { fmtNumber, fmtTime, fmtDateTime } from "../../shared/i18n/format.ts";
+import { t } from "../../shared/i18n/index.ts";
 /** Pure diff helpers (EPIC-P20 T20.1) — split from DiffPane.tsx so they are unit-testable. */
 
 export function diffLineClass(line: string): string {
@@ -16,8 +18,8 @@ export function oversizeNote(oversize: { files: number | null; changedLines: num
   if (oversize.files === null || oversize.changedLines === null) {
     return "Diff zu groß zum Aufzählen — im Terminal ansehen: git show <sha>";
   }
-  const dateien = oversize.files === 1 ? "1 Datei" : `${oversize.files.toLocaleString("de-DE")} Dateien`;
-  return `${dateien}, ${oversize.changedLines.toLocaleString("de-DE")} geänderte Zeilen — Patch bewusst nicht geladen (zu groß für diese Ansicht)`;
+  const dateien = oversize.files === 1 ? t("diff.file_one") : t("diff.files_n", { n: fmtNumber(oversize.files) });
+  return t("diff.oversize_note", { dateien, lines: fmtNumber(oversize.changedLines) });
 }
 
 /** EPIC-P36: eine Unified-Zeile mit ihren echten Seiten-Nummern — Basis

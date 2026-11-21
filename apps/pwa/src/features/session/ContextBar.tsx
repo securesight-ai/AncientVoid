@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { contextLevel, contextText } from "./run-stats.ts";
 
 /**
@@ -15,7 +16,7 @@ export function ContextBar({ fill, windowTokens }: { fill: number | null; window
     <div
       class={`ctx-bar ${known ? level : "unknown"}`}
       role="meter"
-      aria-label="Kontextfenster"
+      aria-label={t("session.context_window")}
       aria-valuemin={0}
       aria-valuemax={100}
       {...(known ? { "aria-valuenow": Math.round(pct) } : {})}
