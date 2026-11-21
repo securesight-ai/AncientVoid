@@ -43,6 +43,16 @@ Handy-Zugang zum Agenten) wegbleibt.
   abgesetzt (`setsid`/`systemd-run --user`) mit Health-Check und Rückrollpfad.
 - tokdeck liegt weiter lokal (Port 7474, nur Loopback + Tailscale), kein Remote.
 
+## Wiederaufnahme nach Hub-Neustart (falls diese Antwort abbricht)
+- Der Hub ist ein systemd-User-Service (`ancientvoid-hub.service`, `Restart=always`,
+  `KillMode=process`) — Session-Worker überleben, der Hub kommt von allein hoch.
+- Nach dem Neustart prüfen: `systemctl --user is-active ancientvoid-hub`,
+  `curl -s 127.0.0.1:7373/api/health`, `curl -s 127.0.0.1:7373/version.json`
+  (sha muss auf `feat/p79-inferenz-token-tempo` zeigen), `/tmp/hub-neustart.log`.
+- Falls der Wachhund zurückgerollt hat (`HEAD` = `30be05d7`): Branch zurücksetzen mit
+  `git checkout feat/p79-inferenz-token-tempo`, Ursache im Log suchen, neu starten.
+- Konfigurations-Backup: `/tmp/hub.config.vor-p79.json`.
+
 ## Nächste Schritte
 1. `git fetch origin` → `origin/main` in `feat/p79-inferenz-token-tempo` mergen,
    Gates erneut (lint/typecheck/gezielte Tests).
