@@ -525,11 +525,11 @@ function HostsView({ hosts, sessions, onPick }: { hosts: FleetHost[]; sessions: 
           <Card key={h.hostId} class="host-card">
             <button class="session-open" type="button" onClick={() => onPick(h.hostId)}>
               <div class="row">
-                <strong class="session-title">{h.label ?? h.hostId.slice(0, 8)}</strong>
+                <strong class="session-title">{h.label ?? h.hostId}</strong>
                 <span class={`pill ${h.state === "reachable" ? "ok" : h.state === "stale" || h.state === "unauthorized" ? "warn" : "err"}`}>{HOST_STATE_LABEL[h.state]}</span>
               </div>
               <div class="session-where dim">
-                {h.detail ?? h.hostId}
+                {h.detail ?? (h.self ? t("common.this_machine") : h.url ?? "")}
                 {h.state !== "reachable" && h.lastSyncAt ? t("common.stand_time", { time: fmtTime(h.lastSyncAt) }) : ""}
               </div>
               <div class="session-activity">
@@ -753,10 +753,12 @@ function SessionRow({
 }
 
 /** 2026-10-26: readable host label — the fleet's own label (hostname /
- * tailnet name), falling back to a short id. Never empty, never guessed. */
+ * tailnet name), falling back to the host id. Never empty, never guessed.
+ * 2026-11-21: the id is NOT shortened — host ids are readable slugs
+ * ("kaisgamingdesk"), and "kaisgami" was not recognizable as a machine. */
 function hostLabel(hosts: readonly FleetHost[], hostId: string): string {
   const host = hosts.find((h) => h.hostId === hostId);
   if (host?.label) return host.label;
   if (hostId === "local") return t("common.this_machine");
-  return hostId.slice(0, 8);
+  return hostId;
 }

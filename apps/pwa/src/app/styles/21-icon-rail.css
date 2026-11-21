@@ -197,7 +197,12 @@
 @media (min-width: 700px) {
   #app:has(.split) { max-width: none; padding-left: 68px; }
   .split-list .dock-stack {
-    position: fixed; inset: 0 auto 0 0; width: 56px; margin: 0;
+    /* 2026-11-21: hier stand `inset: 0 auto 0 0` — die Kurzform setzte bottom auf 0
+     * und überschrieb damit das später im File stehende `bottom: 28px` des
+     * 1280er-Blocks. Die Icon-Leiste lief unter die Statusleiste und verdeckte deren
+     * linkes erstes Item („connected“ war abgeschnitten). Ohne `bottom` hier gilt
+     * die reservierte Höhe der Statusleiste wieder. */
+    position: fixed; top: 0; left: 0; right: auto; width: 56px; margin: 0;
     border-right: 1px solid var(--bg-chip);
   }
   .split-list .sidebar { display: flex; flex-direction: column; height: 100%; justify-content: flex-start; padding: 6px 0; box-sizing: border-box; }
