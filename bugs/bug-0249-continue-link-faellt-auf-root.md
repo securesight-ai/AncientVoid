@@ -1,7 +1,7 @@
 ---
 id: BUG-0249
 slug: continue-link-faellt-auf-root
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
@@ -66,13 +66,18 @@ Der rote Test existiert bereits — eine neue Testdatei ist nicht nötig.
 
 ## Eingrenzung
 
-`apps/pwa` — Erzeuger des `continue-link` im Bericht (ReportPane/T5.5-Umfeld);
-auffällig: nur der Link fällt auf Root zurück, `continue-open` (Kommando)
-trägt dieselbe Session-ID korrekt. Offen, ob die Session zum Renderzeitpunkt
-kurz verschwindet (Poll-Race) oder die Linkbildung die ID verliert.
+`ContinueCard` las `location.href`. Am Desktop (`wide`) schreibt
+`contentHash` für Tabs ohne rekonstruierbare Route (u. a. „Bericht“) `#/` in
+die Adresszeile — der Continue-Link folgte dem und zeigte Root, während
+`continue-open` die Session-ID aus dem Record korrekt trug.
+
+## Fix
+
+`continueSessionLink(sessionId, hostId)` baut den Deep-Link aus
+`sessionHash`; `ContinueCard` nimmt `sessionId`/`hostId` statt `location.href`.
 
 ## Handoff
 
 - [x] Datei im Index [`README.md`](README.md)
-- [ ] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`)
-- [ ] `bugfix` oder offen lassen
+- [x] GitHub-Issue [#251](https://github.com/securesight-ai/AncientVoid/issues/251)
+- [x] `bugfix`

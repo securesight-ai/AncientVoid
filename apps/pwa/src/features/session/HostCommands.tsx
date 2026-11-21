@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+import { sessionHash } from "../../app/route.ts";
 import { useApi } from "../../shared/api-context.ts";
 import { projectName } from "../../shared/project-name.ts";
 import { Button, Card } from "../../shared/ui/index.ts";
@@ -157,13 +158,34 @@ export function ApplyToProject({
 }
 
 /**
+ * BUG-0249: Deep-Link zur Session — nicht `location.href`. Am Desktop schreibt
+ * `contentHash` bei Tabs ohne rekonstruierbare Route (z. B. „Bericht“) `#/` in
+ * die Adresszeile; der Continue-Link muss trotzdem `#/sessions/<id>` tragen.
+ */
+export function continueSessionLink(sessionId: string, hostId?: string | null, origin = typeof location === "undefined" ? "" : location.origin): string {
+  // origin ohne trailing slash; sessionHash ist `#/…` — E2E und location.href
+  // erwarten `http://host/#/sessions/…` (Pfad `/` vor der Raute).
+  return `${origin.replace(/\/$/, "")}${sessionHash(sessionId, hostId).replace(/^#/, "/#")}`;
+}
+
+/**
  * T5.5: continue elsewhere — the web link to this very session (AC-P5-5)
  * and, between turns, the native terminal command for the same provider
  * session on the PC. The hub hides the command while a turn runs, so hub
  * and terminal never write at the same time.
  */
-export function ContinueCard({ openCmd, host = null }: { openCmd?: string | undefined; host?: string | null }) {
-  const link = typeof location === "undefined" ? "" : location.href;
+export function ContinueCard({
+  sessionId,
+  hostId = null,
+  openCmd,
+  host = null,
+}: {
+  sessionId: string;
+  hostId?: string | null;
+  openCmd?: string | undefined;
+  host?: string | null;
+}) {
+  const link = continueSessionLink(sessionId, hostId);
   return (
     <Card data-testid="continue-card">
       <div class="dim" style="font-size: calc(12px * var(--font-scale, 1)); margin-bottom: 6px">Weiterarbeiten auf einem anderen Gerät</div>
