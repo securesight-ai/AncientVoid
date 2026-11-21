@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { loadSidebar, saveSidebar, SIDEBAR_ENTRIES, SIDEBAR_EVENT, SIDEBAR_KEY } from "../shell/sidebar.ts";
 import { Button } from "../../shared/ui/index.ts";
@@ -17,8 +18,8 @@ export function SidebarSettings() {
     [order[index], order[index + by]] = [order[index + by]!, order[index]!];
     saveSidebar({ ...prefs, order });
   };
-  return <SettingsSection title="Sidebar" testid="sidebar-settings">
-    <p class="dim">Reihenfolge und Sichtbarkeit auf PC und Tablet. Die Sidebar bleibt über ihre eigene Taste erreichbar.</p>
+  return <SettingsSection title={t("shell.sidebar")} testid="sidebar-settings">
+    <p class="dim">{t("settings.sidebar_order")}</p>
     {prefs.order.map((id, i) => {
       const entry = SIDEBAR_ENTRIES.find((e) => e.id === id)!;
       return <SettingRow key={id} label={entry.label}>
@@ -27,6 +28,6 @@ export function SidebarSettings() {
         <Switch label={`${entry.label} anzeigen`} checked={!prefs.hidden.includes(id)} onChange={(show) => saveSidebar({ ...prefs, hidden: show ? prefs.hidden.filter((x) => x !== id) : [...prefs.hidden, id] })} />
       </SettingRow>;
     })}
-    <Button onClick={() => saveSidebar({ order: SIDEBAR_ENTRIES.map((e) => e.id), hidden: [], minimized: false })}>Sidebar zurücksetzen</Button>
+    <Button onClick={() => saveSidebar({ order: SIDEBAR_ENTRIES.map((e) => e.id), hidden: [], minimized: false })}>{t("settings.reset_sidebar")}</Button>
   </SettingsSection>;
 }

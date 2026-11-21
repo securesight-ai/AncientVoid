@@ -212,12 +212,6 @@
       "en": "Handing over…"
     },
     {
-      "match": "mehr",
-      "key": "common.more",
-      "de": "mehr",
-      "en": "more"
-    },
-    {
       "match": "Änderung fehlgeschlagen.",
       "key": "common.change_failed",
       "de": "Änderung fehlgeschlagen.",

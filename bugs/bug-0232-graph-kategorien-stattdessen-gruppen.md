@@ -1,7 +1,7 @@
 ---
 id: BUG-0232
 slug: graph-kategorien-stattdessen-gruppen
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev

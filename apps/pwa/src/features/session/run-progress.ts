@@ -1,3 +1,4 @@
+import { fmtNumber, fmtTime, fmtDateTime } from "../../shared/i18n/format.ts";
 import type { AdapterUsage, RunEstimate, UsageQuota } from "../../shared/api.ts";
 import type { NormalizedEvent } from "../../shared/ws.ts";
 
@@ -191,7 +192,7 @@ export function quotaSummary(usage: Pick<AdapterUsage, "supported" | "quota"> | 
     const text = windows
       .map((w) => {
         const left = Math.max(0, Math.round((1 - w.utilization) * 100));
-        const reset = new Date(w.resetsAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+        const reset = fmtTime(w.resetsAt);
         return `${WINDOW_LABELS[w.id] ?? w.id}: ${left} % frei · reset ${reset}`;
       })
       .join(" · ");

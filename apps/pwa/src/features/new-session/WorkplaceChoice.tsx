@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { WorkspacePreview } from "../../shared/api.ts";
 
@@ -51,7 +52,7 @@ export function WorkplaceChoice({
         // Kein Git: der ehrliche Weg ist „Projekt direkt“ — vorbelegen statt scheitern lassen.
         if (!p.worktreePossible) onMode("direct");
       })
-      .catch((err) => alive && setFailure(err instanceof Error ? err.message : "Vorschau nicht verfügbar"));
+      .catch((err) => alive && setFailure(err instanceof Error ? err.message : t("newsession.preview_unavailable")));
     return () => {
       alive = false;
     };
@@ -71,55 +72,55 @@ export function WorkplaceChoice({
 
   return (
     <fieldset class="workplace-choice">
-      <legend>Arbeitsort</legend>
-      <div class="workplace-cards" role="radiogroup" aria-label="Arbeitsort">
+      <legend>{t("newsession.workplace")}</legend>
+      <div class="workplace-cards" role="radiogroup" aria-label={t("newsession.workplace")}>
         <label class={mode === "worktree" ? "workplace-card active" : "workplace-card"}>
           <input
             type="radio"
             name="workplace"
             value="worktree"
-            aria-label="Arbeitsort Worktree"
+            aria-label={t("newsession.workplace_worktree")}
             checked={mode === "worktree"}
             disabled={preview !== null && !preview.worktreePossible}
             onChange={() => onMode("worktree")}
           />
-          <strong>Eigener Worktree</strong>
-          <span class="dim">Änderungen landen in einer eigenen Git-Kopie, dein Projekt bleibt unberührt. Standard.</span>
-          {preview !== null && !preview.worktreePossible && <span class="dim">Nicht möglich: kein Git-Projekt.</span>}
+          <strong>{t("newsession.own_worktree")}</strong>
+          <span class="dim">{t("session.changes_in_git_copy")}</span>
+          {preview !== null && !preview.worktreePossible && <span class="dim">{t("newsession.not_possible_no_git")}</span>}
         </label>
         <label class={mode === "direct" ? "workplace-card active" : "workplace-card"}>
-          <input type="radio" name="workplace" value="direct" aria-label="Arbeitsort direkt im Ordner" checked={mode === "direct"} onChange={() => onMode("direct")} />
-          <strong>Projekt direkt</strong>
-          <span class="dim">Der Agent arbeitet im Projektordner selbst. In Git-Projekten schreibt höchstens eine Session; Ordner ohne Git können mehrere Sessions teilen — nach ausdrücklicher Bestätigung.</span>
+          <input type="radio" name="workplace" value="direct" aria-label={t("newsession.workplace_direct")} checked={mode === "direct"} onChange={() => onMode("direct")} />
+          <strong>{t("newsession.project_direct")}</strong>
+          <span class="dim">{t("newsession.agent_works_in_project")}</span>
         </label>
       </div>
       <p class="dim workplace-note">
-        Ein Worktree trennt nur Git-Dateien — keine Prozess- oder Netzwerkrechte. Was der Agent darf, regelt der Modus („Modus“ / Sandbox des Harness) unabhängig davon.
+        {t("newsession.worktree_separates_files_only")}
       </p>
       {failure && <div class="workplace-warn" role="status">{failure}</div>}
       {direct && preview && (
         <div class="workplace-detail" data-testid="workplace-detail">
           <div class="mono">{preview.checkoutId}</div>
-          {preview.branch && <div class="dim">Branch {preview.branch}</div>}
-          <div class="dim">Änderungen anderer Programme (Editor, Terminal) kann AncientVoid nicht sperren, nur erkennen.</div>
-          {held && isGitCheckout && <div class="workplace-warn" role="alert">Hier schreibt bereits eine andere AncientVoid-Session ({held.slice(0, 8)}). Erst beenden oder „Eigener Worktree“ wählen.</div>}
+          {preview.branch && <div class="dim">{t("common.branch")} {preview.branch}</div>}
+          <div class="dim">{t("session.other_program_changes")}</div>
+          {held && isGitCheckout && <div class="workplace-warn" role="alert">{t("newsession.other_session_writes")}{held.slice(0, 8)}{t("newsession.stop_or_choose")}</div>}
           {holders.length > 0 && !isGitCheckout && (
             <div class="workplace-warn" role="alert">
               <div>
-                In diesem Ordner {holders.length === 1
-                  ? `schreibt bereits eine andere AncientVoid-Session (${holders.map((h) => h.slice(0, 8)).join(", ")})`
-                  : `schreiben bereits ${holders.length} andere AncientVoid-Sessions (${holders.map((h) => h.slice(0, 8)).join(", ")})`}
-                . Ohne Git gibt es keine Trennung — beide können sich gegenseitig überschreiben.
+                {t("newsession.in_this_folder")} {holders.length === 1
+                  ? t("session.writers_singular", { "list": holders.map((h) => h.slice(0, 8)).join(", ") })
+                  : t("session.writers_plural", { "n": holders.length, "list": holders.map((h) => h.slice(0, 8)).join(", ") })}
+                {t("newsession.no_git_no_separation")}
               </div>
               <label class="workplace-confirm">
                 <input type="checkbox" checked={confirmShared} onChange={(e) => onConfirmShared((e.target as HTMLInputElement).checked)} />
-                Mehrere Sessions in diesem Ordner — ich nehme das Überschreibrisiko in Kauf.
+                {t("newsession.multiple_sessions_accept")}
               </label>
             </div>
           )}
           {dirty.length > 0 && (
             <div class="workplace-warn" role="alert">
-              <div>Ungesicherte Änderungen im Projekt ({dirty.length}{preview.dirtyTruncated ? "+" : ""}):</div>
+              <div>{t("newsession.unsaved_changes_in_project")}{dirty.length}{preview.dirtyTruncated ? "+" : ""}):</div>
               <ul class="mono">
                 {dirty.slice(0, 8).map((d) => (
                   <li key={d}>{d}</li>
@@ -127,7 +128,7 @@ export function WorkplaceChoice({
               </ul>
               <label class="workplace-confirm">
                 <input type="checkbox" checked={confirmDirty} onChange={(e) => onConfirmDirty((e.target as HTMLInputElement).checked)} />
-                Trotzdem starten — diese Änderungen bleiben unangetastet und gelten nicht als Leistung der Session.
+                {t("newsession.start_anyway_untouched")}
               </label>
             </div>
           )}

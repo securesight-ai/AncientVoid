@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { Fragment, type ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import type { NormalizedEvent } from "../../shared/ws.ts";
@@ -80,7 +81,7 @@ export function ChatTurns({
         <Fragment key={item.kind === "event" ? item.event.seq : item.key}>
           {i === dividerAt && (
             <div class="new-divider" id="seit-letztem-besuch">
-              Neu seit deinem letzten Besuch
+              {t("session.new_since_last_visit_cap")}
             </div>
           )}
           {item.kind === "event" ? (
@@ -88,10 +89,10 @@ export function ChatTurns({
           ) : item.kind === "unknown" ? (
             <div class="turn-unknown" data-seq={item.firstSeq}>
               <span>
-                {item.count} {item.count === 1 ? "unbekanntes Ereignis" : "unbekannte Ereignisse"}
+                {item.count} {item.count === 1 ? t("session.unknown_event") : t("session.unknown_events")}
               </span>
               <button type="button" class="link-btn" onClick={onOpenVerlauf}>
-                im Verlauf ansehen
+                {t("session.view_in_history")}
               </button>
             </div>
           ) : (
@@ -114,7 +115,7 @@ export function ChatTurns({
           ) : null}
           {live.assistant ? (
             <div class="chat-live">
-              <span class="chat-live-label">antwortet</span>
+              <span class="chat-live-label">{t("session.answering")}</span>
               <div class="chat-live-part" data-testid="chat-live-assistant">{live.assistant}<span class="chat-live-caret" aria-hidden="true" /></div>
             </div>
           ) : null}
@@ -161,7 +162,7 @@ function WorkNote({ event }: { event: NormalizedEvent }) {
   </>;
 }
 
-const STATE_LABEL: Record<Step["state"], string> = { running: "läuft", ok: "fertig", error: "Fehler", open: "ohne Ergebnis" };
+const STATE_LABEL: Record<Step["state"], string> = { running: t("session.running"), ok: "fertig", error: t("notifications.section_errors"), open: t("session.no_result") };
 
 function StepRow({ step, current }: { step: Step; current: boolean }) {
   const [detail, setDetail] = useState(false);
@@ -175,8 +176,8 @@ function StepRow({ step, current }: { step: Step; current: boolean }) {
       </button>
       {detail && (
         <div class="turn-step-io">
-          {step.use && <StepPart label="Eingabe" event={step.use} />}
-          {step.result ? <StepPart label="Ausgabe" event={step.result} /> : <div class="dim">{STATE_LABEL[step.state]}</div>}
+          {step.use && <StepPart label={t("composer.input")} event={step.use} />}
+          {step.result ? <StepPart label={t("composer.output")} event={step.result} /> : <div class="dim">{STATE_LABEL[step.state]}</div>}
         </div>
       )}
     </li>

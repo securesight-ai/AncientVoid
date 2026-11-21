@@ -213,11 +213,13 @@ hart verdrahtet. Für „praktisch alle Sprachen" gilt:
   negativem Fixture; `docs/check-context.md`-Eintrag „script-ref" erfüllt.
 - [x] **T61.4** Migration Shell/Übersicht/Status/Benachrichtigungen
   (häufigste Erstkontakt-Flächen) inkl. `fmt*`-Ersatz der `"de-DE"`-Literale.
-- [ ] **T61.5** Migration Session/Composer/Approvals/Neue Session/Setup-
-  und Onboarding-Pfade.
-- [ ] **T61.6** Migration übrige Features (Workspace, Files, Vault, Graph,
+- [x] **T61.5** Migration Session/Composer/Approvals/Neue Session/Setup-
+  und Onboarding-Pfade. (2026-11-22: 29 Dateien migriert, Baseline
+  105/1330 → 71/1025; Restposten in diesen Dateien sind Daten-/Icon-Keys.)
+- [x] **T61.6** Migration übrige Features (Workspace, Files, Vault, Graph,
   Fleet, Teams, Automations, Forge, Media, Metriken, Settings …) — je
-  Feature-Bereich ein MR, Baseline sinkt nachweisbar.
+  Feature-Bereich ein MR, Baseline sinkt nachweisbar. (2026-11-22: 71 Dateien
+  migriert, Baseline 71/1025 → 0/0; als ein Wave-MR statt je-Bereich-MRs.)
 - [x] **T61.7** Contract + Hub: `messageKey`/`params` an Notifications,
   `error.<code>`-Mapping, `locale` am Push-Abo, Server-Push-Katalog. (K5, K7)
 - [ ] **T61.8** `hubctl`-Katalog und `--lang`; Referenz-Doku neu generieren

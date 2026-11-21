@@ -1,7 +1,7 @@
 ---
 id: BUG-0216
 slug: endtext-des-streamten-diktats-traegt-fremden-namen
-status: open
+status: done
 severity: S3
 area: hub
 instance: dev
@@ -91,6 +91,11 @@ Package `apps/hub`. Verloren geht der Schlüssel beim Handanlegen des Objekts in
 `apiKeyFile`, aber nicht `engine`. `packages/core/src/platform/config.ts` nimmt den
 Schlüssel an (`stt.streaming.engine`), `apps/hub/src/modules/voice/stt.routes.ts:117`
 benutzt ihn — er erreicht die Stelle nur nie.
+
+
+## Fix
+
+Behoben: `3135b690`. Doku-Abschluss 2026-11-21 (Status-Nachzug).
 
 ## Handoff
 

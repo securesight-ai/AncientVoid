@@ -1,17 +1,21 @@
 ---
 id: BUG-0188
 slug: hermes-stumm-native-binding-verloren
-status: open
+status: done
 severity: S1
 area: core
 instance: dev
-commit: "918a57f4"
-forge: ""
+commit: "7d2378a6"
+forge: "https://github.com/securesight-ai/AncientVoid/pull/133"
 created: 2026-11-17
 reporter: "jan-pixel (Tablet, Nutzerreport) + Repro 2026-11-17"
 ---
 
 # BUG-0188 — Hermes-Session verstummt bei langen Turns; nach Stop ist die native Session (Resume-Griff) verloren
+
+> **Hinweis:** Dieselbe Nummer `BUG-0188` trägt auch
+> [`bug-0188-projekt-anlegen-ignoriert-host.md`](bug-0188-projekt-anlegen-ignoriert-host.md)
+> (andere Ursache). Index und Forge unterscheiden die Dateien.
 
 ## Gesehen
 
@@ -70,49 +74,53 @@ Zwei Defekte greifen ineinander:
    Ereignis, obwohl der Hub-Status „working" zeigt — für die PWA sieht das
    wie „nichts passiert" aus.
 2. **Core verwirft das Binding nach dem Stop** —
-   `packages/core/src/modules/sessions/session-manager.ts:2679`:
-   `emit: (event) => { if (signal.aborted || this.shuttingDown) return; … }`.
-   `stop()` abortet das Signal (Zeile 2141), bevor der Adapter-Kill die
-   Pane-Ausgabe flusht; das `hermes.native_session`-Event aus dem onExit-
-   Flush (mit `payload.nativeSessionId`, das generische Binding, Zeile
-   2838) wird **still verworfen**. Damit ist die geleistete Arbeit (76
-   Messages) über den Hub unerreichbar — Verstoß gegen Fail-loud und K7.
+   `packages/core/src/modules/sessions/session-manager.ts`:
+   `emit` droppte bei `signal.aborted` alles still. `stop()` abortet das
+   Signal, bevor der Adapter-Kill die Pane-Ausgabe flusht; das
+   `hermes.native_session`-Event aus dem onExit-Flush (mit
+   `payload.nativeSessionId`) wurde **still verworfen**. Damit war die
+   geleistete Arbeit über den Hub unerreichbar — Verstoß gegen Fail-loud
+   und K7.
 
 Sekundärbefund (Steuerbarkeit, Evidenz Session cb017253, 2026-11-09):
 Hermes v0.21.0 sperrt native Sessions auf einen Live-Owner („Only one
 surface at a time may run a session"). Ein Follow-up-steer, das
 `--resume <sid>` spawnt, während der alte CLI-Owner noch lebt, stirbt mit
 Exit 1 — die Nachricht geht verloren, statt wie im Telegram-Kanal in
-derselben Session zu queueien.
+derselben Session zu landen.
 
 ## Fix
 
+Gemerged in [#133](https://github.com/securesight-ai/AncientVoid/pull/133)
+(`7d2378a6`, 2026-11-17):
+
 1. `adapter-hermes`: jedes `spawnTurn` emittiert sofort
-   `hermes.turn_started` (System-Event) — die PWA zeigt ab Sekunde 1, dass
-   Hermes arbeitet.
+   `hermes.turn_started` (System-Event).
 2. `core/session-manager`: Adapter-Events mit `payload.nativeSessionId`
-   werden nach dem Abort weiterhin journalisiert (der Resume-Griff überlebt
-   den Stop); alle anderen Post-Abort-Drops werden geloggt (fail loud statt
-   still). `shuttingDown` verwirft weiterhin alles.
+   werden nach dem Abort weiterhin journalisiert; andere Post-Abort-Drops
+   werden geloggt. `shuttingDown` verwirft weiterhin alles.
 3. `adapter-hermes`: Exit 1 mit „already has a live owner" löst genau einen
-   verzögerten Neuversuch desselben Turns aus, bevor der Fehler stehen
-   bleibt.
+   verzögerten Neuversuch desselben Turns aus.
 
 ## Tests
 
-- `packages/adapters/hermes/test/adapter.test.ts`:
-  `hermes.turn_started` als erstes Event; Owner-Konflikt → ein Retry →
-  Antwort.
-- `packages/core/test/modules/sessions/session-manager.test.ts`:
-  Adapter-Event mit `nativeSessionId` nach `stop()` landet im EventStore
-  und bindet den Record (ohne Fix rot).
+| Ring | Datei | Stand |
+|---|---|---|
+| Unit | `packages/adapters/hermes/test/adapter.test.ts` (BUG-0188-Block) | grün (re-verify 2026-11-21) |
+| Integration | `packages/core/test/modules/sessions/session-manager.test.ts` „BUG-0188: Adapter-Event…“ | grün (re-verify 2026-11-21) |
 
 ## Umgebung
 
 | Feld | Wert |
 |---|---|
 | Instanz | lokal (`127.0.0.1:7373`, Haupt-Checkout) |
-| Commit | `918a57f4` |
+| Commit | `7d2378a6` (Fix) / Repro auf `918a57f4` |
 | Node-Version | 24 |
 | Adapter | hermes (Hermes Agent v0.21.0) |
 | Repro-Weg | PWA / hubctl, workerRunner tmux |
+
+## Handoff
+
+- [x] Datei im Index [`README.md`](README.md)
+- [x] PR [#133](https://github.com/securesight-ai/AncientVoid/pull/133)
+- [x] `bugfix` (Code 2026-11-17; Doku-Abschluss 2026-11-21)

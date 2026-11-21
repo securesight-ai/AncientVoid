@@ -1,7 +1,7 @@
 ---
 id: BUG-0231
 slug: graph-handy-unscharf-zoom-flach
-status: fixed
+status: done
 severity: S2
 area: pwa
 instance: dev

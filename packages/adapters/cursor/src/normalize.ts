@@ -11,6 +11,7 @@ export interface CursorLine {
   subtype?: unknown;
   session_id?: unknown;
   chatId?: unknown;
+  call_id?: unknown;
   /** Top-level thinking deltas (real cursor-agent, verified live 2026-09-29). */
   text?: unknown;
   message?: { role?: unknown; content?: unknown } | null;
@@ -20,6 +21,12 @@ export interface CursorLine {
   usage?: { input_tokens?: unknown; output_tokens?: unknown; inputTokens?: unknown; outputTokens?: unknown } | null;
   cwd?: unknown;
   tools?: unknown;
+  /** BUG-0202: stream-json tool lifecycle (`started`/`completed`). */
+  tool_call?: Record<string, unknown> | null;
+  /** BUG-0202: permission / plan / AskQuestion prompts. */
+  query_type?: unknown;
+  query?: Record<string, unknown> | null;
+  response?: Record<string, unknown> | null;
 }
 
 function summarize(text: string, max = 200): string {
@@ -126,9 +133,161 @@ export function normalizeCursorLine(line: CursorLine, state: { thinking: string 
     });
     return out;
   }
+  // BUG-0202: cursor-agent stream-json tool lifecycle (docs + live 2026-11-17).
+  // Shape: { type:"tool_call", subtype:"started"|"completed", call_id, tool_call:{ readToolCall:{ args, result? } } }
+  if (type === "tool_call") {
+    const subtype = asString(line.subtype);
+    const callId = asString(line.call_id) ?? "";
+    const parsed = parseCursorToolCall(line.tool_call);
+    if (!parsed) {
+      out.push({ type: "system", summary: "cursor: tool_call ohne erkennbares Werkzeug", payload: { kind: "cursor.unhandled", type: "tool_call", subtype } });
+      return out;
+    }
+    if (subtype === "started" || subtype === undefined) {
+      out.push({
+        type: "tool_use",
+        summary: summarize(`${parsed.name}(${JSON.stringify(parsed.args).slice(0, 150)})`),
+        payload: { id: callId || parsed.name, name: parsed.name, input: parsed.args },
+      });
+      return out;
+    }
+    if (subtype === "completed") {
+      const text = toolResultText(parsed.result);
+      const isError = parsed.resultIsError;
+      out.push({
+        type: "tool_result",
+        summary: summarize(text) || (isError ? "Tool-Fehler" : "Tool fertig"),
+        payload: { toolUseId: callId || parsed.name, isError, content: text },
+      });
+      return out;
+    }
+    out.push({ type: "system", summary: `cursor: tool_call/${subtype ?? "?"}`, payload: { kind: "cursor.unhandled", type: "tool_call", subtype } });
+    return out;
+  }
+  // BUG-0202: Plan-/Auswahl-/Freigabe-Fragen. Request → Chat (assistant), Response → Verlauf.
+  // Ground truth: harbor#1586 + cursor docs (webSearchRequestQuery); AskQuestion/Plan analog.
+  if (type === "interaction_query") {
+    const subtype = asString(line.subtype);
+    const queryType = asString(line.query_type) ?? "query";
+    if (subtype === "request") {
+      const text = formatInteractionRequest(queryType, line.query);
+      out.push({ type: "assistant", summary: summarize(text), payload: { text, kind: "cursor.interaction_query", queryType } });
+      return out;
+    }
+    if (subtype === "response") {
+      out.push({
+        type: "system",
+        summary: `cursor: Freigabe ${queryType}`,
+        payload: { kind: "cursor.interaction_response", queryType, response: line.response ?? null },
+      });
+      return out;
+    }
+    out.push({ type: "system", summary: `cursor: interaction_query/${subtype ?? "?"}`, payload: { kind: "cursor.unhandled", type: "interaction_query", subtype } });
+    return out;
+  }
   if (type !== undefined) {
     // fail loud, once per type would be nicer — visible is the bar
     out.push({ type: "system", summary: `cursor: unbehandelter stream-json-Typ "${type}"`, payload: { kind: "cursor.unhandled", type } });
   }
   return out;
+}
+
+/** Known camelCase wrappers from cursor-agent stream-json (docs + community parsers). */
+const TOOL_CALL_KEYS: ReadonlyArray<{ key: string; name: string }> = [
+  { key: "shellToolCall", name: "Bash" },
+  { key: "readToolCall", name: "Read" },
+  { key: "editToolCall", name: "Edit" },
+  { key: "writeToolCall", name: "Write" },
+  { key: "grepToolCall", name: "Grep" },
+  { key: "globToolCall", name: "Glob" },
+  { key: "searchToolCall", name: "Search" },
+  { key: "listToolCall", name: "List" },
+  { key: "webFetchToolCall", name: "WebFetch" },
+  { key: "webSearchToolCall", name: "WebSearch" },
+];
+
+function parseCursorToolCall(raw: unknown): { name: string; args: unknown; result: unknown; resultIsError: boolean } | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const tc = raw as Record<string, unknown>;
+  for (const { key, name } of TOOL_CALL_KEYS) {
+    const call = tc[key];
+    if (!call || typeof call !== "object" || Array.isArray(call)) continue;
+    const body = call as { args?: unknown; result?: unknown };
+    return { name, args: body.args ?? {}, result: body.result, resultIsError: isToolResultError(body.result) };
+  }
+  const fn = tc.function;
+  if (fn && typeof fn === "object" && !Array.isArray(fn)) {
+    const f = fn as { name?: unknown; arguments?: unknown; result?: unknown };
+    const name = asString(f.name) ?? "tool";
+    let args: unknown = f.arguments ?? {};
+    if (typeof args === "string") {
+      try {
+        args = JSON.parse(args);
+      } catch {
+        args = { raw: args };
+      }
+    }
+    return { name, args, result: f.result, resultIsError: isToolResultError(f.result) };
+  }
+  return null;
+}
+
+function isToolResultError(result: unknown): boolean {
+  if (!result || typeof result !== "object" || Array.isArray(result)) return false;
+  const r = result as Record<string, unknown>;
+  if ("error" in r || "failure" in r) return true;
+  if (r.success === false) return true;
+  return false;
+}
+
+function toolResultText(result: unknown): string {
+  if (result === undefined || result === null) return "";
+  if (typeof result === "string") return result;
+  if (typeof result !== "object" || Array.isArray(result)) return JSON.stringify(result);
+  const r = result as Record<string, unknown>;
+  const success = r.success;
+  if (success && typeof success === "object" && !Array.isArray(success)) {
+    const s = success as Record<string, unknown>;
+    if (typeof s.content === "string") return s.content;
+    if (typeof s.path === "string") return s.path;
+  }
+  if (typeof r.error === "string") return r.error;
+  if (r.error && typeof r.error === "object") return JSON.stringify(r.error);
+  return JSON.stringify(result);
+}
+
+/** Render a permission/plan prompt so the Chat-Tab shows the options (BUG-0202). */
+function formatInteractionRequest(queryType: string, query: unknown): string {
+  const label = queryType.replace(/RequestQuery$/, "").replace(/Query$/, "") || queryType;
+  if (!query || typeof query !== "object" || Array.isArray(query)) {
+    return `Cursor fragt nach Freigabe: ${label}`;
+  }
+  const q = query as Record<string, unknown>;
+  const inner = (q[queryType] ?? q[`${label}RequestQuery`] ?? q[label]) as Record<string, unknown> | undefined;
+  const args = (inner && typeof inner === "object" ? (inner.args as Record<string, unknown> | undefined) : undefined) ?? undefined;
+  const lines: string[] = [`Cursor · ${label}`];
+  if (args && typeof args === "object") {
+    for (const [k, v] of Object.entries(args)) {
+      if (k === "toolCallId" || k === "id") continue;
+      if (typeof v === "string" && v.trim()) lines.push(`${k}: ${v}`);
+      else if (Array.isArray(v) && v.every((x) => typeof x === "string")) lines.push(`${k}:\n- ${v.join("\n- ")}`);
+      else if (v !== undefined && v !== null) lines.push(`${k}: ${JSON.stringify(v).slice(0, 400)}`);
+    }
+  }
+  // AskQuestion / Plan shapes often put options next to args.
+  const options = (inner?.options ?? q.options) as unknown;
+  if (Array.isArray(options) && options.length > 0) {
+    lines.push("Optionen:");
+    for (const opt of options) {
+      if (typeof opt === "string") lines.push(`- ${opt}`);
+      else if (opt && typeof opt === "object") {
+        const o = opt as { label?: unknown; title?: unknown; value?: unknown; description?: unknown };
+        const head = asString(o.label) ?? asString(o.title) ?? asString(o.value) ?? JSON.stringify(opt).slice(0, 120);
+        lines.push(asString(o.description) ? `- ${head} — ${o.description}` : `- ${head}`);
+      }
+    }
+  }
+  const question = asString(inner?.question) ?? asString(q.question) ?? asString(inner?.prompt) ?? asString(q.prompt);
+  if (question) lines.splice(1, 0, question);
+  return lines.join("\n");
 }

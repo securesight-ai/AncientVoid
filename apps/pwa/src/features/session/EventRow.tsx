@@ -1,3 +1,5 @@
+import { t } from "../../shared/i18n/index.ts";
+import { fmtDateTime, fmtTime, fmtNumber } from "../../shared/i18n/format.ts";
 import { memo } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
@@ -37,7 +39,7 @@ export function EventDetail({ event }: { event: NormalizedEvent }) {
         if (alive) setBlob(isOffloaded(event) ? eventDetail(withBlobPayload(event, text)) : text);
       })
       .catch(() => {
-        if (alive) setBlob("Details konnten nicht geladen werden.");
+        if (alive) setBlob(t("session.details_load_failed"));
       });
     return () => {
       alive = false;
@@ -68,7 +70,7 @@ function EventRowView({
   onJump: (anchor: string) => void;
 }) {
   const { event, state: fullText } = useFullEvent(rowEvent, useApi());
-  const time = new Date(event.ts).toLocaleTimeString("de-DE");
+  const time = fmtTime(event.ts, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const blobNote = event.blobRef ? " ⛁" : "";
   const toolId = toolIdOf(event);
   const visible = visibleEventText(event);
@@ -78,10 +80,10 @@ function EventRowView({
     return (
       <div class="event thinking" data-testid="withheld" data-seq={event.seq}>
         <div class="meta">
-          <span>#{event.seq} · thinking</span>
+          <span>#{event.seq} {t("session.dot_thinking")}</span>
           <span>{time}</span>
         </div>
-        <div class="summary">Der Anbieter liefert keinen Denktext</div>
+        <div class="summary">{t("session.provider_no_thinking_text")}</div>
       </div>
     );
   }
@@ -94,7 +96,7 @@ function EventRowView({
       <div class={`event thinking${expanded ? " expanded" : ""}`} data-seq={event.seq} onClick={(ev) => onCardClick(ev, onToggleExpand)}>
         <div class="meta">
           <span>
-            {expanded ? "▾" : "▸"} #{event.seq} · thinking
+            {expanded ? "▾" : "▸"} #{event.seq} {t("session.dot_thinking")}
             {blobNote}
           </span>
           <span>{time}</span>
@@ -112,7 +114,7 @@ function EventRowView({
       <div id={toolAnchor(toolId, "use")} class={`event tool_use${expanded ? " expanded" : ""}`} data-seq={event.seq} onClick={(ev) => onCardClick(ev, onToggleExpand)}>
         <div class="meta">
           <span>
-            #{event.seq} · tool_use
+            #{event.seq} {t("session.dot_tool_use")}
             {blobNote}
           </span>
           <span>{time}</span>
@@ -121,7 +123,7 @@ function EventRowView({
           <span class={`tool-status ${state}`}>{state}</span>
           {toolResult && (
             <button class="link-btn" onClick={() => onJump(toolAnchor(toolId, "result"))}>
-              zum Ergebnis ↓
+              {t("session.to_result_down")}
             </button>
           )}
         </div>
@@ -142,14 +144,14 @@ function EventRowView({
       >
         <div class="meta">
           <span>
-            #{event.seq} · tool_result
+            #{event.seq} {t("session.dot_tool_result")}
             {blobNote}
           </span>
           <span>{time}</span>
         </div>
         <div class="row">
           <button class="link-btn" onClick={() => onJump(toolAnchor(toolId, "use"))}>
-            ↑ zum Aufruf
+            {t("session.up_to_call")}
           </button>
         </div>
         <div class="summary">{event.summary}</div>
@@ -176,7 +178,7 @@ function EventRowView({
         </div>
         <div class="summary">
           {event.summary}
-          {skillNote && <span class="badge waiting"> · Gestartet mit {skillNote}</span>}
+          {skillNote && <span class="badge waiting"> {t("session.started_with")} {skillNote}</span>}
         </div>
         {expanded && <EventDetail event={rowEvent} />}
       </div>
@@ -196,7 +198,7 @@ function EventRowView({
     <div class={`event ${event.type}${prompt ? " own" : ""}${providerError ? " provider-error" : ""}${expanded ? " expanded" : ""}`} data-seq={event.seq} onClick={(ev) => onCardClick(ev, onToggleExpand)}>
       <div class="meta">
         <span>
-          {prompt ? `Du${typeof device === "string" && device ? ` · ${device}` : ""}` : `#${event.seq} · ${event.type}`}
+          {prompt ? t("session.you_suffix", { "suffix": typeof device === "string" && device ? ` · ${device}` : "" }) : `#${event.seq} · ${event.type}`}
           {blobNote}
         </span>
         <span>{time}</span>
@@ -208,7 +210,7 @@ function EventRowView({
       )}
       {fullText !== "ok" && (
         <div class={`dim full-text-note${fullText === "failed" ? " failed" : ""}`}>
-          {fullText === "loading" ? "Langer Text wird geladen …" : "Gekürzt — der volle Text konnte nicht geladen werden."}
+          {fullText === "loading" ? t("session.long_text_loading") : t("session.text_truncated")}
         </div>
       )}
       {prompt && Array.isArray((event.payload as { attachments?: unknown }).attachments) && (
@@ -246,7 +248,7 @@ function CopyButton({ text }: { text: string }) {
         setTimeout(() => setDone(""), 1500);
       }}
     >
-      {done === "ok" ? "kopiert" : done === "fail" ? "nicht erlaubt" : "Kopieren"}
+      {done === "ok" ? t("session.copied") : done === "fail" ? t("session.not_allowed") : t("session.copy")}
     </button>
   );
 }

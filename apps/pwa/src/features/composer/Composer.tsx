@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { registerField, touchField, type FieldId } from "../../shared/command-context.ts";
 import { useApi } from "../../shared/api-context.ts";
@@ -163,10 +164,10 @@ export function Composer({
       try {
         setRecommendation(await api.recommendPrompt(project, result.enhanced));
       } catch (err) {
-        setRecommendError(err instanceof Error ? err.message : "Empfehlung fehlgeschlagen");
+        setRecommendError(err instanceof Error ? err.message : t("composer.recommend_failed"));
       }
     } catch (err) {
-      setEnhanceError(err instanceof Error ? err.message : "Verbessern fehlgeschlagen");
+      setEnhanceError(err instanceof Error ? err.message : t("composer.improve_failed"));
     } finally {
       setEnhancing(false);
     }
@@ -210,7 +211,7 @@ export function Composer({
     setRecommendBusy(true);
     try {
       if (recommendation.mode === "create") {
-        if (!recommendation.draft) throw new Error("Vorschlag hat keinen Entwurf");
+        if (!recommendation.draft) throw new Error(t("composer.suggestion_no_draft"));
         await api.saveArtifact({
           project,
           kind: recommendation.kind,
@@ -245,7 +246,7 @@ export function Composer({
       setPreview(null);
       setRecommendation(null);
     } catch (err) {
-      setRecommendError(err instanceof Error ? err.message : "Empfehlung fehlgeschlagen");
+      setRecommendError(err instanceof Error ? err.message : t("composer.recommend_failed"));
     } finally {
       setRecommendBusy(false);
     }
@@ -253,12 +254,12 @@ export function Composer({
 
   const recommendNote = (item: PromptRecommendation) =>
     item.kind === "workflow"
-      ? "Workflows haben keinen Adapter-Aufruf. Der Name kommt in den Prompt."
+      ? t("composer.workflow_no_call")
       : adapter !== "claude"
-        ? "Dieser Adapter übernimmt den Eintrag nicht direkt. Der Name kommt in den Prompt."
+        ? t("composer.adapter_no_direct")
         : item.mode === "create"
-          ? "Nutzen legt die Datei an und nimmt sie für diesen Prompt. Als Standard merkt sie fürs Projekt."
-          : "Nutzen gilt für diesen Prompt. Als Standard merkt sie fürs Projekt.";
+          ? t("composer.use_creates_file")
+          : t("composer.use_applies");
 
   return (
     // EPIC-P43 T43.4: einzeilig, solange niemand schreibt; Fokus oder Text klappt die Eingabe auf.
@@ -309,10 +310,10 @@ export function Composer({
             onSubmit();
           }
         }}
-        title={onSubmit ? "⌘/Ctrl+Enter senden" : undefined}
+        title={onSubmit ? t("composer.send_hint") : undefined}
       />
       {suggestions.length > 0 && (
-        <div class="composer-notice" role="listbox" aria-label="Commands">
+        <div class="composer-notice" role="listbox" aria-label={t("composer.commands")}>
           {suggestions.map((c, i) => (
             <Button
               key={c.name}
@@ -334,12 +335,12 @@ export function Composer({
       {preview && (
         <div class="enhance-preview">
           <div >
-            <div class="dim" style="font-size: calc(11px * var(--font-scale, 1))">Original</div>
+            <div class="dim" style="font-size: calc(11px * var(--font-scale, 1))">{t("composer.original")}</div>
             <div class="enhance-preview-text">{preview.original}</div>
           </div>
           <div >
             <div class="dim" style="font-size: calc(11px * var(--font-scale, 1))">
-              Verbessert
+              {t("composer.improved")}
               {preview.engine ? ` · ${engineLabel(preview.engine)}` : ""}
               {preview.costUsd !== undefined ? ` · $${preview.costUsd.toFixed(4)}` : ""} ·{" "}
               {(preview.latencyMs / 1000).toFixed(1)}s
@@ -349,10 +350,10 @@ export function Composer({
           </div>
           <div class="row" style="gap: 8px">
             <Button onClick={keepOriginal}>
-              Original senden
+              {t("composer.send_original")}
             </Button>
             <Button onClick={acceptEnhanced} variant="primary">
-              Verbessertes übernehmen
+              {t("composer.apply_improved")}
             </Button>
           </div>
         </div>
@@ -390,16 +391,16 @@ export function Composer({
           class={shelfCount > 0 ? "composer-shelf has-items" : "composer-shelf"}
           data-testid="clipboard-open"
           onClick={openClipboardShelf}
-          aria-label={shelfCount > 0 ? `Ablage öffnen, ${shelfCount} Einträge` : "Ablage öffnen, noch leer"}
-          title={shelfCount > 0 ? `Zwischenablage-Ablage (${shelfCount} Einträge)` : "Zwischenablage-Ablage — noch nichts kopiert"}
+          aria-label={shelfCount > 0 ? t("composer.shelf_open_n", { "n": shelfCount }) : t("composer.shelf_empty")}
+          title={shelfCount > 0 ? t("composer.shelf_tooltip", { "n": shelfCount }) : t("composer.shelf_none")}
         >
           <ShelfGlyph />
           {shelfCount > 0 && <span class="shelf-badge" data-testid="clipboard-count" aria-hidden="true">{shelfCount > 9 ? "9+" : shelfCount}</span>}
         </Button>
         <Button
           aria-pressed={expanded}
-          aria-label={expanded ? "Eingabe verkleinern" : "Eingabe maximieren"}
-          title={expanded ? "Eingabe wieder verkleinern" : "Eingabe groß machen"}
+          aria-label={expanded ? t("composer.shrink_input") : t("composer.maximize_input")}
+          title={expanded ? t("composer.unmaximize_input") : t("composer.enlarge_input")}
           disabled={disabled}
           onClick={() => setExpanded((v) => !v)}
          icon class="composer-expand">
@@ -412,15 +413,15 @@ export function Composer({
           <span
             class="enhance-spinner"
             role="status"
-            aria-label="Prompt wird verbessert"
+            aria-label={t("composer.prompt_being_improved")}
             data-testid="enhance-spinner"
           />
         ) : (
           <Button
-            aria-label="Verbessern"
+            aria-label={t("composer.improve")}
             onClick={enhance}
             disabled={disabled || !enhanceSupported || !value.trim()}
-            title={enhanceSupported ? "Prompt verbessern (lokales Modell zuerst, sonst Kontingent des Adapters)" : "Für diesen Adapter nicht verfügbar"}
+            title={enhanceSupported ? t("composer.improve_title") : t("composer.not_available")}
             icon
             class="icon-btn composer-more"
           >

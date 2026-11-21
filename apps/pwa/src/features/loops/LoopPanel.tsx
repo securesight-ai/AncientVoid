@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { LoopInfo } from "@ancientvoid/contracts";
 import type { hubApi } from "../../shared/api.ts";
@@ -93,30 +94,30 @@ export function LoopPanel({
   const p = view.progress;
   const pct = p && p.total > 0 ? Math.round((p.done / p.total) * 100) : 0;
   return (
-    <section class="loop-panel" aria-label="Loop">
+    <section class="loop-panel" aria-label={t("loops.loop")}>
       <div class="loop-head">
         <LoopBadge adapter={adapter} view={view} />
-        {view.line && <span class="dim">Linie {view.line}</span>}
+        {view.line && <span class="dim">{t("loops.lane")} {view.line}</span>}
         {view.activity && <span class="dim">{view.activity}</span>}
       </div>
       {view.broken.length > 0 && (
         <div class="loop-alert bad" role="alert">
-          Loop gestört: {view.broken.join(" · ")}
+          {t("loops.loop_disturbed")} {view.broken.join(" · ")}
         </div>
       )}
       {view.hold && (
         <div class="loop-alert warn" role="status">
-          Der Loop wartet auf eine Person: {view.hold}
+          {t("loops.waits_for_person")} {view.hold}
         </div>
       )}
       {factory && (
-        <div class="loop-factory" aria-label="Factory-Projekt">
+        <div class="loop-factory" aria-label={t("loops.factory_project")}>
           <div>
-            Verknüpfung:{" "}
+            {t("loops.link")}{" "}
             {driverId ? (
               <>
-                Treiber{" "}
-                <a href={`#/${hostId ? `hosts/${encodeURIComponent(hostId)}/` : ""}sessions/${encodeURIComponent(driverId)}`}>öffnen</a>
+                {t("loops.driver")}{" "}
+                <a href={`#/${hostId ? `hosts/${encodeURIComponent(hostId)}/` : ""}sessions/${encodeURIComponent(driverId)}`}>{t("loops.open")}</a>
                 {" · "}
                 <span class={driverEnded ? "gate-failed" : "gate-passed"}>{driverStatus === null ? "Status unbekannt" : driverEnded ? "Treiber beendet" : "Treiber läuft"}</span>
               </>
@@ -126,14 +127,14 @@ export function LoopPanel({
           </div>
           {driverEnded && (
             <div class="loop-alert warn" role="status">
-              Der Treiber ist beendet — der Lauf geht nicht weiter. Der Fortschritt unten ist der letzte gemeldete Stand, kein „fertig“.
+              {t("loops.driver_ended")}
             </div>
           )}
           <div>
-            Intake:{" "}
+            {t("loops.intake")}{" "}
             {view.intake ? (
               <>
-                {view.intake.status ?? "unbekannt"} · {view.intake.ready ? "ausführungsbereit" : "noch nicht ausführungsbereit"}
+                {view.intake.status ?? t("status.unknown")} · {view.intake.ready ? "ausführungsbereit" : "noch nicht ausführungsbereit"}
                 {view.intake.next ? ` · nächste Aktion: ${view.intake.next}` : ""}
               </>
             ) : (
@@ -142,28 +143,28 @@ export function LoopPanel({
           </div>
           {view.lauf && (
             <div>
-              Lauf: {view.lauf.task ?? "?"} · Phase {view.lauf.phase ?? "?"}
+              {t("loops.run_colon")} {view.lauf.task ?? "?"} {t("loops.phase_frag")} {view.lauf.phase ?? "?"}
             </div>
           )}
           <div class="loop-controls">
             <Button disabled={busy} onClick={() => void command({ command: "resume" })}>
-              Fortsetzen
+              {t("loops.resume")}
             </Button>
             <Button disabled={busy} onClick={() => void command({ command: "end_run" }, "Lauf beenden? Treiber und Beobachter werden gestoppt.")}>
-              Lauf beenden
+              {t("loops.end_run")}
             </Button>
             <label>
-              Betriebsart
-              <select aria-label="Betriebsart der Factory" value={modus} onChange={(e) => setModus((e.target as HTMLSelectElement).value as "a" | "b")}>
+              {t("loops.mode")}
+              <select aria-label={t("loops.factory_mode")} value={modus} onChange={(e) => setModus((e.target as HTMLSelectElement).value as "a" | "b")}>
                 <option value="b">b</option>
-                <option value="a">a — merged automatisch (Außenwirkung)</option>
+                <option value="a">{t("loops.a_auto_merge")}</option>
               </select>
             </label>
             <label>
-              Provider
-              <select aria-label="Provider der Factory" value={provider} onChange={(e) => setProvider((e.target as HTMLSelectElement).value as "anthropic" | "zai")}>
-                <option value="anthropic">Anthropic</option>
-                <option value="zai">Z.ai</option>
+              {t("loops.provider")}
+              <select aria-label={t("loops.factory_provider")} value={provider} onChange={(e) => setProvider((e.target as HTMLSelectElement).value as "anthropic" | "zai")}>
+                <option value="anthropic">{t("loops.anthropic")}</option>
+                <option value="zai">{t("loops.zai")}</option>
               </select>
             </label>
             <Button
@@ -175,18 +176,18 @@ export function LoopPanel({
                 )
               }
             >
-              Betriebsart setzen
+              {t("loops.set_mode")}
             </Button>
           </div>
         </div>
       )}
       {p && (
         <div class="loop-progress">
-          <div class="loop-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Fortschritt des Loops">
+          <div class="loop-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={t("loops.loop_progress")}>
             <div style={`width: ${pct}%`} />
           </div>
           <span>
-            {p.done} von {p.total} Aufgaben
+            {p.done} {t("common.word_of")} {p.total} {t("loops.tasks")}
             {p.phase ? ` · ${p.phase}` : ""}
             {p.step ? ` · ${p.step}` : ""}
             {p.source === "hermes" ? " (Hermes)" : ""}
@@ -195,26 +196,26 @@ export function LoopPanel({
       )}
       {view.gate && (
         <div data-testid="loop-gate">
-          Gate <strong>{view.gate.name}</strong>: <span class={`gate-${view.gate.state === "pass" ? "passed" : view.gate.state === "fail" ? "failed" : view.gate.state}`}>{GATE_STATE[view.gate.state] ?? view.gate.state}</span>
+          {t("loops.gate")} <strong>{view.gate.name}</strong>: <span class={`gate-${view.gate.state === "pass" ? "passed" : view.gate.state === "fail" ? "failed" : view.gate.state}`}>{GATE_STATE[view.gate.state] ?? view.gate.state}</span>
         </div>
       )}
       {view.orchestrator && Object.keys(view.orchestrator.userGates).length > 0 && (
         <div data-testid="loop-gate">
-          Freigaben des Orchestrators:{" "}
+          {t("loops.orchestrator_approvals")}{" "}
           {Object.entries(view.orchestrator.userGates).map(([k, ok]) => `${k} ${ok ? "ja" : "nein"}`).join(" · ")}
           {view.orchestrator.note && <div class="dim">{view.orchestrator.note}</div>}
         </div>
       )}
       {view.stats && (
         <div class="dim">
-          {view.stats.completed} Features fertig · {view.stats.inProgress} in Arbeit
+          {view.stats.completed} {t("loops.features_done")} {view.stats.inProgress} {t("loops.in_progress")}
         </div>
       )}
       {view.notices.length > 0 && (
         <ul class="loop-notices">
           {view.notices.map((n, i) => (
             <li key={i}>
-              Eskalation {n.level}: {n.reason}
+              {t("loops.escalation")} {n.level}: {n.reason}
               {n.fundstelle ? ` (${n.fundstelle})` : ""}
             </li>
           ))}
@@ -223,10 +224,10 @@ export function LoopPanel({
       {view.report && (
         <details class="loop-report">
           <summary>
-            Tagesbericht
+            {t("loops.daily_report")}
             {Object.keys(view.report.counts).length > 0 ? ` (${Object.entries(view.report.counts).map(([k, n]) => `${k} ${n}`).join(", ")})` : ""}
           </summary>
-          {view.report.text ? <pre>{view.report.text}</pre> : <p class="dim">Der volle Text liegt als Blob im Verlauf.</p>}
+          {view.report.text ? <pre>{view.report.text}</pre> : <p class="dim">{t("loops.full_text_blob")}</p>}
         </details>
       )}
       {caps && caps.controls.length > 0 && (
@@ -238,9 +239,9 @@ export function LoopPanel({
           )}
           {caps.controls.includes("setMode") && caps.modes.length > 0 && (
             <label>
-              Betriebsart
-              <select aria-label="Betriebsart des Loops" disabled={disabled} value={view.mode ?? ""} onChange={(e) => changeMode((e.target as HTMLSelectElement).value)}>
-                {view.mode === null && <option value="">unbekannt</option>}
+              {t("loops.mode")}
+              <select aria-label={t("loops.loop_mode")} disabled={disabled} value={view.mode ?? ""} onChange={(e) => changeMode((e.target as HTMLSelectElement).value)}>
+                {view.mode === null && <option value="">{t("status.unknown")}</option>}
                 {caps.modes.map((m) => (
                   <option key={m} value={m}>
                     {m}

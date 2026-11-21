@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { LoopInfo, LoopSpec } from "@ancientvoid/contracts";
 import type { hubApi } from "../../shared/api.ts";
@@ -83,9 +84,9 @@ export function LoopPicker({
   return (
     <div class="loop-picker">
       <label>
-        Loop
+        {t("loops.loop")}
         <select
-          aria-label="Loop"
+          aria-label={t("loops.loop")}
           value={value?.id ?? ""}
           onChange={(e) => {
             const next = loops.find((l) => l.id === (e.target as HTMLSelectElement).value);
@@ -94,7 +95,7 @@ export function LoopPicker({
             onChange(next ? defaultLoopSpec(next) : null, next ?? null);
           }}
         >
-          <option value="">kein Loop</option>
+          <option value="">{t("loops.no_loop")}</option>
           {loops.map((l) => (
             <option key={l.id} value={l.id} disabled={!l.available}>
               {l.label}
@@ -108,9 +109,9 @@ export function LoopPicker({
           <div class="dim">{value.id === "securesight-factory" ? "Ein Lauf besteht aus Treiber (Chat) und Beobachter (Fortschritt). Adapter und Modell unten wählen den Treiber; die Factory-Worker nutzen das Routing im Projekt." : "Adapter, Modell und Modus bestimmt der Loop selbst."}</div>
           {caps.modes.length > 0 && (
             <label>
-              Betriebsart
+              {t("loops.mode")}
               <select
-                aria-label="Betriebsart"
+                aria-label={t("loops.mode")}
                 value={value.mode ?? ""}
                 onChange={(e) => {
                   onConfirmed(false);
@@ -128,8 +129,8 @@ export function LoopPicker({
           )}
           {caps.orchestrators.length > 0 && (
             <label>
-              Orchestrator
-              <select aria-label="Orchestrator" value={value.orchestrator ?? ""} onChange={(e) => set({ orchestrator: (e.target as HTMLSelectElement).value })}>
+              {t("loops.orchestrator")}
+              <select aria-label={t("loops.orchestrator")} value={value.orchestrator ?? ""} onChange={(e) => set({ orchestrator: (e.target as HTMLSelectElement).value })}>
                 {caps.orchestrators.map((o) => (
                   <option key={o} value={o}>
                     {o}
@@ -187,13 +188,13 @@ export function LoopPicker({
                 </>
               )}
               {caps.onboarding.notes?.map((n) => <div class="dim">{n}</div>)}
-              <div class="dim">Beim Starten richtet der Hub das Loop-System ein und startet dann die Session. {caps.onboarding.secret ? "Das Token wird nicht gespeichert." : ""}</div>
+              <div class="dim">{t("loops.setup_on_start")} {caps.onboarding.secret ? "Das Token wird nicht gespeichert." : ""}</div>
             </fieldset>
           )}
           {risky && (
             <label >
-              <input type="checkbox" aria-label="Außenwirkung bestätigen" checked={confirmed} onChange={(e) => onConfirmed((e.target as HTMLInputElement).checked)} />
-              In „{value.mode}“ ändert der Loop Fremdsysteme (z. B. Merges). Ich weiß das und will starten.
+              <input type="checkbox" aria-label={t("loops.confirm_external")} checked={confirmed} onChange={(e) => onConfirmed((e.target as HTMLInputElement).checked)} />
+              {t("loops.in_quote")}{value.mode}{t("loops.quote_changes")}
             </label>
           )}
         </>

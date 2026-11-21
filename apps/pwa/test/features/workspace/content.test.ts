@@ -14,6 +14,9 @@ describe("Karten-Ziele", () => {
     expect(contentHash({ sessionId: "a", content: { kind: "session", tab: "graph" } })).toBe("#/sessions/a/graph");
     expect(contentHash({ sessionId: "a", content: { kind: "session", tab: "datei", file: "src/a.ts" } })).toBe("#/sessions/a/datei/src/a.ts");
     expect(contentHash({ sessionId: "", content: { kind: "page", page: "settings" } })).toBe("#/einstellungen");
+    // Tabs ohne rekonstruierbare Route (Bericht/Diff/…) → Adresszeile `#/` (BUG-0249:
+    // ContinueCard darf deshalb nicht location.href lesen).
+    expect(contentHash({ sessionId: "a", content: { kind: "session", tab: "bericht" } })).toBe("#/");
   });
   it("lässt Handy und Popouts ihren Ablauf behalten; nur ein vorhandenes Grid übernimmt", () => {
     vi.stubGlobal("window", new EventTarget());

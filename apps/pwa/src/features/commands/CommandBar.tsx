@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { readStatusNote, STATUS_NOTE_EVENT } from "../../shared/status-notes.ts";
 import { jumpToSource, sourcesOf, SOURCES_EVENT } from "../../shared/sources.ts";
@@ -218,8 +219,8 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
         <input
           ref={input}
           value={text}
-          placeholder="Springen oder Auftrag — z. B. „Einstellungen“, „Zeig wartende Sessions“"
-          aria-label="Auftrag"
+          placeholder={t("commands.palette_hint")}
+          aria-label={t("commands.commandpalette")}
           role="combobox"
           aria-expanded={jumps.length > 0}
           aria-controls="quick-jumps"
@@ -234,12 +235,12 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
         <Button type="submit" disabled={busy || !text.trim()} variant="primary">
           {busy ? "…" : "Planen"}
         </Button>
-        <Button aria-label="Schließen" onClick={() => embedded ? onClose?.() : setOpen(false)}>
+        <Button aria-label={t("common.close")} onClick={() => embedded ? onClose?.() : setOpen(false)}>
           ✕
         </Button>
       </form>
       {jumps.length > 0 && (
-        <div class="quick-jumps" id="quick-jumps" role="listbox" aria-label="Springen zu">
+        <div class="quick-jumps" id="quick-jumps" role="listbox" aria-label={t("commands.jump_to")}>
           {jumps.map((j, i) => (
             <button
               key={`${j.kind}-${j.label}-${i}`}
@@ -264,7 +265,7 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
               {ex}
             </Chip>
           ))}
-          <div class="command-field">Feld für Textbearbeitung: {currentField() ?? "keins offen"}</div>
+          <div class="command-field">{t("commands.text_field")} {currentField() ?? "keins offen"}</div>
         </div>
       )}
       {message && <div class="reply-error">{message}</div>}
@@ -296,7 +297,7 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
               <span>{s.summary}</span>
             </div>
           ))}
-          <div class="dim command-planner">{plan.planner === "model" ? "verstanden vom lokalen Modell" : "verstanden per Regel"} · Ziel vor dem Ausführen geprüft</div>
+          <div class="dim command-planner">{plan.planner === "model" ? "verstanden vom lokalen Modell" : "verstanden per Regel"} {t("commands.target_verified")}</div>
           {writes || plan.steps[0]?.op.startsWith("field.") ? (
             <Button disabled={busy} onClick={() => void execute(plan)} variant="primary">
               {busy ? "…" : "Ausführen"}
@@ -318,11 +319,11 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
           <div class="dim">{edit.label}</div>
           <div class="command-diff">
             <div>
-              <div class="dim">Vorher</div>
+              <div class="dim">{t("commands.before")}</div>
               <div class="command-before">{edit.before || "(leer)"}</div>
             </div>
             <div>
-              <div class="dim">Nachher</div>
+              <div class="dim">{t("commands.after")}</div>
               <div class="command-after">{edit.after}</div>
             </div>
           </div>
@@ -330,15 +331,15 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
             {!edit.applied ? (
               <>
                 <Button onClick={() => { field(edit.field)?.set(edit.after); setEdit({ ...edit, applied: true }); }} variant="primary">
-                  Übernehmen
+                  {t("common.apply")}
                 </Button>
                 <Button onClick={() => setEdit(null)}>
-                  Verwerfen
+                  {t("composer.discard")}
                 </Button>
               </>
             ) : (
               <Button onClick={() => { field(edit.field)?.set(edit.before); setEdit({ ...edit, applied: false }); }}>
-                Rückgängig
+                {t("session.undo")}
               </Button>
             )}
           </div>

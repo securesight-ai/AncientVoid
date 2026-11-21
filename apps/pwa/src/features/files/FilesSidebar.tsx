@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { TreeEntry, TreeListing } from "@ancientvoid/contracts";
@@ -100,13 +101,13 @@ function Folder({ hostId, target, path, depth, showIgnored, onOpenFile, activePa
       {last?.nextOffset != null && (
         <li>
           <Button style={{ marginLeft: `${depth * 12 + 6}px` }} onClick={() => void load(last.nextOffset!, false)}>
-            Weitere {last.total - entries.length} Einträge laden
+            {t("files.further")} {last.total - entries.length} {t("files.load_entries")}
           </Button>
         </li>
       )}
-      {pages.length > 0 && entries.length === 0 && !error && <li class="dim" style={{ paddingLeft: `${depth * 12 + 6}px` }}>leer</li>}
+      {pages.length > 0 && entries.length === 0 && !error && <li class="dim" style={{ paddingLeft: `${depth * 12 + 6}px` }}>{t("files.empty")}</li>}
       {depth === 0 && last && !last.filters.ignored && last.filters.ignoredHidden > 0 && (
-        <li class="dim">{last.filters.ignoredHidden} ignorierte Einträge ausgeblendet</li>
+        <li class="dim">{last.filters.ignoredHidden} {t("files.ignored_hidden")}</li>
       )}
     </ul>
   );
@@ -231,18 +232,18 @@ export function FilesSidebar({
     <aside
       class={`files-sidebar${mobile ? " drawer" : ""}${dragOut ? " drag-out" : ""}`}
       style={mobile ? undefined : { width: windowed ? "100%" : `${state.width}px` }}
-      aria-label="Dateibaum"
+      aria-label={t("session.file_tree")}
       data-testid="files-sidebar"
     >
-      {!mobile && !windowed && <div class="files-resize" role="separator" aria-orientation="vertical" aria-label="Breite ändern" onPointerDown={startResize as never} />}
+      {!mobile && !windowed && <div class="files-resize" role="separator" aria-orientation="vertical" aria-label={t("files.resize_width")} onPointerDown={startResize as never} />}
       <header class="files-head">
         {!windowed && canDetach() && (
-          <span class={`files-grip${dragOut ? " dragging" : ""}`} aria-hidden="true" title="Aus dem Fenster ziehen: ein Fenster mit Baum und allen offenen Dateien" onPointerDown={startGrip}>
+          <span class={`files-grip${dragOut ? " dragging" : ""}`} aria-hidden="true" title={t("files.drag_out_tree")} onPointerDown={startGrip}>
             ⠿{dragOut ? " Loslassen bündelt Baum und Dateien in einem Fenster" : ""}
           </span>
         )}
         <select
-          aria-label="Dateiquelle"
+          aria-label={t("files.file_source")}
           value={rKey}
           onChange={(e) => {
             const next = roots.find((r) => rootKey(r) === (e.target as HTMLSelectElement).value) ?? null;
@@ -250,7 +251,7 @@ export function FilesSidebar({
             setView("tree");
           }}
         >
-          {!root && <option value="">Quelle wählen …</option>}
+          {!root && <option value="">{t("files.choose_source")}</option>}
           {root && !roots.some((r) => rootKey(r) === rKey) && <option value={rKey}>{root.label}</option>}
           {roots.map((r) => (
             <option key={rootKey(r)} value={rootKey(r)}>{r.label}</option>
@@ -260,18 +261,18 @@ export function FilesSidebar({
           <button
             type="button"
             class="files-detach"
-            aria-label="Baum und offene Dateien in eigenem Fenster"
-            title="Baum und offene Dateien in eigenes Fenster"
+            aria-label={t("files.tree_open_own")}
+            title={t("files.tree_open_move")}
             onClick={() => void detachTree()}
           >
             ⧉
           </button>
         )}
-        <Button aria-label="Dateien schließen" onClick={() => (windowed ? window.close() : update({ open: false }))}>✕</Button>
+        <Button aria-label={t("files.close_files")} onClick={() => (windowed ? window.close() : update({ open: false }))}>✕</Button>
       </header>
       {popoutBlocked && (
         <div class="files-error" role="alert">
-          Das Fenster wurde nicht geöffnet. Der Browser blockiert Pop-ups für diese Seite — bitte erlauben und noch einmal versuchen.
+          {t("app.popup_blocked")}
         </div>
       )}
       {identity && (
@@ -280,44 +281,44 @@ export function FilesSidebar({
           {identity.branch ? ` · ${identity.branch}` : ""}
         </div>
       )}
-      {!root && <EmptyState text="Wähle eine Session oder ein Projekt." />}
+      {!root && <EmptyState text={t("files.choose_session_project")} />}
       {root && (
         <>
           <div class="files-tabs" role="tablist">
-            <Chip role="tab" aria-selected={!showFile}  onClick={() => setView("tree")} active={!showFile}>Baum</Chip>
-            {tabs.map((t) => {
-              const index = state.tabs.indexOf(t);
+            <Chip role="tab" aria-selected={!showFile}  onClick={() => setView("tree")} active={!showFile}>{t("files.tree")}</Chip>
+            {tabs.map((tab) => {
+              const index = state.tabs.indexOf(tab);
               return (
-                <span key={t.path} class="files-tab">
+                <span key={tab.path} class="files-tab">
                   <Chip
                     role="tab"
                     aria-selected={Boolean(showFile) && state.active === index}
-                    title={t.sha ? `${t.path} @ ${t.sha.slice(0, 7)}` : t.path}
+                    title={tab.sha ? `${tab.path} @ ${tab.sha.slice(0, 7)}` : tab.path}
                     onClick={() => { update({ active: index }); setView("file"); }}
                     onPointerDown={startGrip}
                     active={Boolean(showFile) && state.active === index}
                   >
-                    {t.path.split("/").pop()}
-                    {t.sha ? ` @${t.sha.slice(0, 7)}` : ""}
+                    {tab.path.split("/").pop()}
+                    {tab.sha ? ` @${tab.sha.slice(0, 7)}` : ""}
                   </Chip>
                   {!windowed && canDetach() && (
                     <button
                       type="button"
                       class="files-tab-popout"
-                      aria-label={`${t.path} herauslösen: ein Fenster mit Baum und allen offenen Dateien`}
-                      title="Herauslösen: ein Fenster mit Baum und allen offenen Dateien"
+                      aria-label={`${tab.path} herauslösen: ein Fenster mit Baum und allen offenen Dateien`}
+                      title={t("files.detach_tree")}
                       onClick={() => void detachTree()}
                     >
                       ⧉
                     </button>
                   )}
-                  <button type="button" class="files-tab-close" aria-label={`${t.path} schließen`} onClick={() => closeTab(index)}>×</button>
+                  <button type="button" class="files-tab-close" aria-label={`${tab.path} schließen`} onClick={() => closeTab(index)}>×</button>
                 </span>
               );
             })}
             {!showFile && (
               <label class="dim files-ignored">
-                <input type="checkbox" checked={state.showIgnored} onChange={(e) => update({ showIgnored: (e.target as HTMLInputElement).checked })} /> Ignoriertes
+                <input type="checkbox" checked={state.showIgnored} onChange={(e) => update({ showIgnored: (e.target as HTMLInputElement).checked })} /> {t("files.ignored")}
               </label>
             )}
           </div>

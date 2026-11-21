@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { CodeFile } from "@ancientvoid/contracts";
 import { hostApi } from "../../shared/api.ts";
@@ -39,21 +40,21 @@ export function HistoricalBlobView({
   }, [api, target, path, sha]);
 
   if (error) return <div class="files-error" role="alert" data-testid="historical-blob-error">{error}</div>;
-  if (!file) return <div class="ui-empty">lädt Historie …</div>;
+  if (!file) return <div class="ui-empty">{t("files.loading_history")}</div>;
 
   return (
     <div class="file-viewer historical-blob" data-testid="historical-blob-view">
       <div class="file-viewer-head">
         <span class="mono file-viewer-path" title={file.path}>{file.path}</span>
-        <span class="dim">{file.language} · {file.bytes} B · {file.lines} Zeilen</span>
+        <span class="dim">{file.language} · {file.bytes} B · {file.lines} {t("files.lines")}</span>
       </div>
       <div class="dim file-note" data-testid="historical-blob-banner" role="status">
-        Historie @ {sha.slice(0, 7)} — Stand dieser Revision (nicht der aktuelle Worktree)
+        {t("files.history_at")} {sha.slice(0, 7)} {t("files.revision_state")}
         {file.truncated ? " · Inhalt gekappt" : ""}
         {file.binary ? " · Binärdatei (kein Text)" : ""}
       </div>
       {file.binary ? (
-        <div class="ui-empty">Binärinhalt — kein Textvorschau für diesen Blob.</div>
+        <div class="ui-empty">{t("files.binary_no_preview")}</div>
       ) : (
         <pre class="historical-blob-source mono" data-testid="historical-blob-source">{file.content}</pre>
       )}

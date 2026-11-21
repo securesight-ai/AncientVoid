@@ -1,4 +1,6 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useState } from "preact/hooks";
+import { sessionHash } from "../../app/route.ts";
 import { useApi } from "../../shared/api-context.ts";
 import { projectName } from "../../shared/project-name.ts";
 import { Button, Card } from "../../shared/ui/index.ts";
@@ -34,7 +36,7 @@ function CopyButton({ text }: { text: string }) {
   };
   return (
     <Button onClick={() => void copy()}>
-      {state === "copied" ? "Kopiert" : state === "failed" ? "Bitte markieren" : "Kopieren"}
+      {state === "copied" ? t("session.copied") : state === "failed" ? t("session.please_mark") : t("session.copy")}
     </Button>
   );
 }
@@ -71,8 +73,7 @@ export function WorktreeCard({
   return (
     <Card data-testid="worktree-card">
       <div class="dim" style="font-size: calc(12px * var(--font-scale, 1)); margin-bottom: 6px">
-        Die Änderungen dieser Session liegen in einem eigenen Git-Worktree{host ? ` auf ${host}` : ""}, nicht in {projectName(project)}.
-        Branch <span class="mono">{worktree.branch}</span>.
+        {t("session.changes_in_own_worktree")}{host ? t("session.on_suffix", { "host": host }) : ""}{t("session.not_in")} {projectName(project)}{t("session.dot_branch")} <span class="mono">{worktree.branch}</span>.
       </div>
       <div class="attach-cmd-row">
         <code class="mono" data-testid="worktree-path">{worktree.path}</code>
@@ -113,11 +114,11 @@ export function ApplyToProject({
       const r = await api.applyToProject(sessionId);
       setResult(
         r.ok
-          ? { ok: true, text: `Übernommen: ${r.files} Datei(en) nach ${r.into} (${r.commit}).` }
-          : { ok: false, text: r.detail ?? "Übernehmen fehlgeschlagen." },
+          ? { ok: true, text: t("session.taken_over", { "files": r.files, "into": r.into, "commit": r.commit }) }
+          : { ok: false, text: r.detail ?? t("session.take_over_failed") },
       );
     } catch (err) {
-      setResult({ ok: false, text: err instanceof Error ? err.message : "Übernehmen fehlgeschlagen." });
+      setResult({ ok: false, text: err instanceof Error ? err.message : t("session.take_over_failed") });
     } finally {
       setBusy(false);
       setConfirming(false);
@@ -128,27 +129,27 @@ export function ApplyToProject({
       {confirming ? (
         <div class="apply-confirm">
           <div class="dim" style="font-size: calc(12px * var(--font-scale, 1))">
-            Committet alle Änderungen auf {worktree.branch} und merged sie in den ausgecheckten Branch von {projectLabel}.
+            {t("session.commits_all_changes_on")} {worktree.branch} {t("session.and_merges_into")} {projectLabel}.
           </div>
           <div class="row" style="gap: 8px">
             <Button disabled={busy} onClick={() => void apply()} variant="primary" class={busy ? "busy" : undefined}>
-              {busy ? "lädt…" : "Jetzt übernehmen"}
+              {busy ? t("common.loading_dots") : t("session.take_now")}
             </Button>
             <Button disabled={busy} onClick={() => setConfirming(false)}>
-              Abbrechen
+              {t("common.cancel")}
             </Button>
           </div>
         </div>
       ) : (
         <Button
           disabled={running}
-          title={running ? "Erst nach dem laufenden Zug" : undefined}
+          title={running ? t("session.after_current_turn") : undefined}
           onClick={() => {
             setResult(null);
             setConfirming(true);
           }}
          variant="primary" class={primary ? "apply-btn" : "apply-btn"}>
-          Ins Projekt übernehmen
+          {t("session.apply_into_project")}
         </Button>
       )}
       {result && <div class={result.ok ? "apply-result ok" : "apply-result reply-error"}>{result.text}</div>}
@@ -157,16 +158,37 @@ export function ApplyToProject({
 }
 
 /**
+ * BUG-0249: Deep-Link zur Session — nicht `location.href`. Am Desktop schreibt
+ * `contentHash` bei Tabs ohne rekonstruierbare Route (z. B. „Bericht“) `#/` in
+ * die Adresszeile; der Continue-Link muss trotzdem `#/sessions/<id>` tragen.
+ */
+export function continueSessionLink(sessionId: string, hostId?: string | null, origin = typeof location === "undefined" ? "" : location.origin): string {
+  // origin ohne trailing slash; sessionHash ist `#/…` — E2E und location.href
+  // erwarten `http://host/#/sessions/…` (Pfad `/` vor der Raute).
+  return `${origin.replace(/\/$/, "")}${sessionHash(sessionId, hostId).replace(/^#/, "/#")}`;
+}
+
+/**
  * T5.5: continue elsewhere — the web link to this very session (AC-P5-5)
  * and, between turns, the native terminal command for the same provider
  * session on the PC. The hub hides the command while a turn runs, so hub
  * and terminal never write at the same time.
  */
-export function ContinueCard({ openCmd, host = null }: { openCmd?: string | undefined; host?: string | null }) {
-  const link = typeof location === "undefined" ? "" : location.href;
+export function ContinueCard({
+  sessionId,
+  hostId = null,
+  openCmd,
+  host = null,
+}: {
+  sessionId: string;
+  hostId?: string | null;
+  openCmd?: string | undefined;
+  host?: string | null;
+}) {
+  const link = continueSessionLink(sessionId, hostId);
   return (
     <Card data-testid="continue-card">
-      <div class="dim" style="font-size: calc(12px * var(--font-scale, 1)); margin-bottom: 6px">Weiterarbeiten auf einem anderen Gerät</div>
+      <div class="dim" style="font-size: calc(12px * var(--font-scale, 1)); margin-bottom: 6px">{t("session.continue_on_other_device")}</div>
       <div class="attach-cmd-row">
         <code class="mono" data-testid="continue-link">{link}</code>
         <CopyButton text={link} />
@@ -174,7 +196,7 @@ export function ContinueCard({ openCmd, host = null }: { openCmd?: string | unde
       {openCmd ? (
         <>
           <div class="dim" style="font-size: calc(12px * var(--font-scale, 1)); margin: 8px 0 6px">
-            {host ? `Im Terminal, per SSH auf ${host}` : "Im Terminal am PC"}, dieselbe Provider-Session. Solange sie dort läuft, hier nichts senden.
+            {host ? t("session.terminal_ssh", { "host": host }) : t("session.in_terminal_pc")}{t("session.same_provider_session")}
           </div>
           <div class="attach-cmd-row">
             <code class="mono" data-testid="continue-open">{openCmd}</code>
@@ -183,7 +205,7 @@ export function ContinueCard({ openCmd, host = null }: { openCmd?: string | unde
         </>
       ) : (
         <div class="dim" data-testid="continue-none" style="font-size: calc(11px * var(--font-scale, 1)); margin-top: 6px">
-          Terminal-Befehl erscheint zwischen zwei Zügen, sobald die Provider-Session bekannt ist.
+          {t("session.terminal_between_turns")}
         </div>
       )}
     </Card>
@@ -203,14 +225,12 @@ export function AttachCmdRow({ cmd }: { cmd: string }) {
   return (
     <Card data-testid="attach-cmd-card">
       <div class="dim" style="font-size: calc(12px * var(--font-scale, 1)); margin-bottom: 6px">
-        Am Desktop weiterarbeiten — dieselbe Session, nicht eine Kopie. Funktioniert
-        sicher, während der Agent gerade aktiv einen Zug ausführt; dazwischen evtl.
-        „session not found", falls gerade kein Prozess läuft:
+        {t("session.continue_on_desktop")}
       </div>
       <div class="attach-cmd-row">
         <code class="mono">{cmd}</code>
         <Button onClick={copy}>
-          {copied ? "Kopiert" : "Kopieren"}
+          {copied ? t("session.copied") : t("session.copy")}
         </Button>
       </div>
     </Card>

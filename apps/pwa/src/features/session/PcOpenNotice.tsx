@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { HubApi, PcState } from "../../shared/api.ts";
 
@@ -46,14 +47,14 @@ export function PcOpenNotice({ sessionId, api, resume }: { sessionId: string; ap
     : `claude --resume ${pc.nativeSessionId}`;
   return (
     <div class="pc-open-notice dim" role="note">
-      <strong>💻 Am PC offen{pc.name ? ` (${pc.name})` : ""}.</strong>{" "}
+      <strong>{t("session.open_on_pc")}{pc.name ? ` (${pc.name})` : ""}.</strong>{" "}
       {pc.kind === "background" ? (
         <>
-          Hintergrund-Session — am PC live mit <code>claude attach {short}</code>.
+          {t("session.background_session_live_with")} <code>{t("session.claude_attach")} {short}</code>.
         </>
       ) : (
         <>
-          Was du hier schickst, steht im Verlauf; die offene PC-Ansicht zeigt es erst nach <code>{resumeCmd}</code>.
+          {t("session.what_you_send_shows_later")} <code>{resumeCmd}</code>.
         </>
       )}
     </div>

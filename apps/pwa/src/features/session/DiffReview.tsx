@@ -1,3 +1,5 @@
+import { t } from "../../shared/i18n/index.ts";
+import { fmtDateTime, fmtTime, fmtNumber } from "../../shared/i18n/format.ts";
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
 import {
@@ -45,7 +47,7 @@ function writeOutbox(sessionId: string, entries: OutboxEntry[]): void {
   localStorage.setItem(outboxKey(sessionId), JSON.stringify(entries));
 }
 
-const statusLabel: Record<ReviewNoteStatus, string> = { draft: "Entwurf", sent: "gesendet", open: "offen", done: "erledigt" };
+const statusLabel: Record<ReviewNoteStatus, string> = { draft: "Entwurf", sent: t("session.sent"), open: t("common.open_count"), done: t("session.done") };
 
 const sideLabel = (side: "old" | "new") => (side === "old" ? "alte" : "neue");
 
@@ -75,7 +77,7 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
       setSkippedLines(res.journalSkippedLines ?? 0);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Notizen nicht erreichbar");
+      setError(err instanceof Error ? err.message : t("session.notes_unreachable"));
     }
   }, [api, session.id]);
 
@@ -132,7 +134,7 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
         // Netzwerkfehler/Offline: Entwurf bleibt lokal mit Zeitstempel (AC-P36-5)
         enqueue(fallback);
       } else {
-        setError(err instanceof Error ? err.message : "Aktion fehlgeschlagen");
+        setError(err instanceof Error ? err.message : t("notifications.action_failed"));
       }
     }
   };
@@ -185,13 +187,13 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
       setSendPreview(preview.prompt);
       setSessions(list);
     } catch (err) {
-      setSendError(err instanceof Error ? err.message : "Vorschau fehlgeschlagen");
+      setSendError(err instanceof Error ? err.message : t("session.preview_failed"));
     }
   };
 
   const send = async (): Promise<void> => {
     if (!navigator.onLine) {
-      setSendError("Offline — Versand erst mit Verbindung.");
+      setSendError(t("session.offline_send_later"));
       return;
     }
     setSendBusy(true);
@@ -208,11 +210,11 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
         await refresh();
       } else {
         // Ursache sichtbar; dieselbe Operations-ID macht Retry sicher (AC-P36-2/5)
-        setSendError(res.detail ?? "Versand abgelehnt");
+        setSendError(res.detail ?? t("session.send_rejected"));
         await refresh();
       }
     } catch {
-      setSendError("Zustellung unklar (Netzwerk) — erneuter Versuch mit derselben Operations-ID ist sicher.");
+      setSendError(t("session.delivery_unclear"));
     } finally {
       setSendBusy(false);
     }
@@ -225,25 +227,25 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
     <div data-testid="diff-review">
       <div class="diff-review-toolbar">
         <Button  onClick={() => { setPickEnabled(!pickEnabled); setPicked(null); }} class={pickEnabled ? "review-pick-btn active" : "review-pick-btn"}>
-          {pickEnabled ? "Anker wählen (Zeile antippen)" : "Notiz an Zeilen"}
+          {pickEnabled ? t("session.choose_anchor") : t("session.note_on_lines")}
         </Button>
         {picked && (
           <span class="review-picked-info mono">
-            {picked.path} · {sideLabel(picked.side)} {picked.start === picked.end ? `Zeile ${picked.start}` : `Zeilen ${picked.start}–${picked.end}`}
-            {picked.commit ? ` · Commit ${picked.commit.slice(0, 8)}` : " · uncommittet"}
+            {picked.path} · {sideLabel(picked.side)} {picked.start === picked.end ? t("session.line_picked", { "n": picked.start }) : t("session.lines_picked", { "a": picked.start, "b": picked.end })}
+            {picked.commit ? ` · Commit ${picked.commit.slice(0, 8)}` : t("session.uncommitted_suffix")}
           </span>
         )}
         {picked && (
           <span class="review-note-entry">
             <input
               type="text"
-              placeholder="Befund notieren …"
+              placeholder={t("session.note_finding_ph")}
               value={pendingText}
               maxLength={4000}
               onInput={(e) => setPendingText((e.target as HTMLInputElement).value)}
             />
             <button class="review-save-btn" disabled={!pendingText.trim()} onClick={createNote}>
-              speichern
+              {t("common.save_lower")}
             </button>
           </span>
         )}
@@ -253,16 +255,16 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
 
       <section class="review-panel">
         <h3>
-          Review-Notizen <span class="dim">({notes.length})</span>
+          {t("session.review_notes")} <span class="dim">({notes.length})</span>
         </h3>
-        {skippedLines > 0 && <div class="review-warn">Journal enthält {skippedLines} unlesbare Zeile(n) — Recovery-Report im Hub.</div>}
+        {skippedLines > 0 && <div class="review-warn">{t("session.journal_contains")} {skippedLines} {t("session.unreadable_lines_recovery")}</div>}
         {error && <div class="review-warn">{error}</div>}
-        {!online && <div class="review-warn">Offline — Änderungen werden lokal gehalten und mit Zeitstempel nachgezogen; Versand gesperrt.</div>}
+        {!online && <div class="review-warn">{t("session.offline_local_kept")}</div>}
 
         {outbox.map((entry) => (
           <div key={entry.id} class="review-note outboxed">
-            <span class="review-status draft">lokal · {new Date(entry.queuedAt).toLocaleTimeString("de-DE")}</span>
-            <span class="dim">noch nicht gesendet</span>
+            <span class="review-status draft">{t("session.local_dash")} {fmtTime(entry.queuedAt, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+            <span class="dim">{t("session.not_yet_sent")}</span>
           </div>
         ))}
 
@@ -283,41 +285,41 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
             </label>
             <div class="review-note-body">
               <div class="mono review-note-ref">
-                {note.anchor.path} · {sideLabel(note.anchor.side)} {note.anchor.startLine === note.anchor.endLine ? `Zeile ${note.anchor.startLine}` : `Zeilen ${note.anchor.startLine}–${note.anchor.endLine}`}
-                {note.basis.scope.kind === "commit" ? ` · Commit ${note.basis.scope.sha.slice(0, 8)}` : " · uncommittet"}
+                {note.anchor.path} · {sideLabel(note.anchor.side)} {note.anchor.startLine === note.anchor.endLine ? t("session.line_n", { "n": note.anchor.startLine }) : t("session.lines_range", { "a": note.anchor.startLine, "b": note.anchor.endLine })}
+                {note.basis.scope.kind === "commit" ? ` · Commit ${note.basis.scope.sha.slice(0, 8)}` : t("session.uncommitted_suffix")}
               </div>
               <div class="review-note-text">{note.text}</div>
               <div class="review-note-meta">
                 <span class={`review-status ${note.status}`}>{statusLabel[note.status]}</span>
-                {note.anchorState === "stale" && <span class="review-stale-badge" title={note.staleReason ?? ""}>veraltet: {note.staleReason}</span>}
-                {note.anchorState === "unclear" && <span class="review-unclear-badge" title={note.staleReason ?? ""}>Anker unklar: {note.staleReason}</span>}
+                {note.anchorState === "stale" && <span class="review-stale-badge" title={note.staleReason ?? ""}>{t("session.outdated_colon")} {note.staleReason}</span>}
+                {note.anchorState === "unclear" && <span class="review-unclear-badge" title={note.staleReason ?? ""}>{t("session.anchor_unclear")} {note.staleReason}</span>}
                 {note.sendDetail && <span class="review-warn-inline">{note.sendDetail}</span>}
-                {note.sentAt && <span class="dim">gesendet {new Date(note.sentAt).toLocaleString("de-DE")}</span>}
+                {note.sentAt && <span class="dim">{t("session.sent")} {fmtDateTime(note.sentAt)}</span>}
               </div>
             </div>
             <div class="review-note-actions">
               {(note.status === "sent" || note.status === "draft") && (
-                <button onClick={() => void mutate(() => api.setReviewNoteStatus(session.id, note.id, "open"), { kind: "status", noteId: note.id, status: "open" })}>offen</button>
+                <button onClick={() => void mutate(() => api.setReviewNoteStatus(session.id, note.id, "open"), { kind: "status", noteId: note.id, status: "open" })}>{t("common.open_count")}</button>
               )}
               {note.status !== "done" && (
-                <button onClick={() => void mutate(() => api.setReviewNoteStatus(session.id, note.id, "done"), { kind: "status", noteId: note.id, status: "done" })}>erledigt</button>
+                <button onClick={() => void mutate(() => api.setReviewNoteStatus(session.id, note.id, "done"), { kind: "status", noteId: note.id, status: "done" })}>{t("session.done")}</button>
               )}
               <button
                 onClick={() => {
-                  const text = window.prompt("Notiz bearbeiten", note.text);
+                  const text = window.prompt(t("session.edit_note"), note.text);
                   if (text && text.trim()) void mutate(() => api.updateReviewNote(session.id, note.id, text.trim()), { kind: "update", noteId: note.id, text: text.trim() });
                 }}
               >
-                bearbeiten
+                {t("common.edit_lower")}
               </button>
-              <button onClick={() => void mutate(() => api.deleteReviewNote(session.id, note.id), { kind: "delete", noteId: note.id })}>löschen</button>
+              <button onClick={() => void mutate(() => api.deleteReviewNote(session.id, note.id), { kind: "delete", noteId: note.id })}>{t("common.delete_lower")}</button>
             </div>
           </div>
         ))}
 
         <div class="review-send-bar">
           <button class="review-send-btn" disabled={selectedNotes.length === 0 || !online} onClick={() => void openSend()}>
-            {selectedNotes.length > 0 ? `${selectedNotes.length} ${selectedNotes.length === 1 ? "Befund" : "Befunde"} sammeln und senden` : "Befunde zum Versand auswählen"}
+            {selectedNotes.length > 0 ? t("session.collect_send", { "n": selectedNotes.length, "word": selectedNotes.length === 1 ? t("session.finding") : t("session.findings") }) : t("session.select_findings")}
           </button>
           {selectedNotes.length > 0 && (
             <button
@@ -338,20 +340,20 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
                 setSelected(new Set());
               }}
             >
-              {selectedNotes.length} in den Composer
+              {selectedNotes.length} {t("session.into_the_composer")}
             </button>
           )}
-          {!online && <span class="review-warn-inline">Versand nur online</span>}
+          {!online && <span class="review-warn-inline">{t("composer.send_online_only")}</span>}
         </div>
       </section>
 
       {sendOpen && (
-        <Sheet open onClose={() => setSendOpen(false)} label="Sammelversand" variant="modal" testid="modal" class="review-send-dialog">
-          <h3>Sammelversand ({selectedNotes.length} Befunde)</h3>
+        <Sheet open onClose={() => setSendOpen(false)} label={t("composer.batch_send")} variant="modal" testid="modal" class="review-send-dialog">
+          <h3>{t("composer.batch_send_open")}{selectedNotes.length} {t("session.findings_close")}</h3>
           <label class="review-recipient">
-            Empfänger
+            {t("session.recipient")}
             <select value={targetSessionId} onChange={(e) => setTargetSessionId((e.target as HTMLSelectElement).value)}>
-              <option value={session.id}>{session.title ?? session.id.slice(0, 8)} · {session.adapter} (diese Session)</option>
+              <option value={session.id}>{session.title ?? session.id.slice(0, 8)} · {session.adapter} {t("session.this_session")}</option>
               {sessions
                 ?.filter((s) => s.id !== session.id)
                 .map((s) => (
@@ -361,12 +363,12 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
                 ))}
             </select>
           </label>
-          <pre class="review-prompt-preview mono">{sendPreview ?? "Vorschau lädt …"}</pre>
+          <pre class="review-prompt-preview mono">{sendPreview ?? t("session.preview_loading")}</pre>
           {sendError && <div class="review-warn">{sendError}</div>}
           <div class="modal-actions">
-            <button onClick={() => setSendOpen(false)}>abbrechen</button>
+            <button onClick={() => setSendOpen(false)}>{t("common.cancel_lower")}</button>
             <button class="review-send-btn" disabled={sendBusy || !sendPreview} onClick={() => void send()}>
-              {sendBusy ? "sendet …" : `an ${targetLabel?.title?.slice(0, 24) ?? targetSessionId.slice(0, 8)} senden`}
+              {sendBusy ? t("session.sending") : t("session.send_to", { "target": targetLabel?.title?.slice(0, 24) ?? targetSessionId.slice(0, 8) })}
             </button>
           </div>
         </Sheet>

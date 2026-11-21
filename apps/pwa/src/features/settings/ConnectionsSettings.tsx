@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { hubApi, type EndpointEntry, type EndpointKind, type VoidWardenConnection } from "../../shared/api.ts";
 import { ago } from "../../shared/status.ts";
@@ -14,7 +15,7 @@ import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
  * ab (jede HTTP-Antwort zählt, auch 401/403).
  */
 
-const KIND_LABEL: Record<EndpointKind, string> = { llm: "LLM", image: "Bilderkennung", video: "Videoerkennung", other: "Sonstiges" };
+const KIND_LABEL: Record<EndpointKind, string> = { llm: t("settings.llm"), image: t("settings.image_recognition"), video: t("settings.video_recognition"), other: t("notifications.section_rest") };
 
 function vwStatus(c: VoidWardenConnection): { text: string; ok: boolean } {
   if (!c.lastSeenAt) return { text: "noch nie gemeldet", ok: false };
@@ -154,11 +155,11 @@ export function ConnectionsSettings() {
     });
 
   return (
-    <SettingsSection title="Verbindungen" testid="connections-settings">
-      <div class="dim settings-intro">VoidWarden-Instanzen (Handy-Kiosk, ESP32-Board) und Modell-/Tool-Endpoints mit eigenem Schlüssel — alles bleibt über Neuladen hinweg gespeichert.</div>
+    <SettingsSection title={t("settings.connections")} testid="connections-settings">
+      <div class="dim settings-intro">{t("settings.voidwarden_note")}</div>
 
-      <div class="connection-group" role="group" aria-label="VoidWarden-Instanzen">
-        <strong class="connection-group-title">VoidWarden-Instanzen</strong>
+      <div class="connection-group" role="group" aria-label={t("settings.voidwarden")}>
+        <strong class="connection-group-title">{t("settings.voidwarden")}</strong>
         {(voidwarden ?? []).map((c) => {
           const st = vwStatus(c);
           return (
@@ -170,29 +171,29 @@ export function ConnectionsSettings() {
               {c.endpoint && <div class="mono dim connection-url">{c.endpoint}</div>}
               <div class="row connection-actions">
                 <Button disabled={busy} onClick={() => editVoidWarden(c)}>
-                  Bearbeiten
+                  {t("settings.edit")}
                 </Button>
                 <Button disabled={busy} aria-label={`${c.name} löschen`} onClick={() => void run(async () => (await hubApi.removeVoidWarden(c.id), setMessage({ ok: true, text: "Verbindung gelöscht, Token zurückgezogen." }), reload()))} variant="danger">
-                  Löschen
+                  {t("common.delete")}
                 </Button>
               </div>
             </div>
           );
         })}
-        {voidwarden !== null && voidwarden.length === 0 && <div class="dim">Noch keine Instanz eingetragen.</div>}
+        {voidwarden !== null && voidwarden.length === 0 && <div class="dim">{t("settings.no_instance")}</div>}
 
         <label>
-          Name
-          <input value={vwName} onInput={(e) => setVwName((e.target as HTMLInputElement).value)} placeholder="Nyx Board" />
+          {t("composer.name")}
+          <input value={vwName} onInput={(e) => setVwName((e.target as HTMLInputElement).value)} placeholder={t("settings.nyx_board")} />
         </label>
         <label>
-          Endpunkt (optional)
-          <input value={vwEndpoint} onInput={(e) => setVwEndpoint((e.target as HTMLInputElement).value)} placeholder="http://pixel:8080" inputMode="url" autocapitalize="off" spellcheck={false} />
+          {t("settings.endpoint_optional")}
+          <input value={vwEndpoint} onInput={(e) => setVwEndpoint((e.target as HTMLInputElement).value)} placeholder={t("settings.pixel_url")} inputMode="url" autocapitalize="off" spellcheck={false} />
         </label>
         {vwEdit && (
           <label class="row" style="gap: 8px">
             <input type="checkbox" checked={vwRotate} onChange={(e) => setVwRotate((e.target as HTMLInputElement).checked)} />
-            Token ersetzen (altes wird ungültig)
+            {t("settings.replace_token")}
           </label>
         )}
         <div class="row" style="gap: 8px">
@@ -201,25 +202,25 @@ export function ConnectionsSettings() {
           </Button>
           {vwEdit && (
             <Button onClick={() => (setVwEdit(null), setVwName(""), setVwEndpoint(""), setVwRotate(false))}>
-              Abbrechen
+              {t("common.cancel")}
             </Button>
           )}
         </div>
 
         {issued && (
           <div class="connection-token">
-            <div class="connection-token-title">Token für „{issued.name}“ — einmalig sichtbar</div>
+            <div class="connection-token-title">{t("settings.token_for")}{issued.name}{t("settings.once_shown")}</div>
             <div class="mono connection-token-value">{issued.token}</div>
-            <div class="dim">Jetzt nach VoidWarden kopieren; der Hub zeigt es nie wieder.</div>
+            <div class="dim">{t("settings.copy_to_voidwarden")}</div>
             <Button onClick={() => copyToken(issued.token)}>
-              Kopieren
+              {t("session.copy")}
             </Button>
           </div>
         )}
       </div>
 
-      <div class="connection-group" role="group" aria-label="Modell- und Tool-Endpoints">
-        <strong class="connection-group-title">Modell- &amp; Tool-Endpoints</strong>
+      <div class="connection-group" role="group" aria-label={t("settings.model_tool_endpoints")}>
+        <strong class="connection-group-title">{t("settings.model_tool")}</strong>
         {(endpoints ?? []).map((e) => {
           const st = endpointStatus(e);
           return (
@@ -237,50 +238,50 @@ export function ConnectionsSettings() {
               </div>
               <div class="row connection-actions">
                 <Button disabled={busy} onClick={() => void probe(e)}>
-                  Prüfen
+                  {t("settings.check")}
                 </Button>
                 <Button disabled={busy} onClick={() => editEndpoint(e)}>
-                  Bearbeiten
+                  {t("settings.edit")}
                 </Button>
                 <Button disabled={busy} aria-label={`${e.name} löschen`} onClick={() => void run(async () => (await hubApi.removeEndpoint(e.id), setMessage({ ok: true, text: "Endpoint gelöscht." }), reload()))} variant="danger">
-                  Löschen
+                  {t("common.delete")}
                 </Button>
               </div>
             </div>
           );
         })}
-        {endpoints !== null && endpoints.length === 0 && <div class="dim">Noch kein Endpoint eingetragen.</div>}
+        {endpoints !== null && endpoints.length === 0 && <div class="dim">{t("settings.no_endpoint")}</div>}
 
         <label>
-          Name
-          <input value={epName} onInput={(e) => setEpName((e.target as HTMLInputElement).value)} placeholder="Gpubox" />
+          {t("composer.name")}
+          <input value={epName} onInput={(e) => setEpName((e.target as HTMLInputElement).value)} placeholder={t("settings.gpubox")} />
         </label>
         <label>
-          Typ
+          {t("settings.type")}
           <select value={epKind} onChange={(e) => setEpKind((e.target as HTMLSelectElement).value as EndpointKind)}>
-            <option value="llm">LLM</option>
-            <option value="image">Bilderkennung</option>
-            <option value="video">Videoerkennung</option>
-            <option value="other">Sonstiges</option>
+            <option value="llm">{t("settings.llm")}</option>
+            <option value="image">{t("settings.image_recognition")}</option>
+            <option value="video">{t("settings.video_recognition")}</option>
+            <option value="other">{t("notifications.section_rest")}</option>
           </select>
         </label>
         <label>
-          Endpunkt-URL
-          <input value={epUrl} onInput={(e) => setEpUrl((e.target as HTMLInputElement).value)} placeholder="http://100.64.0.10:8100/v1" inputMode="url" autocapitalize="off" spellcheck={false} />
+          {t("settings.endpoint_url2")}
+          <input value={epUrl} onInput={(e) => setEpUrl((e.target as HTMLInputElement).value)} placeholder={t("settings.endpoint_url")} inputMode="url" autocapitalize="off" spellcheck={false} />
         </label>
         <label>
-          API-Key {epEdit ? "(leer lassen = unverändert)" : "(optional)"}
+          {t("settings.api_key")} {epEdit ? "(leer lassen = unverändert)" : "(optional)"}
           <input type="password" value={epKey} onInput={(e) => setEpKey((e.target as HTMLInputElement).value)} placeholder={epEdit?.hasKey ? "neuen Key eingeben, um ihn zu ersetzen" : "sk-…"} autocomplete="off" />
         </label>
         {epEdit?.hasKey && (
           <label class="row" style="gap: 8px">
             <input type="checkbox" checked={epDropKey} onChange={(e) => setEpDropKey((e.target as HTMLInputElement).checked)} />
-            Schlüssel entfernen
+            {t("settings.remove_key")}
           </label>
         )}
         <label>
-          Aktivierte Modelle (Komma-getrennt)
-          <input value={epModels} onInput={(e) => setEpModels((e.target as HTMLInputElement).value)} placeholder="halogen-qwen, halogen-vision" autocapitalize="off" autocorrect="off" spellcheck={false} />
+          {t("settings.enabled_models")}
+          <input value={epModels} onInput={(e) => setEpModels((e.target as HTMLInputElement).value)} placeholder={t("settings.halogen_models")} autocapitalize="off" autocorrect="off" spellcheck={false} />
         </label>
         <div class="row" style="gap: 8px">
           <Button disabled={busy || !epName.trim() || !epUrl.trim()} onClick={() => void saveEndpoint()} variant="primary">
@@ -288,37 +289,37 @@ export function ConnectionsSettings() {
           </Button>
           {epEdit && (
             <Button onClick={() => (setEpEdit(null), setEpName(""), setEpKind("llm"), setEpUrl(""), setEpKey(""), setEpDropKey(false), setEpModels(""))}>
-              Abbrechen
+              {t("common.cancel")}
             </Button>
           )}
         </div>
-        <div class="dim settings-intro">Der Hub speichert vom Schlüssel nur einen Hash — „Prüfen“ fragt nur Erreichbarkeit ab, ohne Schlüssel zu senden.</div>
+        <div class="dim settings-intro">{t("settings.key_hash")}</div>
       </div>
 
-      <div class="connection-group" role="group" aria-label="Forge GitHub-Token">
-        <strong class="connection-group-title">Forge: GitHub</strong>
+      <div class="connection-group" role="group" aria-label={t("settings.forge_github_token")}>
+        <strong class="connection-group-title">{t("settings.forge_github")}</strong>
         <div class="connection-entry">
           <div class="connection-entry-head">
-            <span class="connection-name">Issue-Bridge &amp; Actions-Anzeige</span>
+            <span class="connection-name">{t("settings.issue_bridge")}</span>
             <span class={forgeGithub?.present ? "connection-status ok" : "connection-status dim"} data-testid="forge-github-status">
               {forgeGithub === null ? "nicht konfiguriert" : forgeGithub.present ? "Token hinterlegt ✓" : "kein Token"}
             </span>
           </div>
           {forgeGithub?.tokenFile && <div class="mono dim connection-url">{forgeGithub.tokenFile}</div>}
-          {forgeGithub === null && <div class="dim">forge.github.tokenFile fehlt in der Hub-Config — Pfad dort eintragen, dann hier den Token ablegen.</div>}
+          {forgeGithub === null && <div class="dim">{t("settings.tokenfile_missing")}</div>}
         </div>
         {forgeGithub !== null && (
           <>
             <label>
-              Token (github_pat_…)
-              <input type="password" value={ghToken} onInput={(e) => setGhToken((e.target as HTMLInputElement).value)} placeholder="github_pat_…" autocapitalize="off" spellcheck={false} autocomplete="off" data-testid="forge-github-token-input" />
+              {t("settings.token_github")}
+              <input type="password" value={ghToken} onInput={(e) => setGhToken((e.target as HTMLInputElement).value)} placeholder={t("settings.github_pat")} autocapitalize="off" spellcheck={false} autocomplete="off" data-testid="forge-github-token-input" />
             </label>
             <div class="row" style="gap: 8px">
               <Button disabled={busy || ghToken.trim().length < 10} onClick={() => void saveGitHubToken()} variant="primary" data-testid="forge-github-save">
-                Token speichern
+                {t("settings.save_token")}
               </Button>
             </div>
-            <div class="dim settings-intro">Write-only: der Hub schreibt die erste Zeile der Token-Datei (0600) und liest sie nie wieder zurück — Ersetzen überschreibt den alten Token.</div>
+            <div class="dim settings-intro">{t("settings.write_only")}</div>
           </>
         )}
       </div>

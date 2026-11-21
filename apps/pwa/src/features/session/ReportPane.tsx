@@ -1,3 +1,5 @@
+import { fmtNumber } from "../../shared/i18n/format.ts";
+import { t } from "../../shared/i18n/index.ts";
 import { remoteHost, type SessionRecord, type AdapterUsage, type SessionDiffResult } from "../../shared/api.ts";
 import { formatUsd, formatWindow } from "../overview/Dashboard.tsx";
 import { BudgetTopUp } from "./BudgetTopUp.tsx";
@@ -29,75 +31,80 @@ export function ReportPane({
   const durationMs = new Date(record.updatedAt).getTime() - new Date(createdAt).getTime();
   const suffix = running ? " (bisher)" : "";
   const cost = metricView(record, "cost", formatUsd, numbersReal);
-  const tokens = metricView(record, "tokens", (n) => n.toLocaleString("de-DE"), numbersReal);
+  const tokens = metricView(record, "tokens", (n) => fmtNumber(n), numbersReal);
   // AC-P2-1: `diff.files` trägt seit den Commit-Abschnitten nur den
   // uncommitteten Rest — „Dateien geändert" zählt die Union mit den
   // Commit-Dateien (dedupliziert pro Pfad).
   const changedFiles = diff
     ? new Set([...(diff.commits ?? []).flatMap((c) => c.files.map((f) => f.path)), ...diff.files.map((f) => f.path)]).size
     : 0;
-  const filesChanged = diff ? (diff.error ? diff.error : `${changedFiles}${suffix}`) : "lädt …";
+  const filesChanged = diff ? (diff.error ? diff.error : `${changedFiles}${suffix}`) : t("common.loading");
 
   return (
     <div>
-      <span class={`status-chip ${running ? "pending" : "done"}`}>{status === "interrupted" ? "Unterbrochen — Zug abgebrochen" : running ? "● läuft" : "✓ abgeschlossen"}</span>
+      <span class={`status-chip ${running ? "pending" : "done"}`}>{status === "interrupted" ? t("session.interrupted_abort") : running ? t("session.status_running_bullet") : t("session.status_done_check")}</span>
       {status === "parked" && record.parkReason === "budget" && <BudgetTopUp sessionId={record.id} currentBudgetUsd={record.budgetUsd} />}
       <div class="kv-list">
         <div class="kv-row">
-          <span class="k">Dauer</span>
+          <span class="k">{t("common.duration")}</span>
           <span class="v num">
             {formatDuration(durationMs)}
             {suffix}
           </span>
         </div>
         <div class="kv-row">
-          <span class="k">Kosten</span>
+          <span class="k">{t("status.costs")}</span>
           <span class={`v num metric-${cost.quality}`} title={cost.hint}>
             {cost.text}
             {cost.quality !== "unknown" ? suffix : ""}
           </span>
         </div>
         <div class="kv-row">
-          <span class="k" title="ADR-0084: Summe dessen, was die Modell-Aufrufe bekommen haben — nicht das, was geschrieben wurde">Tokens verarbeitet</span>
+          <span class="k" title={t("session.adr0084_sum")}>{t("session.tokens_processed")}</span>
           <span class={`v num metric-${tokens.quality}`} title={tokens.hint}>
             {tokens.text}
             {tokens.quality !== "unknown" ? suffix : ""}
           </span>
         </div>
         <div class="kv-row">
-          <span class="k">Kontextfenster</span>
+          <span class="k">{t("session.context_window")}</span>
           <span class="v num">
             {!context || context.fill === null
-              ? "keine Meldung"
+              ? t("session.no_report")
               : context.window === null
-                ? `${context.fill.toLocaleString("de-DE")} Tokens — Fenstergröße unbekannt (ADR-0032)`
-                : `${Math.round((context.fill / context.window) * 100)} % (${context.fill.toLocaleString("de-DE")} / ${context.window.toLocaleString("de-DE")})`}
+                ? t("session.tokens_unknown_window", { fill: fmtNumber(context.fill) })
+                : t("session.context_pct", { pct: Math.round((context.fill / context.window) * 100), fill: fmtNumber(context.fill), window: fmtNumber(context.window) })}
           </span>
         </div>
         <div class="kv-row">
-          <span class="k">Kontingent (Adapter-weit)</span>
+          <span class="k">{t("session.quota_adapter_wide")}</span>
           <span class="v num">
             {!usage || !usage.supported
-              ? "unbekannt"
+              ? t("status.unknown")
               : usage.quota === null
-                ? "noch keine Meldung"
+                ? t("session.no_report_yet")
                 : usage.quota.windows.map(formatWindow).join(" · ")}
           </span>
         </div>
         <div class="kv-row">
-          <span class="k">Dateien geändert</span>
+          <span class="k">{t("session.files_changed")}</span>
           <span class="v num">{filesChanged}</span>
         </div>
         <div class="kv-row">
-          <span class="k">Tests</span>
-          <span class="v dim">nicht erfasst — kein Adapter meldet ein strukturiertes Test-Signal</span>
+          <span class="k">{t("common.tests")}</span>
+          <span class="v dim">{t("session.no_test_signal")}</span>
         </div>
       </div>
       {record.attachCmd && <AttachCmdRow cmd={onHost(record.attachCmd, remoteHost(record.hostId))} />}
       {record.worktree && (
         <WorktreeCard sessionId={record.id} status={status} worktree={record.worktree} project={record.project} host={remoteHost(record.hostId)} apply={!applyInHead} />
       )}
-      <ContinueCard openCmd={record.openCmd ? onHost(record.openCmd, remoteHost(record.hostId)) : undefined} host={remoteHost(record.hostId)} />
+      <ContinueCard
+        sessionId={record.id}
+        hostId={remoteHost(record.hostId)}
+        openCmd={record.openCmd ? onHost(record.openCmd, remoteHost(record.hostId)) : undefined}
+        host={remoteHost(record.hostId)}
+      />
     </div>
   );
 }

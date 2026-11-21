@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { SettingRow, SettingsSection } from "./parts.tsx";
 import { Segmented, Select } from "../../shared/forms.tsx";
@@ -61,8 +62,8 @@ export function MainSyncSettings() {
 
   if (state === null) {
     return (
-      <SettingsSection title="Main-Synchronisation" testid="main-sync-settings">
-        <div class="dim">Einstellungen nicht erreichbar.</div>
+      <SettingsSection title={t("settings.main_sync")} testid="main-sync-settings">
+        <div class="dim">{t("settings.settings_unreachable")}</div>
       </SettingsSection>
     );
   }
@@ -86,14 +87,14 @@ export function MainSyncSettings() {
   const candidates = projects.filter((p) => !state.projects[p.path]);
 
   return (
-    <SettingsSection title="Main-Synchronisation" testid="main-sync-settings">
+    <SettingsSection title={t("settings.main_sync")} testid="main-sync-settings">
       <div class="dim settings-intro">
-        Neue Sessions starten auf dem aktuellen Hauptbranch (origin), laufende Sessions werden im Takt geprüft. Nicht passieren: kein Rebase, kein Push nach main, kein Merge in laufende Züge — gemergt wird nur in wartende Sessions.
+        {t("settings.main_sync_note")}
       </div>
 
-      <SettingRow label="Neue Sessions starten auf" hint="Nur wenn der Projektordner auf dem Hauptbranch steht — sonst bleibt der lokale Stand.">
+      <SettingRow label={t("settings.new_sessions_start")} hint="Nur wenn der Projektordner auf dem Hauptbranch steht — sonst bleibt der lokale Stand.">
         <Segmented
-          label="Neue Sessions starten auf"
+          label={t("settings.new_sessions_start")}
           value={g.startSync}
           options={[
             { value: "fetch-base", label: "origin/Hauptbranch" },
@@ -103,38 +104,38 @@ export function MainSyncSettings() {
         />
       </SettingRow>
 
-      <SettingRow label="Fetch-Zeitlimit" hint="Harte Grenze — danach startet die Session auf dem lokalen Stand (mit Meldung).">
+      <SettingRow label={t("settings.fetch_timeout")} hint="Harte Grenze — danach startet die Session auf dem lokalen Stand (mit Meldung).">
         <Select
-          label="Fetch-Zeitlimit"
+          label={t("settings.fetch_timeout")}
           value={String(g.fetchTimeoutSec)}
           options={numberOptions(TIMEOUTS, g.fetchTimeoutSec, (v) => `${v} s`)}
           onChange={(v) => patchGlobal({ fetchTimeoutSec: Number(v) })}
         />
       </SettingRow>
 
-      <SettingRow label="Hauptbranch" hint="Leer = origin/HEAD, wie vom Remote angekündigt.">
+      <SettingRow label={t("settings.main_branch")} hint="Leer = origin/HEAD, wie vom Remote angekündigt.">
         <input
           data-testid="main-sync-default-branch"
           value={g.defaultBranch}
-          placeholder="origin/HEAD"
+          placeholder={t("settings.origin_head")}
           onInput={(e) => patchGlobal({ defaultBranch: (e.target as HTMLInputElement).value })}
           autocapitalize="off"
           spellcheck={false}
         />
       </SettingRow>
 
-      <SettingRow label="Prüfen alle" hint="Rückstand melden, fragen oder selbst mergen — nur bei wartenden Sessions.">
+      <SettingRow label={t("settings.check_all")} hint="Rückstand melden, fragen oder selbst mergen — nur bei wartenden Sessions.">
         <Select
-          label="Prüfen alle"
+          label={t("settings.check_all")}
           value={String(g.checkIntervalMin)}
           options={numberOptions(INTERVALS, g.checkIntervalMin, (v) => (v === 0 ? "aus" : v >= 60 ? `${v / 60} h` : `${v} min`))}
           onChange={(v) => patchGlobal({ checkIntervalMin: Number(v) })}
         />
       </SettingRow>
 
-      <SettingRow label="Bei Rückstand">
+      <SettingRow label={t("settings.when_behind")}>
         <Segmented
-          label="Bei Rückstand"
+          label={t("settings.when_behind")}
           value={g.behindAction}
           options={[
             { value: "notify", label: "melden" },
@@ -145,9 +146,9 @@ export function MainSyncSettings() {
         />
       </SettingRow>
 
-      <SettingRow label="Automatisch mergen" hint="„sauber“ prüft den Merge vorher (Probelauf) und lässt Konflikte liegen.">
+      <SettingRow label={t("settings.merge_automatically")} hint="„sauber“ prüft den Merge vorher (Probelauf) und lässt Konflikte liegen.">
         <Segmented
-          label="Automatisch mergen"
+          label={t("settings.merge_automatically")}
           value={g.autoMerge}
           options={[
             { value: "off", label: "nie" },
@@ -158,23 +159,23 @@ export function MainSyncSettings() {
         />
       </SettingRow>
 
-      <SettingRow label="Nur bei wartenden Sessions">
-        <span class="dim">immer aktiv — ein Merge läuft nie in einen laufenden Zug.</span>
+      <SettingRow label={t("settings.only_waiting")}>
+        <span class="dim">{t("settings.always_active")}</span>
       </SettingRow>
 
       <div class="settings-subhead" role="heading" aria-level={4}>
-        Projekt-Überschreibungen
+        {t("settings.project_overrides")}
       </div>
-      {overriddenPaths.length === 0 && <div class="dim">Keine — alle Projekte folgen den globalen Werten.</div>}
+      {overriddenPaths.length === 0 && <div class="dim">{t("settings.none_global")}</div>}
       {overriddenPaths.map((path) => (
         <div key={path} class="mainsync-override" data-testid="main-sync-override">
           <div class="row" style="justify-content: space-between; align-items: baseline">
             <strong>{path}</strong>
             <Button onClick={() => removeOverride(path)} disabled={busy}>
-              Entfernen
+              {t("settings.remove")}
             </Button>
           </div>
-          <SettingRow label="Neue Sessions starten auf">
+          <SettingRow label={t("settings.new_sessions_start")}>
             <Select
               label={`Neue Sessions (${path})`}
               value={state.projects[path]?.startSync ?? "inherit"}
@@ -186,7 +187,7 @@ export function MainSyncSettings() {
               onChange={(v) => patchOverride(path, v === "inherit" ? { startSync: undefined } : { startSync: v })}
             />
           </SettingRow>
-          <SettingRow label="Prüfen alle">
+          <SettingRow label={t("settings.check_all")}>
             <Select
               label={`Prüfen alle (${path})`}
               value={state.projects[path]?.checkIntervalMin !== undefined ? String(state.projects[path]?.checkIntervalMin) : "inherit"}
@@ -201,16 +202,16 @@ export function MainSyncSettings() {
       ))}
       {candidates.length > 0 && (
         <div class="row" style="gap: 8px">
-          <Select label="Projekt hinzufügen" value={addPath} hideLabel options={[{ value: "", label: "Projekt wählen…" }, ...candidates.map((p) => ({ value: p.path, label: p.name }))]} onChange={setAddPath} />
+          <Select label={t("settings.add_project")} value={addPath} hideLabel options={[{ value: "", label: "Projekt wählen…" }, ...candidates.map((p) => ({ value: p.path, label: p.name }))]} onChange={setAddPath} />
           <Button onClick={() => addOverride()} disabled={busy || addPath === ""}>
-            Übernehmen
+            {t("common.apply")}
           </Button>
         </div>
       )}
 
       <div class="row" style="gap: 8px; align-items: center">
         <Button variant="primary" disabled={busy} onClick={() => void save(state)} class={busy ? "busy" : undefined}>
-          Speichern
+          {t("common.save")}
         </Button>
         {message && <span class={message.ok ? "gemini-state ok" : "gemini-state dim"}>{message.text}</span>}
       </div>

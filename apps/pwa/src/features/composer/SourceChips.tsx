@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { jumpToSource, removeSource, sourcesBlock, useSources, type SourceRef } from "../../shared/sources.ts";
 
 /**
@@ -26,11 +27,11 @@ function Chip({ source, index, target }: { source: SourceRef; index: number; tar
         {index}. {source.label}
       </span>
       {source.hash && (
-        <button type="button" class="source-jump link-btn" aria-label={`Quelle ansehen: ${source.label}`} onClick={() => jumpToSource(source)}>
+        <button type="button" class="source-jump link-btn" aria-label={t("session.view_source", { "label": source.label })} onClick={() => jumpToSource(source)}>
           ↗
         </button>
       )}
-      <button type="button" class="source-remove" aria-label={`Quelle entfernen: ${source.label}`} onClick={() => removeSource(target, source.id)}>
+      <button type="button" class="source-remove" aria-label={t("session.remove_source", { "label": source.label })} onClick={() => removeSource(target, source.id)}>
         ×
       </button>
     </span>
@@ -43,7 +44,7 @@ export function SourcePreviewNote({ target }: { target: string }) {
   if (sources.length === 0) return null;
   return (
     <div class="source-preview" data-testid="source-preview">
-      <div class="dim source-preview-head">Mitgesendet beim nächsten Absenden ({sources.length} Quelle{sources.length > 1 ? "n" : ""}):</div>
+      <div class="dim source-preview-head">{t("composer.sent_with_next")}{sources.length} {t("composer.source")}{sources.length > 1 ? "n" : ""}):</div>
       <pre class="source-preview-block">{sourcesBlock(sources)}</pre>
     </div>
   );

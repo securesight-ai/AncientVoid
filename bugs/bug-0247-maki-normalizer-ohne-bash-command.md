@@ -1,7 +1,7 @@
 ---
 id: BUG-0247
 slug: maki-normalizer-ohne-bash-command
-status: open
+status: done
 severity: S3
 area: adapters
 instance: dev
@@ -13,6 +13,10 @@ reporter: "EPIC-P72 §0 (Bestandsaufnahme 18.11.2026)"
 ---
 
 # BUG-0247 — maki-Normalizer: `bash`-tool_use ohne `command`, nur `title`
+
+## Fix
+
+ACP UpdateMapper wartet auf `command` im `tool_call_update` (nicht `title`→command).
 
 ## Gesehen
 

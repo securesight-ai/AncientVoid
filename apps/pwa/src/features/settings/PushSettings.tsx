@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { hubApi, type PushState } from "../../shared/api.ts";
 import { SettingRow, SettingsSection, Switch } from "./parts.tsx";
@@ -50,26 +51,26 @@ export function PushSettings() {
   };
 
   return (
-    <SettingsSection title="Benachrichtigungen" testid="push-settings">
+    <SettingsSection title={t("notifications.title")} testid="push-settings">
       <p class="dim settings-intro">
-        Push geht über den Dienst des Browser-Herstellers (Google, Apple, Mozilla, Microsoft) und verlässt damit das Tailnet. Übertragen wird nur eine Kennung — kein Prompt, kein Befehl, nichts auf dem Sperrbildschirm außer „Freigabe nötig“, „Fehler“ oder „Zug fertig“. Die Glocke bleibt die vollständige Liste.
+        {t("settings.push_note")}
       </p>
       {error && <div class="reply-error">{error}</div>}
       {info && <div class="dim">{info}</div>}
       {state && (
-        <SettingRow label="Push auf diesem Hub" hint="aus, bis du es einschaltest">
-          <Switch label="Push auf diesem Hub erlauben" checked={state.enabled} onChange={(next) => void run(() => hubApi.setPushEnabled(next))} />
+        <SettingRow label={t("settings.push_on_hub")} hint="aus, bis du es einschaltest">
+          <Switch label={t("settings.allow_push")} checked={state.enabled} onChange={(next) => void run(() => hubApi.setPushEnabled(next))} />
         </SettingRow>
       )}
       {state?.enabled && (
         <>
-          {support === "unsupported" && <div class="push-status warn">Dieser Browser kann hier kein Push. Auf dem iPhone: AncientVoid erst „Zum Home-Bildschirm“ hinzufügen und von dort öffnen.</div>}
-          {support === "denied" && <div class="push-status err">Benachrichtigungen sind für diese Seite blockiert — in den Browser- bzw. Geräteeinstellungen erlauben.</div>}
+          {support === "unsupported" && <div class="push-status warn">{t("settings.no_push_browser")}</div>}
+          {support === "denied" && <div class="push-status err">{t("settings.notifications_blocked")}</div>}
           {support === "ok" && (
             <div class="row" style="gap: 8px; flex-wrap: wrap; justify-content: flex-start">
               {mine.length === 0 ? (
                 <Button onClick={() => void run(() => subscribeThisDevice(state.publicKey!), "Dieses Gerät bekommt jetzt Push.")} variant="primary">
-                  Auf diesem Gerät einschalten
+                  {t("settings.turn_on_device")}
                 </Button>
               ) : (
                 <>
@@ -77,33 +78,33 @@ export function PushSettings() {
                     const r = await hubApi.pushTest();
                     if (r.sent === 0) throw new Error(r.errors[0] ?? "Nicht zugestellt.");
                   }, "Test gesendet — kommt er an?")}>
-                    Test senden
+                    {t("settings.send_test")}
                   </Button>
                   <Button onClick={() => void run(unsubscribeThisDevice, "Push auf diesem Gerät aus.")}>
-                    Auf diesem Gerät aus
+                    {t("settings.off_on_device")}
                   </Button>
                 </>
               )}
             </div>
           )}
-          <SettingRow label="Auch bei fertigem Zug" hint="sonst nur Freigaben und Fehler">
-            <Switch label="Auch wenn ein Zug fertig ist (sonst nur Freigaben und Fehler)" checked={prefs.done} onChange={(next) => save({ ...prefs, done: next })} />
+          <SettingRow label={t("settings.also_completed_turn")} hint="sonst nur Freigaben und Fehler">
+            <Switch label={t("settings.also_when_done")} checked={prefs.done} onChange={(next) => save({ ...prefs, done: next })} />
           </SettingRow>
-          <SettingRow label="Ruhezeit">
+          <SettingRow label={t("settings.quiet_time")}>
             <span class="quiet-control">
-              <Switch label="Ruhezeit" checked={prefs.quiet !== null} onChange={(next) => save({ ...prefs, quiet: next ? { from: 22 * 60, to: 7 * 60 } : null })} />
+              <Switch label={t("settings.quiet_time")} checked={prefs.quiet !== null} onChange={(next) => save({ ...prefs, quiet: next ? { from: 22 * 60, to: 7 * 60 } : null })} />
               {prefs.quiet && (
               <>
-                <input type="time" aria-label="Ruhe ab" value={hhmm(prefs.quiet.from)} onInput={(e) => save({ ...prefs, quiet: { ...prefs.quiet!, from: minutes((e.target as HTMLInputElement).value) } })} />
-                bis
-                <input type="time" aria-label="Ruhe bis" value={hhmm(prefs.quiet.to)} onInput={(e) => save({ ...prefs, quiet: { ...prefs.quiet!, to: minutes((e.target as HTMLInputElement).value) } })} />
+                <input type="time" aria-label={t("settings.quiet_from")} value={hhmm(prefs.quiet.from)} onInput={(e) => save({ ...prefs, quiet: { ...prefs.quiet!, from: minutes((e.target as HTMLInputElement).value) } })} />
+                {t("settings.until")}
+                <input type="time" aria-label={t("settings.quiet_until")} value={hhmm(prefs.quiet.to)} onInput={(e) => save({ ...prefs, quiet: { ...prefs.quiet!, to: minutes((e.target as HTMLInputElement).value) } })} />
               </>
               )}
             </span>
           </SettingRow>
           {mine.length > 0 && support === "ok" && (
             <Button onClick={() => void run(() => subscribeThisDevice(state.publicKey!), "Einstellungen übernommen.")}>
-              Einstellungen für dieses Gerät übernehmen
+              {t("settings.apply_for_device")}
             </Button>
           )}
           {state.subscriptions.length > 0 && (

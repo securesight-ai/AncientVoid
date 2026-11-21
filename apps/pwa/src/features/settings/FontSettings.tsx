@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { APPEARANCE_EVENT, clampFontScale, FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, FONTS, getAppearance, setAppearance, type FontId } from "../../app/appearance.ts";
 import { SettingRow, SettingsSection } from "./parts.tsx";
@@ -20,7 +21,7 @@ function FontChoices({ label, value, onPick, monoOnly }: { label: string; value:
       {FONTS.filter((f) => !monoOnly || f.mono).map((f) => (
         <button key={f.id} type="button" role="radio" aria-checked={f.id === value} class={`font-choice${f.id === value ? " active" : ""}`} style={{ fontFamily: f.stack }} onClick={() => onPick(f.id)}>
           <span class="font-sample" aria-hidden="true">
-            Aa
+            {t("settings.aa")}
           </span>
           <span class="font-name">{f.label}</span>
         </button>
@@ -34,28 +35,28 @@ export function FontSettings() {
   const a = useAppearance();
   const pct = Math.round(a.fontScale * 100);
   return (
-    <SettingsSection title="Schrift">
-      <p class="settings-intro dim">Die Oberflächenschrift gilt für Texte und Bedienung. Code, Diff und Terminal bleiben in einer Festbreitenschrift.</p>
+    <SettingsSection title={t("settings.font")}>
+      <p class="settings-intro dim">{t("settings.ui_font_note")}</p>
       <div class="font-block">
-        <span class="setting-title">Oberfläche</span>
-        <FontChoices label="Schriftart Oberfläche" value={a.fontUi} onPick={(fontUi) => setAppearance({ ...a, fontUi })} />
+        <span class="setting-title">{t("settings.interface")}</span>
+        <FontChoices label={t("settings.font_ui")} value={a.fontUi} onPick={(fontUi) => setAppearance({ ...a, fontUi })} />
       </div>
       <div class="font-block">
-        <span class="setting-title">Code und Diff</span>
-        <FontChoices label="Schriftart Code" value={a.fontCode} monoOnly onPick={(fontCode) => setAppearance({ ...a, fontCode })} />
+        <span class="setting-title">{t("settings.code_diff")}</span>
+        <FontChoices label={t("settings.font_code")} value={a.fontCode} monoOnly onPick={(fontCode) => setAppearance({ ...a, fontCode })} />
       </div>
-      <SettingRow label="Schriftgröße" hint="nur Text — der Zoom skaliert die ganze Oberfläche">
+      <SettingRow label={t("settings.font_size")} hint="nur Text — der Zoom skaliert die ganze Oberfläche">
         <span class="scale-control">
-          <Button aria-label="Schriftgröße verringern" title="Schriftgröße verringern" disabled={a.fontScale <= FONT_SCALE_MIN} onClick={() => setAppearance({ ...a, fontScale: clampFontScale(a.fontScale - FONT_SCALE_STEP) })}>
+          <Button aria-label={t("settings.decrease_font")} title={t("settings.decrease_font")} disabled={a.fontScale <= FONT_SCALE_MIN} onClick={() => setAppearance({ ...a, fontScale: clampFontScale(a.fontScale - FONT_SCALE_STEP) })}>
             −
           </Button>
           <span class="font-scale-value mono" aria-live="polite">
             {pct} %
           </span>
-          <Button aria-label="Schriftgröße erhöhen" title="Schriftgröße erhöhen" disabled={a.fontScale >= FONT_SCALE_MAX} onClick={() => setAppearance({ ...a, fontScale: clampFontScale(a.fontScale + FONT_SCALE_STEP) })}>
+          <Button aria-label={t("settings.increase_font")} title={t("settings.increase_font")} disabled={a.fontScale >= FONT_SCALE_MAX} onClick={() => setAppearance({ ...a, fontScale: clampFontScale(a.fontScale + FONT_SCALE_STEP) })}>
             +
           </Button>
-          <Button aria-label="Schriftgröße zurücksetzen" disabled={a.fontScale === 1} onClick={() => setAppearance({ ...a, fontScale: 1 })}>
+          <Button aria-label={t("settings.reset_font")} disabled={a.fontScale === 1} onClick={() => setAppearance({ ...a, fontScale: 1 })}>
             100 %
           </Button>
         </span>

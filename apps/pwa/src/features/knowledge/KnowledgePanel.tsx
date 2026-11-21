@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { KnowledgeHit, KnowledgeOverview, KnowledgeSourceView } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
@@ -31,7 +32,7 @@ export function KnowledgePanel() {
 
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState("8");
-  const [fusion, setFusion] = useState<"" | "sequential" | "rrf">("");
+  const [fusion, setFusion] = useState<"" | "sequential" | "rrf">("") /* i18n-ignore: Daten-Key */;
   const [minScore, setMinScore] = useState("");
   const [hits, setHits] = useState<{ items: KnowledgeHit[]; truncated: boolean } | null>(null);
   const [doc, setDoc] = useState<{ ref: string; title?: string; content: string; outlinks?: string[]; backlinks?: string[]; truncated: boolean } | null>(null);
@@ -186,7 +187,7 @@ export function KnowledgePanel() {
         <select
           class="knowledge-source"
           data-testid="knowledge-panel-source"
-          aria-label="Wissens-Quelle"
+          aria-label={t("knowledge.knowledge_source")}
           value={activeId ?? ""}
           onChange={(e) => {
             const id = (e.currentTarget as HTMLSelectElement).value;
@@ -194,7 +195,7 @@ export function KnowledgePanel() {
           }}
         >
           <option value="" disabled>
-            Quelle wählen …
+            {t("knowledge.choose_source")}
           </option>
           {(sources ?? []).map((s) => (
             <option key={s.id} value={s.id}>
@@ -207,14 +208,14 @@ export function KnowledgePanel() {
             {statusText(active.status).text}
           </span>
         )}
-        <Button aria-label="Quellen neu laden" onClick={() => void reload()} disabled={busy}>
-          Neu laden
+        <Button aria-label={t("knowledge.reload_sources")} onClick={() => void reload()} disabled={busy}>
+          {t("knowledge.reload")}
         </Button>
       </div>
 
       {offlineNote && (
         <div class="knowledge-offline" data-testid="knowledge-offline" role="status">
-          Offline — gespeicherter Stand{cachedAt ? ` vom ${ago(cachedAt)}` : ""}. Suchen und Schreiben brauchen die Verbindung.
+          {t("knowledge.offline_saved")}{cachedAt ? ` vom ${ago(cachedAt)}` : ""}{t("knowledge.connect_needed")}
         </div>
       )}
       {message && (
@@ -238,34 +239,34 @@ export function KnowledgePanel() {
             if (!offlineNote) void search();
           }}
         >
-          <input class="knowledge-query" data-testid="knowledge-panel-query" type="search" placeholder="Im Brain suchen …" value={query} onInput={(e) => setQuery((e.currentTarget as HTMLInputElement).value)} />
+          <input class="knowledge-query" data-testid="knowledge-panel-query" type="search" placeholder={t("knowledge.search_brain")} value={query} onInput={(e) => setQuery((e.currentTarget as HTMLInputElement).value)} />
           <label class="knowledge-field">
-            topK
+            {t("knowledge.topK")}
             <input data-testid="knowledge-panel-topk" type="number" min={1} max={20} value={topK} onInput={(e) => setTopK((e.currentTarget as HTMLInputElement).value)} />
           </label>
           <label class="knowledge-field">
-            Fusion
-            <select data-testid="knowledge-panel-fusion" value={fusion} onChange={(e) => setFusion((e.currentTarget as HTMLSelectElement).value as "" | "sequential" | "rrf")}>
-              <option value="">Standard</option>
-              <option value="sequential">sequential</option>
-              <option value="rrf">rrf</option>
+            {t("knowledge.fusion")}
+            <select data-testid="knowledge-panel-fusion" value={fusion} onChange={(e) => setFusion((e.currentTarget as HTMLSelectElement).value as "" | "sequential" | "rrf" /* i18n-ignore: Daten-Key */)}>
+              <option value="">{t("common.standard")}</option>
+              <option value="sequential">{t("knowledge.sequential")}</option>
+              <option value="rrf">{t("knowledge.rrf")}</option>
             </select>
           </label>
           <label class="knowledge-field">
-            minScore
+            {t("knowledge.minScore")}
             <input data-testid="knowledge-panel-minscore" type="number" min={0} max={1} step={0.05} value={minScore} onInput={(e) => setMinScore((e.currentTarget as HTMLInputElement).value)} />
           </label>
           <Button type="submit" aria-busy={busy} disabled={busy || !query.trim()} data-testid="knowledge-panel-search">
-            Suchen
+            {t("knowledge.search")}
           </Button>
         </form>
       )}
 
       {hits && (
         <div class="knowledge-hits">
-          {hits.truncated && <div class="knowledge-truncated">Ergebnis gekappt — topK/Snippet-Grenze erreicht.</div>}
+          {hits.truncated && <div class="knowledge-truncated">{t("knowledge.result_capped")}</div>}
           {hits.items.length === 0 ? (
-            <EmptyState text="Kein Treffer." />
+            <EmptyState text={t("knowledge.no_match")} />
           ) : (
             <ul role="list">
               {hits.items.map((h) => (
@@ -288,12 +289,12 @@ export function KnowledgePanel() {
             <h3>{doc.title ?? doc.ref}</h3>
             <code>{doc.ref}</code>
             {canGraph && (
-              <Button aria-label="Nachbarn anzeigen" onClick={() => void neighbors(doc.ref)} disabled={busy}>
-                Nachbarn
+              <Button aria-label={t("knowledge.show_neighbors")} onClick={() => void neighbors(doc.ref)} disabled={busy}>
+                {t("knowledge.neighbors")}
               </Button>
             )}
           </header>
-          {doc.truncated && <div class="knowledge-truncated">Dokument gekappt (32-KB-Grenze).</div>}
+          {doc.truncated && <div class="knowledge-truncated">{t("knowledge.doc_capped")}</div>}
           <pre>{doc.content}</pre>
           {(doc.outlinks?.length ?? 0) + (doc.backlinks?.length ?? 0) > 0 && (
             <div class="knowledge-links">
@@ -314,8 +315,8 @@ export function KnowledgePanel() {
 
       {graph && (
         <section class="knowledge-graph" data-testid="knowledge-panel-graph">
-          <h3>Nachbarn von {graph.nodes[0]?.ref}</h3>
-          {graph.truncated && <div class="knowledge-truncated">Graph gekappt — Knoten-/Kantengrenze erreicht.</div>}
+          <h3>{t("knowledge.neighbors_of")} {graph.nodes[0]?.ref}</h3>
+          {graph.truncated && <div class="knowledge-truncated">{t("knowledge.graph_capped")}</div>}
           <ul class="knowledge-graph-nodes" role="list">
             {graph.nodes.map((n) => (
               <li key={n.ref}>
@@ -325,13 +326,13 @@ export function KnowledgePanel() {
               </li>
             ))}
           </ul>
-          <p class="knowledge-graph-edges dim">{graph.edges.length} Kanten</p>
+          <p class="knowledge-graph-edges dim">{graph.edges.length} {t("knowledge.edges")}</p>
         </section>
       )}
 
       {active && (
         <section class="knowledge-add">
-          <h3>Notiz an „{active.label}“ — nur mit Freigabe</h3>
+          <h3>{t("knowledge.note_to")}{active.label}{t("knowledge.quote_approval")}</h3>
           {canAdd ? (
             <form
               onSubmit={(e) => {
@@ -342,18 +343,18 @@ export function KnowledgePanel() {
               <textarea
                 data-testid="knowledge-add-text"
                 rows={3}
-                placeholder="Text der Notiz …"
+                placeholder={t("knowledge.note_text")}
                 value={addText}
                 onInput={(e) => setAddText((e.currentTarget as HTMLTextAreaElement).value)}
                 disabled={offlineNote}
               />
-              <input data-testid="knowledge-add-ref" type="text" placeholder="eigene ref (optional, z. B. notes/idee.md)" value={addRef} onInput={(e) => setAddRef((e.currentTarget as HTMLInputElement).value)} disabled={offlineNote} />
+              <input data-testid="knowledge-add-ref" type="text" placeholder={t("knowledge.own_ref")} value={addRef} onInput={(e) => setAddRef((e.currentTarget as HTMLInputElement).value)} disabled={offlineNote} />
               <Button type="submit" disabled={busy || offlineNote || !addText.trim()} data-testid="knowledge-add-submit">
-                Zur Freigabe vormerken
+                {t("knowledge.queue_approval")}
               </Button>
             </form>
           ) : (
-            <p class="dim">Diese Quelle bietet kein Schreib-Tool (kb_add) — nur lesen.</p>
+            <p class="dim">{t("knowledge.no_write_tool")}</p>
           )}
           {pending.length > 0 && (
             <ul class="knowledge-pending" role="list" data-testid="knowledge-pending">
@@ -362,10 +363,10 @@ export function KnowledgePanel() {
                   <span>{p.summary}</span>
                   <span class="knowledge-pending-actions">
                     <Button onClick={() => void decide(p.id, "approve")} disabled={busy} data-testid="knowledge-pending-approve">
-                      Freigeben
+                      {t("approvals.approve")}
                     </Button>
                     <Button variant="danger" onClick={() => void decide(p.id, "reject")} disabled={busy} data-testid="knowledge-pending-reject">
-                      Ablehnen
+                      {t("approvals.decline")}
                     </Button>
                   </span>
                 </li>
@@ -376,7 +377,7 @@ export function KnowledgePanel() {
       )}
 
       {sources !== null && sources.length === 0 && (
-        <EmptyState text="Noch keine Wissens-Quelle angebunden — in den Einstellungen unter „Wissensquellen“ anlegen (URL + Token)." />
+        <EmptyState text={t("knowledge.no_source_yet")} />
       )}
     </div>
   );

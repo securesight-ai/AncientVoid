@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useState } from "preact/hooks";
 import type { WindowTarget } from "./protocol.ts";
 import { isPopoutWindow, openPopout } from "./windows.ts";
@@ -30,11 +31,11 @@ export function DetachButton({ target, label, onDetached, class: cls }: { target
         }
       >
         <span aria-hidden="true">⧉</span>
-        <span class="detach-word">Herauslösen</span>
+        <span class="detach-word">{t("windows.detach")}</span>
       </button>
       {blocked && (
         <span class="detach-blocked" role="alert">
-          Pop-ups blockiert — bitte erlauben.
+          {t("windows.popups_blocked")}
         </span>
       )}
     </span>

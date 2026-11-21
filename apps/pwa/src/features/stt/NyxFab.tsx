@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { NyxSprite } from "../nyx/Nyx.tsx";
 import { clampFabPos, fabBreakpoint, hasStoredFabPos, loadFabPos, saveFabPos, type FabPos } from "./fab-position.ts";
@@ -264,13 +265,13 @@ export function NyxFab() {
         >
           {stt.active && (
             <div class="nyx-fab-state" data-testid="nyx-fab-state">
-              ⏹ {stt.recording ? "Aufnahme" : "Diktat"} läuft {mmss} — erneut tippen stoppt
+              ⏹ {stt.recording ? "Aufnahme" : "Diktat"} {t("session.running")} {mmss} {t("stt.stops_typing")}
             </div>
           )}
-          {stt.active && stt.browserPfad && <div class="dim" data-testid="nyx-fab-cloud">Browser-Erkennung — läuft meist über einen Cloud-Dienst des Browsers</div>}
+          {stt.active && stt.browserPfad && <div class="dim" data-testid="nyx-fab-cloud">{t("stt.browser_recognition")}</div>}
           {stt.active && stt.streamNotice && <div class="dim">{stt.streamNotice}</div>}
-          {stt.active && stt.restarts > 0 && <div class="dim">Erkennung {stt.restarts}× neu gestartet — nichts verloren</div>}
-          {stt.partial && <div class="dim">Wort-für-Wort (Vorschau, wird nicht ausgeführt)</div>}
+          {stt.active && stt.restarts > 0 && <div class="dim">{t("stt.recognition")} {stt.restarts}{t("stt.restarted")}</div>}
+          {stt.partial && <div class="dim">{t("stt.word_for_word")}</div>}
           {stt.partial && <div class="nyx-fab-words" data-testid="nyx-fab-words">{stt.partial}</div>}
           {stt.info && !stt.error && <div class="dim">{stt.info}</div>}
           {stt.error && <div class="err">{stt.error}</div>}

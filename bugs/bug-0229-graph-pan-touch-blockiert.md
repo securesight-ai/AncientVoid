@@ -1,7 +1,7 @@
 ---
 id: BUG-0229
 slug: graph-pan-touch-blockiert
-status: fixed
+status: done
 severity: S1
 area: pwa
 instance: dev

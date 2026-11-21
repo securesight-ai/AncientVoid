@@ -22,7 +22,7 @@ import {
 import { spawnArgv } from "@ancientvoid/contracts";
 import { JsonRpcConnection as AcpConnection, RpcError } from "@ancientvoid/adapter-jsonrpc";
 import { resolveContextWindow } from "@ancientvoid/models";
-import { UpdateMapper, type SessionUpdate } from "./normalize.ts";
+import { UpdateMapper, resolveRawInput, type SessionUpdate } from "./normalize.ts";
 import { probeModelCatalog } from "./catalog.ts";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -305,7 +305,8 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
     if (cfg.permissions !== "hub" || !ctx.requestToolPermission) return deny();
     const seen = p.toolCall?.toolCallId ? state.calls.get(p.toolCall.toolCallId) : undefined;
     const call: ToolCallInfo = { ...seen, ...Object.fromEntries(Object.entries(p.toolCall ?? {}).filter(([, v]) => v !== undefined && v !== null)) };
-    const input = call.rawInput && typeof call.rawInput === "object" && !Array.isArray(call.rawInput) ? (call.rawInput as Record<string, unknown>) : { title: call.title ?? call.kind ?? "tool" };
+    // BUG-0247/0248: rawInput may be incomplete at ask-time; never invent from title (PRD §8.5).
+    const input = resolveRawInput(call.rawInput) ?? {};
     const answer = await ctx.requestToolPermission({
       toolName: (call.name ?? (call.kind ? KIND_LABEL[call.kind] : undefined) ?? call.title ?? call.kind ?? "tool").slice(0, 200),
       input,

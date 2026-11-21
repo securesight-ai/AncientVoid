@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { KnowledgeAuthKind, KnowledgeSourceView, KnowledgeStatus } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
@@ -103,10 +104,10 @@ export function KnowledgeSettings() {
 
 
   return (
-    <SettingsSection title="Wissensquellen" testid="knowledge-settings">
-      <div class="dim settings-intro">MCP-Wissensserver anbinden, z. B. den Librarian. Der Hub fragt sie für dich ab; Inhalte sind nur Text zum Lesen.</div>
+    <SettingsSection title={t("knowledge.knowledge_sources")} testid="knowledge-settings">
+      <div class="dim settings-intro">{t("knowledge.mcp_attach")}</div>
 
-      <div class="connection-group" role="group" aria-label="Angebundene Wissensquellen">
+      <div class="connection-group" role="group" aria-label={t("knowledge.attached_sources")}>
         {(sources ?? []).map((s) => {
           const st = statusText(s.status);
           return (
@@ -119,72 +120,72 @@ export function KnowledgeSettings() {
               </div>
               <div class="mono dim connection-url">{s.url}</div>
               <div class="dim connection-models">
-                Auth: {s.auth.kind === "header" ? `Header ${s.auth.header}` : s.auth.kind === "bearer" ? "Bearer" : "keine"}
+                {t("knowledge.auth")} {s.auth.kind === "header" ? `Header ${s.auth.header}` : s.auth.kind === "bearer" ? "Bearer" : "keine"}
                 {s.hasSecret ? " · Geheimnis hinterlegt ✓" : ""}
               </div>
               <div class="row connection-actions">
                 <Button disabled={busy} onClick={() => void probe(s)}>
-                  Prüfen
+                  {t("knowledge.check")}
                 </Button>
                 <Button disabled={busy} onClick={() => startEdit(s)}>
-                  Bearbeiten
+                  {t("knowledge.edit")}
                 </Button>
                 <Button disabled={busy} aria-label={`${s.label} löschen`} variant="danger" onClick={() => void run(async () => (await hubApi.removeKnowledgeSource(s.id), setMessage({ ok: true, text: "Quelle gelöscht." })))}>
-                  Löschen
+                  {t("common.delete")}
                 </Button>
               </div>
             </div>
           );
         })}
-        {sources !== null && sources.length === 0 && <div class="dim">Noch keine Wissensquelle angebunden.</div>}
+        {sources !== null && sources.length === 0 && <div class="dim">{t("knowledge.no_source")}</div>}
 
         <label>
-          Name
-          <input value={label} onInput={(e) => setLabel((e.target as HTMLInputElement).value)} placeholder="Librarian" data-testid="knowledge-label" />
+          {t("composer.name")}
+          <input value={label} onInput={(e) => setLabel((e.target as HTMLInputElement).value)} placeholder={t("knowledge.librarian")} data-testid="knowledge-label" />
         </label>
         <label>
-          MCP-Adresse
-          <input value={url} onInput={(e) => setUrl((e.target as HTMLInputElement).value)} placeholder="https://…/mcp" inputMode="url" autocapitalize="off" spellcheck={false} data-testid="knowledge-url" />
+          {t("knowledge.mcp_address")}
+          <input value={url} onInput={(e) => setUrl((e.target as HTMLInputElement).value)} placeholder={t("knowledge.mcp_placeholder")} inputMode="url" autocapitalize="off" spellcheck={false} data-testid="knowledge-url" />
         </label>
         <label>
-          Anmeldung
+          {t("knowledge.signin")}
           <select value={authKind} onChange={(e) => setAuthKind((e.target as HTMLSelectElement).value as KnowledgeAuthKind)} data-testid="knowledge-auth">
-            <option value="bearer">Bearer-Token</option>
-            <option value="header">Eigener Header</option>
-            <option value="none">Keine</option>
+            <option value="bearer">{t("knowledge.bearer_token")}</option>
+            <option value="header">{t("knowledge.own_header")}</option>
+            <option value="none">{t("knowledge.none")}</option>
           </select>
         </label>
         {authKind === "header" && (
           <label>
-            Header-Name
-            <input value={header} onInput={(e) => setHeader((e.target as HTMLInputElement).value)} placeholder="X-Api-Key" autocapitalize="off" spellcheck={false} />
+            {t("knowledge.header_name")}
+            <input value={header} onInput={(e) => setHeader((e.target as HTMLInputElement).value)} placeholder={t("knowledge.x_api_key")} autocapitalize="off" spellcheck={false} />
           </label>
         )}
         {authKind !== "none" && (
           <label>
-            Token {edit ? "(leer lassen = unverändert)" : ""}
+            {t("knowledge.token")} {edit ? "(leer lassen = unverändert)" : ""}
             <input type="password" value={secret} onInput={(e) => setSecret((e.target as HTMLInputElement).value)} placeholder={edit?.hasSecret ? "neues Token eingeben, um es zu ersetzen" : ""} autocomplete="off" data-testid="knowledge-secret" />
           </label>
         )}
         {edit?.hasSecret && authKind !== "none" && (
           <label class="row" style="gap: 8px">
             <input type="checkbox" checked={dropSecret} onChange={(e) => setDropSecret((e.target as HTMLInputElement).checked)} />
-            Token entfernen
+            {t("knowledge.remove_token")}
           </label>
         )}
         <div class="row" style="gap: 8px">
           <Button disabled={busy || !label.trim() || !url.trim() || (authKind === "header" && !header.trim())} onClick={() => void save()} variant="primary" data-testid="knowledge-save">
             {edit ? "Ändern" : "Quelle anbinden"}
           </Button>
-          {edit && <Button onClick={resetForm}>Abbrechen</Button>}
+          {edit && <Button onClick={resetForm}>{t("common.cancel")}</Button>}
         </div>
-        <div class="dim settings-intro">Das Token bleibt am Hub und wird nie wieder angezeigt.</div>
+        <div class="dim settings-intro">{t("knowledge.token_stays")}</div>
       </div>
 
       {(sources ?? []).length > 0 && (
         <div class="row" style="gap: 8px">
           <Button onClick={() => (location.hash = vaultKnowledgeHash())} variant="primary">
-            Im Notizen-Bereich benutzen
+            {t("knowledge.use_in_notes")}
           </Button>
         </div>
       )}

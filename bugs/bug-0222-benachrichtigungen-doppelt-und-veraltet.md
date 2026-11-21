@@ -1,7 +1,7 @@
 ---
 id: BUG-0222
 slug: benachrichtigungen-doppelt-und-veraltet
-status: fixed
+status: done
 severity: S2
 area: pwa
 instance: dev

@@ -1,7 +1,7 @@
 ---
 id: BUG-0243
 slug: archiv-loeschen
-status: fixed
+status: done
 severity: S3
 area: pwa, hub, core
 instance: dev

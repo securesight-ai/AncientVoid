@@ -1,13 +1,15 @@
+import { t } from "../../shared/i18n/index.ts";
+import { fmtDateTime, fmtTime, fmtNumber } from "../../shared/i18n/format.ts";
 import type { SessionInterruptionReason } from "@ancientvoid/contracts";
 import { useState } from "preact/hooks";
 import type { NormalizedEvent } from "../../shared/ws.ts";
 import { Button } from "../../shared/ui/index.ts";
 
 const REASONS: Record<SessionInterruptionReason, string> = {
-  worker_exit: "Agent-Prozess unerwartet beendet",
-  hub_restart: "Hub neu gestartet — Agent-Prozess nicht mehr vorhanden",
-  adapter_down: "Verbindung zum Adapter verloren",
-  provider_limit: "Limit des Providers erreicht",
+  worker_exit: t("session.agent_exit_unexpected"),
+  hub_restart: t("session.hub_restarted"),
+  adapter_down: t("session.adapter_lost"),
+  provider_limit: t("session.provider_limit"),
 };
 
 /** ADR-0076 Nachtrag: Starb der Zug am Kontingent/Rate-Limit (oder meldete
@@ -57,7 +59,7 @@ export function InterruptedBanner({ events, since, nativeResume, onResume, onArc
   const event = [...events].reverse().find(e => e.payload.kind === "session.interrupted");
   const boundary = [...events].reverse().find(e => e.payload.kind === "session.prompt")?.seq ?? 0;
   const blocked = [...events].reverse().find(e => e.seq > boundary && (e.payload.kind === "session.recovery_blocked" || e.payload.kind === "session.recovery_failed" || e.payload.kind === "session.start_failed" || e.payload.kind === "provider.error" || e.type === "error"));
-  const reason = String(event?.payload.reason ?? "Unterbrechung erkannt");
+  const reason = String(event?.payload.reason ?? t("session.interruption_detected"));
   const at = typeof event?.payload.since === "string" ? event.payload.since : since;
   const isLimit = event?.payload.limit === true || (failed && limitFailure(events));
   const resumesAt = typeof event?.payload.resumesAt === "string" ? event.payload.resumesAt : blockedWindow(events);
@@ -67,20 +69,20 @@ export function InterruptedBanner({ events, since, nativeResume, onResume, onArc
     try { await fn(); } catch (err) { setError(err instanceof Error ? err.message : String(err)); }
     finally { setBusy(false); }
   };
-  return <section class="interrupted-banner" role="status" aria-label={failed ? "Session benötigt Entscheidung" : "Session unterbrochen"}>
-    <strong>{failed ? "Session benötigt eine Entscheidung" : "Session unterbrochen"}</strong>
+  return <section class="interrupted-banner" role="status" aria-label={failed ? t("session.needs_decision") : t("session.interrupted")}>
+    <strong>{failed ? t("session.needs_an_decision") : t("session.interrupted")}</strong>
     {blocked && <p>{String(blocked.payload.detail ?? blocked.payload.reason ?? blocked.payload.error ?? blocked.summary)}</p>}
-    <p>{Object.hasOwn(REASONS, reason) ? REASONS[reason as SessionInterruptionReason] : reason} · <time dateTime={at}>{new Date(at).toLocaleString("de-DE")}</time></p>
-    {event?.payload.lastTurnId && <p>Letzter Zug: {String(event.payload.lastTurnId)}</p>}
-    {!failed && !nativeResume && <p>Dieser Adapter setzt ohne natives Resume fort — Weitermachen sendet eine Fortsetzungsnachricht.</p>}
-    {isLimit && autoResumeOnLimit && <p class="dim" role="status">Macht automatisch weiter, sobald das Limit frei ist{resumesAt ? <> — spätestens ab <time dateTime={resumesAt}>{new Date(resumesAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</time></> : ""}.</p>}
+    <p>{Object.hasOwn(REASONS, reason) ? REASONS[reason as SessionInterruptionReason] : reason} · <time dateTime={at}>{fmtDateTime(at)}</time></p>
+    {event?.payload.lastTurnId && <p>{t("session.last_turn")} {String(event.payload.lastTurnId)}</p>}
+    {!failed && !nativeResume && <p>{t("session.no_native_resume")}</p>}
+    {isLimit && autoResumeOnLimit && <p class="dim" role="status">{t("session.auto_resumes_when_free")}{resumesAt ? <> {t("session.at_earliest_from")} <time dateTime={resumesAt}>{fmtTime(resumesAt)}</time></> : ""}.</p>}
     <div class="row">
-      {!failed && <Button disabled={busy} onClick={() => void act(onResume)}>Weitermachen</Button>}
-      {isLimit && onAutoResumeLimit && !autoResumeOnLimit && <Button disabled={busy} onClick={() => void act(() => onAutoResumeLimit(true))}>Nach Limit automatisch weitermachen</Button>}
-      {isLimit && onAutoResumeLimit && autoResumeOnLimit && <Button disabled={busy} onClick={() => void act(() => onAutoResumeLimit(false))}>Automatik aus</Button>}
-      {onStop && <Button disabled={busy} onClick={() => void act(onStop)}>Abbrechen</Button>}
-      {onHandover && <Button disabled={busy} onClick={onHandover}>An andere Session übergeben…</Button>}
-      <Button disabled={busy} onClick={() => void act(onArchive)}>Archivieren</Button>
+      {!failed && <Button disabled={busy} onClick={() => void act(onResume)}>{t("session.continue")}</Button>}
+      {isLimit && onAutoResumeLimit && !autoResumeOnLimit && <Button disabled={busy} onClick={() => void act(() => onAutoResumeLimit(true))}>{t("session.auto_continue_after_limit")}</Button>}
+      {isLimit && onAutoResumeLimit && autoResumeOnLimit && <Button disabled={busy} onClick={() => void act(() => onAutoResumeLimit(false))}>{t("session.automation_off")}</Button>}
+      {onStop && <Button disabled={busy} onClick={() => void act(onStop)}>{t("common.cancel")}</Button>}
+      {onHandover && <Button disabled={busy} onClick={onHandover}>{t("session.hand_over_to_other")}</Button>}
+      <Button disabled={busy} onClick={() => void act(onArchive)}>{t("common.archive_btn")}</Button>
     </div>
     {error && <p role="alert">{error}</p>}
   </section>;

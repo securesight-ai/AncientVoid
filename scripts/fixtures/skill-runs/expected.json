@@ -65,11 +65,24 @@
       "chain": [],
       "invoked": []
     },
-    "commands": [],
+    "commands": [
+      {
+        "seq": 2,
+        "cmd": "npm test",
+        "error": null,
+        "exit": null
+      },
+      {
+        "seq": 3,
+        "cmd": "npm run lint",
+        "error": null,
+        "exit": null
+      }
+    ],
     "prompts": [],
     "cost": null,
     "unparsed": {
-      "shellWithoutCommand": 2,
+      "shellWithoutCommand": 0,
       "blobMissing": 0,
       "unknownShape": 0
     }
@@ -82,11 +95,24 @@
       "chain": [],
       "invoked": []
     },
-    "commands": [],
+    "commands": [
+      {
+        "seq": 2,
+        "cmd": "npm run lint",
+        "error": null,
+        "exit": null
+      },
+      {
+        "seq": 3,
+        "cmd": "echo hi",
+        "error": null,
+        "exit": null
+      }
+    ],
     "prompts": [],
     "cost": null,
     "unparsed": {
-      "shellWithoutCommand": 2,
+      "shellWithoutCommand": 0,
       "blobMissing": 0,
       "unknownShape": 0
     }

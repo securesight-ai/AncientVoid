@@ -1,7 +1,7 @@
 ---
 id: BUG-0223
 slug: os-push-trotz-offener-app
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev

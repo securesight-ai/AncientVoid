@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import type { NormalizedEvent } from "../../shared/ws.ts";
 import { visibleEventText } from "./event-text.ts";
 import { Chip } from "../../shared/ui/index.ts";
@@ -22,13 +23,13 @@ export function lastAssistantQuestion(events: readonly NormalizedEvent[]): strin
 
 export function QuickConfirm({ disabled, onAnswer }: { disabled: boolean; onAnswer: (text: string) => void }) {
   return (
-    <div class="quick-confirm" role="group" aria-label="Ja/Nein antworten">
-      <span class="dim">Agent fragt:</span>
-      <Chip disabled={disabled} onClick={() => onAnswer("Ja")}>
-        Ja
+    <div class="quick-confirm" role="group" aria-label={t("session.answer_yes_no")}>
+      <span class="dim">{t("session.agent_asks")}</span>
+      <Chip disabled={disabled} onClick={() => onAnswer(t("common.yes"))}>
+        {t("common.yes")}
       </Chip>
-      <Chip disabled={disabled} onClick={() => onAnswer("Nein")}>
-        Nein
+      <Chip disabled={disabled} onClick={() => onAnswer(t("common.no"))}>
+        {t("common.no")}
       </Chip>
     </div>
   );

@@ -1,7 +1,7 @@
 ---
 id: BUG-0237
 slug: optionsfrage-eigene-antwort
-status: fixed
+status: done
 severity: S2
 area: pwa
 instance: dev

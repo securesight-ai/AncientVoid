@@ -1,7 +1,7 @@
 ---
 id: BUG-0188
 slug: projekt-anlegen-ignoriert-host
-status: open
+status: done
 severity: S2
 area: pwa
 instance: dev
@@ -107,6 +107,11 @@ Pfad erreichen (`apps/hub/src/platform/auth.ts:52`).
 Dazu vom Nutzer gewünscht (gleicher PR, eigener Commit): der Host-DDL steht
 in der Neuanlage jetzt **zuerst** — Pfad und wählbares Repo hängen vom Host
 ab. Vorher stand er unter Pfad (E2E: Label-Index 2 statt 0).
+
+
+## Fix
+
+Behoben: PR #71 (`0ef89869`). Doku-Abschluss 2026-11-21 (Status-Nachzug).
 
 ## Handoff
 

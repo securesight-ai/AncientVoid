@@ -62,7 +62,6 @@ export const en = {
   "common.metrics": "Metrics",
   "common.inference": "Inference",
   "common.inference_title": "Token tempo of the inference engines: decode, prefill, KV reuse",
-  "common.more": "more",
   "common.n_sessions": "{n} sessions",
   "common.never": "never",
   "common.new": "new",

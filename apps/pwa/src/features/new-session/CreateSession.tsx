@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { WorkplaceChoice, type WorkplaceMode } from "./WorkplaceChoice.tsx";
 import { CustomModelDialog } from "./CustomModelDialog.tsx";
 import { takeHandOver } from "../../shared/media.ts";
@@ -279,7 +280,7 @@ export function CreateSession({
       // Neues Repo: erst die Linie einrichten (factoryctl), dann die Session auf ihr starten.
       const ob = loopInfo?.capabilities?.onboarding;
       if (loop && ob && isOnboarding(loopInfo, loop)) {
-        setOnboardNote("Linie wird angelegt … das kann eine Minute dauern.");
+        setOnboardNote(t("newsession.line_creating"));
         const made = await api.onboardLoop(loop.id, { options: onboard.values, secret: onboard.secret });
         setOnboardNote("");
         if (!made.ok) throw new Error(made.detail);
@@ -289,10 +290,10 @@ export function CreateSession({
         setLoopReload((n) => n + 1);
         // AC-P26-1 / Premortem 2: „bereit“ nur, wenn die Factory es meldet — sonst die Checkliste zeigen und nicht starten.
         if (made.ready === false) {
-          setOnboardNote(`Projekt eingerichtet, aber noch nicht bereit: ${made.detail ?? "Checkliste der Factory prüfen"}. Es wurde kein Lauf gestartet — nach der Klärung erneut „Starten“.`);
+          setOnboardNote(t("newsession.setup_incomplete", { "detail": made.detail ?? t("newsession.check_factory_list") }));
           return;
         }
-        if (made.detail) setOnboardNote(`Einrichtung: ${made.detail}`);
+        if (made.detail) setOnboardNote(t("session.setup_of", { "detail": made.detail }));
       }
       // EPIC-P26 T26.5 (ADR-0043): securesight „bestehend“ startet den
       // Factory-Lauf — Treiber (/factory mit dem Auftrag als Prompt) plus
@@ -334,27 +335,27 @@ export function CreateSession({
           Projekt und Pfad. */}
       {hosts.length > 1 && (
         <label>
-          Host
+          {t("common.host")}
           <select value={host ?? ""} onChange={(e) => setHost((e.target as HTMLSelectElement).value)}>
             {hosts.map((h) => (
               <option key={h.hostId} value={h.hostId} disabled={h.state !== "reachable"}>
                 {h.hostId}
-                {h.self ? " (dieser)" : h.state !== "reachable" ? ` (${h.state})` : ""}
+                {h.self ? t("newsession.this_suffix") : h.state !== "reachable" ? ` (${h.state})` : ""}
               </option>
             ))}
           </select>
         </label>
       )}
       <label>
-        Projekt
+        {t("newsession.project")}
         {projects === null ? (
-          <input disabled placeholder="lade…" />
+          <input disabled placeholder={t("common.loading_short")} />
         ) : projects.length > 0 ? (
           <select
             value={projects.some((p) => p.path === project) ? project : ""}
             onChange={(e) => setProject((e.target as HTMLSelectElement).value)}
           >
-            {projects.every((p) => p.path !== project) && <option value="">eigener Pfad (siehe unten)</option>}
+            {projects.every((p) => p.path !== project) && <option value="">{t("newsession.own_path_below")}</option>}
             {projects.map((p) => (
               <option key={p.path} value={p.path}>
                 {p.name}
@@ -364,11 +365,11 @@ export function CreateSession({
           </select>
         ) : rootsInfo?.configured ? (
           <span class="dim" style="font-size: calc(11px * var(--font-scale, 1))">
-            kein Git-Repo in den Wurzeln ({rootsInfo.roots.join(", ")}) — Pfad eintippen; ein noch fehlender Ordner wird beim Start angelegt
+            {t("newsession.no_git_repo_in_roots")}{rootsInfo.roots.join(", ")}{t("newsession.type_path_note")}
           </span>
         ) : (
           <span class="dim" style="font-size: calc(11px * var(--font-scale, 1))">
-            keine Projekt-Wurzeln konfiguriert — siehe docs/configuration.md, oder Pfad direkt eintippen
+            {t("newsession.no_project_roots")}
           </span>
         )}
       </label>
@@ -383,19 +384,19 @@ export function CreateSession({
             class="form-inline-grow"
             value={newProject}
             onInput={(e) => setNewProject((e.target as HTMLInputElement).value)}
-            placeholder="neues Projekt (Name)"
+            placeholder={t("newsession.new_project_name")}
           />
           <button type="button" disabled={!newProject.trim() || creating} onClick={createNewProject}>
-            {creating ? "…" : "+ Anlegen"}
+            {creating ? "…" : t("newsession.add_create")}
           </button>
         </div>
       )}
       <label>
-        Pfad
+        {t("newsession.path")}
         <input
           value={project}
           onInput={(e) => setProject((e.target as HTMLInputElement).value)}
-          placeholder="/home/user/repo"
+          placeholder={t("new-session.user_repo")}
           autocapitalize="off"
           autocorrect="off"
           spellcheck={false}
@@ -407,29 +408,29 @@ export function CreateSession({
       {(!loop || loop.id === "securesight-factory") && (
         <>
       <label>
-        {loop ? "Factory-Treiber" : "Adapter"}
+        {loop ? t("newsession.factory_driver") : t("newsession.adapter")}
         <select value={adapter} onChange={(e) => { setReplacedDriver(null); setAdapter((e.target as HTMLSelectElement).value); }}>
           {adapters.filter((a) => !loop || ["claude", "maki"].includes(a.id)).map((a) => (
             <option key={a.id} value={a.id}>
               {a.id}
-              {a.capabilities.features && !a.capabilities.features.followUp ? " (nur beobachten)" : ""}
+              {a.capabilities.features && !a.capabilities.features.followUp ? t("newsession.observe_only_suffix") : ""}
             </option>
           ))}
         </select>
       </label>
       {loop?.id === "securesight-factory" && replacedDriver && (
         <div class="tool-gate warn" role="status">
-          Factory-Treiber läuft nur mit claude oder maki — „{replacedDriver}“ wurde ersetzt.
+          {t("newsession.factory_driver_only")}{replacedDriver}{t("newsession.was_replaced")}
         </div>
       )}
       {features?.toolGate === "bypass" && (
-        <div class="tool-gate warn">{adapter}: Tools laufen ungefragt, ohne Rückfrage an dich.</div>
+        <div class="tool-gate warn">{adapter}{t("newsession.tools_run_unasked")}</div>
       )}
       {!loop && modes.length > 0 && (
         <label>
-          Modus
-          <select aria-label="Modus" value={mode} onChange={(e) => setMode((e.target as HTMLSelectElement).value)}>
-            <option value="">Standard des Hubs</option>
+          {t("common.mode")}
+          <select aria-label={t("common.mode")} value={mode} onChange={(e) => setMode((e.target as HTMLSelectElement).value)}>
+            <option value="">{t("common.hub_default")}</option>
             {modes.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -440,15 +441,15 @@ export function CreateSession({
       )}
       {modelChoice && (
         <label>
-          {loop ? "Treiber-Modell" : "Modell"}
+          {loop ? t("newsession.driver_model") : t("common.model")}
           {catalog && catalog.length > 0 ? (
             <select value={model} onChange={(e) => setModel((e.target as HTMLSelectElement).value)}>
-              <option value="">Standard des Harness</option>
+              <option value="">{t("session.harness_default")}</option>
               {catalog.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.label ?? m.id}
-                  {m.id === defaultModel ? " (Standard)" : ""}
-                  {customIds.includes(m.id) ? " · eigenes" : ""}
+                  {m.id === defaultModel ? t("newsession.default_suffix") : ""}
+                  {customIds.includes(m.id) ? t("newsession.own_suffix") : ""}
                 </option>
               ))}
             </select>
@@ -456,7 +457,7 @@ export function CreateSession({
             <input
               value={model}
               onInput={(e) => setModel((e.target as HTMLInputElement).value)}
-              placeholder="Standard des Harness"
+              placeholder={t("session.harness_default")}
               autocapitalize="off"
               autocorrect="off"
               spellcheck={false}
@@ -466,7 +467,7 @@ export function CreateSession({
       )}
       {modelChoice && (
         <Button onClick={() => setCustomOpen(true)} style="justify-self: start">
-          ＋ Eigenes Modell / Endpunkt
+          {t("newsession.add_own_model_endpoint")}
         </Button>
       )}
       {customOpen && (
@@ -486,12 +487,12 @@ export function CreateSession({
       </div>
       <div class="new-session-span">
       <label>
-        Prompt (optional)
+        {t("newsession.prompt_optional")}
         <Composer
           value={prompt}
           onChange={setPrompt}
           fieldId="new_prompt"
-          placeholder="Refactore den Auth-Flow…"
+          placeholder={t("newsession.example_prompt")}
           adapter={adapter}
           project={project}
           adapterEnhance={adapters.find((a) => a.id === adapter)?.enhance}
@@ -512,7 +513,7 @@ export function CreateSession({
       {loopBlock && loop && <div class="loop-block warn" role="alert">{loopBlock}</div>}
       {onboardNote && <div class="dim" role="status">{onboardNote}</div>}
       <Button  aria-busy={busy} onClick={submit} disabled={busy || !project || !!loopBlock || (!loop && workplaceBlocked)} variant="primary" class={busy ? "busy" : undefined}>
-        {busy ? "lädt…" : "Starten"}
+        {busy ? "lädt…" : t("newsession.start")}
       </Button>
       </div>
     </Card>

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import type { GraphGroup, GraphNode } from "@ancientvoid/contracts";
 import type { GalaxyCategory, GalaxyNeighbor } from "./galaxy-query.ts";
 import { systemLabel, type GalaxySystem } from "./galaxy-layout.ts";
@@ -35,8 +36,8 @@ export function GalaxyPanel(props: {
   const outgoing = props.neighbors.filter((n) => n.dir === "out" && (props.twoHop || n.hop === 1));
   const showLists = !props.narrow || props.sheet === "open";
   return (
-    <aside class="graph-side" data-sheet={props.narrow ? props.sheet : "open"} aria-label="Galaxie">
-      <div class="graph-filters" role="group" aria-label="Filter">
+    <aside class="graph-side" data-sheet={props.narrow ? props.sheet : "open"} aria-label={t("graph.galaxy")}>
+      <div class="graph-filters" role="group" aria-label={t("graph.filter")}>
         {(Object.keys(GROUP_LABEL) as GraphGroup[]).map((g) => (
           <button
             key={g}
@@ -49,14 +50,14 @@ export function GalaxyPanel(props: {
           </button>
         ))}
         <button type="button" class="graph-chip graph-chip-btn" aria-pressed={props.deadOnly} onClick={() => props.onDeadOnly(!props.deadOnly)}>
-          Nur tote
+          {t("graph.dead_only")}
         </button>
         <button type="button" class="graph-chip graph-chip-btn" aria-pressed={props.errorOnly} onClick={() => props.onErrorOnly(!props.errorOnly)}>
-          Nur Fehler
+          {t("graph.errors_only")}
         </button>
       </div>
       {props.categories.length > 1 && (
-        <div class="graph-filters graph-cat-filters" role="group" aria-label="Kategorien">
+        <div class="graph-filters graph-cat-filters" role="group" aria-label={t("graph.categories")}>
           {props.categories.map((c) => (
             <button
               key={c.name}
@@ -82,14 +83,14 @@ export function GalaxyPanel(props: {
         </ul>
       )}
       {selected && (
-        <section data-testid="graph-selection" aria-label="Auswahl">
+        <section data-testid="graph-selection" aria-label={t("graph.selection")}>
           {props.narrow && props.sheet === "line" && (
             <div class="graph-sheet-line">
-              <button type="button" class="graph-sheet-handle" aria-label="Liste aufklappen" onClick={() => props.onSheet("open")}>
+              <button type="button" class="graph-sheet-handle" aria-label={t("graph.expand_list")} onClick={() => props.onSheet("open")}>
                 {selected.path}
               </button>
-              <Button aria-label="Datei öffnen" onClick={() => props.onOpen(selected.path)}>
-                Öffnen
+              <Button aria-label={t("graph.open_file")} onClick={() => props.onOpen(selected.path)}>
+                {t("graph.open")}
               </Button>
             </div>
           )}
@@ -100,19 +101,19 @@ export function GalaxyPanel(props: {
                 {GROUP_LABEL[selected.group]}
                 {selected.in === 0 && !selected.entry ? " · tot" : ""}
               </p>
-              <Button aria-label="Datei öffnen" onClick={() => props.onOpen(selected.path)}>
-                Öffnen
+              <Button aria-label={t("graph.open_file")} onClick={() => props.onOpen(selected.path)}>
+                {t("graph.open")}
               </Button>
               <Button aria-pressed={props.twoHop} onClick={() => props.onTwoHop(!props.twoHop)}>
-                2 Schritte
+                {t("graph.two_steps")}
               </Button>
               <p class="graph-direction">
-                <span class="graph-dir-in">eingehend, Pfeil zur Auswahl</span>
+                <span class="graph-dir-in">{t("graph.incoming_arrow")}</span>
                 {" · "}
-                <span class="graph-dir-out">ausgehend, Pfeil zum Nachbarn</span>
+                <span class="graph-dir-out">{t("graph.outgoing_arrow")}</span>
               </p>
-              <NeighborList title="Wird verwendet von" count={selected.in} items={incoming} onSelect={props.onSelect} />
-              <NeighborList title="Verwendet" count={selected.out} items={outgoing} onSelect={props.onSelect} />
+              <NeighborList title={t("graph.used_by")} count={selected.in} items={incoming} onSelect={props.onSelect} />
+              <NeighborList title={t("graph.used")} count={selected.out} items={outgoing} onSelect={props.onSelect} />
             </>
           )}
         </section>
@@ -128,7 +129,7 @@ function NeighborList(props: { title: string; count: number; items: GalaxyNeighb
         {props.title} ({props.count})
       </h3>
       {props.items.length === 0 ? (
-        <p class="dim">keine</p>
+        <p class="dim">{t("graph.none")}</p>
       ) : (
         <ul class="graph-neighbors">
           {props.items.map((n, i) => (

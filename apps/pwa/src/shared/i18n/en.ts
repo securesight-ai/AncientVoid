@@ -4,12 +4,14 @@ import type { de } from "./de.ts";
 import { en as dock } from "./en/dock.ts";
 import { en as notifications } from "./en/notifications.ts";
 import { en as common } from "./en/common.ts";
+import { en as features } from "./en/features.ts";
 import { en as inference } from "./en/inference.ts";
 
 export const en: Record<keyof typeof de, string> = {
   ...dock,
   ...notifications,
   ...common,
+  ...features,
   ...inference,
 
   "settings.language.title": "Language",

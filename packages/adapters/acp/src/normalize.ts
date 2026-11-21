@@ -5,6 +5,11 @@ import type { EmittedEvent } from "@ancientvoid/contracts";
  * 1.5.0, PROTOCOL_VERSION 1). Text arrives in chunks; one chat message per
  * agent message, not one event per token (K8). Plans map onto the todo shape
  * the run strip already reads (`todowrite`).
+ *
+ * BUG-0247/0248: Shell-Tools liefern `command` oft erst in `tool_call_update`
+ * (opencode ACP: erstes `tool_call` nur `{cwd}`, Update dann mit `command`).
+ * Ohne Nachzug bleibt nur `cwd`/`title` im Eventstore — Kuratierung blind.
+ * `title` wird nie zu `command` (PRD §8.5).
  */
 
 interface ContentBlock {
@@ -35,6 +40,14 @@ export interface SessionUpdate {
   size?: unknown;
 }
 
+type PendingTool = {
+  name: string;
+  kind: string | null;
+  input: Record<string, unknown>;
+  title: string | null;
+  emitted: boolean;
+};
+
 function summarize(text: string, max = 200): string {
   const one = text.replace(/\s+/g, " ").trim();
   return one.length > max ? `${one.slice(0, max - 1)}…` : one;
@@ -42,6 +55,31 @@ function summarize(text: string, max = 200): string {
 
 /** dsh reports a failed command as "completed" with `[exit code: N]` at the end. */
 const NONZERO_EXIT = /\[exit code: [1-9]\d*\]\s*$/;
+
+/** ACP `rawInput` as object or JSON string — never invented from `title`. */
+export function resolveRawInput(raw: unknown): Record<string, unknown> | undefined {
+  if (typeof raw === "string") {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+    } catch {
+      /* not JSON */
+    }
+    return undefined;
+  }
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, unknown>;
+  return undefined;
+}
+
+function inputHasCommand(input: Record<string, unknown>): boolean {
+  return typeof input.command === "string" && input.command.trim().length > 0;
+}
+
+function isShellish(name: string, kind: string | null): boolean {
+  const n = name.toLowerCase();
+  // ACP `kind: execute` is the shell slot (opencode/maki/dsh); name alone covers non-kind agents.
+  return n === "bash" || n === "shell" || kind === "execute";
+}
 
 function toolResultText(update: SessionUpdate): string {
   const parts: string[] = [];
@@ -58,10 +96,26 @@ function toolResultText(update: SessionUpdate): string {
   return parts.join("\n");
 }
 
+function toolUseEvent(id: string | undefined, pending: PendingTool): EmittedEvent {
+  const { name, kind, input, title } = pending;
+  return {
+    type: "tool_use",
+    summary: summarize(`${name}(${JSON.stringify(input).slice(0, 150)})`),
+    payload: {
+      id,
+      name,
+      input,
+      kind,
+      ...(title ? { title } : {}),
+    },
+  };
+}
+
 export class UpdateMapper {
   private text = "";
   private thought = "";
   private readonly toolNames = new Map<string, string>();
+  private readonly pendingTools = new Map<string, PendingTool>();
   private readonly unknownSeen = new Set<string>();
   private readonly label: string;
 
@@ -99,27 +153,10 @@ export class UpdateMapper {
         }
         this.thought += block?.text ?? "";
         return [];
-      case "tool_call": {
-        const name = update.name ?? update.title ?? update.kind ?? "tool";
-        if (update.toolCallId) this.toolNames.set(update.toolCallId, name);
-        const input = update.rawInput && typeof update.rawInput === "object" ? update.rawInput : { title: update.title ?? name };
-        return [
-          ...this.flush(),
-          { type: "tool_use", summary: summarize(`${name}(${JSON.stringify(input).slice(0, 150)})`), payload: { id: update.toolCallId, name, input, kind: update.kind ?? null } },
-        ];
-      }
-      case "tool_call_update": {
-        if (update.status !== "completed" && update.status !== "failed") return [];
-        const content = toolResultText(update);
-        return [
-          ...this.flush(),
-          {
-            type: "tool_result",
-            summary: summarize(content) || (update.status === "failed" ? "Tool-Fehler" : "Tool fertig"),
-            payload: { toolUseId: update.toolCallId, name: update.toolCallId ? this.toolNames.get(update.toolCallId) : undefined, isError: update.status === "failed" || NONZERO_EXIT.test(content), content },
-          },
-        ];
-      }
+      case "tool_call":
+        return this.onToolCall(update);
+      case "tool_call_update":
+        return this.onToolCallUpdate(update);
       case "plan":
         return [
           ...this.flush(),
@@ -157,5 +194,77 @@ export class UpdateMapper {
         this.unknownSeen.add(kind);
         return [{ type: "system", summary: `${this.label}: unbekanntes ACP-Update "${kind.slice(0, 60)}"`, payload: { kind: "acp.unhandled_update", update: kind.slice(0, 60) } }];
     }
+  }
+
+  private onToolCall(update: SessionUpdate): EmittedEvent[] {
+    const id = update.toolCallId;
+    const name = update.name ?? update.title ?? update.kind ?? "tool";
+    if (id) this.toolNames.set(id, name);
+    const input = resolveRawInput(update.rawInput) ?? {};
+    const pending: PendingTool = {
+      name,
+      kind: update.kind ?? null,
+      input,
+      title: typeof update.title === "string" ? update.title : null,
+      emitted: false,
+    };
+    if (id) this.pendingTools.set(id, pending);
+    // Shell ohne command: warten auf tool_call_update (BUG-0247/0248).
+    if (isShellish(name, pending.kind) && !inputHasCommand(input)) {
+      return this.flush();
+    }
+    pending.emitted = true;
+    return [...this.flush(), toolUseEvent(id, pending)];
+  }
+
+  private onToolCallUpdate(update: SessionUpdate): EmittedEvent[] {
+    const id = update.toolCallId;
+    const known = id ? this.pendingTools.get(id) : undefined;
+    const name = update.name ?? known?.name ?? (id ? this.toolNames.get(id) : undefined) ?? update.title ?? update.kind ?? "tool";
+    if (id) this.toolNames.set(id, name);
+
+    const patch = resolveRawInput(update.rawInput);
+    const pending: PendingTool = known ?? {
+      name,
+      kind: update.kind ?? null,
+      input: {},
+      title: typeof update.title === "string" ? update.title : null,
+      emitted: false,
+    };
+    if (update.name) pending.name = update.name;
+    if (update.kind) pending.kind = update.kind;
+    if (typeof update.title === "string") pending.title = update.title;
+    if (patch) pending.input = { ...pending.input, ...patch };
+    if (id && known) this.pendingTools.set(id, pending);
+
+    const out: EmittedEvent[] = [...this.flush()];
+    const terminal = update.status === "completed" || update.status === "failed";
+    // Nur nachziehen, wenn wir ein tool_call gesehen haben — sonst nur tool_result
+    // (dsh-Exit-Code-Test und andere orphan updates).
+    if (known && !pending.emitted) {
+      const ready = inputHasCommand(pending.input) || !isShellish(pending.name, pending.kind) || terminal;
+      if (ready) {
+        pending.emitted = true;
+        out.push(toolUseEvent(id, pending));
+      }
+    } else if (known && pending.emitted && patch && inputHasCommand(pending.input)) {
+      out.push(toolUseEvent(id, pending));
+    }
+
+    if (!terminal) return out;
+
+    const content = toolResultText(update);
+    out.push({
+      type: "tool_result",
+      summary: summarize(content) || (update.status === "failed" ? "Tool-Fehler" : "Tool fertig"),
+      payload: {
+        toolUseId: id,
+        name: id ? this.toolNames.get(id) : undefined,
+        isError: update.status === "failed" || NONZERO_EXIT.test(content),
+        content,
+      },
+    });
+    if (id) this.pendingTools.delete(id);
+    return out;
   }
 }

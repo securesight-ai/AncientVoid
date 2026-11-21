@@ -4,12 +4,14 @@
 import { de as dock } from "./de/dock.ts";
 import { de as notifications } from "./de/notifications.ts";
 import { de as common } from "./de/common.ts";
+import { de as features } from "./de/features.ts";
 import { de as inference } from "./de/inference.ts";
 
 export const de = {
   ...dock,
   ...notifications,
   ...common,
+  ...features,
   ...inference,
 
   "settings.language.title": "Sprache",
