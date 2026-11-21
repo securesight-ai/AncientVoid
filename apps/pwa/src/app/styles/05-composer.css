@@ -292,15 +292,7 @@
   flex: 0 0 44px;
 }
 
-/* T8.4: drafts — where the text lives, and a conflict to decide. */
-.draft-state {
-  font-size: var(--text-xs);
-  padding: 2px 2px 4px;
-}
-
-.draft-state.local {
-  color: var(--warn);
-}
+/* T8.4: drafts — a conflict to decide. */
 
 .draft-conflict {
   display: grid;
@@ -311,19 +303,6 @@
   border: 1px solid var(--warn);
   background: color-mix(in srgb, var(--warn) 10%, var(--bg-elev));
   font-size: var(--text-md);
-}
-
-.reply-templates {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  padding: 2px 0 6px;
-  scrollbar-width: none;
-}
-
-.reply-templates .chip {
-  white-space: nowrap;
-  flex: 0 0 auto;
 }
 
 /* Ja/Nein-Rückfrage (QuickConfirm): eine Zeile über dem Composer, nur
@@ -340,30 +319,6 @@
   font-weight: 600;
 }
 
-.template-chip {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-/* Regel 8 (Design-System): lange Vorlagenwörter brechen um statt zu scrollen. */
-.template-chip .chip {
-  flex: 0 1 auto;
-  min-width: 0;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.template-remove {
-  background: none;
-  border: none;
-  color: var(--fg-dim);
-  min-width: 28px;
-  min-height: 32px;
-}
-
 /* EPIC-P43 T43.4: einzeilig, solange niemand schreibt; Fokus oder Text klappt die Eingabe auf.
  * „Verbessern“ braucht Text und erscheint erst dann. */
 .composer.compact .composer-input {
@@ -377,42 +332,4 @@
 
 .composer.compact .composer-more {
   display: none;
-}
-
-/*
- * ADR-0092: die gemerkte Diktat-Aufnahme — eine schmale Zeile unter dem Eingabefeld.
- * Sie ist kein Alarm und kein Floating-Widget: sie steht, bis neu erkannt oder
- * verworfen wurde.
- */
-.composer-replay {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-1) var(--space-3);
-  padding-top: var(--space-1);
-  font-size: var(--text-xs);
-}
-
-.composer-replay-hinweis {
-  color: var(--fg-dim);
-}
-
-.composer-replay-taten {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-1);
-}
-
-.composer-replay-punkt {
-  color: var(--fg-faint);
-}
-
-.composer-replay-run {
-  font-weight: 700;
-}
-
-
-.composer-replay-drop {
-  color: var(--fg-faint);
 }

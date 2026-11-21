@@ -185,13 +185,13 @@ test.describe("Lokale Spracherkennung (T10.2)", () => {
     expect(received.length).toBe(before);
   });
 
-  test.describe("Neu-Erkennung der gemerkten Aufnahme (ADR-0092)", () => {
+  test.describe("Neu-Erkennung der gemerkten Sprachnachricht (ADR-0092, Nachtrag)", () => {
     test.beforeEach(() => {
       kaputt = false;
       antwort = "Starte die Tests im Worktree";
     });
 
-    test("die gemerkte Aufnahme wird neu erkannt und ersetzt den unveraenderten Text", async ({ app, hub }) => {
+    test("die Sprachnachricht in der Ablage wird neu erkannt und ersetzt den unveraenderten Text", async ({ app, hub }) => {
       const id = await hub.createSession({ adapter: "opencode", prompt: "Start" });
       await app.goto(`${hub.origin}/#/sessions/${id}`);
       await app.getByPlaceholder("Antworten…").click();
@@ -201,32 +201,18 @@ test.describe("Lokale Spracherkennung (T10.2)", () => {
       await app.waitForTimeout(1200);
       await fab.click();
       await expect(app.getByPlaceholder("Antworten…")).toHaveValue("Starte die Tests im Worktree");
-      const zeile = app.getByTestId("stt-replay");
-      await expect(zeile).toBeVisible();
-      await expect(zeile).toContainText("Aufnahme gemerkt");
-      // Die Zeile gehoert zum Eingabefeld — sie darf nicht irgendwo ueber dem Chat schweben.
-      const lage = await app.evaluate(() => {
-        const zeile = document.querySelector('[data-testid="stt-replay"]')!.getBoundingClientRect();
-        const feld = document.querySelector('textarea[placeholder="Antworten…"]')!.getBoundingClientRect();
-        return {
-          unterDemFeld: zeile.top >= feld.bottom - 1,
-          links: Math.round(zeile.left),
-          rechts: Math.round(window.innerWidth - zeile.right),
-          hoehe: Math.round(zeile.height),
-        };
-      });
-      expect(lage.unterDemFeld).toBe(true);
-      expect(lage.links).toBeGreaterThanOrEqual(8);
-      expect(lage.rechts).toBeGreaterThanOrEqual(8);
-      expect(lage.hoehe).toBeLessThan(60);
+      // Nutzerentscheidung 21.11.2026: keine Zeile am Eingabefeld — die Ablage trägt die Aufnahme.
+      await app.getByTestId("clipboard-open").click();
+      const zeile = app.getByTestId("shelf-voice-row");
+      await expect(zeile).toContainText("Sprachnachricht");
       const vor = received.length;
       antwort = "Starte die Tests — jetzt mit Protokoll";
-      await app.getByTestId("stt-replay-run").click();
+      await app.getByTestId("shelf-voice-run").click();
       await expect(app.getByPlaceholder("Antworten…")).toHaveValue("Starte die Tests — jetzt mit Protokoll");
       expect(received.length).toBe(vor + 1);
-      // Die wartende Aufnahme ist verbraucht; was bleibt, ist der ehrliche Hinweis.
-      await expect(app.getByTestId("stt-replay")).toHaveCount(0);
-      await expect(app.getByTestId("stt-replay-note")).toContainText("ersetzt");
+      // Die wartende Aufnahme ist verbraucht; was bleibt, ist der ehrliche Hinweis im Blatt.
+      await expect(app.getByTestId("shelf-voice-row")).toHaveCount(0);
+      await expect(app.getByTestId("shelf-note")).toContainText("ersetzt");
     });
 
     test("ein fehlgeschlagener Durchlauf wirft die Aufnahme nicht weg — spaeter laeuft sie doch", async ({ app, hub }) => {
@@ -240,11 +226,12 @@ test.describe("Lokale Spracherkennung (T10.2)", () => {
       await fab.click();
       await expect(app.locator('[data-testid=nyx-fab-toast] .err')).toBeVisible();
       await expect(app.getByPlaceholder("Antworten…")).toHaveValue("");
-      await expect(app.getByTestId("stt-replay")).toBeVisible();
+      await app.getByTestId("clipboard-open").click();
+      await expect(app.getByTestId("shelf-voice-row")).toContainText("Sprachnachricht");
       kaputt = false;
       antwort = "Doch, jetzt klar";
       const vor = received.length;
-      await app.getByTestId("stt-replay-run").click();
+      await app.getByTestId("shelf-voice-run").click();
       await expect(app.getByPlaceholder("Antworten…")).toHaveValue("Doch, jetzt klar");
       expect(received.length).toBe(vor + 1);
     });

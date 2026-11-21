@@ -13,7 +13,6 @@ import type { AttachmentRecord } from "../../shared/api.ts";
 import { Button } from "../../shared/ui/index.ts";
 import { openClipboardShelf } from "../../shared/clipboard-shelf.ts";
 import { ShelfGlyph, useShelfCount } from "../clipboard/ClipboardShelf.tsx";
-import { discardReplay, reRecognize, useReplay } from "../stt/replay-recognize.ts";
 
 /** T1.5-8: enhance.ts only has a real implementation for these adapters —
  * never offer the button for an adapter it can't actually enhance for
@@ -110,29 +109,11 @@ export function Composer({
   // statt Mikro-Feld; im expanded-Zustand setzt CSS die Höhe, Auto-Grow
   // greift dann nicht ein (offsetHeight ist schon groß).
   const [expanded, setExpanded] = useState(false);
-  // ADR-0090: die Ablage atmet mit — der Knopf zeigt, wie viele Stufen da sind.
+  // ADR-0090/0092: die Ablage atmet mit — der Knopf zeigt, wie viele Einträge (Stufen
+  // und Sprachnachrichten) da sind.
   const shelfCount = useShelfCount();
   // EPIC-P43 T43.4: einzeilig, bis das Feld zum ersten Mal den Fokus bekommt.
   const [touched, setTouched] = useState(false);
-  // ADR-0092: die gemerkte Diktat-Aufnahme — „neu erkennen“ gehoert zum Eingabefeld,
-  // denn dort liegt nach dem Diktat die Aufmerksamkeit (nicht schwebend ueber dem Chat).
-  const replay = useReplay();
-  const [replayNote, setReplayNote] = useState("");
-  useEffect(() => {
-    if (!replayNote) return;
-    const t = setTimeout(() => setReplayNote(""), 12_000);
-    return () => clearTimeout(t);
-  }, [replayNote]);
-  const replayErneut = async (): Promise<void> => {
-    if (!replay) return;
-    setReplayNote("erkennt neu …");
-    setReplayNote((await reRecognize(replay)).note);
-  };
-  const replayWeg = async (): Promise<void> => {
-    if (!replay) return;
-    setReplayNote("");
-    await discardReplay(replay);
-  };
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -330,22 +311,6 @@ export function Composer({
         }}
         title={onSubmit ? "⌘/Ctrl+Enter senden" : undefined}
       />
-      {(replay || replayNote) && (
-        <div class="composer-replay" data-testid={replay ? "stt-replay" : "stt-replay-note"}>
-          <span class="composer-replay-hinweis">
-            {replay
-              ? `Aufnahme gemerkt (${replay.seconds} s${replay.failed ? ", Erkennung fehlgeschlagen" : ""})`
-              : replayNote}
-          </span>
-          {replay && (
-            <span class="composer-replay-taten">
-              <button type="button" class="link-btn composer-replay-run" data-testid="stt-replay-run" onClick={() => void replayErneut()}>neu erkennen</button>
-              <span class="composer-replay-punkt" aria-hidden="true">·</span>
-              <button type="button" class="link-btn composer-replay-drop" data-testid="stt-replay-drop" onClick={() => void replayWeg()}>weg</button>
-            </span>
-          )}
-        </div>
-      )}
       {suggestions.length > 0 && (
         <div class="composer-notice" role="listbox" aria-label="Commands">
           {suggestions.map((c, i) => (
@@ -425,8 +390,8 @@ export function Composer({
           class={shelfCount > 0 ? "composer-shelf has-items" : "composer-shelf"}
           data-testid="clipboard-open"
           onClick={openClipboardShelf}
-          aria-label={shelfCount > 0 ? `Ablage öffnen, ${shelfCount} Stufen` : "Ablage öffnen, noch leer"}
-          title={shelfCount > 0 ? `Zwischenablage-Ablage (${shelfCount} Stufen)` : "Zwischenablage-Ablage — noch nichts kopiert"}
+          aria-label={shelfCount > 0 ? `Ablage öffnen, ${shelfCount} Einträge` : "Ablage öffnen, noch leer"}
+          title={shelfCount > 0 ? `Zwischenablage-Ablage (${shelfCount} Einträge)` : "Zwischenablage-Ablage — noch nichts kopiert"}
         >
           <ShelfGlyph />
           {shelfCount > 0 && <span class="shelf-badge" data-testid="clipboard-count" aria-hidden="true">{shelfCount > 9 ? "9+" : shelfCount}</span>}

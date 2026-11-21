@@ -35,7 +35,7 @@ test.describe("Mehrstufige Zwischenablage (ADR-0090)", () => {
       range.selectNodeContents(best);
       sel?.removeAllRanges();
       sel?.addRange(range);
-      document.dispatchEvent(new Event("pointerup"));
+      root.dispatchEvent(new Event("pointerup", { bubbles: true }));
       return best.textContent ?? "";
     });
     expect(selected.trim().length).toBeGreaterThan(9);
@@ -75,7 +75,7 @@ test.describe("Mehrstufige Zwischenablage (ADR-0090)", () => {
       range.selectNodeContents(best);
       sel?.removeAllRanges();
       sel?.addRange(range);
-      document.dispatchEvent(new Event("pointerup"));
+      root.dispatchEvent(new Event("pointerup", { bubbles: true }));
       void node;
     });
 

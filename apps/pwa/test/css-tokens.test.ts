@@ -100,6 +100,7 @@ function counts(): Counts {
     "(min-width: 760px)",
     "(max-height: 430px)",
     "(max-height: 520px)",
+    "(min-height: 521px)",
     "(max-height: 699px)",
     "(min-height: 700px)",
   ]);

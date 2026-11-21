@@ -68,6 +68,7 @@ export function SoundSettings() {
                 onClick={() => soundPlayer.preview(cat, row.variant)}
                 disabled={!row.enabled}
                 aria-label={`Vorschau ${LABELS[cat]}`}
+                title={`Vorschau ${LABELS[cat]}`}
               >
                 ▶
               </Button>

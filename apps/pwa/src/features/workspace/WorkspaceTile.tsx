@@ -105,7 +105,7 @@ export function WorkspaceTile({
         </div>
       )}
       {tileRef?.content && tileRef.content.kind !== "session" ? (
-        <ContentCard card={tileRef} active={active} onClose={onClose} onSwitchToken={onSwitchToken} />
+        <ContentCard card={tileRef} active={active} onClose={onClose} onSwitchToken={onSwitchToken} onPopout={onPopout ? () => onPopout() : undefined} />
       ) : !tileRef ? (
         <div class="ui-empty tile-empty">
           Kachel {index + 1} ist frei — Session links wählen

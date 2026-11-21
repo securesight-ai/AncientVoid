@@ -48,7 +48,7 @@ test.describe("Kleinkram-Regeln (EPIC-P43 T43.5)", () => {
     const bar = app.locator(".subtabs-wrap").first();
     await expect(bar.getByRole("button", { name: /^Änderungen/ })).toHaveCount(0);
     await sessionTab(app, "Änderungen");
-    const empty = app.locator(".empty-state").first();
+    const empty = app.locator(".ui-empty").first();
     await expect(empty).toContainText("noch nichts geändert");
     await empty.getByRole("button", { name: "Zum Chat" }).click();
     await expect(bar.getByRole("button", { name: /^Chat/ })).toHaveAttribute("aria-current", "page");
@@ -88,8 +88,8 @@ test.describe("Kleinkram-Regeln (EPIC-P43 T43.5)", () => {
     const head = app.locator(".changes-head").first();
     await expect(head).toContainText("1 Datei");
     // Die Ansicht selbst — das Antwortfeld darunter mit „Senden“ gehört nicht zu ihr.
-    await expect(app.locator(".tail-scroll").first().locator(".btn.primary")).toHaveCount(1);
-    const primary = head.locator(".btn.primary");
+    await expect(app.locator(".tail-scroll").first().locator(".ui-button--primary")).toHaveCount(1);
+    const primary = head.locator(".ui-button--primary");
     await expect(primary).toHaveText("Ins Projekt übernehmen");
     const [btn, box] = await Promise.all([primary.boundingBox(), head.boundingBox()]);
     expect(btn!.x + btn!.width).toBeGreaterThan(box!.x + box!.width - 4);
@@ -201,7 +201,7 @@ test.describe("Kleinkram-Regeln (EPIC-P43 T43.5)", () => {
         if (el.scrollWidth - el.clientWidth > 2) bad.push(`${el.tagName}.${el.className}`.slice(0, 90));
       }
       // Regel 8 umgesetzte Stellen: die Umbruch-Container dürfen nicht auf Scroll zurückfallen.
-      for (const s of [".filter-bar", ".reply-templates", ".attach-cmd-row", ".run-meta", ".desktop-cmd"]) {
+      for (const s of [".filter-bar", ".attach-cmd-row", ".run-meta", ".desktop-cmd"]) {
         for (const el of document.querySelectorAll<HTMLElement>(s)) {
           if (el.getBoundingClientRect().width === 0) continue;
           const ox = getComputedStyle(el).overflowX;
@@ -218,12 +218,8 @@ test.describe("Kleinkram-Regeln (EPIC-P43 T43.5)", () => {
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await expect(app.getByText(new RegExp(lang.slice(0, 20))).first()).toBeVisible();
     await app.getByPlaceholder("Antworten…").fill(lang);
-    // Die Vorlagenzeile muss langes Wort umbrechen, statt horizontal zu scrollen.
-    await app.getByRole("button", { name: "+ als Vorlage merken" }).click();
-    await app.getByPlaceholder("Antworten…").fill("");
-    await expect(app.locator(".reply-templates").getByRole("button", { name: lang, exact: true })).toBeVisible();
     expect(await scan()).toEqual([]);
-    // Befehle: Vorlagen- und Befehlszeilen.
+    // Befehle: Befehlszeilen.
     await sessionTab(app, "Befehle");
     expect(await scan()).toEqual([]);
     // Einstellungen: von der Übersicht aus (dockGo- Weg wie in Regel 5).

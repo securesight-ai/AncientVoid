@@ -143,7 +143,10 @@ function TokenGate({ onReady, rejected }: { onReady: () => void; rejected: strin
   );
 }
 
-const WIDE = "(min-width: 700px)";
+/** Ab 700 px teilen sich PC und Tablet den Kachel-Arbeitsplatz (dabe85d5) — aber nur
+ * bei nutzbarer Höhe: im Handy-Querformat (≤ 520 px, BUG-0053) bleibt das Mobil-Layout
+ * mit seiner Verdichtung, sonst frisst der Kachelkopf den Verlauf auf. */
+const WIDE = "(min-width: 700px) and (min-height: 521px)";
 const WORKSPACE_KEY = "ancientvoid.workspace";
 const LIST_COLLAPSED_KEY = "ancientvoid.listCollapsed";
 

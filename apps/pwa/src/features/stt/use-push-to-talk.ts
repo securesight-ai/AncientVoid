@@ -68,8 +68,8 @@ export function usePushToTalk() {
     void sttStatus().then(setLocalStt);
   }, []);
 
-  // ADR-0092: die Rohaufnahme bleibt auf dem Geraet — gemerkt wird hier, die
-  // Zeile mit „neu erkennen“ sitzt beim Eingabefeld (replay-recognize.ts).
+  // ADR-0092 (Nachtrag): die Rohaufnahme bleibt auf dem Geraet — als Sprachnachricht
+  // in der Ablage, von dort aus neu erkennbar (replay-recognize.ts).
   const gemerkt = (aufnahme: { blob: Blob; seconds: number; text?: string; engine?: string; failed?: boolean; reason?: string }) =>
     saveRecording({ blob: aufnahme.blob, mime: aufnahme.blob.type || "audio/webm", seconds: aufnahme.seconds, text: aufnahme.text, engine: aufnahme.engine, failed: aufnahme.failed, reason: aufnahme.reason });
 
@@ -180,7 +180,7 @@ export function usePushToTalk() {
       const t = await rec.transcribe(blob);
       if (t.text) {
         await applyText(t.text, `lokal · ${t.engine} · ${(t.k6Ms / 1000).toFixed(1)} s${streamNotice ? " · Live-Vorschau nicht verfügbar" : ""}`);
-        // ADR-0092: die Aufnahme bleibt — fuer eine spaetere Neu-Erkennung.
+        // ADR-0092: die Aufnahme bleibt — fuer eine spaetere Neu-Erkennung aus der Ablage.
         await gemerkt({ blob, seconds: dauer, engine: t.engine, text: t.text });
       } else {
         setError("Nichts erkannt — nochmal versuchen.");
@@ -203,8 +203,8 @@ export function usePushToTalk() {
               ? `${grund} — eigene Erkennung nicht erreichbar; beim nächsten Drücken übernimmt die Browser-Erkennung.`
               : `${grund} — eigene Erkennung ist gerade nicht erreichbar.`,
       );
-      // ADR-0092: der Fehlversatz war umsonst, waere die Aufnahme weg — sie bleibt liegen
-      // und darf neu erkannt werden, sobald die Erkennung wieder laeuft.
+      // ADR-0092: der Fehlversuch bleibt als Sprachnachricht liegen und darf neu
+      // erkannt werden, sobald die Erkennung wieder laeuft.
       if (blob) await gemerkt({ blob, seconds: dauer, failed: true, reason: grund });
     } finally {
       setListening(false);

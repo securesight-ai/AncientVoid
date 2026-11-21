@@ -2,7 +2,7 @@
 
 **Art:** referenz
 
-**Stand:** 2026-11-15 (P43-Basis, P43.5-Abschluss integriert) · **Zweck:** Leitplanke E10 — beim Umbau der Oberfläche
+**Stand:** 2026-11-21 (P43-Basis, P43.5-Abschluss integriert; S27/S29 nach Nutzerentscheidung vom 21.11.2026 entfallen — „nehmen zu viel Platz weg und lenken ab“; S79 kehrt am selben Tag als Ablage-Sprachnachricht zurück) · **Zweck:** Leitplanke E10 — beim Umbau der Oberfläche
 geht keine Funktion verloren. · **Gate:** [`e2e/specs/funktionsinventar.spec.ts`](../e2e/specs/funktionsinventar.spec.ts)
 
 Jede Zeile ist eine Funktion, die ein Mensch in der PWA erreichen kann. Die letzte Spalte
@@ -91,7 +91,7 @@ Werkzeugseiten füllen die Detailspalte.
 | G56 | Oberflächengröße (Strg +/−/0, Strg+Rad) | Tastatur bzw. Einstellungen | — | spec:oberflaeche.spec.ts |
 | G57 | Querformat am Handy: Drehen baut um (Liste links, Laufleiste aus, Chat bleibt Leshöhe) | Gerät drehen | BUG-0053, BUG-0181 | spec:querformat.spec.ts |
 | G58 | Neue Session: Skill oder Agent wählen | Neue Session → „+ Skill/Agent“ | — | inventar |
-| G59 | Provider-Status über „Mehr“ (Handy, Tablet) | Dock „Mehr“ → „Provider-Status“ | — | inventar |
+| G59 | Provider-Status über „Mehr“ (Handy; Tablet direkt im Dock) | Dock „Mehr“ → „Provider-Status“; ab 700 px direkter Dock-Eintrag | — | inventar |
 | G60 | Suchen im Dock (öffnet das Befehlsfeld) | Dock „Suchen“ | T43.6 | inventar |
 | G61 | Freigabe auf der Karte entscheiden (Erlauben/Ablehnen) | Start → Karte unter „Du bist dran“ | — | spec:start-warteschlange.spec.ts |
 | G62 | „Ruhig“ auf- und zuklappen | Start → Gruppenkopf „Ruhig“ | — | spec:start-warteschlange.spec.ts |
@@ -126,12 +126,12 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S03 | Bericht | „Mehr“ → „Bericht“; auch unter dem Diff in „Änderungen“ | T43.5 | inventar |
 | S04 | Diff | Reiter „Änderungen“ (mit Zahl der Dateien); ohne Änderungen „Mehr“ → „Änderungen“ mit Satz und „Zum Chat“ | T43.5 | inventar |
 | S05 | Repo-Graph | „Mehr“ → „Graph“ | T43.4 | inventar |
-| S06 | Datei | „Mehr“ → „Datei“; ohne geöffnete Datei Satz und „Dateibaum öffnen“ | T43.5 | inventar |
+| S06 | Datei | „Mehr“ → „Datei“ — Code-Fläche der Session als eigene Karte; der Dateibaum hängt am Reiter „Befehle“ | T43.5 | inventar |
 | S07 | GitLab | „Mehr“ → „GitLab“ | T43.4 | inventar |
 | S08 | Suche | „Mehr“ → „Suche“ | T43.4 | inventar |
 | S09 | Code | Reiter „Dateien“ | T43.5 | inventar |
 | S10 | Umgebung | „Mehr“ → „Umgebung“ | T43.4 | inventar |
-| S11 | Zurück zur Übersicht (Handy/Tablet) | „←“ im Kopf | — | inventar |
+| S11 | Zurück zur Übersicht (Handy/Tablet) | „←“ im Kopf; ab 700 px Dock „Start“ | — | inventar |
 | S12 | Stop | Taste im Kopf | T43.4 | inventar |
 | S13 | Umbenennen | „⋯“ → „Umbenennen“ | — | inventar |
 | S14 | Anheften/Lösen | „⋯“ → „Anheften“ | — | inventar |
@@ -145,9 +145,7 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S24 | Spracheingabe | Composer → Mikrofon | T43.4 | inventar |
 | S25 | Prompt verbessern; vorhandenen Skill anzeigen/anpassen | Composer antippen → „Verbessern“: lokales Modell zuerst, Adapter-Fallback mit Grund, Projektkontext; Empfehlung → „Anpassen“ → Vorschlag oder Editor → „Datei speichern“ (Konfliktschutz) | T43.4, T68.2–T68.7 | inventar |
 | S26 | Slash-Commands | „/“ im Composer | — | inventar |
-| S27 | Antwortvorlagen (Schnellantworten) | über dem Composer | T43.4 | inventar |
 | S28 | Modus und Modell | über dem Composer | T43.4 | inventar |
-| S29 | Entwurfsstatus | Zeile über dem Composer beim Tippen | T43.4 | inventar |
 | S30 | Steuerung ein- und ausblenden | „▾“/„▴“ | T43.4 | inventar |
 | S31 | Kopieren je Ereignis | Taste am Ereignis | T43.5 | inventar |
 | S32 | Dateibaum | Reiter „Dateien“ → „Dateibaum“; ohne Session globales „Mehr“ → „Dateibaum“ (PC: Leiste) | T43.5 | inventar |
@@ -198,7 +196,7 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S76 | Installierter Stand: Modus, Fenster-Ausrichtung, Winkel, Manifest, Worker-Stufe; dreht das Gerät nicht, erzwingt die App Querformat oder nennt die Abweisung | Einstellungen → Geräte | BUG-0186 | spec:installations-stand.spec.ts |
 | S77 | Ein langes Gespräch bleibt bis zu seinem Anfang lesbar: hochscrollen (oder der Knopf „frühere Einträge“) holt die früheren, die Lesestelle hält ihre Position | Session → Chat oder Verlauf → nach oben scrollen | BUG-0211 | spec:chat-aeltere-laden.spec.ts |
 | S78 | Kopiertes bleibt greifbar: die Ablage hält sechs sichtbare Stufen (Diktat, Markierung, Befehl, Eintrag, Kennung) und fügt sie wieder ein — Token bleiben draußen | Composer → Ablage-Knopf; oder Text markieren/kopieren | ADR-0090 | spec:clipboard-shelf.spec.ts |
-| S79 | Die Diktat-Aufnahme bleibt auf dem Gerät liegen (drei neueste, höchstens 12 MB) und lässt sich neu erkennen — auch nach einem Ausfall der eigenen Erkennung; ersetzt wird nur ein unveränderter Text | Nyx-FAB → „Aufnahme gemerkt — neu erkennen“ | ADR-0092 | spec:voice-local.spec.ts |
+| S79 | Diktat-Aufnahmen bleiben als Sprachnachricht in der Ablage (drei neueste, höchstens 12 MB) und lassen sich neu erkennen — auch nach einem Ausfall der eigenen Erkennung; ersetzt wird nur ein unveränderter Text | Composer → Ablage → Sprachnachricht → „neu erkennen“ | ADR-0092 (Nachträge) | spec:voice-local.spec.ts |
 | S80 | Die Ablage nimmt beim Wiederkommen auch extern Kopiertes auf — Text als „Andere App“, Screenshots als Bild-Stufe mit Vorschaubild — und hängt ein solches Bild an die Session an | Ablage-Blatt; automatisch beim Fokus | ADR-0093 | spec:clipboard-aussen.spec.ts |
 | S81 | Welche Spracheingabe ein Gerät benutzt, ist pro Gerät wählbar — Automatisch, Lokal (Hub) oder Browser (meist Cloud) — mit ehrlicher Quellenangabe, und „Lokal“ fällt nie still in die Cloud zurück | Mikro-Knopf gedrückt halten (Menü) oder Einstellungen → Spracheingabe | ADR-0095 (mit Nachtrag) | spec:stt-modus.spec.ts |
 

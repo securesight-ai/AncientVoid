@@ -45,12 +45,11 @@ test.describe("Dock im Querformat", () => {
     await expect(app.getByRole("button", { name: "Senden" })).toBeEnabled();
   });
 
-  test("im Hochformat bleibt alles wie es war (Vorlagen und Modus/Modell sichtbar)", async ({ app, hub }) => {
+  test("im Hochformat bleibt alles wie es war (Modus/Modell sichtbar)", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "claude", prompt: "Hallo" });
     await hub.until(async () => (await hub.events(id)).some((e) => e.type === "assistant"), "Antwort", 20_000);
     await app.setViewportSize({ width: 412, height: 915 });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
-    await expect(app.locator(".reply-templates")).toBeVisible();
     await expect(app.getByLabel("Modus")).toBeVisible();
   });
 });

@@ -150,9 +150,10 @@
   line-height: 1;
 }
 
-/* BUG-0234: ab 700 px ist die Session-Liste dauerhaft sichtbar (TabletSplit
- * bzw. Split) — der Zurück-Pfeil neben dem Titel gehört nur auf das Handy. */
-@media (min-width: 700px) {
+/* BUG-0234: ab 700 px ist die Session-Liste dauerhaft sichtbar (Split) — der Zurück-Pfeil
+ * neben dem Titel gehört nur auf das Handy. Ausnahme Handy-Querformat (Höhe ≤ 520 px,
+ * BUG-0053): dort gilt das Mobil-Layout, der Pfeil bleibt. */
+@media (min-width: 700px) and (min-height: 521px) {
   .session-topbar .back-btn {
     display: none;
   }
@@ -213,8 +214,10 @@
   min-width: 0;
 }
 
+/* Nicht selbst positioniert: das Menü ankert an der Topbar (sticky, TILE-breit) —
+ * am 44-px-⋯ verankert, lief es am Tablet aus der schmalen Kachel heraus in die
+ * Listenspalte und wurde dort unbedienbar (Inventar S13, 21.11.2026). */
 .session-menu {
-  position: relative;
   flex: 0 0 auto;
 }
 
