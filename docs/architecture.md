@@ -42,8 +42,8 @@ packages/                        Bibliotheken
                                  browser, code, commands, connections,
                                  custom-models, desktop, devices, diagnostics,
                                  discovery, fleet, forge, gatekeeper, git-graph,
-                                 graph, handover, harness, identity, loops,
-                                 media, notifications, observability, team,
+                                 graph, handover, harness, identity, inference,
+                                 loops, media, notifications, observability, team,
                                  push, reporting, reviews, runs, sessions,
                                  skills, statistics, vault, workspace
   core/src/platform/             db, eventstore, config, logger, metrics
@@ -62,6 +62,13 @@ Moduls teilen sich große Klassen nach Verantwortung auf (Beispiel
 `core/modules/sessions`: `session-manager.ts` orchestriert,
 `approval-flow.ts` und `budget-guard.ts` sehen ihn nur über eine schmale
 Host-Schnittstelle).
+
+Beispiel für ein Modul, das nur liest und misst: `core/modules/inference`
+(EPIC-P79, ADR-0102) beprobt lokale Inferenz-Engines (Strata, Halogen,
+llama.cpp) in eigener Folge als `aimetrics` (P59) — Request-Historie als JSONL
+(K7, quellen-getaggt), Perzentile über eigene Requests, Gegenwerte nur als
+Gegenwerte. `null` heißt „Engine meldet nicht“ und wird nie zu `0`; die Antwort
+ist vertraglich gekappt (12 Request-Zeilen, 120 Verlaufspunkte, 8 Hinweise).
 
 ## Pakete & Abhängigkeitsrichtung
 
