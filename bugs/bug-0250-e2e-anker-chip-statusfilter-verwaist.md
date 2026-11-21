@@ -1,7 +1,7 @@
 ---
 id: BUG-0250
 slug: e2e-anker-chip-statusfilter-verwaist
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
@@ -66,13 +66,16 @@ Expected: visible, Timeout: 10000s
 
 `apps/pwa/src/shared/ui/Chip.tsx:20` — Klassenliste `ui-chip … active …`
 seit der Baustein-Migration (EPIC-P63 T63.9, d70e9c8b). Betroffene Anker:
-`.chip.status-filter` in `e2e/specs/overview-shell.spec.ts:126,358-Umfeld`
-sowie der Statusfilter-Chip in `Dashboard.tsx` („nur wartende/aktive", selbe
-Klasse). Nach T63.6-Regel („Anker werden data-testid") sollte der Fix den
-Baustein-Anker über `data-testid` führen, nicht die alte Klasse reanimieren.
+`.chip.status-filter` in `e2e/specs/overview-shell.spec.ts` sowie der
+Statusfilter-Chip in `Dashboard.tsx`. Nach T63.6 („Anker werden data-testid")
+kein Zurück zur Klasse `chip`.
+
+## Fix
+
+`data-testid="status-filter"` an den Filter-Chips; E2E-Locator angepasst.
 
 ## Handoff
 
 - [x] Datei im Index [`README.md`](README.md)
-- [ ] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`)
-- [ ] `bugfix` oder offen lassen
+- [x] GitHub-Issue [#252](https://github.com/securesight-ai/AncientVoid/issues/252)
+- [x] `bugfix`

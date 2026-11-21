@@ -352,12 +352,15 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
                 sessionStorage.removeItem("ancientvoid.overviewFilter");
                 setStatusFilter("all");
               }}
-             active class="status-filter">
+              active
+              class="status-filter"
+              data-testid="status-filter"
+            >
               {statusFilter === "waiting" ? t("common.only_waiting") : t("common.only_active")} ✕
             </Chip>
           )}
           {hostFilter && (
-            <Chip onClick={() => setHostFilter(null)} active class="status-filter">
+            <Chip onClick={() => setHostFilter(null)} active class="status-filter" data-testid="status-filter">
               {t("common.host_colon")} {hostLabel(hosts, hostFilter)} ✕
             </Chip>
           )}
