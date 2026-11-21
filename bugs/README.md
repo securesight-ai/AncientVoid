@@ -281,9 +281,9 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 | [BUG-0246](bug-0246-session-delete-orphan-projekt.md) | Session-Löschen scheitert an toten Projekten; Reste bleiben | fixed | S2 | core, hub | [#240](https://github.com/securesight-ai/AncientVoid/issues/240) |
 | [BUG-0247](bug-0247-maki-normalizer-ohne-bash-command.md) | maki `bash`-tool_use ohne `command` (nur `title`) — Kuratierung blind | open | S3 | adapters | [#242](https://github.com/securesight-ai/AncientVoid/issues/242) |
 | [BUG-0248](bug-0248-opencode-normalizer-ohne-shell-command.md) | opencode `shell`/`bash`-tool_use ohne `command` (nur `cwd`) — Kuratierung blind | open | S3 | adapters | [#243](https://github.com/securesight-ai/AncientVoid/issues/243) |
-| [BUG-0249](bug-0249-continue-link-faellt-auf-root.md) | Continue-Link im Bericht fällt auf `#/` zurück (nur der Link, nicht das Kommando) | open | S3 | pwa | [#251](https://github.com/securesight-ai/AncientVoid/issues/251) |
-| [BUG-0250](bug-0250-e2e-anker-chip-statusfilter-verwaist.md) | E2E-Anker `.chip.status-filter` verwaist nach Baustein-Migration (Chip rendert `ui-chip`) | open | S3 | pwa, e2e | [#252](https://github.com/securesight-ai/AncientVoid/issues/252) |
-| [BUG-0251](bug-0251-gefunden-einstieg-doppelt.md) | „Gefunden“-Einstieg doppelt in der Übersicht (Tab + Chip) | open | S4 | pwa | [#253](https://github.com/securesight-ai/AncientVoid/issues/253) |
+| [BUG-0249](bug-0249-continue-link-faellt-auf-root.md) | Continue-Link im Bericht fällt auf `#/` zurück (nur der Link, nicht das Kommando) | done | S3 | pwa | [#251](https://github.com/securesight-ai/AncientVoid/issues/251) |
+| [BUG-0250](bug-0250-e2e-anker-chip-statusfilter-verwaist.md) | E2E-Anker `.chip.status-filter` verwaist nach Baustein-Migration (Chip rendert `ui-chip`) | done | S3 | pwa, e2e | [#252](https://github.com/securesight-ai/AncientVoid/issues/252) |
+| [BUG-0251](bug-0251-gefunden-einstieg-doppelt.md) | „Gefunden“-Einstieg doppelt in der Übersicht (Tab + Chip) | done | S4 | pwa | [#253](https://github.com/securesight-ai/AncientVoid/issues/253) |
 
 Die nächste freie Nummer ist **0244** (gemerged, 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
 0183 mit PR #50, 0184 mit PR #48 und 0185 mit dem Nightly-Fix aus den Issues #54–#57 gemerged,

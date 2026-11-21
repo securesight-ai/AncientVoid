@@ -124,10 +124,11 @@ test.describe("Übersichts-Ansichten (EPIC-P47)", () => {
     await app.locator("[data-testid=overview-switch-btn]", { hasText: "Hosts" }).click();
     await app.locator(".host-card .session-open").first().click();
     await expect(app.locator(".session-card").first()).toBeVisible();
-    const chip = app.locator(".chip.status-filter", { hasText: "Host" });
+    // BUG-0250: Chip-Baustein trägt ui-chip, nicht chip — Anker ist data-testid (T63.6).
+    const chip = app.locator("[data-testid=status-filter]", { hasText: "Host" });
     await expect(chip).toBeVisible();
     await chip.click();
-    await expect(app.locator(".chip.status-filter", { hasText: "Host" })).toHaveCount(0);
+    await expect(app.locator("[data-testid=status-filter]", { hasText: "Host" })).toHaveCount(0);
     await expect(app.locator(".session-card").first()).toBeVisible();
   });
 

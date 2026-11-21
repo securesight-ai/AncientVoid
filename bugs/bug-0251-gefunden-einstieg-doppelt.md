@@ -1,7 +1,7 @@
 ---
 id: BUG-0251
 slug: gefunden-einstieg-doppelt
-status: open
+status: done
 severity: S4
 area: pwa
 instance: dev
@@ -61,8 +61,13 @@ Chip klickbar, Hash-Deeplink bleibt.
 `discovery` als vierten Tab, zusätzlich zum Summary-Chip (EPIC-P47 T47.5
 hatte den State eingeführt, den Tab aber nie entfernt).
 
+## Fix
+
+Vierter Tab „Gefunden“ aus `VIEWS` entfernt; Chip rechts neben Archiv und
+Deeplink `#/gefunden` bleiben (Commit `30be05d7` / Closes #253).
+
 ## Handoff
 
 - [x] Datei im Index [`README.md`](README.md)
-- [ ] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`)
-- [x] Fix in Arbeit (gleicher Lauf)
+- [x] GitHub-Issue [#253](https://github.com/securesight-ai/AncientVoid/issues/253)
+- [x] `bugfix`

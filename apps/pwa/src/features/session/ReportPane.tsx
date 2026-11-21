@@ -97,7 +97,12 @@ export function ReportPane({
       {record.worktree && (
         <WorktreeCard sessionId={record.id} status={status} worktree={record.worktree} project={record.project} host={remoteHost(record.hostId)} apply={!applyInHead} />
       )}
-      <ContinueCard openCmd={record.openCmd ? onHost(record.openCmd, remoteHost(record.hostId)) : undefined} host={remoteHost(record.hostId)} />
+      <ContinueCard
+        sessionId={record.id}
+        hostId={remoteHost(record.hostId)}
+        openCmd={record.openCmd ? onHost(record.openCmd, remoteHost(record.hostId)) : undefined}
+        host={remoteHost(record.hostId)}
+      />
     </div>
   );
 }
