@@ -14,22 +14,24 @@ import { VaultTabs } from "../vault/VaultTabs.tsx";
 import { TeamsPane } from "../team/TeamsPane.tsx";
 import { AutomationsPane } from "../automations/AutomationsPane.tsx";
 import { AiMetricsPage } from "../aimetrics/AiMetricsPage.tsx";
+import { InferencePage } from "../inference/InferencePage.tsx";
 import { TerminalPage } from "../terminal/TerminalPage.tsx";
 import { ReleaseNotesPage } from "../release-notes/ReleaseNotesPage.tsx";
 import { useHubStatus } from "./hub-status.ts";
 
 const TITLES: Partial<Record<ListPage, string>> = {
   new: t("common.new_session"),
-  approvals: t("common.approvals"),
-  statistics: t("common.statistics"),
-  settings: t("common.settings"),
-  media: t("common.media"),
-  pc: t("common.type_at_pc"),
-  status: t("common.provider_status"),
-  vault: t("common.notes"),
-  teams: t("common.agent_teams"),
-  automationen: t("common.automations"),
+  approvals: "Freigaben",
+  statistics: "Statistik",
+  settings: "Einstellungen",
+  media: "Medien",
+  pc: "Am PC eintippen",
+  status: "Provider-Status",
+  vault: "Notizen",
+  teams: "Agenten-Teams",
+  automationen: "Automationen",
   aimetrics: t("common.metrics"),
+  inference: t("common.inference"),
   terminal: t("common.terminal"),
   releasenotes: t("common.release_notes"),
 };
@@ -112,6 +114,7 @@ export function ToolPane({
         {page === "teams" && <TeamsPane initialHash={initialHash} />}
         {page === "automationen" && <AutomationsPane />}
         {page === "aimetrics" && <AiMetricsPage />}
+        {page === "inference" && <InferencePage />}
         {page === "terminal" && <TerminalPage />}
         {page === "releasenotes" && <ReleaseNotesPage />}
       </div>

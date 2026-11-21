@@ -109,6 +109,7 @@ Werkzeugseiten füllen die Detailspalte.
 | G75 | Main-Sync: neue Sessions starten auf origin/Hauptbranch (Fetch mit hartem Timeout, Fallback + sichtbares Event); laufende Prüfung je Projekt mit Modi melden/fragen/automatisch; Session-Hinweis „N hinter main“ mit Prüfen/Einmischen im ⋯-Menü; Benachrichtigung mit Aktionsknopf | Einstellungen → Main-Synchronisation · Session ⋯-Menü · `hubctl main-sync` | EPIC-P67 / ADR-0088 | spec:main-sync-session.spec.ts |
 | G76 | Release-Notes: pro PR Was (Commits, Dateien, ±Zeilen) und Warum (PR-Beschreibung) aus dem lokalen Git-Verlauf; Subjects ohne Notation bleiben roh sichtbar | Dock „Mehr“ → „Release-Notes“; PC: Leiste | — | spec:release-notes.spec.ts |
 | G77 | Wissensquellen: MCP-Wissensserver (z. B. Librarian) anbinden — Adresse, Anmeldung Bearer/eigener Header/keine, Token write-only; Prüfen mit sichtbarem Status je Quelle; durchsuchen und Treffer lesen (fremder Text, keine Anweisung) | Einstellungen → Wissensquellen | EPIC-P74 / ADR-0096 | spec:knowledge-sources.spec.ts |
+| G78 | Token-Tempo der Inferenz-Engines: Decode/Vorbehandlung/Zeit-bis-1.-Token, Verteilungen nur bei Engines mit Einzel-Requests, Gegenwert-Engines erklären sich, Ausfall bleibt sichtbar | Dock „Mehr“ → „Inferenz“ | EPIC-P79 / ADR-0102 | spec:inference-tempo.spec.ts |
 
 ## Session
 

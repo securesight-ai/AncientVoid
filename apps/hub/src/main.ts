@@ -9,7 +9,7 @@ import { sttModuleConfig } from "./modules/voice/stt-wiring.ts";
  * Boot order (P0): config → db → adapters → recovery (K7) → HTTP/WS → PWA.
  */
 import { chmodSync, mkdirSync, existsSync } from "node:fs";
-import { readFile, readdir } from "node:fs/promises";
+import { appendFile, readFile, readdir } from "node:fs/promises";
 import { homedir, hostname, loadavg, cpus, totalmem, freemem } from "node:os";
 import { toHostId, sessionMainSyncPath } from "@ancientvoid/contracts";
 import { projectName } from "@ancientvoid/core";
@@ -76,7 +76,7 @@ import { createHubApp } from "./app.ts";
 import { ForgeService } from "./modules/forge/forge-service.ts";
 import { createHubAutomationService } from "./modules/automations/automations-service.ts";
 import { ExternalJobsService } from "./modules/automations/external-jobs.ts";
-import { createAiMetricsSampler, type AiMetricsSamplerServer } from "@ancientvoid/core";
+import { createAiMetricsSampler, createInferenceTracker, type AiMetricsSamplerServer, type InferenceEngineConfig, type InferenceTracker } from "@ancientvoid/core";
 import { StatisticsService } from "./modules/statistics/statistics.service.ts";
 import { createPermissionBridge } from "./modules/approvals/permission-bridge.ts";
 
@@ -385,6 +385,7 @@ async function main(): Promise<void> {
   // dem Hub bekannten Modell-Server; Secrets nur als Dateireferenz (ADR-0011).
   const keyFile = (file: string | undefined) => (file ? resolve(file.replace(/^~(?=\/)/, homedir())) : undefined);
   let aimetrics: ReturnType<typeof createAiMetricsSampler> | undefined;
+  let inference: InferenceTracker | undefined;
   if (config.aiMetrics) {
     const servers: AiMetricsSamplerServer[] = config.aiMetrics.servers.map((s) => ({
       url: s.url,
@@ -431,6 +432,40 @@ async function main(): Promise<void> {
         logger,
       },
     });
+  }
+
+  if (config.inference && config.inference.engines.length > 0) {
+    const engines: InferenceEngineConfig[] = config.inference.engines.map((e) => ({
+      ...(e.id ? { id: e.id } : {}),
+      kind: e.kind,
+      url: e.url,
+      ...(e.label ? { label: e.label } : {}),
+      ...(e.apiKeyFile ? { apiKeyFile: resolve(e.apiKeyFile.replace(/^~(?=\/)/, homedir())) } : {}),
+    }));
+    inference = createInferenceTracker(
+      {
+        fetch: (url, init) => fetch(url, init),
+        readFile: async (path) => readFile(path, "utf8").catch(() => null),
+        appendFile: async (path, data) => {
+          await appendFile(path, data, "utf8");
+        },
+        now: () => new Date(),
+        logger: {
+          info: (m) => logger.info(`inference: ${m}`),
+          warn: (m) => logger.warn(`inference: ${m}`),
+          error: (m) => logger.error(`inference: ${m}`),
+        },
+      },
+      engines,
+      {
+        intervalSec: config.inference.intervalSec,
+        windowHours: config.inference.windowHours,
+        minReadPrefill: config.inference.minReadPrefill,
+        storeFile: resolve(dataDir, "inference-requests.jsonl"),
+      },
+    );
+    inference.start();
+    logger.info(`inference: ${engines.length} Engine-Quellen (${engines.map((e) => e.kind).join(", ")})`);
   }
 
   const app = await createHubApp({
@@ -490,6 +525,7 @@ async function main(): Promise<void> {
     },
     team,
     ...(aimetrics ? { aimetrics, aimetricsMergePeers: config.aiMetrics?.mergePeers !== false } : {}),
+    ...(inference ? { inference } : {}),
     // EPIC-P56 T56.3: Statistik-Rollup — hält die Fakten-Caches frisch und
     // liest sie für die Statistik-Seite (Journal bleibt Wahrheit, K7).
     statistics: new StatisticsService(db, sessions, team),
@@ -576,6 +612,7 @@ async function main(): Promise<void> {
     automations.stop();
     issueBridge?.stop();
     aimetrics?.stop();
+  inference?.stop();
     mainSyncScheduler.stop();
     logger.info("shutting down", { signal: sig });
     // tmux workers outlive the hub: a planned restart keeps them running and

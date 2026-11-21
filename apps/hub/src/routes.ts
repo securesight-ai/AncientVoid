@@ -33,6 +33,7 @@ import { registerDeviceRoutes } from "./modules/devices/device.routes.ts";
 import { registerClientReportRoutes } from "./modules/diagnostics/client-report.routes.ts";
 
 import { registerAiMetricsRoutes } from "./modules/aimetrics/aimetrics.routes.ts";
+import { registerInferenceRoutes } from "./modules/inference/inference.routes.ts";
 import { registerStatisticsRoutes } from "./modules/statistics/statistics.routes.ts";
 
 /** Composition of every module's HTTP routes (ADR-0020). */
@@ -69,6 +70,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
   registerClientReportRoutes(app, ctx);
 
   registerAiMetricsRoutes(app, ctx);
+  registerInferenceRoutes(app, ctx);
   registerStatisticsRoutes(app, ctx);
   registerConnectionRoutes(app, ctx);
   registerKnowledgeRoutes(app, ctx);

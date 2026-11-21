@@ -303,6 +303,38 @@ export const HubConfig = z.object({
     })
     .optional(),
   /**
+   * EPIC-P79 (ADR-0102): Token-Tempo der Inferenz-Engines fuer die Seite
+   * "Inferenz". Eigene, engmaschigere Spur als `aiMetrics` (P59): Request-
+   * Historie plus Verteilungen. Ohne Abschnitt: leere Quellen-Liste, die Seite
+   * erklaert die Konfiguration. Schluessel nur als Dateireferenz (ADR-0011).
+   */
+  inference: z
+    .object({
+      intervalSec: z.number().int().min(1).max(300).default(2),
+      /** Aufbewahrungs- und Berechnungsfenster der Request-Historie (K7: JSONL). */
+      windowHours: z.number().int().min(1).max(720).default(72),
+      /** Prefill-Perzentile rechnen nur ab dieser Zahl *gelesener* Token. */
+      minReadPrefill: z.number().int().min(0).max(200_000).default(4_000),
+      engines: z
+        .array(
+          z.object({
+            id: z
+              .string()
+              .min(1)
+              .max(64)
+              .regex(/^[a-z0-9][a-z0-9_-]{0,63}$/)
+              .optional(),
+            kind: z.enum(["strata", "halogen", "llamacpp"]),
+            url: z.string().url(),
+            label: z.string().min(1).max(80).optional(),
+            apiKeyFile: z.string().min(1).optional(),
+          }),
+        )
+        .max(16)
+        .default([]),
+    })
+    .optional(),
+  /**
    * ADR-0087: Allowlist für den PWA-Terminal-Tab.
    * Jedes Ziel: `ssh` (OpenSSH-Host/Alias) oder `local: true` (Hub-Host).
    * Ohne Abschnitt: leere Liste, Tab erklärt die Config.

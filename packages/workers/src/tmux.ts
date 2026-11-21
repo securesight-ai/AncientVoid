@@ -248,17 +248,29 @@ export class TmuxRunner implements WorkerRunner {
     const envPrefix = Object.entries(spec.env ?? {})
       .map(([k, v]) => `${k}=${shellQuote(v)}`)
       .join(" ");
-    let shellCmd = `env ${envPrefix} ${cmdLine}; echo "__ANCIENTVOID_EXIT__$?"`;
+    // Die Pane-Kommandozeile laeuft durch tmux' default-shell — das ist die
+    // Login-Shell des Nutzers (z. B. fish, wo `$?` und POSIX-Quote-Nesting
+    // ungueltig sind: das Pane starb beim Spawn). Der Wrapper steckt deshalb in
+    // einer Datei, und der Shell wird nur `sh <datei>` uebergeben — das versteht
+    // jede Shell gleich.
+    let wrapperBody: string;
     if (spec.stdin === "pipe") {
       // T7.2: stdin from a FIFO the pane itself holds open read-write (fd 3):
       // writers (this hub, the next one after a restart) come and go without
       // the worker ever seeing EOF, and nothing is echoed or cut at the
       // terminal's 4 KB line limit. POSIX sh, whatever the user's shell is.
       const fifo = stdinPath(logPath);
-      const res = await new Promise<number>((done) => spawn("mkfifo", ["-m", "600", fifo]).on("exit", (code) => done(code ?? 1)));
-      if (res !== 0) throw new Error(`tmux spawn failed: mkfifo ${fifo}`);
-      shellCmd = `sh -c ${shellQuote(`exec 3<>${shellQuote(fifo)}; env ${envPrefix} ${cmdLine} <&3; echo "__ANCIENTVOID_EXIT__$?"`)}`;
+      const mk = await new Promise<number>((done) => spawn("mkfifo", ["-m", "600", fifo]).on("exit", (code) => done(code ?? 1)));
+      if (mk !== 0) throw new Error(`tmux spawn failed: mkfifo ${fifo}`);
+      wrapperBody = `exec 3<>${shellQuote(fifo)}; env ${envPrefix} ${cmdLine} <&3; echo "__ANCIENTVOID_EXIT__$?"`;
+    } else {
+      wrapperBody = `env ${envPrefix} ${cmdLine}; echo "__ANCIENTVOID_EXIT__$?"`;
     }
+    const wrapperPath = `${logPath}.sh`;
+    await writeFile(wrapperPath, `#!/bin/sh
+${wrapperBody}
+`, { mode: 0o700 });
+    const shellCmd = `sh ${shellQuote(wrapperPath)}`;
 
     // 1. Create the session with a placeholder — so options can be applied
     //    BEFORE the real command runs (no remain-on-exit race for short cmds).

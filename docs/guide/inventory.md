@@ -37,6 +37,7 @@ Regeln:
 | page:teams | Agent teams: plan, dispatch, gates, deliveries | `#/teams` | team |
 | page:automationen | Automations: schedules and run history | `#/automationen` | automations |
 | page:aimetrics | Local AI server metrics (CPU/GPU, tokens/s) | `#/metriken` | ki-server-metriken |
+| page:inference | Token tempo of local inference engines (decode, prefill, KV reuse) | `#/inferenz` | inference-tempo |
 | page:statistics | Session, turn, gate, tool and team statistics from the rollup cache | `#/statistik` | statistik |
 | page:terminal | Allowlisted SSH/local shell in the PWA | `#/terminal` | terminal |
 | page:releasenotes | Release notes: merged PRs with what changed and why | `#/releasenotes` | release-notes |
@@ -63,6 +64,7 @@ Regeln:
 | ID | English description | e2e spec |
 |---|---|---|
 | feature:aimetrics | AI server metrics sampling and display | ki-server-metriken |
+| feature:inference | Inference token/tempo adapters, request history and percentiles | inference-tempo |
 | feature:approvals | Approve, reject or answer agent requests | quick-confirm |
 | feature:attachments | Attach files to prompts | attachments |
 | feature:automations | Automation plans: create, activate, history | automations |

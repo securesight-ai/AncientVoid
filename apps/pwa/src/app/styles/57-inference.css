@@ -1,0 +1,224 @@
+/* EPIC-P79 (ADR-0102): Token-Tempo-Seite. Phone zuerst; ab 700 px (Z-Fold-inner)
+   zweispaltig, ab 1280 px dreispaltig. Nur Tokens und Breakpoint-Leiter
+   (css-tokens.test.ts). */
+
+.inference {
+  display: grid;
+  gap: var(--space-3);
+  /* Die Seite lebt oft in einem schmalen Seitenpane (ToolPane): der Leitwert ist
+     die Breite des Containers, nicht des Fensters — sonst rechnet das Layout mit
+     1280 px, während 702 px da sind, und Tabellen werden abgeschnitten. */
+  container-type: inline-size;
+  container-name: inferenz;
+}
+
+.inference-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.inference-quellen,
+.inference-fenster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.inference-hero {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.inference-hero > div {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+}
+
+.inference-hero dt {
+  font-size: var(--text-xs);
+  color: var(--fg-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inference-hero dd {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.inference-hero dd small {
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}
+
+.inference-kacheln {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* Rost der Grid-Überläufe: Grid-Kinder dürfen unter ihre Inhaltbreite schrumpfen,
+   sonst reißt eine breite Tabelle die Spalte und damit die ganze Seite auf. */
+.inference-kacheln > *,
+.inference-hero > div {
+  min-width: 0;
+}
+
+.inference-werte {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+}
+
+.inference-werte > div {
+  min-width: 0;
+}
+
+.inference-werte dt {
+  font-size: var(--text-xs);
+  color: var(--fg-dim);
+}
+
+.inference-werte dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.inference-balken {
+  height: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--border);
+  overflow: hidden;
+  margin-top: var(--space-1);
+}
+
+.inference-balken > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.inference-balken--warn > span {
+  background: var(--warn);
+}
+
+.inference-balken--err > span {
+  background: var(--err);
+}
+
+.inference-tabelle {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.inference-tabelle th,
+.inference-tabelle td {
+  text-align: right;
+  padding: var(--space-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.inference-tabelle th:first-child,
+.inference-tabelle td:first-child {
+  text-align: left;
+  color: var(--fg-dim);
+}
+
+.inference-hinweis {
+  color: var(--fg-dim);
+  font-size: var(--text-sm);
+  margin: var(--space-2) 0 0;
+}
+
+.inference-fehler {
+  color: var(--err);
+  font-size: var(--text-sm);
+}
+
+@container inferenz (min-width: 700px) {
+  .inference-hero {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .inference-kacheln {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inference-werte {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container inferenz (min-width: 1280px) {
+  .inference-kacheln {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Eng (Handy-Cover, schmaler Rand im Seitenpane): Zusatzspalten weg, damit
+   Median und Spitze lesbar bleiben; der Rest scrollt im eigenen Rahmen. */
+/* Ab unter 1024 px Containerbreite (schmales Seitenpane, Tablet) fallen p10 und Ø
+   weg — Median, p90 und Spitze bleiben stehen und die Tabelle muss nicht
+   seitlich geschoben werden. */
+@container inferenz (max-width: 1023px) {
+  .inference-spalt--zusatz {
+    display: none;
+  }
+}
+
+.inference-tabelle-umbruch {
+  overflow-x: auto;
+}
+
+/* Zahlenklein und einzeilig: dann passen sechs Spalten auch in eine schmale
+   Seitenpane-Karte, ohne dass seitlich geschoben werden muss. */
+.inference-tabelle {
+  font-size: var(--text-xs);
+}
+
+.inference-tabelle th,
+.inference-tabelle td {
+  white-space: nowrap;
+}
+
+.inference-tabelle td small {
+  color: var(--fg-faint);
+  white-space: normal;
+}
+
+/* Bereichsbeschriftungen brechen statt zu schieben — die Zahlspalten bleiben einzeilig. */
+.inference-tabelle th:first-child,
+.inference-tabelle td:first-child {
+  white-space: normal;
+}
+
+@container inferenz (max-width: 699px) {
+  .inference-tabelle th,
+  .inference-tabelle td {
+    padding: var(--space-1) 4px;
+  }
+}
+
+/* Karten trennen den Inhalt, wenn ein Rahmen nicht mehr reicht — sonst schiebt
+   eine breite Tabelle die ganze Kachel über die Seite hinaus. */
+.inference-kacheln > * > * {
+  max-width: 100%;
+}
+
+/* EPIC-P79: Grenzen der Quelle sichtbar — Liste, nicht Fußnote im Leeren. */
+.inference-hinweis-liste {
+  margin: var(--space-2) 0 0;
+  padding-left: 1.1rem;
+  color: var(--fg-dim);
+  font-size: var(--text-sm);
+  display: grid;
+  gap: var(--space-1);
+}
