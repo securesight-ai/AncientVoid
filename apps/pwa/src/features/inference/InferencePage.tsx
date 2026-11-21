@@ -149,9 +149,19 @@ export function InferencePage() {
             </p>
           )}
           <dl class="inference-hero">
-            <Hero wert={tempo(snap.live?.decodeTokS ?? snap.totals?.window?.decodeTokS)} einheit="tok/s" label={t("inference.hero.decode")} />
-            <Hero wert={tempo(snap.live?.prefillTokS ?? snap.totals?.window?.prefillTokS)} einheit="tok/s" label={t("inference.hero.prefill")} />
-            <Hero wert={dauer(snap.live?.ttftS)} einheit={snap.live?.ttftS != null ? "" : ""} label={t("inference.hero.ttft")} />
+            <Hero
+              wert={tempo(snap.live?.decodeTokS ?? snap.totals?.window?.decodeTokS)}
+              einheit="tok/s"
+              label={t("inference.hero.decode")}
+              unterzeile={snap.live?.decodeTokS == null ? t("inference.hero.idle") : undefined}
+            />
+            <Hero
+              wert={tempo(snap.live?.prefillTokS ?? snap.totals?.window?.prefillTokS)}
+              einheit="tok/s"
+              label={t("inference.hero.prefill")}
+              unterzeile={snap.live?.prefillTokS == null ? t("inference.hero.idle") : undefined}
+            />
+            <Hero wert={dauer(snap.live?.ttftS)} einheit="" label={t("inference.hero.ttft")} unterzeile={t("inference.hero.ttftLetzte")} />
             <Hero
               wert={zahl(snap.totals?.output)}
               einheit=""
@@ -161,7 +171,7 @@ export function InferencePage() {
           </dl>
           <p class="inference-hinweis">
             {t("inference.fenster")} {fensterH} h
-            {alt != null ? ` · ${alt} s` : ""}
+            {alt != null ? ` · ${alt < 2 ? t("inference.alt.frisch") : t("inference.alt.s", { s: alt })}` : ""}
             {snap.engine.model ? ` · ${snap.engine.model}` : ""}
             {snap.engine.version ? ` ${snap.engine.version}` : ""}
           </p>
@@ -275,10 +285,10 @@ function PerfRow({ titel, zeile, einheit }: { titel: string; zeile: InferencePer
         <small>{zeile.bereich}</small>
       </td>
       <td>{zahl(zeile.n)}</td>
-      <td>{tempo(zeile.p10)}</td>
+      <td class="inference-spalt--zusatz">{tempo(zeile.p10)}</td>
       <td>{tempo(zeile.p50)}</td>
-      <td>{tempo(zeile.p90)}</td>
-      <td>{tempo(zeile.mean)}</td>
+      <td class="inference-spalt--zusatz">{tempo(zeile.p90)}</td>
+      <td class="inference-spalt--zusatz">{tempo(zeile.mean)}</td>
       <td>
         {tempo(zeile.peak)}
         {einheit === "s" ? " s" : ""}
@@ -305,44 +315,48 @@ function PerfCard({ snap }: { snap: InferenceSnapshot }) {
       {perf && (
         <>
           <p class="inference-hinweis">{t("inference.card.perfHint", { anzahl: snap.requests.length, schwelle: zahl(perf.schwelleGelesen) })}</p>
-          <table class="inference-tabelle">
-            <thead>
-              <tr>
-                <th>{t("inference.perf.decode")}</th>
-                <th>{t("inference.schichten.anzahl")}</th>
-                <th>{t("inference.perf.p10")}</th>
-                <th>{t("inference.perf.p50")}</th>
-                <th>{t("inference.perf.p90")}</th>
-                <th>{t("inference.perf.mean")}</th>
-                <th>{t("inference.perf.peak")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {perf.decode.map((z) => (
-                <PerfRow titel={t("inference.perf.decode")} zeile={z} einheit="tok/s" />
-              ))}
-              {perf.prefill.map((z) => (
-                <PerfRow titel={t("inference.perf.prefill")} zeile={z} einheit="tok/s" />
-              ))}
-              {perf.ttft.map((z) => (
-                <PerfRow titel={t("inference.perf.ttft")} zeile={z} einheit="s" />
-              ))}
-            </tbody>
-          </table>
-          <p class="inference-hinweis">{t("inference.schichten.title")} — {t("inference.schichten.hint")}</p>
-          <table class="inference-tabelle">
-            <tbody>
-              {perf.groessenSchichten.map((s) => (
+          <div class="inference-tabelle-umbruch">
+            <table class="inference-tabelle">
+              <thead>
                 <tr>
-                  <td>{s.label}</td>
-                  <td>{zahl(s.n)}</td>
-                  <td>{tempo(s.p50)}</td>
-                  <td>{tempo(s.p90)}</td>
-                  <td>{tempo(s.peak)}</td>
+                  <th>{t("inference.perf.decode")}</th>
+                  <th>{t("inference.schichten.anzahl")}</th>
+                  <th class="inference-spalt--zusatz">{t("inference.perf.p10")}</th>
+                  <th>{t("inference.perf.p50")}</th>
+                  <th class="inference-spalt--zusatz">{t("inference.perf.p90")}</th>
+                  <th class="inference-spalt--zusatz">{t("inference.perf.mean")}</th>
+                  <th>{t("inference.perf.peak")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {perf.decode.map((z) => (
+                  <PerfRow titel={t("inference.perf.decode")} zeile={z} einheit="tok/s" />
+                ))}
+                {perf.prefill.map((z) => (
+                  <PerfRow titel={t("inference.perf.prefill")} zeile={z} einheit="tok/s" />
+                ))}
+                {perf.ttft.map((z) => (
+                  <PerfRow titel={t("inference.perf.ttft")} zeile={z} einheit="s" />
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="inference-hinweis">{t("inference.schichten.title")} — {t("inference.schichten.hint")}</p>
+          <div class="inference-tabelle-umbruch">
+            <table class="inference-tabelle">
+              <tbody>
+                {perf.groessenSchichten.map((s) => (
+                  <tr>
+                    <td>{s.label}</td>
+                    <td>{zahl(s.n)}</td>
+                    <td>{tempo(s.p50)}</td>
+                    <td class="inference-spalt--zusatz">{tempo(s.p90)}</td>
+                    <td>{tempo(s.peak)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {perf.asymptote && (
             <p class="inference-hinweis">
               {t("inference.asymptote.title")}: {tempo(perf.asymptote.tokS)} {TOKS} · {t("inference.asymptote.overhead")}{" "}
@@ -443,30 +457,32 @@ function ProtocolCard({ snap }: { snap: InferenceSnapshot }) {
       <p class="inference-hinweis">{t("inference.card.protocolHint")}</p>
       {reihen.length === 0 && <p class="inference-hinweis">{t("inference.protocol.leer")}</p>}
       {reihen.length > 0 && (
-        <table class="inference-tabelle">
-          <thead>
-            <tr>
-              <th>{t("inference.protocol.read")}</th>
-              <th>{t("inference.protocol.prompt")}</th>
-              <th>{t("inference.protocol.output")}</th>
-              <th>{t("inference.protocol.prefill")}</th>
-              <th>{t("inference.protocol.decode")}</th>
-              <th>{t("inference.protocol.ttft")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reihen.map((r) => (
-              <tr key={r.id}>
-                <td>{zahl(r.read)}</td>
-                <td>{zahl(r.prompt)}</td>
-                <td>{zahl(r.output)}</td>
-                <td>{tempo(r.prefillTokS)}</td>
-                <td>{tempo(r.decodeTokS)}</td>
-                <td>{dauer(r.ttftS)}</td>
+        <div class="inference-tabelle-umbruch">
+          <table class="inference-tabelle">
+            <thead>
+              <tr>
+                <th>{t("inference.protocol.read")}</th>
+                <th class="inference-spalt--zusatz">{t("inference.protocol.prompt")}</th>
+                <th>{t("inference.protocol.output")}</th>
+                <th class="inference-spalt--zusatz">{t("inference.protocol.prefill")}</th>
+                <th>{t("inference.protocol.decode")}</th>
+                <th>{t("inference.protocol.ttft")}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {reihen.map((r) => (
+                <tr key={r.id}>
+                  <td>{zahl(r.read)}</td>
+                  <td class="inference-spalt--zusatz">{zahl(r.prompt)}</td>
+                  <td>{zahl(r.output)}</td>
+                  <td class="inference-spalt--zusatz">{tempo(r.prefillTokS)}</td>
+                  <td>{tempo(r.decodeTokS)}</td>
+                  <td>{dauer(r.ttftS)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </Card>
   );

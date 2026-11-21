@@ -5,6 +5,11 @@
 .inference {
   display: grid;
   gap: var(--space-3);
+  /* Die Seite lebt oft in einem schmalen Seitenpane (ToolPane): der Leitwert ist
+     die Breite des Containers, nicht des Fensters — sonst rechnet das Layout mit
+     1280 px, während 702 px da sind, und Tabellen werden abgeschnitten. */
+  container-type: inline-size;
+  container-name: inferenz;
 }
 
 .inference-kopf {
@@ -56,6 +61,13 @@
 .inference-kacheln {
   display: grid;
   gap: var(--space-3);
+}
+
+/* Rost der Grid-Überläufe: Grid-Kinder dürfen unter ihre Inhaltbreite schrumpfen,
+   sonst reißt eine breite Tabelle die Spalte und damit die ganze Seite auf. */
+.inference-kacheln > *,
+.inference-hero > div {
+  min-width: 0;
 }
 
 .inference-werte {
@@ -131,7 +143,7 @@
   font-size: var(--text-sm);
 }
 
-@media (min-width: 700px) {
+@container inferenz (min-width: 700px) {
   .inference-hero {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -145,10 +157,60 @@
   }
 }
 
-@media (min-width: 1280px) {
+@container inferenz (min-width: 1280px) {
   .inference-kacheln {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* Eng (Handy-Cover, schmaler Rand im Seitenpane): Zusatzspalten weg, damit
+   Median und Spitze lesbar bleiben; der Rest scrollt im eigenen Rahmen. */
+/* Ab unter 1024 px Containerbreite (schmales Seitenpane, Tablet) fallen p10 und Ø
+   weg — Median, p90 und Spitze bleiben stehen und die Tabelle muss nicht
+   seitlich geschoben werden. */
+@container inferenz (max-width: 1023px) {
+  .inference-spalt--zusatz {
+    display: none;
+  }
+}
+
+.inference-tabelle-umbruch {
+  overflow-x: auto;
+}
+
+/* Zahlenklein und einzeilig: dann passen sechs Spalten auch in eine schmale
+   Seitenpane-Karte, ohne dass seitlich geschoben werden muss. */
+.inference-tabelle {
+  font-size: var(--text-xs);
+}
+
+.inference-tabelle th,
+.inference-tabelle td {
+  white-space: nowrap;
+}
+
+.inference-tabelle td small {
+  color: var(--fg-faint);
+  white-space: normal;
+}
+
+/* Bereichsbeschriftungen brechen statt zu schieben — die Zahlspalten bleiben einzeilig. */
+.inference-tabelle th:first-child,
+.inference-tabelle td:first-child {
+  white-space: normal;
+}
+
+@container inferenz (max-width: 699px) {
+  .inference-tabelle th,
+  .inference-tabelle td {
+    padding: var(--space-1) 4px;
+  }
+}
+
+/* Karten trennen den Inhalt, wenn ein Rahmen nicht mehr reicht — sonst schiebt
+   eine breite Tabelle die ganze Kachel über die Seite hinaus. */
+.inference-kacheln > * > * {
+  max-width: 100%;
 }
 
 /* EPIC-P79: Grenzen der Quelle sichtbar — Liste, nicht Fußnote im Leeren. */
