@@ -226,4 +226,5 @@
 /* Breakpoint-Leiter als dokumentierte Konstanten (media queries können keine
  * Custom Properties auswerten — css-tokens.test.ts (f) prüft die Ausdrücke):
  * phone ≤ 639 px · tablet ≤ 1023 px · desktop ≥ 1280 px · short ≤ 520 px Höhe
+ * · Arbeitsplatz ab 521 px Höhe (Kachel-Layout braucht nutzbare Höhe, main.tsx WIDE)
  * · graph 699/700/760 px (EPIC-P52, Galaxie-Vollbild-Grenze, design-system.md). */
