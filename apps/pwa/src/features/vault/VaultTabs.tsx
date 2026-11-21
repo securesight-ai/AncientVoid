@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { useState } from "preact/hooks";
 import { pageHash, vaultKnowledgeHash } from "../../app/route.ts";
@@ -18,12 +19,12 @@ export function VaultTabs({ initialFile = null, initialTab = "notizen" }: { init
   };
   return (
     <div class="vault-tabs">
-      <nav class="vault-tabbar" role="tablist" aria-label="Notizen-Bereich">
+      <nav class="vault-tabbar" role="tablist" aria-label={t("vault.notes_area")}>
         <button type="button" role="tab" class={`vault-tab${tab === "notizen" ? " active" : ""}`} aria-selected={tab === "notizen"} onClick={() => switchTo("notizen")}>
-          Notizen
+          {t("common.notes")}
         </button>
         <button type="button" role="tab" class={`vault-tab${tab === "wissen" ? " active" : ""}`} aria-selected={tab === "wissen"} onClick={() => switchTo("wissen")}>
-          Wissen
+          {t("vault.knowledge")}
         </button>
       </nav>
       {tab === "wissen" ? <KnowledgePanel /> : <VaultPane {...(initialFile ? { initialFile } : {})} />}

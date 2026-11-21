@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { AutomationInfo, AutomationSchedule, AutomationTarget, Team } from "@ancientvoid/contracts";
 import type { ActionDefinition } from "../../shared/api.ts";
@@ -120,102 +121,102 @@ export function AutomationForm({ adapters, projects, teams, editing, disabled, o
     <form key={existing?.id ?? "new"} class="automation-form" data-testid="automation-form" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
       <h4>{existing ? `„${existing.label}" bearbeiten` : "Neue Automation"}</h4>
       {error && <div class="files-error" role="alert">{error}</div>}
-      <label>Label
-        <input value={label} onInput={(e) => setLabel(e.currentTarget.value)} maxlength={80} placeholder="Morgen-Briefing" required />
+      <label>{t("automations.label")}
+        <input value={label} onInput={(e) => setLabel(e.currentTarget.value)} maxlength={80} placeholder={t("automations.morning_briefing")} required />
       </label>
-      <label>Automationart<select value={targetKind} onChange={e => setTargetKind(e.currentTarget.value as "session" | "team" | "script")}><option value="session">Cron-Job · Session-Trigger</option><option value="team">Service · Agenten-Team</option><option value="script">Skript-Start · Miniskript</option></select></label>
-      {targetKind === "team" ? <label>Team-Vorlage<select value={templateId} onChange={e => setTemplateId(e.currentTarget.value)} required><option value="">Vorhandenes Team wählen</option>{teams.filter(team => team.tasks.length > 0).map(team => <option key={team.id} value={team.id}>{team.title}</option>)}</select></label> : targetKind === "script" ? <>
-      <label>Projekt
-        <input list="automation-projects" value={project} onInput={(e) => setProject(e.currentTarget.value)} placeholder="/pfad/zum/repo" required />
+      <label>{t("automations.automation_type")}<select value={targetKind} onChange={e => setTargetKind(e.currentTarget.value as "session" | "team" | "script")}><option value="session">{t("automations.cron_session_trigger")}</option><option value="team">{t("automations.service_agent_team")}</option><option value="script">{t("automations.script_start")}</option></select></label>
+      {targetKind === "team" ? <label>{t("automations.team_template")}<select value={templateId} onChange={e => setTemplateId(e.currentTarget.value)} required><option value="">{t("automations.choose_existing_team")}</option>{teams.filter(team => team.tasks.length > 0).map(team => <option key={team.id} value={team.id}>{team.title}</option>)}</select></label> : targetKind === "script" ? <>
+      <label>{t("newsession.project")}
+        <input list="automation-projects" value={project} onInput={(e) => setProject(e.currentTarget.value)} placeholder={t("automations.path_to_repo")} required />
       </label>
-      <label>Aktion
+      <label>{t("automations.action")}
         <select value={actionId} onChange={e => setActionId(e.currentTarget.value)} required disabled={!project.trim() || actionsLoading}>
           <option value="">{actionsLoading ? "lade Aktionen…" : project.trim() ? "Registrierte Aktion wählen" : "zuerst Projekt angeben"}</option>
           {(actions ?? []).map(a => <option key={a.id} value={a.id}>{a.label}</option>)}
         </select>
       </label>
       {actionsError && <div class="files-error" role="alert">{actionsError}</div>}
-      {!actionsError && !actionsLoading && actions?.length === 0 && project.trim() && <p class="team-meta">Keine registrierten Aktionen für dieses Projekt gefunden.</p>}
-      <p class="team-meta">Der Skript-Start führt die Aktion ohne Shell im Projekt aus — mit Zeitplan wird sie zum cron-artigen Miniskript-Trigger.</p>
+      {!actionsError && !actionsLoading && actions?.length === 0 && project.trim() && <p class="team-meta">{t("automations.no_registered_actions")}</p>}
+      <p class="team-meta">{t("automations.script_start_desc")}</p>
       </> : <>
       <div class="form-grid">
-        <label>Harness
-          <input list="automation-adapters" value={harness} onInput={(e) => setHarness(e.currentTarget.value)} placeholder="dummy" required />
+        <label>{t("status.harness")}
+          <input list="automation-adapters" value={harness} onInput={(e) => setHarness(e.currentTarget.value)} placeholder={t("automations.dummy")} required />
         </label>
         <datalist id="automation-adapters">{adapters.map((a) => <option key={a} value={a} />)}</datalist>
-        <label>Modell (optional)
+        <label>{t("automations.model_optional")}
           <input value={model} onInput={(e) => setModel(e.currentTarget.value)} />
         </label>
       </div>
-      <label>Projekt
-        <input list="automation-projects" value={project} onInput={(e) => setProject(e.currentTarget.value)} placeholder="/pfad/zum/repo" required />
+      <label>{t("newsession.project")}
+        <input list="automation-projects" value={project} onInput={(e) => setProject(e.currentTarget.value)} placeholder={t("automations.path_to_repo")} required />
       </label>
       <div class="form-grid">
-        <label>Arbeitsort
+        <label>{t("newsession.workplace")}
           <select value={workdir} onChange={(e) => setWorkdir(e.currentTarget.value as "worktree" | "direct")}>
-            <option value="worktree">Worktree (Standard)</option>
-            <option value="direct">direct-Checkout (P38-Lease)</option>
+            <option value="worktree">{t("automations.worktree_default")}</option>
+            <option value="direct">{t("automations.direct_checkout")}</option>
           </select>
         </label>
 
       </div>
       </>}
       <datalist id="automation-projects">{projects.map((p) => <option key={p} value={p} />)}</datalist>
-        <label>Zeitzone
+        <label>{t("automations.time_zone")}
           <input list="automation-timezones" value={timezone} onInput={(e) => setTimezone(e.currentTarget.value)} />
         </label>
         <datalist id="automation-timezones">{TZ_SUGGESTIONS.map((tz) => <option key={tz} value={tz} />)}</datalist>
       <fieldset>
-        <legend>Zeitplan</legend>
+        <legend>{t("automations.schedule")}</legend>
         <div class="form-grid">
-          <label>Art
+          <label>{t("automations.type")}
             <select value={scheduleKind} onChange={(e) => setScheduleKind(e.currentTarget.value as "preset" | "cron")}>
-              <option value="preset">Preset</option>
-              <option value="cron">Cron (5 Felder)</option>
+              <option value="preset">{t("automations.preset")}</option>
+              <option value="cron">{t("automations.cron_5_fields")}</option>
             </select>
           </label>
           {scheduleKind === "preset" ? (
             <>
-              <label>Preset
+              <label>{t("automations.preset")}
                 <select value={preset} onChange={(e) => setPreset(e.currentTarget.value as "hourly" | "daily" | "weekly" | "weekday")}>
-                  <option value="hourly">stündlich</option>
-                  <option value="daily">täglich</option>
-                  <option value="weekly">wöchentlich</option>
-                  <option value="weekday">werktags</option>
+                  <option value="hourly">{t("automations.hourly")}</option>
+                  <option value="daily">{t("automations.daily")}</option>
+                  <option value="weekly">{t("automations.weekly")}</option>
+                  <option value="weekday">{t("automations.weekdays_short")}</option>
                 </select>
               </label>
               {preset !== "hourly" && (
-                <label>Uhrzeit (Ortszeit)
+                <label>{t("automations.time_local")}
                   <input type="time" value={localTime} onInput={(e) => setLocalTime(e.currentTarget.value)} />
                 </label>
               )}
             </>
           ) : (
-            <label>Cron (min Std Tag Monat WT)
+            <label>{t("automations.cron_fields")}
               <input value={cron} onInput={(e) => setCron(e.currentTarget.value)} placeholder="*/15 9-17 * * 1-5" />
             </label>
           )}
         </div>
       </fieldset>
-      {scheduleKind === "preset" && preset === "weekly" && <fieldset><legend>Wochentage</legend>{["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"].map((day, index) => <label key={day}><input type="checkbox" checked={weekdays.includes(index)} onChange={() => setWeekdays(days => days.includes(index) ? days.filter(d => d !== index) : [...days, index].sort())} />{day}</label>)}</fieldset>}
+      {scheduleKind === "preset" && preset === "weekly" && <fieldset><legend>{t("automations.weekdays")}</legend>{["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"].map((day, index) => <label key={day}><input type="checkbox" checked={weekdays.includes(index)} onChange={() => setWeekdays(days => days.includes(index) ? days.filter(d => d !== index) : [...days, index].sort())} />{day}</label>)}</fieldset>}
       <div class="form-grid">
-        <label>Precheck-Aktion (optional, registriert)
-          <input value={precheckActionId} onInput={(e) => setPrecheckActionId(e.currentTarget.value)} placeholder="git-status" />
+        <label>{t("automations.precheck_action")}
+          <input value={precheckActionId} onInput={(e) => setPrecheckActionId(e.currentTarget.value)} placeholder={t("automations.git_status")} />
         </label>
-        <label>max. parallel
+        <label>{t("automations.max_parallel")}
           <input type="number" min={1} max={4} value={maxParallel} onInput={(e) => setMaxParallel(Number(e.currentTarget.value) || 1)} />
         </label>
-        <label>Nachholfenster (Minuten)
+        <label>{t("automations.catchup_window")}
           <input type="number" min={0} max={1440} value={missedGraceMinutes} onInput={(e) => setMissedGraceMinutes(Number(e.currentTarget.value) || 0)} />
         </label>
       </div>
-      {targetKind === "session" && <label>Prompt (leer lassen behält den bisherigen Auftrag)
-        <textarea rows={4} value={promptText} onInput={(e) => setPromptText(e.currentTarget.value)} placeholder="Was der Lauf tun soll…" required={!existing} />
+      {targetKind === "session" && <label>{t("automations.prompt_keep")}
+        <textarea rows={4} value={promptText} onInput={(e) => setPromptText(e.currentTarget.value)} placeholder={t("automations.what_run_should")} required={!existing} />
       </label>}
-      <p class="team-meta">Neue und geänderte Automationen beginnen deaktiviert — die Aktivierung ist die Freigabe.</p>
+      <p class="team-meta">{t("automations.new_disabled")}</p>
       <div class="automation-form-actions">
         <Button type="submit" disabled={busy || disabled}>{existing ? "Speichern" : "Anlegen"}</Button>
-        <Button onClick={onCancel}>Abbrechen</Button>
+        <Button onClick={onCancel}>{t("common.cancel")}</Button>
       </div>
     </form>
   );

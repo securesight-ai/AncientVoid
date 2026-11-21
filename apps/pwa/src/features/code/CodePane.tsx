@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
@@ -115,7 +116,7 @@ export function CodePane({ sessionId, hostId, initial, onOpenDiff, active = true
           type="search"
           value={query}
           placeholder={mode === "symbol" ? "Funktion, Klasse …" : "Text im Code…"}
-          aria-label="Code durchsuchen"
+          aria-label={t("code.search_code")}
           onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
           onFocus={() => touchField("code_query")}
         />
@@ -125,10 +126,10 @@ export function CodePane({ sessionId, hostId, initial, onOpenDiff, active = true
       </form>
       <div class="filter-bar">
         <button type="button" class={`chip ${mode === "symbol" ? "active" : ""}`} onClick={() => setMode("symbol")}>
-          Symbol
+          {t("code.symbol")}
         </button>
         <button type="button" class={`chip ${mode === "text" ? "active" : ""}`} onClick={() => setMode("text")}>
-          Text
+          {t("code.text")}
         </button>
       </div>
       {error && <div class="reply-error">{error}</div>}
@@ -136,20 +137,20 @@ export function CodePane({ sessionId, hostId, initial, onOpenDiff, active = true
         <div class="code-results">
           <IdentityLine identity={result.identity} />
           {result.matches.length === 0 ? (
-            <div class="ui-empty">Keine Treffer.</div>
+            <div class="ui-empty">{t("code.no_hits")}</div>
           ) : (
             result.matches.map((m) => (
               <button key={`${m.path}:${m.line}:${m.column}`} type="button" class={`code-hit ${m.kind}`} onClick={() => void openFile(m.path, m.line)}>
                 <span class="code-hit-where">
                   {m.path}:{m.line}
-                  {m.kind === "definition" && <span class="code-hit-def">Definition</span>}
+                  {m.kind === "definition" && <span class="code-hit-def">{t("code.definition")}</span>}
                 </span>
                 <code>{m.text.trim()}</code>
               </button>
             ))
           )}
-          {result.truncated && <div class="dim">Mehr als {result.matches.length} Treffer — genauer suchen.</div>}
-          <div class="dim code-engine">lokal · {result.engine}</div>
+          {result.truncated && <div class="dim">{t("code.more_than")} {result.matches.length} {t("code.hits_refine")}</div>}
+          <div class="dim code-engine">{t("session.local_dash")} {result.engine}</div>
         </div>
       )}
       <ActionsPanel sessionId={sessionId} />
@@ -173,28 +174,28 @@ function FileView({ file, line, onLine, onBack, onOpenDiff }: { file: CodeFile; 
     <div class="code-file">
       <div class="code-file-head">
         <Button onClick={onBack}>
-          ← Suche
+          {t("code.back_search")}
         </Button>
         <div class="code-file-title">
           <strong>{file.path}</strong>
           <span class="dim">
-            {file.language} · {total} Zeilen{file.blobSha ? ` · ${file.blobSha.slice(0, 8)}` : ""}
+            {file.language} · {total} {t("code.lines")}{file.blobSha ? ` · ${file.blobSha.slice(0, 8)}` : ""}
           </span>
         </div>
       </div>
       <IdentityLine identity={file.identity} />
       {file.changed && (
         <button type="button" class="code-changed" onClick={onOpenDiff}>
-          In dieser Session geändert: +{file.changed.additions} −{file.changed.deletions} → Diff
+          {t("code.changed_session")}{file.changed.additions} −{file.changed.deletions} {t("code.forward_diff")}
         </button>
       )}
       {file.binary ? (
-        <div class="ui-empty">Binärdatei — wird nicht angezeigt.</div>
+        <div class="ui-empty">{t("code.binary_file")}</div>
       ) : (
         <>
           {start > 1 && (
             <Button onClick={() => setStart(Math.max(1, start - WINDOW))} class="code-more">
-              Zeilen davor
+              {t("code.lines_before")}
             </Button>
           )}
           <ol class="code-lines" start={start}>
@@ -212,10 +213,10 @@ function FileView({ file, line, onLine, onBack, onOpenDiff }: { file: CodeFile; 
           </ol>
           {end < total && (
             <Button onClick={() => setStart(start + WINDOW)} class="code-more">
-              Zeilen danach
+              {t("code.lines_after")}
             </Button>
           )}
-          {file.truncated && <div class="dim">Datei größer als 1 MB — nur der Anfang ist geladen.</div>}
+          {file.truncated && <div class="dim">{t("code.file_too_big")}</div>}
         </>
       )}
     </div>
@@ -298,10 +299,10 @@ function ActionsPanel({ sessionId }: { sessionId: string }) {
   if (!actions) return error ? <div class="reply-error">{error}</div> : null;
   return (
     <div class="code-actions">
-      <h3>Befehle</h3>
-      <input type="search" class="action-filter" placeholder="Befehle filtern …" aria-label="Befehle filtern" value={filter} onInput={(e) => setFilter((e.target as HTMLInputElement).value)} />
+      <h3>{t("session.commands")}</h3>
+      <input type="search" class="action-filter" placeholder={t("code.filter_commands_a")} aria-label={t("code.filter_commands")} value={filter} onInput={(e) => setFilter((e.target as HTMLInputElement).value)} />
       {error && <div class="reply-error">{error}</div>}
-      {groups.length === 0 && <div class="ui-empty">Keine passenden Befehle.</div>}
+      {groups.length === 0 && <div class="ui-empty">{t("code.no_matching_commands")}</div>}
       {groups.map(([source, list]) => (
         <section key={source} class="action-group" aria-label={source}>
           <h4 class="action-source dim">{source}</h4>
@@ -321,11 +322,11 @@ function ActionsPanel({ sessionId }: { sessionId: string }) {
                   )}
                   {runningRun(a.id) ? (
                     <Button aria-label={`${a.label} stoppen`} onClick={() => void stop(runningRun(a.id)!)} variant="danger">
-                      Stoppen
+                      {t("code.stop")}
                     </Button>
                   ) : (
                     <Button disabled={runs.filter((r) => r.status === "running").length >= 4} aria-label={`${a.label} ausführen`} title={a.longRunning ? "Startet ohne Zeitlimit bis „Stoppen“; Fenster öffnen sich auf dem Rechner des Hubs" : undefined} onClick={() => void run(a)}>
-                      Ausführen
+                      {t("code.run")}
                     </Button>
                   )}
                 </div>

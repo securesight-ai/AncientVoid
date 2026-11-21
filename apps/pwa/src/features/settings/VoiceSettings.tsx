@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { recordingSupported, sttStatus } from "../../shared/local-stt.ts";
 import { speechRecognitionSupported } from "../../shared/speech.ts";
@@ -35,9 +36,9 @@ export function VoiceSettings() {
   const pfad = waehlePfad(modus, faehigkeiten);
 
   return (
-    <SettingsSection title="Spracheingabe" testid="settings-voice">
-      <SettingRow label="Quelle" hint="auch: Mikro-Knopf halten">
-        <span class="segmented" role="group" aria-label="Quelle der Spracheingabe">
+    <SettingsSection title={t("settings.voice_input")} testid="settings-voice">
+      <SettingRow label={t("composer.source")} hint="auch: Mikro-Knopf halten">
+        <span class="segmented" role="group" aria-label={t("settings.voice_source")}>
           {OPTIONEN.map((o) => (
             <button
               key={o.wert}

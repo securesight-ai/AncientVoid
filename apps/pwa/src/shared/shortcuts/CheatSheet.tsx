@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import { Sheet, Button } from "../ui/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { activeShortcutIds, CATALOG, shortcut, type ShortcutInfo, registerShortcut } from "./registry.ts";
@@ -53,31 +54,31 @@ export function CheatSheet() {
     .filter((s): s is ShortcutInfo => s?.scope === "overlay" && s.id !== "cheatsheet.close");
 
   return (
-    <Sheet open onClose={() => setOpen(false)} label="Kürzel-Übersicht" class="cheatsheet">
+    <Sheet open onClose={() => setOpen(false)} label={t("app.shortcut_overview")} class="cheatsheet">
       <div class="row" style="justify-content: space-between; align-items: center">
-        <strong>Tastatur-Kürzel</strong>
-        <Button aria-label="Kürzel-Übersicht schließen" onClick={() => setOpen(false)}>
+        <strong>{t("app.keyboard_shortcuts")}</strong>
+        <Button aria-label={t("app.close_overview")} onClick={() => setOpen(false)}>
           ✕
         </Button>
       </div>
       {openOverlays.length > 0 && (
         <>
-          <div class="cheatsheet-head dim">Gerade offen</div>
+          <div class="cheatsheet-head dim">{t("app.just_open")}</div>
           {openOverlays.map((s) => (
             <Row key={s.id} info={s} />
           ))}
         </>
       )}
-      <div class="cheatsheet-head dim">Überall</div>
+      <div class="cheatsheet-head dim">{t("app.everywhere")}</div>
       {globalKm.map((s) => (
         <Row key={s.id} info={s} />
       ))}
-      <div class="cheatsheet-head dim">Eingabe-Interaktion</div>
+      <div class="cheatsheet-head dim">{t("app.input_interaction")}</div>
       {local.map((s) => (
         <Row key={s.id} info={s} />
       ))}
       <div class="dim cheatsheet-note">
-        Belegungen von Browser und Fenstermanager stehen je Kürzel in <code>docs/tastatur-kollisionen.md</code> — z. B. wirkt Alt+1–4 im Firefox-Tab nicht (Tab-Wechsel) und Alt+Pos1 ruft dort die Startseite.
+        {t("app.assignments_in")} <code>{t("app.tastatur_docs")}</code> {t("app.firefox_note")}
       </div>
     </Sheet>
   );

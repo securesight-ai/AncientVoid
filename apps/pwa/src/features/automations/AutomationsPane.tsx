@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { AutomationInfo, Team } from "@ancientvoid/contracts";
 import { getToken, hostApi, remoteHost, type AdapterInfo, type DiscoveredProject } from "../../shared/api.ts";
@@ -16,8 +17,8 @@ export function AutomationsPane() {
   const { hosts } = useHubStatus();
   const api = useMemo(() => hostApi(host), [host]);
   return <div>
-    <label>Ausführungshost<select value={host ?? ""} onChange={e => setHost(e.currentTarget.value || null)}>
-      <option value="">Dieser Host</option>{hosts.filter(h => !h.self).map(h => <option key={h.hostId} value={h.hostId}>{h.label ?? h.hostId} · {h.state}</option>)}
+    <label>{t("automations.execution_host")}<select value={host ?? ""} onChange={e => setHost(e.currentTarget.value || null)}>
+      <option value="">{t("automations.this_host")}</option>{hosts.filter(h => !h.self).map(h => <option key={h.hostId} value={h.hostId}>{h.label ?? h.hostId} · {h.state}</option>)}
     </select></label>
     <ApiContext.Provider value={api}><AutomationsHostPane key={host ?? "self"} host={host} /></ApiContext.Provider>
   </div>;
@@ -101,9 +102,9 @@ function AutomationsHostPane({ host }: { host: string | null }) {
 
   return <div class="teams-pane" data-testid="automations-pane">
     <div class="teams-list">
-      <div class="teams-list-head"><h3>Automationen</h3><Button disabled={offline || busy} onClick={() => { setShowNew(value => !value); setEditing(null); }}>{showNew ? "Abbrechen" : "Neue Automation"}</Button></div>
-      {at && <p>Daten vom <time data-testid="automations-asof" dateTime={at}>{new Date(at).toLocaleString("de-DE")}</time></p>}
-      {offline && <p role="status" data-testid="automations-offline">Offline / Host nicht erreichbar — gespeicherter Stand, Änderungen gesperrt.</p>}
+      <div class="teams-list-head"><h3>{t("common.automations")}</h3><Button disabled={offline || busy} onClick={() => { setShowNew(value => !value); setEditing(null); }}>{showNew ? "Abbrechen" : "Neue Automation"}</Button></div>
+      {at && <p>{t("app.data_from")} <time data-testid="automations-asof" dateTime={at}>{new Date(at).toLocaleString("de-DE")}</time></p>}
+      {offline && <p role="status" data-testid="automations-offline">{t("automations.offline_locked")}</p>}
       {readError && <div class="files-error" role="alert">{readError}</div>}
       {error && <div class="files-error" role="alert" data-testid="automations-error">{error}</div>}
       {(showNew || editing) && <AutomationForm key={editing?.definition.id ?? "new"} adapters={adapters.map(a => a.id)} projects={projects.map(p => p.path)} teams={teams} editing={editing} disabled={offline}
@@ -112,18 +113,18 @@ function AutomationsHostPane({ host }: { host: string | null }) {
       <TempSessionCard adapters={adapters} projects={projects} disabled={offline} />
       <ExternalJobsSection offline={offline} cacheKey={cacheKey} />
       {automations === null ? <div class="ui-empty">{offline && readError ? "Keine gespeicherte Projektion vorhanden." : "lade…"}</div>
-        : automations.length === 0 ? <div class="ui-empty">Noch keine Automationen.</div>
+        : automations.length === 0 ? <div class="ui-empty">{t("automations.none_yet")}</div>
         : <ul>{automations.map(info => <li key={info.definition.id}><div class={`team-row ${info.definition.id === selectedId ? "active" : ""}`}>
           <button type="button" class="automation-row-main" onClick={() => setSelectedId(info.definition.id)}>
             <span class="team-row-title">{info.definition.label}</span><span class="team-pill" data-testid="automation-kind">{info.definition.target.kind === "session" ? "Cron-Job" : info.definition.target.kind === "team" ? "Service" : "Skript"}</span><span class="team-pill" data-testid="automation-state">{info.definition.enabled ? "aktiv" : "aus"}</span>
-            <span class="team-row-meta">{scheduleText(info)} · Host {info.definition.hostId}</span>
-            <span class="team-row-meta">nächster Termin: {info.nextOccurrences[0]?.local ?? "—"}</span>
-            {info.lastOccurrence && <span class="team-row-meta">zuletzt {STATE_LABEL[info.lastOccurrence.state]} {info.lastOccurrence.reason ? REASON_LABEL[info.lastOccurrence.reason] : ""} {info.lastOccurrence.outcome ? outcomeLabel(info.lastOccurrence.outcome) : ""}</span>}
+            <span class="team-row-meta">{scheduleText(info)} {t("automations.host_frag")} {info.definition.hostId}</span>
+            <span class="team-row-meta">{t("automations.next_occurrence")} {info.nextOccurrences[0]?.local ?? "—"}</span>
+            {info.lastOccurrence && <span class="team-row-meta">{t("automations.last ")} {STATE_LABEL[info.lastOccurrence.state]} {info.lastOccurrence.reason ? REASON_LABEL[info.lastOccurrence.reason] : ""} {info.lastOccurrence.outcome ? outcomeLabel(info.lastOccurrence.outcome) : ""}</span>}
           </button>
           <div class="automation-row-actions">
-            <Button disabled={busy || offline} onClick={() => void perform(info, "run")}>Jetzt starten</Button>
+            <Button disabled={busy || offline} onClick={() => void perform(info, "run")}>{t("automations.start_now")}</Button>
             <Button disabled={busy || offline} onClick={() => void perform(info, "enable")}>{info.definition.enabled ? "Deaktivieren" : "Aktivieren"}</Button>
-            <Button disabled={busy || offline} onClick={() => { setEditing(info); setShowNew(false); }}>Bearbeiten</Button>
+            <Button disabled={busy || offline} onClick={() => { setEditing(info); setShowNew(false); }}>{t("automations.edit")}</Button>
           </div>
         </div></li>)}</ul>}
     </div>
@@ -157,23 +158,23 @@ function TempSessionCard({ adapters, projects, disabled }: { adapters: AdapterIn
     }
   };
   return <form class="automation-form automation-tempsession" data-testid="automation-tempsession" onSubmit={(e) => { e.preventDefault(); void start(); }}>
-    <h4>Temporäre Session starten</h4>
+    <h4>{t("automations.start_temp_session")}</h4>
     {error && <div class="files-error" role="alert">{error}</div>}
     <div class="form-grid">
-      <label>Harness
-        <input list="tempsession-adapters" value={harness} onInput={(e) => setHarness(e.currentTarget.value)} placeholder="dummy" required />
+      <label>{t("status.harness")}
+        <input list="tempsession-adapters" value={harness} onInput={(e) => setHarness(e.currentTarget.value)} placeholder={t("automations.dummy")} required />
       </label>
       <datalist id="tempsession-adapters">{adapters.map((a) => <option key={a.id} value={a.id} />)}</datalist>
     </div>
-    <label>Projekt
-      <input list="tempsession-projects" value={project} onInput={(e) => setProject(e.currentTarget.value)} placeholder="/pfad/zum/repo" required />
+    <label>{t("newsession.project")}
+      <input list="tempsession-projects" value={project} onInput={(e) => setProject(e.currentTarget.value)} placeholder={t("automations.path_to_repo")} required />
     </label>
     <datalist id="tempsession-projects">{projects.map((p) => <option key={p.path} value={p.path} />)}</datalist>
-    <label>Prompt
-      <textarea rows={3} value={prompt} onInput={(e) => setPrompt(e.currentTarget.value)} placeholder="Was die Session tun soll…" required />
+    <label>{t("automations.prompt")}
+      <textarea rows={3} value={prompt} onInput={(e) => setPrompt(e.currentTarget.value)} placeholder={t("automations.what_session_should")} required />
     </label>
     <div class="automation-form-actions">
-      <Button type="submit" disabled={busy || disabled}>Session starten</Button>
+      <Button type="submit" disabled={busy || disabled}>{t("automations.start_session")}</Button>
     </div>
   </form>;
 }

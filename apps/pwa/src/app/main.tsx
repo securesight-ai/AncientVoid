@@ -106,7 +106,7 @@ function TokenGate({ onReady, rejected }: { onReady: () => void; rejected: strin
       <img class="login-artwork" src="/assets/artwork-tempel.webp" alt="" width="1280" height="720" />
       <h2 style="margin: 0">{t("app.sign_in")}</h2>
       <p class="dim" style="margin: 0">
-        {t("app.token_intro_1")} <code>hubctl token issue &lt;label&gt;</code> {t("app.token_intro_2")}
+        {t("app.token_intro_1")} <code>{t("app.token_issue")}</code> {t("app.token_intro_2")}
       </p>
       <label>
         {t("common.device_token")}

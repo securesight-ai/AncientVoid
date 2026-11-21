@@ -349,7 +349,7 @@ export function CreateSession({
       <label>
         {t("newsession.project")}
         {projects === null ? (
-          <input disabled placeholder="lade…" />
+          <input disabled placeholder={t("common.loading_short")} />
         ) : projects.length > 0 ? (
           <select
             value={projects.some((p) => p.path === project) ? project : ""}
@@ -396,7 +396,7 @@ export function CreateSession({
         <input
           value={project}
           onInput={(e) => setProject((e.target as HTMLInputElement).value)}
-          placeholder="/home/user/repo"
+          placeholder={t("new-session.user_repo")}
           autocapitalize="off"
           autocorrect="off"
           spellcheck={false}

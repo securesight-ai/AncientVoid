@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useState } from "preact/hooks";
 import type { HubApi } from "../../shared/api.ts";
 import { basket, useBasket } from "./feedback-basket.ts";
@@ -18,7 +19,7 @@ export function FeedbackPanel({ api, sessionId }: { api: HubApi; sessionId: stri
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   if (items.length === 0) return null;
-  if (!sessionId) return <div class="dim file-note" data-testid="feedback-panel">{items.length} Befunde gesammelt — Feedback braucht eine Session als Quelle (nicht ein Projektordner).</div>;
+  if (!sessionId) return <div class="dim file-note" data-testid="feedback-panel">{items.length} {t("files.findings_need_session")}</div>;
 
   const doPreview = async () => {
     setBusy(true);
@@ -64,22 +65,22 @@ export function FeedbackPanel({ api, sessionId }: { api: HubApi; sessionId: stri
 
   return (
     <div class="feedback-panel" data-testid="feedback-panel">
-      <strong>Feedback ({items.length})</strong>
+      <strong>{t("files.feedback_open")}{items.length})</strong>
       <ul>
         {items.map((it, k) => (
           <li key={`${it.path}:${it.startLine}:${it.endLine}`}>
             <span class="mono">{it.path}:{it.startLine}{it.endLine !== it.startLine ? `–${it.endLine}` : ""}</span>
-            <input class="file-find" placeholder="Anmerkung" aria-label={`Anmerkung zu ${it.path} Zeile ${it.startLine}`} maxLength={2000} value={it.note} onInput={(e) => { it.note = (e.target as HTMLInputElement).value; setPreview(null); }} />
-            <Chip aria-label="Befund entfernen" onClick={() => { basket.remove(k); setPreview(null); }}>×</Chip>
+            <input class="file-find" placeholder={t("files.note")} aria-label={`Anmerkung zu ${it.path} Zeile ${it.startLine}`} maxLength={2000} value={it.note} onInput={(e) => { it.note = (e.target as HTMLInputElement).value; setPreview(null); }} />
+            <Chip aria-label={t("files.remove_finding")} onClick={() => { basket.remove(k); setPreview(null); }}>×</Chip>
           </li>
         ))}
       </ul>
       <div class="file-tools">
-        <Button disabled={busy} onClick={doPreview} data-testid="feedback-preview">Vorschau</Button>
-        <Button disabled={busy} onClick={toComposer} data-testid="feedback-to-composer">In den Composer</Button>
-        <Button disabled={busy || !preview || preview.stale.length > 0} onClick={send} data-testid="feedback-send">An Session senden</Button>
+        <Button disabled={busy} onClick={doPreview} data-testid="feedback-preview">{t("files.preview")}</Button>
+        <Button disabled={busy} onClick={toComposer} data-testid="feedback-to-composer">{t("files.into_composer")}</Button>
+        <Button disabled={busy || !preview || preview.stale.length > 0} onClick={send} data-testid="feedback-send">{t("files.send_session")}</Button>
       </div>
-      {preview && preview.stale.length > 0 && <div class="files-stale" role="alert">Veraltet: {preview.stale.map((s) => `${s.path} (${s.reason})`).join("; ")} — Befund entfernen und neu auswählen.</div>}
+      {preview && preview.stale.length > 0 && <div class="files-stale" role="alert">{t("files.outdated")} {preview.stale.map((s) => `${s.path} (${s.reason})`).join("; ")} {t("files.remove_reselect")}</div>}
       {preview && <pre class="file-text" data-testid="feedback-prompt">{preview.prompt}</pre>}
       {status && <div class="dim" role="status">{status}</div>}
     </div>

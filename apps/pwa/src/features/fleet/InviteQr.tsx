@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Button } from "../../shared/ui/index.ts";
 
@@ -24,8 +25,8 @@ export function InviteQr({ text }: { text: string }) {
       live = false;
     };
   }, [text]);
-  if (failed) return <div class="reply-error">QR-Code konnte nicht geladen werden — Code unten eintippen oder die Seite neu laden.</div>;
-  return src ? <img class="fleet-qr" src={src} alt="QR-Code der Einladung" /> : null;
+  if (failed) return <div class="reply-error">{t("fleet.qr_failed")}</div>;
+  return src ? <img class="fleet-qr" src={src} alt={t("fleet.qr_invitation")} /> : null;
 }
 
 /**
@@ -88,7 +89,7 @@ export function QrScanner({ onResult, onClose }: { onResult: (text: string) => v
     <div class="fleet-scanner">
       {error ? <div class="reply-error">{error}</div> : <video ref={video} class="fleet-scanner-video" muted playsInline />}
       <Button onClick={onClose}>
-        Scannen abbrechen
+        {t("fleet.cancel_scan")}
       </Button>
     </div>
   );

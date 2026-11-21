@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { VaultBrowse, VaultFile, VaultState } from "@ancientvoid/contracts";
@@ -175,7 +176,7 @@ export function VaultPane({ initialFile = null }: { initialFile?: string | null 
   }, [files, filter]);
 
   if (loadError && !state) return <div class="files-error" role="alert">{loadError}</div>;
-  if (!state) return <EmptyState text="Vault lädt…" />;
+  if (!state) return <EmptyState text={t("vault.vault_loading")} />;
   if (picker) {
     return (
       <VaultPicker
@@ -198,31 +199,31 @@ export function VaultPane({ initialFile = null }: { initialFile?: string | null 
     <div class="vault-pane" data-testid="vault-pane">
       <div class="vault-head">
         <span class="vault-title" title={state.root ?? undefined}>📂 {state.label}</span>
-        <Button onClick={() => setPicker(true)}>Ordner wechseln</Button>
+        <Button onClick={() => setPicker(true)}>{t("vault.change_folder")}</Button>
       </div>
       <div class="vault-new">
         <input
           type="text"
-          placeholder="Neue Notiz (nur .md)"
-          aria-label="Neue Notiz"
+          placeholder={t("vault.new_note_md")}
+          aria-label={t("vault.new_note")}
           value={newName}
           onInput={(e) => setNewName((e.target as HTMLInputElement).value)}
           onKeyDown={(e) => e.key === "Enter" && create()}
         />
-        <Button onClick={create} disabled={creating || newName.trim() === ""}>Anlegen</Button>
+        <Button onClick={create} disabled={creating || newName.trim() === ""}>{t("vault.create")}</Button>
       </div>
       <div class="vault-search">
         <input
           type="search"
-          placeholder="Notiz suchen…"
-          aria-label="Notiz suchen"
+          placeholder={t("vault.search_note2")}
+          aria-label={t("vault.search_note")}
           data-testid="vault-search"
           value={filter}
           onInput={(e) => setFilter((e.target as HTMLInputElement).value)}
         />
       </div>
       {editorError && <div class="files-error" role="alert">{editorError}</div>}
-      {truncated && <div class="graph-banner">Liste gekappt — sehr viele Dateien im Vault-Ordner.</div>}
+      {truncated && <div class="graph-banner">{t("vault.list_capped")}</div>}
       <div class="vault-body">
         <ul
           class="vault-list"
@@ -260,18 +261,18 @@ export function VaultPane({ initialFile = null }: { initialFile?: string | null 
               {current?.editable && (
                 <>
                   {editMode ? (
-                    <Button onClick={() => { setEditMode(false); openFile(selected); }}>Ansehen</Button>
+                    <Button onClick={() => { setEditMode(false); openFile(selected); }}>{t("vault.view")}</Button>
                   ) : (
-                    <Button onClick={() => void enterEdit(selected)}>Bearbeiten</Button>
+                    <Button onClick={() => void enterEdit(selected)}>{t("vault.edit")}</Button>
                   )}
                 </>
               )}
-              <Button aria-label="Datei in eigenes Fenster" onClick={() => void openPopout({ kind: "vault", path: selected })}>⧉ Eigenes Fenster</Button>
+              <Button aria-label={t("session.file_in_own_window")} onClick={() => void openPopout({ kind: "vault", path: selected })}>{t("session.own_window")}</Button>
             </div>
             {editMode ? (
               <div class="vault-editor">
-                {stale && <div class="files-error" role="alert">Die Notiz hat sich unterdessen geändert — neu laden und erneut versuchen (kein stiller Verlust).</div>}
-                {!online && <div class="graph-banner">Offline — Speichern gesperrt, der Text bleibt im Fenster.</div>}
+                {stale && <div class="files-error" role="alert">{t("vault.note_changed")}</div>}
+                {!online && <div class="graph-banner">{t("vault.offline_locked")}</div>}
                 <textarea
                   class="vault-textarea"
                   spellcheck={false}
@@ -345,13 +346,13 @@ function VaultPicker({ onDone, currentRoot = null }: { onDone: (state: VaultStat
 
   return (
     <div class="vault-picker" data-testid="vault-picker">
-      <h2>Zielordner für Notizen wählen</h2>
-      <p class="dim">Der Knowledge Vault legt und bearbeitet ausschließlich Markdown-Dateien in diesem Ordner.</p>
+      <h2>{t("vault.choose_target")}</h2>
+      <p class="dim">{t("vault.vault_markdown")}</p>
       {error && <div class="files-error" role="alert">{error}</div>}
       {browse && (
         <>
           <div class="vault-crumbs">
-            {browse.path === "" ? <span class="dim">Startpunkte</span> : <Button onClick={() => setPath(browse.parent)}>← übergeordneter Ordner</Button>}
+            {browse.path === "" ? <span class="dim">{t("vault.entry_points")}</span> : <Button onClick={() => setPath(browse.parent)}>{t("vault.parent_folder")}</Button>}
             {browse.path !== "" && <code class="vault-path">{browse.path}</code>}
           </div>
           <ul class="vault-list">
@@ -381,8 +382,8 @@ function VaultPicker({ onDone, currentRoot = null }: { onDone: (state: VaultStat
       <div class="vault-manual">
         <input
           type="text"
-          placeholder="… oder absoluten Pfad eingeben, z. B. /home/dev/notizen"
-          aria-label="Vault-Ordner als Pfad eingeben"
+          placeholder={t("vault.or_absolute")}
+          aria-label={t("vault.vault_path")}
           data-testid="vault-path-input"
           value={manualPath}
           onInput={(e) => setManualPath((e.target as HTMLInputElement).value)}
@@ -397,7 +398,7 @@ function VaultPicker({ onDone, currentRoot = null }: { onDone: (state: VaultStat
           {applying ? "Wähle …" : "Pfad übernehmen"}
         </Button>
       </div>
-      {!browse && !error && <div class="ui-empty">Ordner laden …</div>}
+      {!browse && !error && <div class="ui-empty">{t("vault.load_folder")}</div>}
     </div>
   );
 }

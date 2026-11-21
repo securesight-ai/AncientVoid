@@ -3289,18 +3289,6 @@
    ]
   },
   {
-   "match": "`${events[0]!.seq - 1} frühere Einträge — hochscrollen oder tippen`",
-   "key": "session.older_entries",
-   "de": "{n} frühere Einträge — hochscrollen oder tippen",
-   "en": "{n} earlier entries — scroll up or tap",
-   "params": {
-    "events[0]!.seq - 1": "n"
-   },
-   "only": [
-    "SessionTail.tsx"
-   ]
-  },
-  {
    "match": "`Aktuell — kein Rückstand auf origin/${check.branch}.`",
    "key": "session.up_to_date",
    "de": "Aktuell — kein Rückstand auf origin/{branch}.",
@@ -3877,6 +3865,5532 @@
     "selectedNotes.length": "n",
     "selectedNotes.length === 1 ? t(\"session.finding\") : t(\"session.findings\")": "word"
    }
+  },
+  {
+   "match": "Alter",
+   "key": "aimetrics.age",
+   "de": "Alter",
+   "en": "Age"
+  },
+  {
+   "match": "Feld",
+   "key": "aimetrics.field",
+   "de": "Feld",
+   "en": "Field"
+  },
+  {
+   "match": "Keine frischen Daten — letzte bekannte Werte.",
+   "key": "aimetrics.no_fresh",
+   "de": "Keine frischen Daten — letzte bekannte Werte.",
+   "en": "No fresh data — last known values."
+  },
+  {
+   "match": "Keine Quellen konfiguriert — der Hub beprobt nur Konfiguriertes (aiMetrics).",
+   "key": "aimetrics.no_sources2",
+   "de": "Keine Quellen konfiguriert — der Hub beprobt nur Konfiguriertes (aiMetrics).",
+   "en": "No sources configured — the hub only probes configured ones (aiMetrics)."
+  },
+  {
+   "match": "Probe fehlgeschlagen:",
+   "key": "aimetrics.probe_failed",
+   "de": "Probe fehlgeschlagen:",
+   "en": "Probe failed: "
+  },
+  {
+   "match": "Wert",
+   "key": "aimetrics.value",
+   "de": "Wert",
+   "en": "Value"
+  },
+  {
+   "match": "AncientVoid",
+   "key": "app.ancientvoid",
+   "de": "AncientVoid",
+   "en": "AncientVoid"
+  },
+  {
+   "match": "Belegungen von Browser und Fenstermanager stehen je Kürzel in",
+   "key": "app.assignments_in",
+   "de": "Belegungen von Browser und Fenstermanager stehen je Kürzel in",
+   "en": "Browser and window manager assignments per shortcut are in "
+  },
+  {
+   "match": "Kürzel-Übersicht schließen",
+   "key": "app.close_overview",
+   "de": "Kürzel-Übersicht schließen",
+   "en": "Close shortcut overview"
+  },
+  {
+   "match": "Überall",
+   "key": "app.everywhere",
+   "de": "Überall",
+   "en": "Everywhere"
+  },
+  {
+   "match": "— z. B. wirkt Alt+1–4 im Firefox-Tab nicht (Tab-Wechsel) und Alt+Pos1 ruft dort die Startseite.",
+   "key": "app.firefox_note",
+   "de": "— z. B. wirkt Alt+1–4 im Firefox-Tab nicht (Tab-Wechsel) und Alt+Pos1 ruft dort die Startseite.",
+   "en": "— e.g. Alt+1–4 does not work in the Firefox tab (tab switch) and Alt+Home calls up its start page there."
+  },
+  {
+   "match": "Eingabe-Interaktion",
+   "key": "app.input_interaction",
+   "de": "Eingabe-Interaktion",
+   "en": "Input interaction"
+  },
+  {
+   "match": "Gerade offen",
+   "key": "app.just_open",
+   "de": "Gerade offen",
+   "en": "Just open"
+  },
+  {
+   "match": "Tastatur-Kürzel",
+   "key": "app.keyboard_shortcuts",
+   "de": "Tastatur-Kürzel",
+   "en": "Keyboard shortcuts"
+  },
+  {
+   "match": "Kürzel-Übersicht",
+   "key": "app.shortcut_overview",
+   "de": "Kürzel-Übersicht",
+   "en": "Shortcut overview"
+  },
+  {
+   "match": "docs/tastatur-kollisionen.md",
+   "key": "app.tastatur_docs",
+   "de": "docs/tastatur-kollisionen.md",
+   "en": "docs/tastatur-kollisionen.md"
+  },
+  {
+   "match": "Teams",
+   "key": "app.teams",
+   "de": "Teams",
+   "en": "Teams"
+  },
+  {
+   "match": "hubctl token issue &lt;label&gt;",
+   "key": "app.token_issue",
+   "de": "hubctl token issue &lt;label&gt;",
+   "en": "hubctl token issue <label>"
+  },
+  {
+   "match": "Anhang hinzufügen",
+   "key": "attachments.add_attachment",
+   "de": "Anhang hinzufügen",
+   "en": "Add attachment"
+  },
+  {
+   "match": "Dateien anhängen",
+   "key": "attachments.attach_files",
+   "de": "Dateien anhängen",
+   "en": "Attach files"
+  },
+  {
+   "match": "Dateien oder Bilder anhängen",
+   "key": "attachments.attach_files_images",
+   "de": "Dateien oder Bilder anhängen",
+   "en": "Attach files or images"
+  },
+  {
+   "match": "Ausgelesen ·",
+   "key": "attachments.parsed",
+   "de": "Ausgelesen ·",
+   "en": "Extracted ·"
+  },
+  {
+   "match": "Aufgeben…",
+   "key": "automations.abandon_ab",
+   "de": "Aufgeben…",
+   "en": "Abandon…"
+  },
+  {
+   "match": "Notiz (warum aufgeben?)",
+   "key": "automations.abandon_note",
+   "de": "Notiz (warum aufgeben?)",
+   "en": "Note (why abandon?)"
+  },
+  {
+   "match": "Aktion",
+   "key": "automations.action",
+   "de": "Aktion",
+   "en": "Action"
+  },
+  {
+   "match": "Stand:",
+   "key": "automations.as_of",
+   "de": "Stand:",
+   "en": "As of: "
+  },
+  {
+   "match": "(höchstens 100 Einträge)",
+   "key": "automations.at_most_100",
+   "de": "(höchstens 100 Einträge)",
+   "en": "(at most 100 entries)"
+  },
+  {
+   "match": "· höchstens",
+   "key": "automations.at_most_frag",
+   "de": "· höchstens",
+   "en": "· at most "
+  },
+  {
+   "match": "Automationart",
+   "key": "automations.automation_type",
+   "de": "Automationart",
+   "en": "Automation type"
+  },
+  {
+   "match": "· Nachholfenster:",
+   "key": "automations.catchup_frag",
+   "de": "· Nachholfenster:",
+   "en": "· Catch-up window: "
+  },
+  {
+   "match": "Nachholfenster (Minuten)",
+   "key": "automations.catchup_window",
+   "de": "Nachholfenster (Minuten)",
+   "en": "Catch-up window (minutes)"
+  },
+  {
+   "match": "Vorhandenes Team wählen",
+   "key": "automations.choose_existing_team",
+   "de": "Vorhandenes Team wählen",
+   "en": "Choose existing team"
+  },
+  {
+   "match": "Als aufgegeben abschließen",
+   "key": "automations.close_abandoned",
+   "de": "Als aufgegeben abschließen",
+   "en": "Close as abandoned"
+  },
+  {
+   "match": "Cron (5 Felder)",
+   "key": "automations.cron_5_fields",
+   "de": "Cron (5 Felder)",
+   "en": "Cron (5 fields)"
+  },
+  {
+   "match": "Cron (min Std Tag Monat WT)",
+   "key": "automations.cron_fields",
+   "de": "Cron (min Std Tag Monat WT)",
+   "en": "Cron (min hr day month DOW)"
+  },
+  {
+   "match": "Cron-Job · Session-Trigger",
+   "key": "automations.cron_session_trigger",
+   "de": "Cron-Job · Session-Trigger",
+   "en": "Cron job · session trigger"
+  },
+  {
+   "match": "täglich",
+   "key": "automations.daily",
+   "de": "täglich",
+   "en": "daily"
+  },
+  {
+   "match": "(Frist",
+   "key": "automations.deadline_open",
+   "de": "(Frist",
+   "en": "(deadline "
+  },
+  {
+   "match": "direct-Checkout (P38-Lease)",
+   "key": "automations.direct_checkout",
+   "de": "direct-Checkout (P38-Lease)",
+   "en": "direct checkout (P38 lease)"
+  },
+  {
+   "match": "dummy",
+   "key": "automations.dummy",
+   "de": "dummy",
+   "en": "dummy"
+  },
+  {
+   "match": "Bearbeiten",
+   "key": "automations.edit",
+   "de": "Bearbeiten",
+   "en": "Edit"
+  },
+  {
+   "match": "Ausführungshost",
+   "key": "automations.execution_host",
+   "de": "Ausführungshost",
+   "en": "Execution host"
+  },
+  {
+   "match": "Externe Automatismen",
+   "key": "automations.external_automations",
+   "de": "Externe Automatismen",
+   "en": "External automations"
+  },
+  {
+   "match": "Eingefrorener Rahmen:",
+   "key": "automations.frozen_frame",
+   "de": "Eingefrorener Rahmen:",
+   "en": "Frozen frame: "
+  },
+  {
+   "match": "git-status",
+   "key": "automations.git_status",
+   "de": "git-status",
+   "en": "git-status"
+  },
+  {
+   "match": "· Host",
+   "key": "automations.host_frag",
+   "de": "· Host",
+   "en": "· Host "
+  },
+  {
+   "match": "stündlich",
+   "key": "automations.hourly",
+   "de": "stündlich",
+   "en": "hourly"
+  },
+  {
+   "match": "Label",
+   "key": "automations.label",
+   "de": "Label",
+   "en": "Label"
+  },
+  {
+   "match": "zuletzt",
+   "key": "automations.last ",
+   "de": "zuletzt",
+   "en": "last "
+  },
+  {
+   "match": "max. parallel",
+   "key": "automations.max_parallel",
+   "de": "max. parallel",
+   "en": "max. parallel"
+  },
+  {
+   "match": "· Maximal parallel:",
+   "key": "automations.max_parallel_frag",
+   "de": "· Maximal parallel:",
+   "en": "· Max parallel: "
+  },
+  {
+   "match": "Minuten · Freigabeversion:",
+   "key": "automations.minutes_approval_version",
+   "de": "Minuten · Freigabeversion:",
+   "en": "Minutes · approval version: "
+  },
+  {
+   "match": "Verpasste Termine bis",
+   "key": "automations.missed_until",
+   "de": "Verpasste Termine bis",
+   "en": "Missed occurrences until "
+  },
+  {
+   "match": "Modell (optional)",
+   "key": "automations.model_optional",
+   "de": "Modell (optional)",
+   "en": "Model (optional)"
+  },
+  {
+   "match": "Morgen-Briefing",
+   "key": "automations.morning_briefing",
+   "de": "Morgen-Briefing",
+   "en": "Morning briefing"
+  },
+  {
+   "match": "Neue und geänderte Automationen beginnen deaktiviert — die Aktivierung ist die Freigabe.",
+   "key": "automations.new_disabled",
+   "de": "Neue und geänderte Automationen beginnen deaktiviert — die Aktivierung ist die Freigabe.",
+   "en": "New and changed automations start disabled — enabling is the approval."
+  },
+  {
+   "match": "nächster Termin:",
+   "key": "automations.next_occurrence",
+   "de": "nächster Termin:",
+   "en": "next occurrence: "
+  },
+  {
+   "match": "Nächste Termine",
+   "key": "automations.next_occurrences",
+   "de": "Nächste Termine",
+   "en": "Next occurrences"
+  },
+  {
+   "match": "Kein Termin im unterstützten Kalenderhorizont.",
+   "key": "automations.no_occurrence",
+   "de": "Kein Termin im unterstützten Kalenderhorizont.",
+   "en": "No occurrence within the supported calendar horizon."
+  },
+  {
+   "match": "Keine registrierten Aktionen für dieses Projekt gefunden.",
+   "key": "automations.no_registered_actions",
+   "de": "Keine registrierten Aktionen für dieses Projekt gefunden.",
+   "en": "No registered actions found for this project."
+  },
+  {
+   "match": "Noch keine Läufe.",
+   "key": "automations.no_runs",
+   "de": "Noch keine Läufe.",
+   "en": "No runs yet."
+  },
+  {
+   "match": "Noch keine Automationen.",
+   "key": "automations.none_yet",
+   "de": "Noch keine Automationen.",
+   "en": "No automations yet."
+  },
+  {
+   "match": "Offline / Host nicht erreichbar — gespeicherter Stand, Änderungen gesperrt.",
+   "key": "automations.offline_locked",
+   "de": "Offline / Host nicht erreichbar — gespeicherter Stand, Änderungen gesperrt.",
+   "en": "Offline / host unreachable — saved state, changes locked."
+  },
+  {
+   "match": "Offline — gespeicherter Stand.",
+   "key": "automations.offline_saved",
+   "de": "Offline — gespeicherter Stand.",
+   "en": "Offline — saved state."
+  },
+  {
+   "match": "öffnen",
+   "key": "automations.open",
+   "de": "öffnen",
+   "en": "open"
+  },
+  {
+   "match": "parallel",
+   "key": "automations.parallel",
+   "de": "parallel",
+   "en": "parallel"
+  },
+  {
+   "match": "/pfad/zum/repo",
+   "key": "automations.path_to_repo",
+   "de": "/pfad/zum/repo",
+   "en": "/path/to/repo"
+  },
+  {
+   "match": "Vorprüfung:",
+   "key": "automations.precheck",
+   "de": "Vorprüfung:",
+   "en": "Precheck: "
+  },
+  {
+   "match": "Precheck-Aktion (optional, registriert)",
+   "key": "automations.precheck_action",
+   "de": "Precheck-Aktion (optional, registriert)",
+   "en": "Precheck action (optional, registered)"
+  },
+  {
+   "match": "Preset",
+   "key": "automations.preset",
+   "de": "Preset",
+   "en": "Preset"
+  },
+  {
+   "match": "Prompt",
+   "key": "automations.prompt",
+   "de": "Prompt",
+   "en": "Prompt"
+  },
+  {
+   "match": "Prompt (leer lassen behält den bisherigen Auftrag)",
+   "key": "automations.prompt_keep",
+   "de": "Prompt (leer lassen behält den bisherigen Auftrag)",
+   "en": "Prompt (leave empty to keep the current assignment)"
+  },
+  {
+   "match": "Grund:",
+   "key": "automations.reason",
+   "de": "Grund:",
+   "en": "Reason: "
+  },
+  {
+   "match": "Ergebnis:",
+   "key": "automations.result",
+   "de": "Ergebnis:",
+   "en": "Result: "
+  },
+  {
+   "match": "Gespeicherter Verlauf vom",
+   "key": "automations.saved_history",
+   "de": "Gespeicherter Verlauf vom",
+   "en": "Saved history from "
+  },
+  {
+   "match": "Zeitplan",
+   "key": "automations.schedule",
+   "de": "Zeitplan",
+   "en": "Schedule"
+  },
+  {
+   "match": "Skript-Start · Miniskript",
+   "key": "automations.script_start",
+   "de": "Skript-Start · Miniskript",
+   "en": "Script start · mini-script"
+  },
+  {
+   "match": "Der Skript-Start führt die Aktion ohne Shell im Projekt aus — mit Zeitplan wird sie zum cron-artigen Miniskript-Trigger.",
+   "key": "automations.script_start_desc",
+   "de": "Der Skript-Start führt die Aktion ohne Shell im Projekt aus — mit Zeitplan wird sie zum cron-artigen Miniskript-Trigger.",
+   "en": "Script start runs the action in the project without a shell — with a schedule it becomes a cron-like mini-script trigger."
+  },
+  {
+   "match": "Service · Agenten-Team",
+   "key": "automations.service_agent_team",
+   "de": "Service · Agenten-Team",
+   "en": "Service · agent team"
+  },
+  {
+   "match": "Session ↗",
+   "key": "automations.session_arrow",
+   "de": "Session ↗",
+   "en": "Session ↗"
+  },
+  {
+   "match": "Jetzt starten",
+   "key": "automations.start_now",
+   "de": "Jetzt starten",
+   "en": "Start now"
+  },
+  {
+   "match": "Session starten",
+   "key": "automations.start_session",
+   "de": "Session starten",
+   "en": "Start session"
+  },
+  {
+   "match": "Temporäre Session starten",
+   "key": "automations.start_temp_session",
+   "de": "Temporäre Session starten",
+   "en": "Start temporary session"
+  },
+  {
+   "match": "Ziel:",
+   "key": "automations.target",
+   "de": "Ziel:",
+   "en": "Target: "
+  },
+  {
+   "match": "Team ↗",
+   "key": "automations.team_arrow",
+   "de": "Team ↗",
+   "en": "Team ↗"
+  },
+  {
+   "match": "Der vollständige Team-Rahmen ist online über die eingefrorene Vorlage abrufbar.",
+   "key": "automations.team_frame_online",
+   "de": "Der vollständige Team-Rahmen ist online über die eingefrorene Vorlage abrufbar.",
+   "en": "The full team frame is available online via the frozen template."
+  },
+  {
+   "match": "Team-Vorlage",
+   "key": "automations.team_template",
+   "de": "Team-Vorlage",
+   "en": "Team template"
+  },
+  {
+   "match": "Dieser Host",
+   "key": "automations.this_host",
+   "de": "Dieser Host",
+   "en": "This host"
+  },
+  {
+   "match": "Uhrzeit (Ortszeit)",
+   "key": "automations.time_local",
+   "de": "Uhrzeit (Ortszeit)",
+   "en": "Time (local time)"
+  },
+  {
+   "match": "Zeitzone",
+   "key": "automations.time_zone",
+   "de": "Zeitzone",
+   "en": "Time zone"
+  },
+  {
+   "match": "Art",
+   "key": "automations.type",
+   "de": "Art",
+   "en": "Type"
+  },
+  {
+   "match": "Wochentage",
+   "key": "automations.weekdays",
+   "de": "Wochentage",
+   "en": "Weekdays"
+  },
+  {
+   "match": "werktags",
+   "key": "automations.weekdays_short",
+   "de": "werktags",
+   "en": "weekdays"
+  },
+  {
+   "match": "wöchentlich",
+   "key": "automations.weekly",
+   "de": "wöchentlich",
+   "en": "weekly"
+  },
+  {
+   "match": "Was der Lauf tun soll…",
+   "key": "automations.what_run_should",
+   "de": "Was der Lauf tun soll…",
+   "en": "What the run should do…"
+  },
+  {
+   "match": "Was die Session tun soll…",
+   "key": "automations.what_session_should",
+   "de": "Was die Session tun soll…",
+   "en": "What the session should do…"
+  },
+  {
+   "match": "· Worker:",
+   "key": "automations.worker_frag",
+   "de": "· Worker:",
+   "en": "· Worker: "
+  },
+  {
+   "match": "Worktree (Standard)",
+   "key": "automations.worktree_default",
+   "de": "Worktree (Standard)",
+   "en": "Worktree (default)"
+  },
+  {
+   "match": "Adresse",
+   "key": "browser.address",
+   "de": "Adresse",
+   "en": "Address"
+  },
+  {
+   "match": "Stand",
+   "key": "browser.as_of",
+   "de": "Stand",
+   "en": "As of "
+  },
+  {
+   "match": "Screenshot des Elements anhängen",
+   "key": "browser.attach_element_screenshot",
+   "de": "Screenshot des Elements anhängen",
+   "en": "Attach element screenshot"
+  },
+  {
+   "match": "Zurück",
+   "key": "browser.back",
+   "de": "Zurück",
+   "en": "Back"
+  },
+  {
+   "match": "Browser schließen",
+   "key": "browser.browser_close",
+   "de": "Browser schließen",
+   "en": "Close browser"
+  },
+  {
+   "match": "Der Browser ist geschlossen. Adresse eingeben und „Browser starten“.",
+   "key": "browser.browser_closed",
+   "de": "Der Browser ist geschlossen. Adresse eingeben und „Browser starten“.",
+   "en": "The browser is closed. Enter an address and choose “Start browser”."
+  },
+  {
+   "match": "Der Browser läuft auf dem Host der Session. Für Sessions anderer Maschinen ist er in dieser Version nicht erreichbar.",
+   "key": "browser.browser_host",
+   "de": "Der Browser läuft auf dem Host der Session. Für Sessions anderer Maschinen ist er in dieser Version nicht erreichbar.",
+   "en": "The browser runs on the session's host. For sessions on other machines it is not reachable in this version."
+  },
+  {
+   "match": "Browser in eigenes Fenster",
+   "key": "browser.browser_own_window",
+   "de": "Browser in eigenes Fenster",
+   "en": "Browser to its own window"
+  },
+  {
+   "match": "Browser nicht verfügbar:",
+   "key": "browser.browser_unavailable",
+   "de": "Browser nicht verfügbar:",
+   "en": "Browser unavailable: "
+  },
+  {
+   "match": "Browser-Arbeitsplatz",
+   "key": "browser.browser_workspace",
+   "de": "Browser-Arbeitsplatz",
+   "en": "Browser workspace"
+  },
+  {
+   "match": "Desktop 1280×800",
+   "key": "browser.desktop_size",
+   "de": "Desktop 1280×800",
+   "en": "Desktop 1280×800"
+  },
+  {
+   "match": "Zuerst eine Session fokussieren — der Browser gehört zu ihrem Workspace.",
+   "key": "browser.focus_session_first",
+   "de": "Zuerst eine Session fokussieren — der Browser gehört zu ihrem Workspace.",
+   "en": "Focus a session first — the browser belongs to its workspace."
+  },
+  {
+   "match": "Vor",
+   "key": "browser.forward",
+   "de": "Vor",
+   "en": "Forward"
+  },
+  {
+   "match": "Frame: nur das Frame-Element, sein Inhalt wird nicht ausgelesen.",
+   "key": "browser.frame_only",
+   "de": "Frame: nur das Frame-Element, sein Inhalt wird nicht ausgelesen.",
+   "en": "Frame: only the frame element; its content is not read."
+  },
+  {
+   "match": "&gt;",
+   "key": "browser.gt",
+   "de": "&gt;",
+   "en": ">"
+  },
+  {
+   "match": "Fenstergröße des Host-Browsers — kein Gerätesimulator",
+   "key": "browser.host_window_size",
+   "de": "Fenstergröße des Host-Browsers — kein Gerätesimulator",
+   "en": "Host browser window size — not a device simulator"
+  },
+  {
+   "match": "Bild wird geladen …",
+   "key": "browser.image_loading",
+   "de": "Bild wird geladen …",
+   "en": "Loading image …"
+  },
+  {
+   "match": "In den Composer",
+   "key": "browser.into_composer",
+   "de": "In den Composer",
+   "en": "Into the composer"
+  },
+  {
+   "match": "&lt;",
+   "key": "browser.lt",
+   "de": "&lt;",
+   "en": "<"
+  },
+  {
+   "match": "Schmal 390×844",
+   "key": "browser.narrow_size",
+   "de": "Schmal 390×844",
+   "en": "Narrow 390×844"
+  },
+  {
+   "match": "Keine Console-/Netzfehler.",
+   "key": "browser.no_errors",
+   "de": "Keine Console-/Netzfehler.",
+   "en": "No console/network errors."
+  },
+  {
+   "match": "Noch keine Testläufe.",
+   "key": "browser.no_runs",
+   "de": "Noch keine Testläufe.",
+   "en": "No test runs yet."
+  },
+  {
+   "match": "Kein freigegebenes Ziel: der Workspace hat keinen laufenden Service (Manifest) und es sind keine browserOrigins konfiguriert.",
+   "key": "browser.no_shared_target",
+   "de": "Kein freigegebenes Ziel: der Workspace hat keinen laufenden Service (Manifest) und es sind keine browserOrigins konfiguriert.",
+   "en": "No shared target: the workspace has no running service (manifest) and no browserOrigins are configured."
+  },
+  {
+   "match": "Anmerkung zum Element",
+   "key": "browser.note_element",
+   "de": "Anmerkung zum Element",
+   "en": "Note about the element"
+  },
+  {
+   "match": "Offline — letztes Bild mit Zeitstempel, Eingabe gesperrt.",
+   "key": "browser.offline_last",
+   "de": "Offline — letztes Bild mit Zeitstempel, Eingabe gesperrt.",
+   "en": "Offline — last image with timestamp, input locked."
+  },
+  {
+   "match": "Bedienen",
+   "key": "browser.operate",
+   "de": "Bedienen",
+   "en": "Operate"
+  },
+  {
+   "match": "/pfad oder http://127.0.0.1:PORT/",
+   "key": "browser.path_or_port",
+   "de": "/pfad oder http://127.0.0.1:PORT/",
+   "en": "/path or http://127.0.0.1:PORT/"
+  },
+  {
+   "match": "Vorschau",
+   "key": "browser.preview",
+   "de": "Vorschau",
+   "en": "Preview"
+  },
+  {
+   "match": "Erreichbar:",
+   "key": "browser.reachable",
+   "de": "Erreichbar:",
+   "en": "Reachable: "
+  },
+  {
+   "match": "Registrierte Schritte (goto, click, fill, expectText, expectVisible, expectUrl) — kein freier Code. Der Test läuft in einem eigenen Kontext, getrennt von deinem Browser. Ein „/pfad“ gilt relativ zum ersten freigegebenen Dienst.",
+   "key": "browser.registered_steps",
+   "de": "Registrierte Schritte (goto, click, fill, expectText, expectVisible, expectUrl) — kein freier Code. Der Test läuft in einem eigenen Kontext, getrennt von deinem Browser. Ein „/pfad“ gilt relativ zum ersten freigegebenen Dienst.",
+   "en": "Registered steps (goto, click, fill, expectText, expectVisible, expectUrl) — no free code. The test runs in its own context, separate from your browser. A “/path” is relative to the first shared service."
+  },
+  {
+   "match": "Neu laden",
+   "key": "browser.reload",
+   "de": "Neu laden",
+   "en": "Reload"
+  },
+  {
+   "match": "Screenshot",
+   "key": "browser.screenshot",
+   "de": "Screenshot",
+   "en": "Screenshot"
+  },
+  {
+   "match": "Runterscrollen",
+   "key": "browser.scroll_down",
+   "de": "Runterscrollen",
+   "en": "Scroll down"
+  },
+  {
+   "match": "Hochscrollen",
+   "key": "browser.scroll_up",
+   "de": "Hochscrollen",
+   "en": "Scroll up"
+  },
+  {
+   "match": "Passwort-/Secret-Feld: Text und Styles werden nicht exportiert.",
+   "key": "browser.secret_field",
+   "de": "Passwort-/Secret-Feld: Text und Styles werden nicht exportiert.",
+   "en": "Password/secret field: text and styles are not exported."
+  },
+  {
+   "match": "Element wählen",
+   "key": "browser.select_element",
+   "de": "Element wählen",
+   "en": "Select element"
+  },
+  {
+   "match": "An Session senden",
+   "key": "browser.send_session",
+   "de": "An Session senden",
+   "en": "Send to session"
+  },
+  {
+   "match": "Element liegt im Shadow DOM.",
+   "key": "browser.shadow_dom",
+   "de": "Element liegt im Shadow DOM.",
+   "en": "The element is inside a shadow DOM."
+  },
+  {
+   "match": "Quelle:",
+   "key": "browser.source",
+   "de": "Quelle:",
+   "en": "Source: "
+  },
+  {
+   "match": "Test starten",
+   "key": "browser.start_test",
+   "de": "Test starten",
+   "en": "Start test"
+  },
+  {
+   "match": "Tablet 820×1180",
+   "key": "browser.tablet_size",
+   "de": "Tablet 820×1180",
+   "en": "Tablet 820×1180"
+  },
+  {
+   "match": "Tippen",
+   "key": "browser.tap",
+   "de": "Tippen",
+   "en": "Tap"
+  },
+  {
+   "match": "Testfall (JSON)",
+   "key": "browser.test_case_json",
+   "de": "Testfall (JSON)",
+   "en": "Test case (JSON)"
+  },
+  {
+   "match": "Text: „",
+   "key": "browser.text_quote",
+   "de": "Text: „",
+   "en": "Text: “"
+  },
+  {
+   "match": "Text in das fokussierte Feld tippen",
+   "key": "browser.type_focused",
+   "de": "Text in das fokussierte Feld tippen",
+   "en": "Type text into the focused field"
+  },
+  {
+   "match": "Text eintippen",
+   "key": "browser.type_text",
+   "de": "Text eintippen",
+   "en": "Type text"
+  },
+  {
+   "match": "Was soll geändert werden?",
+   "key": "browser.what_change",
+   "de": "Was soll geändert werden?",
+   "en": "What should be changed?"
+  },
+  {
+   "match": "Fenstergröße",
+   "key": "browser.window_size",
+   "de": "Fenstergröße",
+   "en": "Window size"
+  },
+  {
+   "match": "anhängen",
+   "key": "clipboard.attach",
+   "de": "anhängen",
+   "en": "attach"
+  },
+  {
+   "match": "Zwischenablage-Ablage",
+   "key": "clipboard.clipboard_shelf",
+   "de": "Zwischenablage-Ablage",
+   "en": "Clipboard shelf"
+  },
+  {
+   "match": "schließen",
+   "key": "clipboard.close",
+   "de": "schließen",
+   "en": "close"
+  },
+  {
+   "match": "Nur auf diesem Gerät in diesem Browser — die Ablage geht nie zum Hub. Sichtbar sind",
+   "key": "clipboard.device_only",
+   "de": "Nur auf diesem Gerät in diesem Browser — die Ablage geht nie zum Hub. Sichtbar sind",
+   "en": "Only on this device in this browser — the shelf never goes to the hub. Visible are "
+  },
+  {
+   "match": "× geholt",
+   "key": "clipboard.fetched",
+   "de": "× geholt",
+   "en": "× fetched"
+  },
+  {
+   "match": "; Bilder liegen getrennt (zwölf Stück, höchstens 24 MB), Sprachnachrichten ebenso (drei neueste, höchstens 12 MB).",
+   "key": "clipboard.images_separate",
+   "de": "; Bilder liegen getrennt (zwölf Stück, höchstens 24 MB), Sprachnachrichten ebenso (drei neueste, höchstens 12 MB).",
+   "en": "; images are kept separately (twelve items, at most 24 MB), voice messages likewise (three newest, at most 12 MB)"
+  },
+  {
+   "match": "aus anderen Apps übernehmen",
+   "key": "clipboard.import_other_apps",
+   "de": "aus anderen Apps übernehmen",
+   "en": "import from other apps"
+  },
+  {
+   "match": "Stufen, gemerkt bis",
+   "key": "clipboard.levels_until",
+   "de": "Stufen, gemerkt bis",
+   "en": "levels, remembered until "
+  },
+  {
+   "match": "· neueste zuerst",
+   "key": "clipboard.newest_first",
+   "de": "· neueste zuerst",
+   "en": "· newest first"
+  },
+  {
+   "match": "Einfügen",
+   "key": "clipboard.paste",
+   "de": "Einfügen",
+   "en": "Paste"
+  },
+  {
+   "match": "entfernen",
+   "key": "clipboard.remove",
+   "de": "entfernen",
+   "en": "remove"
+  },
+  {
+   "match": "Ablage",
+   "key": "clipboard.shelf",
+   "de": "Ablage",
+   "en": "Shelf"
+  },
+  {
+   "match": "Noch nichts abgelegt. Was die App kopiert — Diktat, Markierung, Befehl, Eintrag — liegt eine Stufe tiefer hier; beim Wiederkommen kommt auch extern Kopiertes herein (Text und Screenshot). Token bleiben draußen.",
+   "key": "clipboard.shelf_empty",
+   "de": "Noch nichts abgelegt. Was die App kopiert — Diktat, Markierung, Befehl, Eintrag — liegt eine Stufe tiefer hier; beim Wiederkommen kommt auch extern Kopiertes herein (Text und Screenshot). Token bleiben draußen.",
+   "en": "Nothing shelved yet. What the app copies — dictation, mark, command, entry — sits one level down here; when you return, externally copied content arrives too (text and screenshot). Tokens stay out."
+  },
+  {
+   "match": "Erstmal tippen fragt nach, nochmal tippen leert",
+   "key": "clipboard.tap_asks",
+   "de": "Erstmal tippen fragt nach, nochmal tippen leert",
+   "en": "First tap asks, second tap clears"
+  },
+  {
+   "match": "in die Zwischenablage",
+   "key": "clipboard.to_clipboard",
+   "de": "in die Zwischenablage",
+   "en": "to the clipboard"
+  },
+  {
+   "match": "gekürzt",
+   "key": "clipboard.truncated",
+   "de": "gekürzt",
+   "en": "truncated"
+  },
+  {
+   "match": "← Suche",
+   "key": "code.back_search",
+   "de": "← Suche",
+   "en": "← Search"
+  },
+  {
+   "match": "Binärdatei — wird nicht angezeigt.",
+   "key": "code.binary_file",
+   "de": "Binärdatei — wird nicht angezeigt.",
+   "en": "Binary file — not displayed."
+  },
+  {
+   "match": "In dieser Session geändert: +",
+   "key": "code.changed_session",
+   "de": "In dieser Session geändert: +",
+   "en": "Changed in this session: +"
+  },
+  {
+   "match": "Definition",
+   "key": "code.definition",
+   "de": "Definition",
+   "en": "Definition"
+  },
+  {
+   "match": "Datei größer als 1 MB — nur der Anfang ist geladen.",
+   "key": "code.file_too_big",
+   "de": "Datei größer als 1 MB — nur der Anfang ist geladen.",
+   "en": "File larger than 1 MB — only the beginning is loaded."
+  },
+  {
+   "match": "Befehle filtern",
+   "key": "code.filter_commands",
+   "de": "Befehle filtern",
+   "en": "Filter commands"
+  },
+  {
+   "match": "Befehle filtern …",
+   "key": "code.filter_commands_a",
+   "de": "Befehle filtern …",
+   "en": "Filter commands…"
+  },
+  {
+   "match": "→ Diff",
+   "key": "code.forward_diff",
+   "de": "→ Diff",
+   "en": "→ Diff"
+  },
+  {
+   "match": "Treffer — genauer suchen.",
+   "key": "code.hits_refine",
+   "de": "Treffer — genauer suchen.",
+   "en": "hits — search more narrowly."
+  },
+  {
+   "match": "Zeilen",
+   "key": "code.lines",
+   "de": "Zeilen",
+   "en": "Lines"
+  },
+  {
+   "match": "Zeilen danach",
+   "key": "code.lines_after",
+   "de": "Zeilen danach",
+   "en": "Lines after"
+  },
+  {
+   "match": "Zeilen davor",
+   "key": "code.lines_before",
+   "de": "Zeilen davor",
+   "en": "Lines before"
+  },
+  {
+   "match": "Mehr als",
+   "key": "code.more_than",
+   "de": "Mehr als",
+   "en": "More than "
+  },
+  {
+   "match": "Keine Treffer.",
+   "key": "code.no_hits",
+   "de": "Keine Treffer.",
+   "en": "No hits."
+  },
+  {
+   "match": "Keine passenden Befehle.",
+   "key": "code.no_matching_commands",
+   "de": "Keine passenden Befehle.",
+   "en": "No matching commands."
+  },
+  {
+   "match": "Ausführen",
+   "key": "code.run",
+   "de": "Ausführen",
+   "en": "Run"
+  },
+  {
+   "match": "Code durchsuchen",
+   "key": "code.search_code",
+   "de": "Code durchsuchen",
+   "en": "Search code"
+  },
+  {
+   "match": "Stoppen",
+   "key": "code.stop",
+   "de": "Stoppen",
+   "en": "Stop"
+  },
+  {
+   "match": "Symbol",
+   "key": "code.symbol",
+   "de": "Symbol",
+   "en": "Symbol"
+  },
+  {
+   "match": "Text",
+   "key": "code.text",
+   "de": "Text",
+   "en": "Text"
+  },
+  {
+   "match": "Nachher",
+   "key": "commands.after",
+   "de": "Nachher",
+   "en": "After"
+  },
+  {
+   "match": "Vorher",
+   "key": "commands.before",
+   "de": "Vorher",
+   "en": "Before"
+  },
+  {
+   "match": "Auftrag",
+   "key": "commands.commandpalette",
+   "de": "Auftrag",
+   "en": "Command"
+  },
+  {
+   "match": "Springen zu",
+   "key": "commands.jump_to",
+   "de": "Springen zu",
+   "en": "Jump to"
+  },
+  {
+   "match": "Springen oder Auftrag — z. B. „Einstellungen“, „Zeig wartende Sessions“",
+   "key": "commands.palette_hint",
+   "de": "Springen oder Auftrag — z. B. „Einstellungen“, „Zeig wartende Sessions“",
+   "en": "Jump or command — e.g. “Settings”, “Show waiting sessions”"
+  },
+  {
+   "match": "· Ziel vor dem Ausführen geprüft",
+   "key": "commands.target_verified",
+   "de": "· Ziel vor dem Ausführen geprüft",
+   "en": "· target verified before executing"
+  },
+  {
+   "match": "Feld für Textbearbeitung:",
+   "key": "commands.text_field",
+   "de": "Feld für Textbearbeitung:",
+   "en": "Field for text editing: "
+  },
+  {
+   "match": "node apps/hubctl/src/cli.ts token issue companion:mein-pc > ~/.config/ancientvoid/companion.token\nnode apps/companion/src/cli.ts run --hub http://127.0.0.1:7373",
+   "key": "desktop.SKIP",
+   "de": "node apps/hubctl/src/cli.ts token issue companion:mein-pc > ~/.config/ancientvoid/companion.token\nnode apps/companion/src/cli.ts run --hub http://127.0.0.1:7373",
+   "en": ""
+  },
+  {
+   "match": "Not-Stopp am PC aktiv — dort mit „ancientvoid-companion resume“ freigeben.",
+   "key": "desktop.estop_active",
+   "de": "Not-Stopp am PC aktiv — dort mit „ancientvoid-companion resume“ freigeben.",
+   "en": "E-stop on the PC active — release it there with “ancientvoid-companion resume”."
+  },
+  {
+   "match": "Not-Stopp am PC: „ancientvoid-companion stop“ (z. B. auf Super+Shift+Esc legen).",
+   "key": "desktop.estop_hint",
+   "de": "Not-Stopp am PC: „ancientvoid-companion stop“ (z. B. auf Super+Shift+Esc legen).",
+   "en": "E-stop on the PC: “ancientvoid-companion stop” (e.g. bind it to Super+Shift+Esc)."
+  },
+  {
+   "match": "Kein PC verbunden. So richtest du den Companion ein (auf dem PC):",
+   "key": "desktop.no_pc_set_up",
+   "de": "Kein PC verbunden. So richtest du den Companion ein (auf dem PC):",
+   "en": "No PC connected. Set up the companion like this (on the PC):"
+  },
+  {
+   "match": "PC",
+   "key": "desktop.pc",
+   "de": "PC",
+   "en": "PC"
+  },
+  {
+   "match": "Bildschirm am PC gesperrt.",
+   "key": "desktop.pc_locked",
+   "de": "Bildschirm am PC gesperrt.",
+   "en": "Screen locked on the PC."
+  },
+  {
+   "match": "Ersetzen",
+   "key": "desktop.replace",
+   "de": "Ersetzen",
+   "en": "Replace"
+  },
+  {
+   "match": "Feldinhalt markieren (Strg+A) und ersetzen",
+   "key": "desktop.select_replace",
+   "de": "Feldinhalt markieren (Strg+A) und ersetzen",
+   "en": "Select field content (Ctrl+A) and replace"
+  },
+  {
+   "match": "Ziel:",
+   "key": "desktop.target",
+   "de": "Ziel:",
+   "en": "Target: "
+  },
+  {
+   "match": "Gezielt einfügen (Clipboard vorübergehend ersetzen; Clipboard-Manager können den Text übernehmen. Paste gilt fürs angezeigte Fenster.)",
+   "key": "desktop.targeted_paste",
+   "de": "Gezielt einfügen (Clipboard vorübergehend ersetzen; Clipboard-Manager können den Text übernehmen. Paste gilt fürs angezeigte Fenster.)",
+   "en": "Targeted paste (temporarily replaces the clipboard; clipboard managers may pick the text up. Paste applies to the window being shown.)"
+  },
+  {
+   "match": "Text für den PC",
+   "key": "desktop.text_for_pc",
+   "de": "Text für den PC",
+   "en": "Text for the PC"
+  },
+  {
+   "match": "Text bleibt gesperrt, bis du das adressierte Einfügen ausdrücklich einschaltest. Normale Hyprland-Tasten würden dem Fokus folgen.",
+   "key": "desktop.text_locked",
+   "de": "Text bleibt gesperrt, bis du das adressierte Einfügen ausdrücklich einschaltest. Normale Hyprland-Tasten würden dem Fokus folgen.",
+   "en": "Text stays locked until you explicitly enable targeted paste. Normal Hyprland keys would follow the focus."
+  },
+  {
+   "match": "Text, der am PC ins fokussierte Feld getippt wird",
+   "key": "desktop.text_typed_pc",
+   "de": "Text, der am PC ins fokussierte Feld getippt wird",
+   "en": "Text typed into the focused field on the PC"
+  },
+  {
+   "match": "Eintippen",
+   "key": "desktop.type",
+   "de": "Eintippen",
+   "en": "Type"
+  },
+  {
+   "match": "Android-Geräte",
+   "key": "devices.android_devices",
+   "de": "Android-Geräte",
+   "en": "Android devices"
+  },
+  {
+   "match": "Android-Testgeräte",
+   "key": "devices.android_test_devices",
+   "de": "Android-Testgeräte",
+   "en": "Android test devices"
+  },
+  {
+   "match": "API",
+   "key": "devices.api",
+   "de": "API",
+   "en": "API "
+  },
+  {
+   "match": "Stand",
+   "key": "devices.as_of",
+   "de": "Stand",
+   "en": "As of "
+  },
+  {
+   "match": "ASCII-Text tippen (Leerzeichen erlaubt, % nicht)",
+   "key": "devices.ascii_type",
+   "de": "ASCII-Text tippen (Leerzeichen erlaubt, % nicht)",
+   "en": "Type ASCII text (spaces allowed, % not)"
+  },
+  {
+   "match": "Anhang-ID (sha256)",
+   "key": "devices.attachment_id",
+   "de": "Anhang-ID (sha256)",
+   "en": "Attachment ID (sha256)"
+  },
+  {
+   "match": "Anhang-ID (sha256) aus einem Session-Anhang",
+   "key": "devices.attachment_id_session",
+   "de": "Anhang-ID (sha256) aus einem Session-Anhang",
+   "en": "Attachment ID (sha256) from a session attachment"
+  },
+  {
+   "match": "AVD",
+   "key": "devices.avd",
+   "de": "AVD",
+   "en": "AVD"
+  },
+  {
+   "match": "AVD wählen",
+   "key": "devices.avd_choose",
+   "de": "AVD wählen",
+   "en": "Select AVD"
+  },
+  {
+   "match": "AVD im AVD-Home des Hubs (devices.avdHome)",
+   "key": "devices.avd_home",
+   "de": "AVD im AVD-Home des Hubs (devices.avdHome)",
+   "en": "AVD in the AVD home of the hub (devices.avdHome)"
+  },
+  {
+   "match": "USB-Debugging bestätigen",
+   "key": "devices.confirm_usb",
+   "de": "USB-Debugging bestätigen",
+   "en": "Confirm USB debugging"
+  },
+  {
+   "match": "Geräte-Testfall (JSON)",
+   "key": "devices.device_test_json",
+   "de": "Geräte-Testfall (JSON)",
+   "en": "Device test case (JSON)"
+  },
+  {
+   "match": "Geräte schließen",
+   "key": "devices.devices_close",
+   "de": "Geräte schließen",
+   "en": "Close devices"
+  },
+  {
+   "match": "Die Testgeräte laufen auf dem Host der Session. Für Sessions anderer Maschinen sind sie nicht erreichbar.",
+   "key": "devices.devices_host",
+   "de": "Die Testgeräte laufen auf dem Host der Session. Für Sessions anderer Maschinen sind sie nicht erreichbar.",
+   "en": "The test devices run on the host of the session. They are not reachable for sessions on other machines."
+  },
+  {
+   "match": "Geräte in eigenes Fenster",
+   "key": "devices.devices_own_window",
+   "de": "Geräte in eigenes Fenster",
+   "en": "Devices to their own window"
+  },
+  {
+   "match": "alle 10 s",
+   "key": "devices.every_10s",
+   "de": "alle 10 s",
+   "en": "every 10 s"
+  },
+  {
+   "match": "fremder Emulator — wird nie von AV beendet",
+   "key": "devices.foreign_emulator",
+   "de": "fremder Emulator — wird nie von AV beendet",
+   "en": "foreign emulator — never terminated by AV"
+  },
+  {
+   "match": "Generation",
+   "key": "devices.generation",
+   "de": "Generation",
+   "en": "Generation "
+  },
+  {
+   "match": "· Geometrie",
+   "key": "devices.geometry_frag",
+   "de": "· Geometrie",
+   "en": "· Geometry "
+  },
+  {
+   "match": "Steuerung holen",
+   "key": "devices.get_control",
+   "de": "Steuerung holen",
+   "en": "Get control"
+  },
+  {
+   "match": "belegt von „",
+   "key": "devices.held_by",
+   "de": "belegt von „",
+   "en": "held by “"
+  },
+  {
+   "match": "http://10.0.2.2:PORT/ (10.0.2.2 = Host-Loopback)",
+   "key": "devices.host_loopback",
+   "de": "http://10.0.2.2:PORT/ (10.0.2.2 = Host-Loopback)",
+   "en": "http://10.0.2.2:PORT/ (10.0.2.2 = host loopback)"
+  },
+  {
+   "match": "Installieren",
+   "key": "devices.install",
+   "de": "Installieren",
+   "en": "Install"
+  },
+  {
+   "match": "APK aus Session-Anhang installieren",
+   "key": "devices.install_apk",
+   "de": "APK aus Session-Anhang installieren",
+   "en": "Install from session attachment"
+  },
+  {
+   "match": "Querformat",
+   "key": "devices.landscape",
+   "de": "Querformat",
+   "en": "Landscape"
+  },
+  {
+   "match": "Accessibility-Baum laden",
+   "key": "devices.load_a11y",
+   "de": "Accessibility-Baum laden",
+   "en": "Load accessibility tree"
+  },
+  {
+   "match": "Logcat laden",
+   "key": "devices.load_logcat",
+   "de": "Logcat laden",
+   "en": "Load logcat"
+  },
+  {
+   "match": "Keine Geräte — einen Emulator starten oder Gerät anstecken (nur sichtbar).",
+   "key": "devices.no_devices",
+   "de": "Keine Geräte — einen Emulator starten oder Gerät anstecken (nur sichtbar).",
+   "en": "No devices — start an emulator or plug in a device (view only)."
+  },
+  {
+   "match": "Noch kein Bild — Gerät bereit? Standbild kommt alle 0,7 s.",
+   "key": "devices.no_image",
+   "de": "Noch kein Bild — Gerät bereit? Standbild kommt alle 0,7 s.",
+   "en": "No image yet — device ready? Still image comes every 0.7 s."
+  },
+  {
+   "match": "Noch keine Testläufe auf diesem Gerät.",
+   "key": "devices.no_runs",
+   "de": "Noch keine Testläufe auf diesem Gerät.",
+   "en": "No test runs on this device yet."
+  },
+  {
+   "match": "Nicht bereit:",
+   "key": "devices.not_ready",
+   "de": "Nicht bereit:",
+   "en": "Not ready: "
+  },
+  {
+   "match": "Offline — kein Start/Stop und keine Eingaben.",
+   "key": "devices.offline",
+   "de": "Offline — kein Start/Stop und keine Eingaben.",
+   "en": "Offline — no start/stop and no inputs."
+  },
+  {
+   "match": "Öffnen",
+   "key": "devices.open",
+   "de": "Öffnen",
+   "en": "Open"
+  },
+  {
+   "match": "URL im Emulator öffnen",
+   "key": "devices.open_url_emulator",
+   "de": "URL im Emulator öffnen",
+   "en": "Open URL in the emulator"
+  },
+  {
+   "match": "Ausrichtung",
+   "key": "devices.orientation",
+   "de": "Ausrichtung",
+   "en": "Orientation"
+  },
+  {
+   "match": "physisch — nur sichtbar, keine Steuerung (EPIC-P42 Out)",
+   "key": "devices.physical_view",
+   "de": "physisch — nur sichtbar, keine Steuerung (EPIC-P42 Out)",
+   "en": "physical — view only, no control (EPIC-P42 Out)"
+  },
+  {
+   "match": "Hochformat",
+   "key": "devices.portrait",
+   "de": "Hochformat",
+   "en": "Portrait"
+  },
+  {
+   "match": "px",
+   "key": "devices.px",
+   "de": "px",
+   "en": "px"
+  },
+  {
+   "match": "Beenden",
+   "key": "devices.quit",
+   "de": "Beenden",
+   "en": "Quit"
+  },
+  {
+   "match": "Nur referenzierte Artefakte mit Hash-Prüfung — keine URL-Downloads (EPIC-P42 §3.3).",
+   "key": "devices.referenced_only",
+   "de": "Nur referenzierte Artefakte mit Hash-Prüfung — keine URL-Downloads (EPIC-P42 §3.3).",
+   "en": "Only referenced artifacts with hash check — no URL downloads (EPIC-P42 §3.3)."
+  },
+  {
+   "match": "Registrierte Schritte (openUrl, tap, swipe, text, key, rotate, expectText, wait) — kein freier Code. Der Lauf hält selbst die Lease und hält Image/API/Auflösung fest. 10.0.2.2 ist der Host aus Emulatorsicht.",
+   "key": "devices.registered_steps",
+   "de": "Registrierte Schritte (openUrl, tap, swipe, text, key, rotate, expectText, wait) — kein freier Code. Der Lauf hält selbst die Lease und hält Image/API/Auflösung fest. 10.0.2.2 ist der Host aus Emulatorsicht.",
+   "en": "Registered steps (openUrl, tap, swipe, text, key, rotate, expectText, wait) — no free code. The run holds the lease itself and pins image/API/resolution. 10.0.2.2 is the host from the emulator's point of view."
+  },
+  {
+   "match": "Screenshot",
+   "key": "devices.screenshot",
+   "de": "Screenshot",
+   "en": "Screenshot"
+  },
+  {
+   "match": "· Seq",
+   "key": "devices.seq_frag",
+   "de": "· Seq",
+   "en": "· Seq "
+  },
+  {
+   "match": "Emulator starten",
+   "key": "devices.start_emulator",
+   "de": "Emulator starten",
+   "en": "Start emulator"
+  },
+  {
+   "match": "Test starten",
+   "key": "devices.start_test",
+   "de": "Test starten",
+   "en": "Start test"
+  },
+  {
+   "match": "Runterwischen",
+   "key": "devices.swipe_down",
+   "de": "Runterwischen",
+   "en": "Swipe down"
+  },
+  {
+   "match": "Hochwischen",
+   "key": "devices.swipe_up",
+   "de": "Hochwischen",
+   "en": "Swipe up"
+  },
+  {
+   "match": "Tippen",
+   "key": "devices.tap",
+   "de": "Tippen",
+   "en": "Tap"
+  },
+  {
+   "match": "Text auf dem Gerät tippen",
+   "key": "devices.type_on_device",
+   "de": "Text auf dem Gerät tippen",
+   "en": "Type text on the device"
+  },
+  {
+   "match": "Nur Ansicht — für Eingaben die Steuerung (Lease) holen. Jeder Tap wird an das angezeigte Bild gebunden.",
+   "key": "devices.view_only",
+   "de": "Nur Ansicht — für Eingaben die Steuerung (Lease) holen. Jeder Tap wird an das angezeigte Bild gebunden.",
+   "en": "View only — get control (lease) for inputs. Every tap is bound to the displayed image."
+  },
+  {
+   "match": "Als Kopie",
+   "key": "discovery.as_copy",
+   "de": "Als Kopie",
+   "en": "As copy"
+  },
+  {
+   "match": "Nach Provider filtern",
+   "key": "discovery.filter_provider",
+   "de": "Nach Provider filtern",
+   "en": "Filter by provider"
+  },
+  {
+   "match": "Nach Zustand filtern",
+   "key": "discovery.filter_state",
+   "de": "Nach Zustand filtern",
+   "en": "Filter by state"
+  },
+  {
+   "match": "Fork",
+   "key": "discovery.fork",
+   "de": "Fork",
+   "en": "Fork"
+  },
+  {
+   "match": "ID",
+   "key": "discovery.id",
+   "de": "ID",
+   "en": "ID"
+  },
+  {
+   "match": "· zuletzt",
+   "key": "discovery.last_frag",
+   "de": "· zuletzt",
+   "en": "· last "
+  },
+  {
+   "match": "Spiegeln",
+   "key": "discovery.mirror",
+   "de": "Spiegeln",
+   "en": "Mirror"
+  },
+  {
+   "match": "Verlauf lesbar im Hub spiegeln — ohne Übernahme, nur lesen",
+   "key": "discovery.mirror_history",
+   "de": "Verlauf lesbar im Hub spiegeln — ohne Übernahme, nur lesen",
+   "en": "Mirror readable history to the hub — without takeover, read only"
+  },
+  {
+   "match": "Weitere Angaben und Aktionen",
+   "key": "discovery.more_details",
+   "de": "Weitere Angaben und Aktionen",
+   "en": "More details and actions"
+  },
+  {
+   "match": "keine Session passt zum Filter",
+   "key": "discovery.no_match",
+   "de": "keine Session passt zum Filter",
+   "en": "no session matches the filter"
+  },
+  {
+   "match": "Eigene Kopie fortsetzen — das Original bleibt unverändert",
+   "key": "discovery.own_copy",
+   "de": "Eigene Kopie fortsetzen — das Original bleibt unverändert",
+   "en": "Continue with own copy — the original stays unchanged"
+  },
+  {
+   "match": "Lief in einem Worktree des Projekts",
+   "key": "discovery.ran_worktree",
+   "de": "Lief in einem Worktree des Projekts",
+   "en": "Ran in a worktree of the project"
+  },
+  {
+   "match": "Sessions durchsuchen",
+   "key": "discovery.search_sessions",
+   "de": "Sessions durchsuchen",
+   "en": "Search sessions"
+  },
+  {
+   "match": "Sessions durchsuchen: Titel, letzte Nachricht, Projekt …",
+   "key": "discovery.search_sessions_hint",
+   "de": "Sessions durchsuchen: Titel, letzte Nachricht, Projekt …",
+   "en": "Search sessions: title, last message, project …"
+  },
+  {
+   "match": "Subagent",
+   "key": "discovery.subagent",
+   "de": "Subagent",
+   "en": "Subagent"
+  },
+  {
+   "match": "Subagent von",
+   "key": "discovery.subagent_of",
+   "de": "Subagent von",
+   "en": "Subagent of "
+  },
+  {
+   "match": "Art",
+   "key": "discovery.type",
+   "de": "Art",
+   "en": "Type"
+  },
+  {
+   "match": "unbekanntes Format",
+   "key": "discovery.unknown_format",
+   "de": "unbekanntes Format",
+   "en": "unknown format"
+  },
+  {
+   "match": "Projekt für Prüfer freigeben",
+   "key": "files.approve_project",
+   "de": "Projekt für Prüfer freigeben",
+   "en": "Approve project for checkers"
+  },
+  {
+   "match": "Binärinhalt — kein Textvorschau für diesen Blob.",
+   "key": "files.binary_no_preview",
+   "de": "Binärinhalt — kein Textvorschau für diesen Blob.",
+   "en": "Binary content — no text preview for this blob."
+  },
+  {
+   "match": "Byte-Offset",
+   "key": "files.byte_offset",
+   "de": "Byte-Offset",
+   "en": "Byte offset"
+  },
+  {
+   "match": "Bytes",
+   "key": "files.bytes",
+   "de": "Bytes",
+   "en": "Bytes "
+  },
+  {
+   "match": "· Bytes",
+   "key": "files.bytes_frag",
+   "de": "· Bytes",
+   "en": "· Bytes "
+  },
+  {
+   "match": "Groß/klein",
+   "key": "files.case",
+   "de": "Groß/klein",
+   "en": "Case"
+  },
+  {
+   "match": "Zeichen (Text unverändert).",
+   "key": "files.characters",
+   "de": "Zeichen (Text unverändert).",
+   "en": "characters (text unchanged)."
+  },
+  {
+   "match": "Wähle eine Session oder ein Projekt.",
+   "key": "files.choose_session_project",
+   "de": "Wähle eine Session oder ein Projekt.",
+   "en": "Select a session or a project."
+  },
+  {
+   "match": "Quelle wählen …",
+   "key": "files.choose_source",
+   "de": "Quelle wählen …",
+   "en": "Select source …"
+  },
+  {
+   "match": "Dateien schließen",
+   "key": "files.close_files",
+   "de": "Dateien schließen",
+   "en": "Close files"
+  },
+  {
+   "match": "Dieser Browser kann die Datei nicht abspielen/anzeigen (Codec/Format). Download oder Hex zeigen die Originalbytes.",
+   "key": "files.codec_missing",
+   "de": "Dieser Browser kann die Datei nicht abspielen/anzeigen (Codec/Format). Download oder Hex zeigen die Originalbytes.",
+   "en": "This browser cannot play/display this file (codec/format). Download or hex shows the original bytes."
+  },
+  {
+   "match": "Herauslösen: ein Fenster mit Baum und allen offenen Dateien",
+   "key": "files.detach_tree",
+   "de": "Herauslösen: ein Fenster mit Baum und allen offenen Dateien",
+   "en": "Detach: a window with the tree and all open files"
+  },
+  {
+   "match": "Diagnose",
+   "key": "files.diagnose",
+   "de": "Diagnose",
+   "en": "Diagnostics"
+  },
+  {
+   "match": "Download",
+   "key": "files.download",
+   "de": "Download",
+   "en": "Download"
+  },
+  {
+   "match": "Aus dem Fenster ziehen: ein Fenster mit Baum und allen offenen Dateien",
+   "key": "files.drag_out_tree",
+   "de": "Aus dem Fenster ziehen: ein Fenster mit Baum und allen offenen Dateien",
+   "en": "Drag out of the window: a window with the tree and all open files"
+  },
+  {
+   "match": "leer",
+   "key": "files.empty",
+   "de": "leer",
+   "en": "empty"
+  },
+  {
+   "match": "Leere Datei (0 Bytes).",
+   "key": "files.empty_file",
+   "de": "Leere Datei (0 Bytes).",
+   "en": "Empty file (0 bytes)."
+  },
+  {
+   "match": "Einträge",
+   "key": "files.entries",
+   "de": "Einträge",
+   "en": "Entries"
+  },
+  {
+   "match": "Feedback (",
+   "key": "files.feedback_open",
+   "de": "Feedback (",
+   "en": "Feedback ("
+  },
+  {
+   "match": "Stand der Datei:",
+   "key": "files.file_as_of",
+   "de": "Stand der Datei:",
+   "en": "File as of: "
+  },
+  {
+   "match": "Die Datei hat sich geändert (Agent oder Editor). Bisher gelesene Abschnitte passen nicht mehr zusammen.",
+   "key": "files.file_changed",
+   "de": "Die Datei hat sich geändert (Agent oder Editor). Bisher gelesene Abschnitte passen nicht mehr zusammen.",
+   "en": "The file has changed (agent or editor). Previously read sections no longer line up."
+  },
+  {
+   "match": "Die Datei hat sich seit dieser Prüfung geändert — Ergebnis veraltet, bitte neu prüfen.",
+   "key": "files.file_changed_check",
+   "de": "Die Datei hat sich seit dieser Prüfung geändert — Ergebnis veraltet, bitte neu prüfen.",
+   "en": "The file has changed since this check — result outdated, please re-check."
+  },
+  {
+   "match": "Dateiquelle",
+   "key": "files.file_source",
+   "de": "Dateiquelle",
+   "en": "File source"
+  },
+  {
+   "match": "Befunde gesammelt — Feedback braucht eine Session als Quelle (nicht ein Projektordner).",
+   "key": "files.findings_need_session",
+   "de": "Befunde gesammelt — Feedback braucht eine Session als Quelle (nicht ein Projektordner).",
+   "en": "Findings collected — feedback needs a session as source (not a project folder)."
+  },
+  {
+   "match": "Weitere",
+   "key": "files.further",
+   "de": "Weitere",
+   "en": "Further "
+  },
+  {
+   "match": "Hex",
+   "key": "files.hex",
+   "de": "Hex",
+   "en": "Hex"
+  },
+  {
+   "match": "— Hex zeigt die Originalbytes.",
+   "key": "files.hex_original",
+   "de": "— Hex zeigt die Originalbytes.",
+   "en": "— hex shows the original bytes."
+  },
+  {
+   "match": "— „Hex“ zeigt die Originalbytes.",
+   "key": "files.hex_original_quote",
+   "de": "— „Hex“ zeigt die Originalbytes.",
+   "en": "— “Hex” shows the original bytes."
+  },
+  {
+   "match": "). Die Hex-Ansicht liest die Datei bis zum letzten Byte.",
+   "key": "files.hex_reads_to2",
+   "de": "). Die Hex-Ansicht liest die Datei bis zum letzten Byte.",
+   "en": "). The hex view reads the file up to the last byte."
+  },
+  {
+   "match": "Historie @",
+   "key": "files.history_at",
+   "de": "Historie @",
+   "en": "History @ "
+  },
+  {
+   "match": "Ignoriertes",
+   "key": "files.ignored",
+   "de": "Ignoriertes",
+   "en": "Ignored entries"
+  },
+  {
+   "match": "ignorierte Einträge ausgeblendet",
+   "key": "files.ignored_hidden",
+   "de": "ignorierte Einträge ausgeblendet",
+   "en": "ignored entries hidden"
+  },
+  {
+   "match": "In den Composer",
+   "key": "files.into_composer",
+   "de": "In den Composer",
+   "en": "Into the composer"
+  },
+  {
+   "match": "Zu Byte-Offset springen",
+   "key": "files.jump_byte",
+   "de": "Zu Byte-Offset springen",
+   "en": "Jump to byte offset"
+  },
+  {
+   "match": "Zu Zeile springen",
+   "key": "files.jump_line",
+   "de": "Zu Zeile springen",
+   "en": "Jump to line"
+  },
+  {
+   "match": "Zeile",
+   "key": "files.line",
+   "de": "Zeile",
+   "en": "Line"
+  },
+  {
+   "match": "Zeilen",
+   "key": "files.lines",
+   "de": "Zeilen",
+   "en": "Lines"
+  },
+  {
+   "match": "Liste gekürzt.",
+   "key": "files.list_truncated",
+   "de": "Liste gekürzt.",
+   "en": "List truncated."
+  },
+  {
+   "match": "Einträge laden",
+   "key": "files.load_entries",
+   "de": "Einträge laden",
+   "en": "Load entries"
+  },
+  {
+   "match": "lädt Historie …",
+   "key": "files.loading_history",
+   "de": "lädt Historie …",
+   "en": "loading history…"
+  },
+  {
+   "match": "Mermaid-Diagramm",
+   "key": "files.mermaid_diagram",
+   "de": "Mermaid-Diagramm",
+   "en": "Mermaid diagram"
+  },
+  {
+   "match": "Mermaid nicht gerendert:",
+   "key": "files.mermaid_not_rendered",
+   "de": "Mermaid nicht gerendert:",
+   "en": "Mermaid not rendered: "
+  },
+  {
+   "match": "Diagramm wird gerendert …",
+   "key": "files.mermaid_rendering",
+   "de": "Diagramm wird gerendert …",
+   "en": "Rendering diagram…"
+  },
+  {
+   "match": "weitere Zeilen — „Text“ liest die Datei vollständig.",
+   "key": "files.more_lines",
+   "de": "weitere Zeilen — „Text“ liest die Datei vollständig.",
+   "en": "more lines — “Text” reads the file completely."
+  },
+  {
+   "match": "weitere Meldungen in anderen Dateien des Projektchecks.",
+   "key": "files.more_messages",
+   "de": "weitere Meldungen in anderen Dateien des Projektchecks.",
+   "en": "more messages in other files of the project check."
+  },
+  {
+   "match": "Nächster Abschnitt",
+   "key": "files.next_section",
+   "de": "Nächster Abschnitt",
+   "en": "Next section"
+  },
+  {
+   "match": "kein Download",
+   "key": "files.no_download",
+   "de": "kein Download",
+   "en": "no download"
+  },
+  {
+   "match": "Dieser Browser zeigt PDFs nicht inline an — bitte „Download“ nutzen.",
+   "key": "files.no_inline_pdf",
+   "de": "Dieser Browser zeigt PDFs nicht inline an — bitte „Download“ nutzen.",
+   "en": "This browser does not show PDFs inline — please use “Download”."
+  },
+  {
+   "match": "Kein gültiges JSON:",
+   "key": "files.no_valid_json",
+   "de": "Kein gültiges JSON:",
+   "en": "No valid JSON: "
+  },
+  {
+   "match": "Kein gültiges YAML:",
+   "key": "files.no_valid_yaml",
+   "de": "Kein gültiges YAML:",
+   "en": "No valid YAML: "
+  },
+  {
+   "match": "Anmerkung",
+   "key": "files.note",
+   "de": "Anmerkung",
+   "en": "Note"
+  },
+  {
+   "match": "Hex öffnen",
+   "key": "files.open_hex",
+   "de": "Hex öffnen",
+   "en": "Open hex"
+  },
+  {
+   "match": "Veraltet:",
+   "key": "files.outdated",
+   "de": "Veraltet:",
+   "en": "Outdated: "
+  },
+  {
+   "match": "gepackt",
+   "key": "files.packed",
+   "de": "gepackt",
+   "en": "packed"
+  },
+  {
+   "match": "Voriger Abschnitt",
+   "key": "files.prev_section",
+   "de": "Voriger Abschnitt",
+   "en": "Previous section"
+  },
+  {
+   "match": "Vorschau",
+   "key": "files.preview",
+   "de": "Vorschau",
+   "en": "Preview"
+  },
+  {
+   "match": "Nur Lesen — es wird nichts ausgeführt, HTML-/Skript-Ausgaben werden nicht dargestellt.",
+   "key": "files.read_only",
+   "de": "Nur Lesen — es wird nichts ausgeführt, HTML-/Skript-Ausgaben werden nicht dargestellt.",
+   "en": "Read only — nothing is executed, HTML/script output is not rendered."
+  },
+  {
+   "match": "Neu laden",
+   "key": "files.reload",
+   "de": "Neu laden",
+   "en": "Reload"
+  },
+  {
+   "match": "Befund entfernen",
+   "key": "files.remove_finding",
+   "de": "Befund entfernen",
+   "en": "Remove finding"
+  },
+  {
+   "match": "— Befund entfernen und neu auswählen.",
+   "key": "files.remove_reselect",
+   "de": "— Befund entfernen und neu auswählen.",
+   "en": "— remove the finding and re-select."
+  },
+  {
+   "match": "Breite ändern",
+   "key": "files.resize_width",
+   "de": "Breite ändern",
+   "en": "Resize width"
+  },
+  {
+   "match": "· Revision",
+   "key": "files.revision_frag",
+   "de": "· Revision",
+   "en": "· Revision "
+  },
+  {
+   "match": "— Stand dieser Revision (nicht der aktuelle Worktree)",
+   "key": "files.revision_state",
+   "de": "— Stand dieser Revision (nicht der aktuelle Worktree)",
+   "en": "— state of this revision (not the current worktree)"
+  },
+  {
+   "match": "In Datei suchen",
+   "key": "files.search_in_file",
+   "de": "In Datei suchen",
+   "en": "Search in file"
+  },
+  {
+   "match": "Suchen (ganze Datei)",
+   "key": "files.search_whole",
+   "de": "Suchen (ganze Datei)",
+   "en": "Search (whole file)"
+  },
+  {
+   "match": "Gesicherte Vorschau: keine Skripte, kein Netzwerk, keine Formulare.",
+   "key": "files.secured_preview",
+   "de": "Gesicherte Vorschau: keine Skripte, kein Netzwerk, keine Formulare.",
+   "en": "Secured preview: no scripts, no network, no forms."
+  },
+  {
+   "match": "An Session senden",
+   "key": "files.send_session",
+   "de": "An Session senden",
+   "en": "Send to session"
+  },
+  {
+   "match": "Größe",
+   "key": "files.size",
+   "de": "Größe",
+   "en": "Size"
+  },
+  {
+   "match": "— Quelltext:",
+   "key": "files.source_code",
+   "de": "— Quelltext:",
+   "en": "— source code:"
+  },
+  {
+   "match": "Syntaxfarben aus: Abschnitt größer als",
+   "key": "files.syntax_off",
+   "de": "Syntaxfarben aus: Abschnitt größer als",
+   "en": "Syntax colors off: section larger than "
+  },
+  {
+   "match": "Text",
+   "key": "files.text",
+   "de": "Text",
+   "en": "Text"
+  },
+  {
+   "match": ". „Text“ zeigt die Datei unverändert.",
+   "key": "files.text_unchanged",
+   "de": ". „Text“ zeigt die Datei unverändert.",
+   "en": ". “Text” shows the file unchanged."
+  },
+  {
+   "match": "zum Feedback",
+   "key": "files.to_feedback",
+   "de": "zum Feedback",
+   "en": "to feedback"
+  },
+  {
+   "match": "Inhaltsverzeichnis — es wird nichts entpackt.",
+   "key": "files.toc_no_unpacking",
+   "de": "Inhaltsverzeichnis — es wird nichts entpackt.",
+   "en": "Table of contents — nothing is unpacked."
+  },
+  {
+   "match": "Zu groß für den Browser-Speicher — Hex liest bis zum letzten Byte",
+   "key": "files.too_big_hex",
+   "de": "Zu groß für den Browser-Speicher — Hex liest bis zum letzten Byte",
+   "en": "Too big for browser memory — hex reads up to the last byte"
+  },
+  {
+   "match": "ist zu groß für eine Vorschau (Grenze",
+   "key": "files.too_large_preview",
+   "de": "ist zu groß für eine Vorschau (Grenze",
+   "en": "is too large for a preview (limit "
+  },
+  {
+   "match": "Baum",
+   "key": "files.tree",
+   "de": "Baum",
+   "en": "Tree"
+  },
+  {
+   "match": "Baum und offene Dateien in eigenes Fenster",
+   "key": "files.tree_open_move",
+   "de": "Baum und offene Dateien in eigenes Fenster",
+   "en": "Tree and open files to their own window"
+  },
+  {
+   "match": "Baum und offene Dateien in eigenem Fenster",
+   "key": "files.tree_open_own",
+   "de": "Baum und offene Dateien in eigenem Fenster",
+   "en": "Tree and open files in their own window"
+  },
+  {
+   "match": "tsc kommt aus dem Projekt (node_modules) — Projektcode darf nur mit Freigabe laufen.",
+   "key": "files.tsc_project",
+   "de": "tsc kommt aus dem Projekt (node_modules) — Projektcode darf nur mit Freigabe laufen.",
+   "en": "tsc comes from the project (node_modules) — project code may only run with approval."
+  },
+  {
+   "match": "Ansicht",
+   "key": "files.view",
+   "de": "Ansicht",
+   "en": "View"
+  },
+  {
+   "match": "Umbruch",
+   "key": "files.word_wrap",
+   "de": "Umbruch",
+   "en": "Word wrap"
+  },
+  {
+   "match": "Host hinzufügen — Adresse",
+   "key": "fleet.add_host",
+   "de": "Host hinzufügen — Adresse",
+   "en": "Add host — address"
+  },
+  {
+   "match": "Adresse im QR-Code:",
+   "key": "fleet.address_qr",
+   "de": "Adresse im QR-Code:",
+   "en": "Address in QR code: "
+  },
+  {
+   "match": "Scannen abbrechen",
+   "key": "fleet.cancel_scan",
+   "de": "Scannen abbrechen",
+   "en": "Cancel scan"
+  },
+  {
+   "match": "Einladungscode vom anderen Hub",
+   "key": "fleet.code_from_other",
+   "de": "Einladungscode vom anderen Hub",
+   "en": "Invitation code from the other hub"
+  },
+  {
+   "match": "ABCD-EFGH-JKLM",
+   "key": "fleet.code_placeholder",
+   "de": "ABCD-EFGH-JKLM",
+   "en": "ABCD-EFGH-JKLM"
+  },
+  {
+   "match": "Diesen Hub von einem anderen aus verbinden",
+   "key": "fleet.connect_from_other",
+   "de": "Diesen Hub von einem anderen aus verbinden",
+   "en": "Connect this hub from another"
+  },
+  {
+   "match": "Einladungscode erzeugen",
+   "key": "fleet.generate_code",
+   "de": "Einladungscode erzeugen",
+   "en": "Generate invitation code"
+  },
+  {
+   "match": "einmalig, gültig bis",
+   "key": "fleet.onetime_until",
+   "de": "einmalig, gültig bis",
+   "en": "one-time, valid until "
+  },
+  {
+   "match": "QR-Code konnte nicht geladen werden — Code unten eintippen oder die Seite neu laden.",
+   "key": "fleet.qr_failed",
+   "de": "QR-Code konnte nicht geladen werden — Code unten eintippen oder die Seite neu laden.",
+   "en": "QR code could not be loaded — type the code below or reload the page."
+  },
+  {
+   "match": "QR-Code der Einladung",
+   "key": "fleet.qr_invitation",
+   "de": "QR-Code der Einladung",
+   "en": "Invitation QR code"
+  },
+  {
+   "match": "Wirklich entfernen",
+   "key": "fleet.really_remove",
+   "de": "Wirklich entfernen",
+   "en": "Really remove"
+  },
+  {
+   "match": "Entfernen",
+   "key": "fleet.remove",
+   "de": "Entfernen",
+   "en": "Remove"
+  },
+  {
+   "match": "https://home-server.<tailnet>.ts.net",
+   "key": "fleet.tailnet_placeholder",
+   "de": "https://home-server.<tailnet>.ts.net",
+   "en": "https://home-server.<tailnet>.ts.net"
+  },
+  {
+   "match": "Dieser Hub",
+   "key": "fleet.this_hub",
+   "de": "Dieser Hub",
+   "en": "This hub"
+  },
+  {
+   "match": "als Befund",
+   "key": "forge.as_finding",
+   "de": "als Befund",
+   "en": "as finding"
+  },
+  {
+   "match": "→ Child-Pipeline #",
+   "key": "forge.child_pipeline",
+   "de": "→ Child-Pipeline #",
+   "en": "→ Child pipeline #"
+  },
+  {
+   "match": "schließen",
+   "key": "forge.close",
+   "de": "schließen",
+   "en": "close"
+  },
+  {
+   "match": "Draft",
+   "key": "forge.draft",
+   "de": "Draft",
+   "en": "Draft"
+  },
+  {
+   "match": "Draft-MR",
+   "key": "forge.draft_mr",
+   "de": "Draft-MR",
+   "en": "Draft MR"
+  },
+  {
+   "match": "Abruf",
+   "key": "forge.fetch",
+   "de": "Abruf",
+   "en": "Fetch "
+  },
+  {
+   "match": "Befund (Daten — wird dem Agenten im Quellenrahmen zitiert) …",
+   "key": "forge.finding_data",
+   "de": "Befund (Daten — wird dem Agenten im Quellenrahmen zitiert) …",
+   "en": "Finding (data — will be quoted to the agent in the source frame)…"
+  },
+  {
+   "match": "https://gitlab.example/team/proj/-/merge_requests/7",
+   "key": "forge.gitlab_placeholder",
+   "de": "https://gitlab.example/team/proj/-/merge_requests/7",
+   "en": "https://gitlab.example/team/proj/-/merge_requests/7"
+  },
+  {
+   "match": "In den Composer",
+   "key": "forge.into_composer",
+   "de": "In den Composer",
+   "en": "Into the composer"
+  },
+  {
+   "match": "Issues dieses Projekts als Session-Quelle",
+   "key": "forge.issues_source",
+   "de": "Issues dieses Projekts als Session-Quelle",
+   "en": "Issues of this project as session source"
+  },
+  {
+   "match": "Job-Trace",
+   "key": "forge.job_trace",
+   "de": "Job-Trace",
+   "en": "Job trace"
+  },
+  {
+   "match": "KB · SHA",
+   "key": "forge.kb_sha",
+   "de": "KB · SHA",
+   "en": "KB · SHA "
+  },
+  {
+   "match": "verknüpfen",
+   "key": "forge.link",
+   "de": "verknüpfen",
+   "en": "link"
+  },
+  {
+   "match": "MR verknüpfen",
+   "key": "forge.link_mr",
+   "de": "MR verknüpfen",
+   "en": "Link MR"
+  },
+  {
+   "match": "laden",
+   "key": "forge.load",
+   "de": "laden",
+   "en": "load"
+  },
+  {
+   "match": "Issues laden",
+   "key": "forge.load_issues",
+   "de": "Issues laden",
+   "en": "Load issues"
+  },
+  {
+   "match": "Weitere Diskussionen als gezeigt — Liste gekappt.",
+   "key": "forge.more_discussions",
+   "de": "Weitere Diskussionen als gezeigt — Liste gekappt.",
+   "en": "More discussions than shown — list capped."
+  },
+  {
+   "match": "MR-Beschreibung",
+   "key": "forge.mr_description",
+   "de": "MR-Beschreibung",
+   "en": "MR description"
+  },
+  {
+   "match": "· MR-Head",
+   "key": "forge.mr_head",
+   "de": "· MR-Head",
+   "en": "· MR head "
+  },
+  {
+   "match": "MR hat neue Commits (veraltet — neu laden)",
+   "key": "forge.mr_new_commits",
+   "de": "MR hat neue Commits (veraltet — neu laden)",
+   "en": "MR has new commits (outdated — reload)"
+  },
+  {
+   "match": "MR-Titel (Commit-Notation)",
+   "key": "forge.mr_title",
+   "de": "MR-Titel (Commit-Notation)",
+   "en": "MR title (commit notation)"
+  },
+  {
+   "match": "Keine offenen Issues.",
+   "key": "forge.no_open_issues",
+   "de": "Keine offenen Issues.",
+   "en": "No open issues."
+  },
+  {
+   "match": "Keine Pipelines für den Branch.",
+   "key": "forge.no_pipelines",
+   "de": "Keine Pipelines für den Branch.",
+   "en": "No pipelines for the branch."
+  },
+  {
+   "match": "Operationen",
+   "key": "forge.operations",
+   "de": "Operationen",
+   "en": "Operations"
+  },
+  {
+   "match": "Pipelines",
+   "key": "forge.pipelines",
+   "de": "Pipelines",
+   "en": "Pipelines"
+  },
+  {
+   "match": "Pipelines:",
+   "key": "forge.pipelines_colon",
+   "de": "Pipelines:",
+   "en": "Pipelines: "
+  },
+  {
+   "match": "vorbereiten (read-only)",
+   "key": "forge.prepare",
+   "de": "vorbereiten (read-only)",
+   "en": "prepare (read-only)"
+  },
+  {
+   "match": "Vorschau",
+   "key": "forge.preview",
+   "de": "Vorschau",
+   "en": "Preview"
+  },
+  {
+   "match": "lösen",
+   "key": "forge.resolve",
+   "de": "lösen",
+   "en": "resolve"
+  },
+  {
+   "match": "Befund an Agenten senden",
+   "key": "forge.send_finding",
+   "de": "Befund an Agenten senden",
+   "en": "Send finding to agent"
+  },
+  {
+   "match": "Session:",
+   "key": "forge.session_colon",
+   "de": "Session:",
+   "en": "Session: "
+  },
+  {
+   "match": "Quelle:",
+   "key": "forge.source",
+   "de": "Quelle:",
+   "en": "Source: "
+  },
+  {
+   "match": "Session starten",
+   "key": "forge.start_session",
+   "de": "Session starten",
+   "en": "Start session"
+  },
+  {
+   "match": "Threads",
+   "key": "forge.threads",
+   "de": "Threads",
+   "en": "Threads"
+  },
+  {
+   "match": "Trace",
+   "key": "forge.trace",
+   "de": "Trace",
+   "en": "Trace"
+  },
+  {
+   "match": "Trace Job",
+   "key": "forge.trace_job",
+   "de": "Trace Job",
+   "en": "Trace job "
+  },
+  {
+   "match": "Commits — ältere fehlen sichtbar.",
+   "key": "git-graph.commits_missing",
+   "de": "Commits — ältere fehlen sichtbar.",
+   "en": "Commits — older ones visibly missing."
+  },
+  {
+   "match": "Lade Git-Graph …",
+   "key": "git-graph.gitgraph_loading",
+   "de": "Lade Git-Graph …",
+   "en": "Loading git graph…"
+  },
+  {
+   "match": "Git-Graph nicht ladbar:",
+   "key": "git-graph.gitgraph_not_loadable",
+   "de": "Git-Graph nicht ladbar:",
+   "en": "Git graph not loadable: "
+  },
+  {
+   "match": "Verlauf gekappt: neueste",
+   "key": "git-graph.history_capped",
+   "de": "Verlauf gekappt: neueste",
+   "en": "History capped: newest "
+  },
+  {
+   "match": "Farben = Spurlinien (Lanes), nicht Hosts. Chips = Branch-/Tag-Tips im geladenen Verlauf.\n          Worktree-Sessions erscheinen als „Session …“ (Hover = voller Ref).",
+   "key": "git-graph.lanes_note",
+   "de": "Farben = Spurlinien (Lanes), nicht Hosts. Chips = Branch-/Tag-Tips im geladenen Verlauf.\n          Worktree-Sessions erscheinen als „Session …“ (Hover = voller Ref).",
+   "en": "Colors = lane lines (lanes), not hosts. Chips = branch/tag tips in the loaded history.\\nWorktree sessions appear as “Session …” (hover = full ref)."
+  },
+  {
+   "match": "… weitere Dateien gekappt",
+   "key": "git-graph.more_files_capped",
+   "de": "… weitere Dateien gekappt",
+   "en": "… more files capped"
+  },
+  {
+   "match": "keine Dateiänderungen",
+   "key": "git-graph.no_file_changes",
+   "de": "keine Dateiänderungen",
+   "en": "no file changes"
+  },
+  {
+   "match": "Kategorien",
+   "key": "graph.categories",
+   "de": "Kategorien",
+   "en": "Categories"
+  },
+  {
+   "match": "Prüfung fehlgeschlagen:",
+   "key": "graph.check_failed",
+   "de": "Prüfung fehlgeschlagen:",
+   "en": "Check failed: "
+  },
+  {
+   "match": "Graph prüfen",
+   "key": "graph.check_graph",
+   "de": "Graph prüfen",
+   "en": "Check graph"
+  },
+  {
+   "match": "Tote Dateien",
+   "key": "graph.dead_files",
+   "de": "Tote Dateien",
+   "en": "Dead files "
+  },
+  {
+   "match": "Nur tote",
+   "key": "graph.dead_only",
+   "de": "Nur tote",
+   "en": "Dead only"
+  },
+  {
+   "match": "Fehler in",
+   "key": "graph.errors_in",
+   "de": "Fehler in",
+   "en": "errors in "
+  },
+  {
+   "match": "Nur Fehler",
+   "key": "graph.errors_only",
+   "de": "Nur Fehler",
+   "en": "Errors only"
+  },
+  {
+   "match": "Vollbild verlassen",
+   "key": "graph.exit_fullscreen",
+   "de": "Vollbild verlassen",
+   "en": "Exit full screen"
+  },
+  {
+   "match": "Vollbild verlassen (Esc)",
+   "key": "graph.exit_fullscreen_esc",
+   "de": "Vollbild verlassen (Esc)",
+   "en": "Exit full screen (Esc)"
+  },
+  {
+   "match": "✕ Vollbild verlassen",
+   "key": "graph.exit_fullscreen_x",
+   "de": "✕ Vollbild verlassen",
+   "en": "✕ Exit full screen"
+  },
+  {
+   "match": "Liste aufklappen",
+   "key": "graph.expand_list",
+   "de": "Liste aufklappen",
+   "en": "Expand list"
+  },
+  {
+   "match": "Dateien",
+   "key": "graph.files",
+   "de": "Dateien",
+   "en": "Files"
+  },
+  {
+   "match": "Dateien gezeigt — Filter verfeinern.",
+   "key": "graph.files_shown",
+   "de": "Dateien gezeigt — Filter verfeinern.",
+   "en": "files shown — refine filters."
+  },
+  {
+   "match": "Filter",
+   "key": "graph.filter",
+   "de": "Filter",
+   "en": "Filter"
+  },
+  {
+   "match": "Einpassen",
+   "key": "graph.fit",
+   "de": "Einpassen",
+   "en": "Fit"
+  },
+  {
+   "match": "Vollbild",
+   "key": "graph.fullscreen",
+   "de": "Vollbild",
+   "en": "Full screen"
+  },
+  {
+   "match": "Galaxie",
+   "key": "graph.galaxy",
+   "de": "Galaxie",
+   "en": "Galaxy"
+  },
+  {
+   "match": "Graph gekappt:",
+   "key": "graph.graph_capped",
+   "de": "Graph gekappt:",
+   "en": "Graph capped: "
+  },
+  {
+   "match": "Graph nicht ladbar:",
+   "key": "graph.graph_not_loadable",
+   "de": "Graph nicht ladbar:",
+   "en": "Graph not loadable: "
+  },
+  {
+   "match": "eingehend, Pfeil zur Auswahl",
+   "key": "graph.incoming_arrow",
+   "de": "eingehend, Pfeil zur Auswahl",
+   "en": "incoming, arrow to the selection"
+  },
+  {
+   "match": "· Zufluss",
+   "key": "graph.inflow_frag",
+   "de": "· Zufluss",
+   "en": "· Inflow "
+  },
+  {
+   "match": "Lade Graph …",
+   "key": "graph.loading_graph",
+   "de": "Lade Graph …",
+   "en": "Loading graph …"
+  },
+  {
+   "match": "Ort",
+   "key": "graph.location",
+   "de": "Ort",
+   "en": "Location"
+  },
+  {
+   "match": "Bildrate zu niedrig — Namen, Pulse und Leuchten reduziert",
+   "key": "graph.low_framerate",
+   "de": "Bildrate zu niedrig — Namen, Pulse und Leuchten reduziert",
+   "en": "Frame rate too low — names, pulses, and glow reduced"
+  },
+  {
+   "match": "Keine Dateien im Ziel gefunden.",
+   "key": "graph.no_files_target",
+   "de": "Keine Dateien im Ziel gefunden.",
+   "en": "No files found in the target."
+  },
+  {
+   "match": "Kein Treffer",
+   "key": "graph.no_match",
+   "de": "Kein Treffer",
+   "en": "No match"
+  },
+  {
+   "match": "keine",
+   "key": "graph.none",
+   "de": "keine",
+   "en": "none"
+  },
+  {
+   "match": "Öffnen",
+   "key": "graph.open",
+   "de": "Öffnen",
+   "en": "Open"
+  },
+  {
+   "match": "Datei öffnen",
+   "key": "graph.open_file",
+   "de": "Datei öffnen",
+   "en": "Open file"
+  },
+  {
+   "match": "ausgehend, Pfeil zum Nachbarn",
+   "key": "graph.outgoing_arrow",
+   "de": "ausgehend, Pfeil zum Nachbarn",
+   "en": "outgoing, arrow to the neighbor"
+  },
+  {
+   "match": "· Ausgehend",
+   "key": "graph.outgoing_frag",
+   "de": "· Ausgehend",
+   "en": "· Outgoing "
+  },
+  {
+   "match": "Repo",
+   "key": "graph.repo",
+   "de": "Repo",
+   "en": "Repo"
+  },
+  {
+   "match": "Datei suchen",
+   "key": "graph.search_file",
+   "de": "Datei suchen",
+   "en": "Search file"
+  },
+  {
+   "match": "Dateien suchen",
+   "key": "graph.search_files",
+   "de": "Dateien suchen",
+   "en": "Search files"
+  },
+  {
+   "match": "Auswahl",
+   "key": "graph.selection",
+   "de": "Auswahl",
+   "en": "Selection"
+  },
+  {
+   "match": "Ganze Galaxie zeigen",
+   "key": "graph.show_entire",
+   "de": "Ganze Galaxie zeigen",
+   "en": "Show entire galaxy"
+  },
+  {
+   "match": "Vereinfacht",
+   "key": "graph.simplified",
+   "de": "Vereinfacht",
+   "en": "Simplified"
+  },
+  {
+   "match": "Systeme",
+   "key": "graph.systems",
+   "de": "Systeme",
+   "en": "Systems "
+  },
+  {
+   "match": "2 Schritte",
+   "key": "graph.two_steps",
+   "de": "2 Schritte",
+   "en": "2 steps"
+  },
+  {
+   "match": "Verwendet",
+   "key": "graph.used",
+   "de": "Verwendet",
+   "en": "Used"
+  },
+  {
+   "match": "Wird verwendet von",
+   "key": "graph.used_by",
+   "de": "Wird verwendet von",
+   "en": "Used by"
+  },
+  {
+   "match": "Angebundene Wissensquellen",
+   "key": "knowledge.attached_sources",
+   "de": "Angebundene Wissensquellen",
+   "en": "Attached knowledge sources"
+  },
+  {
+   "match": "Auth:",
+   "key": "knowledge.auth",
+   "de": "Auth:",
+   "en": "Auth: "
+  },
+  {
+   "match": "Bearer-Token",
+   "key": "knowledge.bearer_token",
+   "de": "Bearer-Token",
+   "en": "Bearer token"
+  },
+  {
+   "match": "Prüfen",
+   "key": "knowledge.check",
+   "de": "Prüfen",
+   "en": "Check"
+  },
+  {
+   "match": "Quelle wählen …",
+   "key": "knowledge.choose_source",
+   "de": "Quelle wählen …",
+   "en": "Select source …"
+  },
+  {
+   "match": ". Suchen und Schreiben brauchen die Verbindung.",
+   "key": "knowledge.connect_needed",
+   "de": ". Suchen und Schreiben brauchen die Verbindung.",
+   "en": ". Search and writing need the connection."
+  },
+  {
+   "match": "Dokument gekappt (32-KB-Grenze).",
+   "key": "knowledge.doc_capped",
+   "de": "Dokument gekappt (32-KB-Grenze).",
+   "en": "Document capped (32 KB limit)."
+  },
+  {
+   "match": "Kanten",
+   "key": "knowledge.edges",
+   "de": "Kanten",
+   "en": "Edges"
+  },
+  {
+   "match": "Bearbeiten",
+   "key": "knowledge.edit",
+   "de": "Bearbeiten",
+   "en": "Edit"
+  },
+  {
+   "match": "Fusion",
+   "key": "knowledge.fusion",
+   "de": "Fusion",
+   "en": "Fusion"
+  },
+  {
+   "match": "Graph gekappt — Knoten-/Kantengrenze erreicht.",
+   "key": "knowledge.graph_capped",
+   "de": "Graph gekappt — Knoten-/Kantengrenze erreicht.",
+   "en": "graph capped — node/edge limit reached."
+  },
+  {
+   "match": "Header-Name",
+   "key": "knowledge.header_name",
+   "de": "Header-Name",
+   "en": "Header name"
+  },
+  {
+   "match": "Wissens-Quelle",
+   "key": "knowledge.knowledge_source",
+   "de": "Wissens-Quelle",
+   "en": "Knowledge source"
+  },
+  {
+   "match": "Wissensquellen",
+   "key": "knowledge.knowledge_sources",
+   "de": "Wissensquellen",
+   "en": "Knowledge sources"
+  },
+  {
+   "match": "Librarian",
+   "key": "knowledge.librarian",
+   "de": "Librarian",
+   "en": "Librarian"
+  },
+  {
+   "match": "MCP-Adresse",
+   "key": "knowledge.mcp_address",
+   "de": "MCP-Adresse",
+   "en": "MCP address"
+  },
+  {
+   "match": "MCP-Wissensserver anbinden, z. B. den Librarian. Der Hub fragt sie für dich ab; Inhalte sind nur Text zum Lesen.",
+   "key": "knowledge.mcp_attach",
+   "de": "MCP-Wissensserver anbinden, z. B. den Librarian. Der Hub fragt sie für dich ab; Inhalte sind nur Text zum Lesen.",
+   "en": "Attach an MCP knowledge server, e.g. the Librarian. The hub queries it for you; contents are text to read only."
+  },
+  {
+   "match": "https://…/mcp",
+   "key": "knowledge.mcp_placeholder",
+   "de": "https://…/mcp",
+   "en": "https://…/mcp"
+  },
+  {
+   "match": "minScore",
+   "key": "knowledge.minScore",
+   "de": "minScore",
+   "en": "minScore"
+  },
+  {
+   "match": "Nachbarn",
+   "key": "knowledge.neighbors",
+   "de": "Nachbarn",
+   "en": "Neighbors"
+  },
+  {
+   "match": "Nachbarn von",
+   "key": "knowledge.neighbors_of",
+   "de": "Nachbarn von",
+   "en": "Neighbors of "
+  },
+  {
+   "match": "Kein Treffer.",
+   "key": "knowledge.no_match",
+   "de": "Kein Treffer.",
+   "en": "No match."
+  },
+  {
+   "match": "Noch keine Wissensquelle angebunden.",
+   "key": "knowledge.no_source",
+   "de": "Noch keine Wissensquelle angebunden.",
+   "en": "No knowledge source attached yet."
+  },
+  {
+   "match": "Noch keine Wissens-Quelle angebunden — in den Einstellungen unter „Wissensquellen“ anlegen (URL + Token).",
+   "key": "knowledge.no_source_yet",
+   "de": "Noch keine Wissens-Quelle angebunden — in den Einstellungen unter „Wissensquellen“ anlegen (URL + Token).",
+   "en": "No knowledge source attached yet — create one in settings under “Knowledge sources” (URL + token)."
+  },
+  {
+   "match": "Diese Quelle bietet kein Schreib-Tool (kb_add) — nur lesen.",
+   "key": "knowledge.no_write_tool",
+   "de": "Diese Quelle bietet kein Schreib-Tool (kb_add) — nur lesen.",
+   "en": "This source offers no write tool (kb_add) — read only."
+  },
+  {
+   "match": "Keine",
+   "key": "knowledge.none",
+   "de": "Keine",
+   "en": "None"
+  },
+  {
+   "match": "Text der Notiz …",
+   "key": "knowledge.note_text",
+   "de": "Text der Notiz …",
+   "en": "Note text…"
+  },
+  {
+   "match": "Notiz an „",
+   "key": "knowledge.note_to",
+   "de": "Notiz an „",
+   "en": "Note to “"
+  },
+  {
+   "match": "Offline — gespeicherter Stand",
+   "key": "knowledge.offline_saved",
+   "de": "Offline — gespeicherter Stand",
+   "en": "Offline — saved state"
+  },
+  {
+   "match": "Eigener Header",
+   "key": "knowledge.own_header",
+   "de": "Eigener Header",
+   "en": "Own header"
+  },
+  {
+   "match": "eigene ref (optional, z. B. notes/idee.md)",
+   "key": "knowledge.own_ref",
+   "de": "eigene ref (optional, z. B. notes/idee.md)",
+   "en": "own ref (optional, e.g. notes/idea.md)"
+  },
+  {
+   "match": "Zur Freigabe vormerken",
+   "key": "knowledge.queue_approval",
+   "de": "Zur Freigabe vormerken",
+   "en": "Queue for approval"
+  },
+  {
+   "match": "“ — nur mit Freigabe",
+   "key": "knowledge.quote_approval",
+   "de": "“ — nur mit Freigabe",
+   "en": "” — approval only"
+  },
+  {
+   "match": "Neu laden",
+   "key": "knowledge.reload",
+   "de": "Neu laden",
+   "en": "Reload"
+  },
+  {
+   "match": "Quellen neu laden",
+   "key": "knowledge.reload_sources",
+   "de": "Quellen neu laden",
+   "en": "Reload sources"
+  },
+  {
+   "match": "Token entfernen",
+   "key": "knowledge.remove_token",
+   "de": "Token entfernen",
+   "en": "Remove token"
+  },
+  {
+   "match": "Ergebnis gekappt — topK/Snippet-Grenze erreicht.",
+   "key": "knowledge.result_capped",
+   "de": "Ergebnis gekappt — topK/Snippet-Grenze erreicht.",
+   "en": "Result capped — topK/snippet limit reached."
+  },
+  {
+   "match": "rrf",
+   "key": "knowledge.rrf",
+   "de": "rrf",
+   "en": "rrf"
+  },
+  {
+   "match": "Suchen",
+   "key": "knowledge.search",
+   "de": "Suchen",
+   "en": "Search"
+  },
+  {
+   "match": "Im Brain suchen …",
+   "key": "knowledge.search_brain",
+   "de": "Im Brain suchen …",
+   "en": "Search the brain…"
+  },
+  {
+   "match": "sequential",
+   "key": "knowledge.sequential",
+   "de": "sequential",
+   "en": "sequential"
+  },
+  {
+   "match": "Nachbarn anzeigen",
+   "key": "knowledge.show_neighbors",
+   "de": "Nachbarn anzeigen",
+   "en": "Show neighbors"
+  },
+  {
+   "match": "Anmeldung",
+   "key": "knowledge.signin",
+   "de": "Anmeldung",
+   "en": "Sign-in"
+  },
+  {
+   "match": "Token",
+   "key": "knowledge.token",
+   "de": "Token",
+   "en": "Token "
+  },
+  {
+   "match": "Das Token bleibt am Hub und wird nie wieder angezeigt.",
+   "key": "knowledge.token_stays",
+   "de": "Das Token bleibt am Hub und wird nie wieder angezeigt.",
+   "en": "The token stays on the hub and is never shown again."
+  },
+  {
+   "match": "topK",
+   "key": "knowledge.topK",
+   "de": "topK",
+   "en": "topK"
+  },
+  {
+   "match": "Im Notizen-Bereich benutzen",
+   "key": "knowledge.use_in_notes",
+   "de": "Im Notizen-Bereich benutzen",
+   "en": "Use in the notes area"
+  },
+  {
+   "match": "X-Api-Key",
+   "key": "knowledge.x_api_key",
+   "de": "X-Api-Key",
+   "en": "X-Api-Key"
+  },
+  {
+   "match": "a — merged automatisch (Außenwirkung)",
+   "key": "loops.a_auto_merge",
+   "de": "a — merged automatisch (Außenwirkung)",
+   "en": "a — merges automatically (external effect)"
+  },
+  {
+   "match": "Anthropic",
+   "key": "loops.anthropic",
+   "de": "Anthropic",
+   "en": "Anthropic"
+  },
+  {
+   "match": "Außenwirkung bestätigen",
+   "key": "loops.confirm_external",
+   "de": "Außenwirkung bestätigen",
+   "en": "Confirm external effect"
+  },
+  {
+   "match": "Tagesbericht",
+   "key": "loops.daily_report",
+   "de": "Tagesbericht",
+   "en": "Daily report"
+  },
+  {
+   "match": "Treiber",
+   "key": "loops.driver",
+   "de": "Treiber",
+   "en": "Driver"
+  },
+  {
+   "match": "Der Treiber ist beendet — der Lauf geht nicht weiter. Der Fortschritt unten ist der letzte gemeldete Stand, kein „fertig“.",
+   "key": "loops.driver_ended",
+   "de": "Der Treiber ist beendet — der Lauf geht nicht weiter. Der Fortschritt unten ist der letzte gemeldete Stand, kein „fertig“.",
+   "en": "The driver has exited — the run does not continue. The progress below is the last reported state, not “done”."
+  },
+  {
+   "match": "Lauf beenden",
+   "key": "loops.end_run",
+   "de": "Lauf beenden",
+   "en": "End run"
+  },
+  {
+   "match": "Eskalation",
+   "key": "loops.escalation",
+   "de": "Eskalation",
+   "en": "Escalation "
+  },
+  {
+   "match": "Betriebsart der Factory",
+   "key": "loops.factory_mode",
+   "de": "Betriebsart der Factory",
+   "en": "Factory mode"
+  },
+  {
+   "match": "Factory-Projekt",
+   "key": "loops.factory_project",
+   "de": "Factory-Projekt",
+   "en": "Factory project"
+  },
+  {
+   "match": "Provider der Factory",
+   "key": "loops.factory_provider",
+   "de": "Provider der Factory",
+   "en": "Factory provider"
+  },
+  {
+   "match": "Features fertig ·",
+   "key": "loops.features_done",
+   "de": "Features fertig ·",
+   "en": "Features done · "
+  },
+  {
+   "match": "Der volle Text liegt als Blob im Verlauf.",
+   "key": "loops.full_text_blob",
+   "de": "Der volle Text liegt als Blob im Verlauf.",
+   "en": "The full text is stored as a blob in the journal."
+  },
+  {
+   "match": "Gate",
+   "key": "loops.gate",
+   "de": "Gate",
+   "en": "Gate "
+  },
+  {
+   "match": "in Arbeit",
+   "key": "loops.in_progress",
+   "de": "in Arbeit",
+   "en": "in progress"
+  },
+  {
+   "match": "In „",
+   "key": "loops.in_quote",
+   "de": "In „",
+   "en": "In “"
+  },
+  {
+   "match": "Intake:",
+   "key": "loops.intake",
+   "de": "Intake:",
+   "en": "Intake:"
+  },
+  {
+   "match": "Linie",
+   "key": "loops.lane",
+   "de": "Linie",
+   "en": "Lane "
+  },
+  {
+   "match": "Verknüpfung:",
+   "key": "loops.link",
+   "de": "Verknüpfung:",
+   "en": "Link:"
+  },
+  {
+   "match": "Loop",
+   "key": "loops.loop",
+   "de": "Loop",
+   "en": "Loop"
+  },
+  {
+   "match": "Loop gestört:",
+   "key": "loops.loop_disturbed",
+   "de": "Loop gestört:",
+   "en": "Loop disturbed: "
+  },
+  {
+   "match": "Betriebsart des Loops",
+   "key": "loops.loop_mode",
+   "de": "Betriebsart des Loops",
+   "en": "Loop mode"
+  },
+  {
+   "match": "Fortschritt des Loops",
+   "key": "loops.loop_progress",
+   "de": "Fortschritt des Loops",
+   "en": "Loop progress"
+  },
+  {
+   "match": "Betriebsart",
+   "key": "loops.mode",
+   "de": "Betriebsart",
+   "en": "Mode"
+  },
+  {
+   "match": "kein Loop",
+   "key": "loops.no_loop",
+   "de": "kein Loop",
+   "en": "no loop"
+  },
+  {
+   "match": "öffnen",
+   "key": "loops.open",
+   "de": "öffnen",
+   "en": "open"
+  },
+  {
+   "match": "Orchestrator",
+   "key": "loops.orchestrator",
+   "de": "Orchestrator",
+   "en": "Orchestrator"
+  },
+  {
+   "match": "Freigaben des Orchestrators:",
+   "key": "loops.orchestrator_approvals",
+   "de": "Freigaben des Orchestrators:",
+   "en": "Orchestrator approvals:"
+  },
+  {
+   "match": "· Phase",
+   "key": "loops.phase_frag",
+   "de": "· Phase",
+   "en": "· Phase "
+  },
+  {
+   "match": "Provider",
+   "key": "loops.provider",
+   "de": "Provider",
+   "en": "Provider"
+  },
+  {
+   "match": "“ ändert der Loop Fremdsysteme (z. B. Merges). Ich weiß das und will starten.",
+   "key": "loops.quote_changes",
+   "de": "“ ändert der Loop Fremdsysteme (z. B. Merges). Ich weiß das und will starten.",
+   "en": "” the loop changes foreign systems (e.g. merges). I know this and want to start."
+  },
+  {
+   "match": "Fortsetzen",
+   "key": "loops.resume",
+   "de": "Fortsetzen",
+   "en": "Resume"
+  },
+  {
+   "match": "Lauf:",
+   "key": "loops.run_colon",
+   "de": "Lauf:",
+   "en": "Run: "
+  },
+  {
+   "match": "Betriebsart setzen",
+   "key": "loops.set_mode",
+   "de": "Betriebsart setzen",
+   "en": "Set mode"
+  },
+  {
+   "match": "Beim Starten richtet der Hub das Loop-System ein und startet dann die Session.",
+   "key": "loops.setup_on_start",
+   "de": "Beim Starten richtet der Hub das Loop-System ein und startet dann die Session.",
+   "en": "On start the hub sets up the loop system and then starts the session. "
+  },
+  {
+   "match": "Aufgaben",
+   "key": "loops.tasks",
+   "de": "Aufgaben",
+   "en": "Tasks"
+  },
+  {
+   "match": "Der Loop wartet auf eine Person:",
+   "key": "loops.waits_for_person",
+   "de": "Der Loop wartet auf eine Person:",
+   "en": "The loop is waiting for a person: "
+  },
+  {
+   "match": "Z.ai",
+   "key": "loops.zai",
+   "de": "Z.ai",
+   "en": "Z.ai"
+  },
+  {
+   "match": "Cloud (Gemini) erlauben",
+   "key": "media.allow_cloud",
+   "de": "Cloud (Gemini) erlauben",
+   "en": "Allow cloud (Gemini)"
+  },
+  {
+   "match": "Video analysieren",
+   "key": "media.analyze_video",
+   "de": "Video analysieren",
+   "en": "Analyze video"
+  },
+  {
+   "match": "automatisch",
+   "key": "media.automatic",
+   "de": "automatisch",
+   "en": "automatic"
+  },
+  {
+   "match": "Kapitel",
+   "key": "media.chapters",
+   "de": "Kapitel",
+   "en": "Chapters"
+  },
+  {
+   "match": "Datei wählen",
+   "key": "media.choose_file",
+   "de": "Datei wählen",
+   "en": "Choose file"
+  },
+  {
+   "match": "Beschreibung (",
+   "key": "media.description_open",
+   "de": "Beschreibung (",
+   "en": "Description ("
+  },
+  {
+   "match": "Englisch",
+   "key": "media.english",
+   "de": "Englisch",
+   "en": "English"
+  },
+  {
+   "match": "Deutsch",
+   "key": "media.german",
+   "de": "Deutsch",
+   "en": "German"
+  },
+  {
+   "match": "Bild bei",
+   "key": "media.image_at",
+   "de": "Bild bei",
+   "en": "Image at "
+  },
+  {
+   "match": "Bild lädt…",
+   "key": "media.image_loading",
+   "de": "Bild lädt…",
+   "en": "Image loading…"
+  },
+  {
+   "match": "Schlüsselbilder (",
+   "key": "media.keyframes",
+   "de": "Schlüsselbilder (",
+   "en": "Keyframes ("
+  },
+  {
+   "match": "Sprache",
+   "key": "media.language",
+   "de": "Sprache",
+   "en": "Language"
+  },
+  {
+   "match": "Hat den Hub verlassen:",
+   "key": "media.left_hub",
+   "de": "Hat den Hub verlassen:",
+   "en": "Has left the hub:"
+  },
+  {
+   "match": ", kann irren):",
+   "key": "media.may_err",
+   "de": ", kann irren):",
+   "en": ", may err): "
+  },
+  {
+   "match": "neuer Session",
+   "key": "media.new_session",
+   "de": "neuer Session",
+   "en": "new session"
+  },
+  {
+   "match": "Ohne Gemini-Schlüssel (Einstellungen) bleibt alles lokal; Bilder werden dann nur per OCR gelesen.",
+   "key": "media.no_gemini",
+   "de": "Ohne Gemini-Schlüssel (Einstellungen) bleibt alles lokal; Bilder werden dann nur per OCR gelesen.",
+   "en": "Without a Gemini key (settings) everything stays local; images are then only read via OCR."
+  },
+  {
+   "match": "kein Transkript",
+   "key": "media.no_transcript",
+   "de": "kein Transkript",
+   "en": "no transcript"
+  },
+  {
+   "match": "Zusammenfassung nicht ladbar:",
+   "key": "media.summary_unloadable",
+   "de": "Zusammenfassung nicht ladbar:",
+   "en": "Summary not loadable: "
+  },
+  {
+   "match": "Ziel-Session",
+   "key": "media.target_session",
+   "de": "Ziel-Session",
+   "en": "Target session"
+  },
+  {
+   "match": "Text im Bild:",
+   "key": "media.text_in_image",
+   "de": "Text im Bild:",
+   "en": "Text in image: "
+  },
+  {
+   "match": "Transkript",
+   "key": "media.transcript",
+   "de": "Transkript",
+   "en": "Transcript "
+  },
+  {
+   "match": "Als Anhang verwenden in",
+   "key": "media.use_as_attachment",
+   "de": "Als Anhang verwenden in",
+   "en": "Use as attachment in"
+  },
+  {
+   "match": "In Session verwenden",
+   "key": "media.use_in_session",
+   "de": "In Session verwenden",
+   "en": "Use in session"
+  },
+  {
+   "match": "Videodatei",
+   "key": "media.video_file",
+   "de": "Videodatei",
+   "en": "Video file"
+  },
+  {
+   "match": "Video-Link",
+   "key": "media.video_link",
+   "de": "Video-Link",
+   "en": "Video link"
+  },
+  {
+   "match": "YouTube- oder Video-Link",
+   "key": "media.youtube_link",
+   "de": "YouTube- oder Video-Link",
+   "en": "YouTube or video link"
+  },
+  {
+   "match": "anthropic/claude-opus-5-5",
+   "key": "new-session.anthropic_model",
+   "de": "anthropic/claude-opus-5-5",
+   "en": "anthropic/claude-opus-5-5"
+  },
+  {
+   "match": "http://100.64.0.10:8100/v1",
+   "key": "new-session.endpoint_url",
+   "de": "http://100.64.0.10:8100/v1",
+   "en": "http://100.64.0.10:8100/v1"
+  },
+  {
+   "match": "gpubox",
+   "key": "new-session.gpubox",
+   "de": "gpubox",
+   "en": "gpubox"
+  },
+  {
+   "match": "$GPUBOX_KEY",
+   "key": "new-session.gpubox_key",
+   "de": "$GPUBOX_KEY",
+   "en": "$GPUBOX_KEY"
+  },
+  {
+   "match": "halogen-qwen3.8-flash-next-uncensored-iq4xs",
+   "key": "new-session.halogen_model",
+   "de": "halogen-qwen3.8-flash-next-uncensored-iq4xs",
+   "en": "halogen-qwen3.8-flash-next-uncensored-iq4xs"
+  },
+  {
+   "match": "Opus 5.5",
+   "key": "new-session.opus",
+   "de": "Opus 5.5",
+   "en": "Model 5.5"
+  },
+  {
+   "match": "/home/user/repo",
+   "key": "new-session.user_repo",
+   "de": "/home/user/repo",
+   "en": "/home/user/repo"
+  },
+  {
+   "match": "In der Session entscheiden",
+   "key": "nyx.decide_in_session",
+   "de": "In der Session entscheiden",
+   "en": "Decide in the session"
+  },
+  {
+   "match": "Nichts wartet auf dich.",
+   "key": "nyx.nothing_waits",
+   "de": "Nichts wartet auf dich.",
+   "en": "Nothing is waiting for you."
+  },
+  {
+   "match": "Nyx",
+   "key": "nyx.nyx",
+   "de": "Nyx",
+   "en": "Nyx"
+  },
+  {
+   "match": "Wähle ein Projekt — seine gemergten PRs erscheinen hier chronologisch.",
+   "key": "release-notes.choose_project",
+   "de": "Wähle ein Projekt — seine gemergten PRs erscheinen hier chronologisch.",
+   "en": "Choose a project — its merged PRs appear here chronologically."
+  },
+  {
+   "match": "Projekt wählen…",
+   "key": "release-notes.choose_project2",
+   "de": "Projekt wählen…",
+   "en": "Choose project…"
+  },
+  {
+   "match": "Commit-Beschreibung gekürzt (Cap)",
+   "key": "release-notes.commit_desc_truncated",
+   "de": "Commit-Beschreibung gekürzt (Cap)",
+   "en": "Commit description truncated (cap)"
+  },
+  {
+   "match": "Beschreibung gekürzt (Cap)",
+   "key": "release-notes.desc_truncated",
+   "de": "Beschreibung gekürzt (Cap)",
+   "en": "Description truncated (cap)"
+  },
+  {
+   "match": "Dateiliste gekürzt (Cap)",
+   "key": "release-notes.filelist_truncated",
+   "de": "Dateiliste gekürzt (Cap)",
+   "en": "File list truncated (cap)"
+  },
+  {
+   "match": "Dateien",
+   "key": "release-notes.files",
+   "de": "Dateien",
+   "en": "Files"
+  },
+  {
+   "match": "gelistet",
+   "key": "release-notes.listed",
+   "de": "gelistet",
+   "en": "listed"
+  },
+  {
+   "match": "Release-Notes werden geladen…",
+   "key": "release-notes.loading",
+   "de": "Release-Notes werden geladen…",
+   "en": "Loading release notes…"
+  },
+  {
+   "match": "Keine gemergten Pull-Requests im Verlauf.",
+   "key": "release-notes.no_merged",
+   "de": "Keine gemergten Pull-Requests im Verlauf.",
+   "en": "No merged pull requests in the history."
+  },
+  {
+   "match": "ohne Notation",
+   "key": "release-notes.no_notation",
+   "de": "ohne Notation",
+   "en": "without notation"
+  },
+  {
+   "match": "keine PR-Beschreibung im Merge-Commit",
+   "key": "release-notes.no_pr_desc",
+   "de": "keine PR-Beschreibung im Merge-Commit",
+   "en": "no PR description in the merge commit"
+  },
+  {
+   "match": "ältere PRs nicht geladen (Cap",
+   "key": "release-notes.older_not_loaded",
+   "de": "ältere PRs nicht geladen (Cap",
+   "en": "older PRs not loaded (cap "
+  },
+  {
+   "match": "Was —",
+   "key": "release-notes.what",
+   "de": "Was —",
+   "en": "What — "
+  },
+  {
+   "match": "Warum",
+   "key": "release-notes.why",
+   "de": "Warum",
+   "en": "Why"
+  },
+  {
+   "match": "Dokumente ·",
+   "key": "search.documents",
+   "de": "Dokumente ·",
+   "en": "Documents · "
+  },
+  {
+   "match": "Volltextsuche nicht verfügbar —",
+   "key": "search.fulltext_unavailable",
+   "de": "Volltextsuche nicht verfügbar —",
+   "en": "Full-text search unavailable — "
+  },
+  {
+   "match": "Erstindex wird aufgebaut — das kann bei einem großen Projekt einige Minuten dauern…",
+   "key": "search.initial_index",
+   "de": "Erstindex wird aufgebaut — das kann bei einem großen Projekt einige Minuten dauern…",
+   "en": "Initial index is being built — on a large project this can take a few minutes…"
+  },
+  {
+   "match": "Zeile",
+   "key": "search.line",
+   "de": "Zeile",
+   "en": "Line"
+  },
+  {
+   "match": "keine Treffer",
+   "key": "search.no_hits",
+   "de": "keine Treffer",
+   "en": "no hits"
+  },
+  {
+   "match": "keine Markdown-Dokumente im Projekt",
+   "key": "search.no_md",
+   "de": "keine Markdown-Dokumente im Projekt",
+   "en": "no Markdown documents in the project"
+  },
+  {
+   "match": "ist auf diesem Hub nicht installiert. Die Dokumente unten lassen sich trotzdem öffnen.",
+   "key": "search.not_installed",
+   "de": "ist auf diesem Hub nicht installiert. Die Dokumente unten lassen sich trotzdem öffnen.",
+   "en": "is not installed on this hub. The documents below can still be opened."
+  },
+  {
+   "match": "qmd",
+   "key": "search.qmd",
+   "de": "qmd",
+   "en": "qmd"
+  },
+  {
+   "match": "Doku durchsuchen (Markdown)…",
+   "key": "search.search_docs",
+   "de": "Doku durchsuchen (Markdown)…",
+   "en": "Search docs (Markdown)…"
+  },
+  {
+   "match": "Suche läuft…",
+   "key": "search.search_running",
+   "de": "Suche läuft…",
+   "en": "Search running…"
+  },
+  {
+   "match": "claude attach",
+   "key": "session.claude_attach",
+   "de": "claude attach",
+   "en": "claude attach "
+  },
+  {
+   "match": "Aa",
+   "key": "settings.aa",
+   "de": "Aa",
+   "en": "Aa"
+  },
+  {
+   "match": "Akzentfarbe",
+   "key": "settings.accent_color",
+   "de": "Akzentfarbe",
+   "en": "Accent color"
+  },
+  {
+   "match": "Akzentfarbe, Schriftarten und Schriftgröße; Theme und Zoom bleiben",
+   "key": "settings.accent_fonts",
+   "de": "Akzentfarbe, Schriftarten und Schriftgröße; Theme und Zoom bleiben",
+   "en": "Accent color, fonts and font size; theme and zoom stay"
+  },
+  {
+   "match": "Akzentfarbe ·",
+   "key": "settings.accent_frag",
+   "de": "Akzentfarbe ·",
+   "en": "Accent color · "
+  },
+  {
+   "match": "Projekt hinzufügen",
+   "key": "settings.add_project",
+   "de": "Projekt hinzufügen",
+   "en": "Add project"
+  },
+  {
+   "match": "Push auf diesem Hub erlauben",
+   "key": "settings.allow_push",
+   "de": "Push auf diesem Hub erlauben",
+   "en": "Allow push on this hub"
+  },
+  {
+   "match": "Auch bei fertigem Zug",
+   "key": "settings.also_completed_turn",
+   "de": "Auch bei fertigem Zug",
+   "en": "Also on completed turn"
+  },
+  {
+   "match": "Auch wenn ein Zug fertig ist (sonst nur Freigaben und Fehler)",
+   "key": "settings.also_when_done",
+   "de": "Auch wenn ein Zug fertig ist (sonst nur Freigaben und Fehler)",
+   "en": "Also when a turn completes (otherwise only approvals and errors)"
+  },
+  {
+   "match": "Alt",
+   "key": "settings.alt",
+   "de": "Alt",
+   "en": "Alt"
+  },
+  {
+   "match": "immer aktiv — ein Merge läuft nie in einen laufenden Zug.",
+   "key": "settings.always_active",
+   "de": "immer aktiv — ein Merge läuft nie in einen laufenden Zug.",
+   "en": "always active — a merge never runs into a running turn."
+  },
+  {
+   "match": "API-Key",
+   "key": "settings.api_key",
+   "de": "API-Key",
+   "en": "API key "
+  },
+  {
+   "match": "API-Schlüssel",
+   "key": "settings.api_key_full",
+   "de": "API-Schlüssel",
+   "en": "API key"
+  },
+  {
+   "match": "Darstellung",
+   "key": "settings.appearance",
+   "de": "Darstellung",
+   "en": "Appearance"
+  },
+  {
+   "match": "Darstellungs- und Layout-Presets",
+   "key": "settings.appearance_layout_presets",
+   "de": "Darstellungs- und Layout-Presets",
+   "en": "Appearance and layout presets"
+  },
+  {
+   "match": "Anwenden",
+   "key": "settings.apply",
+   "de": "Anwenden",
+   "en": "Apply"
+  },
+  {
+   "match": "Einstellungen für dieses Gerät übernehmen",
+   "key": "settings.apply_for_device",
+   "de": "Einstellungen für dieses Gerät übernehmen",
+   "en": "Apply settings for this device"
+  },
+  {
+   "match": "Wieder automatisch",
+   "key": "settings.automatic_again",
+   "de": "Wieder automatisch",
+   "en": "Automatic again"
+  },
+  {
+   "match": "await",
+   "key": "settings.await",
+   "de": "await",
+   "en": "await"
+  },
+  {
+   "match": "Rahmenbreite",
+   "key": "settings.border_width",
+   "de": "Rahmenbreite",
+   "en": "Border width"
+  },
+  {
+   "match": "Browser-Fenster-Preset Handy",
+   "key": "settings.browser_preset_phone",
+   "de": "Browser-Fenster-Preset Handy",
+   "en": "Browser window preset phone"
+  },
+  {
+   "match": "Geräte-Token wechseln",
+   "key": "settings.change_device_token",
+   "de": "Geräte-Token wechseln",
+   "en": "Change device token"
+  },
+  {
+   "match": "Chatbreite",
+   "key": "settings.chat_width",
+   "de": "Chatbreite",
+   "en": "Chat width"
+  },
+  {
+   "match": "Prüfen",
+   "key": "settings.check",
+   "de": "Prüfen",
+   "en": "Check"
+  },
+  {
+   "match": "Prüfen alle",
+   "key": "settings.check_all",
+   "de": "Prüfen alle",
+   "en": "Check all"
+  },
+  {
+   "match": "geprüft…",
+   "key": "settings.checked",
+   "de": "geprüft…",
+   "en": "checked…"
+  },
+  {
+   "match": "clearTimeout(handle)",
+   "key": "settings.clear_timeout",
+   "de": "clearTimeout(handle)",
+   "en": "clearTimeout(handle)"
+  },
+  {
+   "match": "Code und Diff",
+   "key": "settings.code_diff",
+   "de": "Code und Diff",
+   "en": "Code and diff"
+  },
+  {
+   "match": "Codegröße",
+   "key": "settings.code_size",
+   "de": "Codegröße",
+   "en": "Code size"
+  },
+  {
+   "match": "Komfortabel",
+   "key": "settings.comfortable",
+   "de": "Komfortabel",
+   "en": "Comfortable"
+  },
+  {
+   "match": "Kompakt",
+   "key": "settings.compact",
+   "de": "Kompakt",
+   "en": "Compact"
+  },
+  {
+   "match": "Verbindungen",
+   "key": "settings.connections",
+   "de": "Verbindungen",
+   "en": "Connections"
+  },
+  {
+   "match": "Jetzt nach VoidWarden kopieren; der Hub zeigt es nie wieder.",
+   "key": "settings.copy_to_voidwarden",
+   "de": "Jetzt nach VoidWarden kopieren; der Hub zeigt es nie wieder.",
+   "en": "Copy to VoidWarden now; the hub will never show it again."
+  },
+  {
+   "match": "Rundung",
+   "key": "settings.corner_radius",
+   "de": "Rundung",
+   "en": "Corner radius"
+  },
+  {
+   "match": "Dunkel",
+   "key": "settings.dark",
+   "de": "Dunkel",
+   "en": "Dark"
+  },
+  {
+   "match": "Schriftgröße verringern",
+   "key": "settings.decrease_font",
+   "de": "Schriftgröße verringern",
+   "en": "Decrease font size"
+  },
+  {
+   "match": "Standardfläche",
+   "key": "settings.default_surface",
+   "de": "Standardfläche",
+   "en": "Default surface"
+  },
+  {
+   "match": "Dichte",
+   "key": "settings.density",
+   "de": "Dichte",
+   "en": "Density"
+  },
+  {
+   "match": "Geräte-Token",
+   "key": "settings.device_token",
+   "de": "Geräte-Token",
+   "en": "Device token"
+  },
+  {
+   "match": "- clearTimeout(handle);\n+ await flush();\n+ clearTimeout(handle);",
+   "key": "settings.diff_example",
+   "de": "- clearTimeout(handle);\n+ await flush();\n+ clearTimeout(handle);",
+   "en": "- clearTimeout(handle);\\n+ await flush();\\n+ clearTimeout(handle);"
+  },
+  {
+   "match": "Du: Bitte mach den fehlschlagenden Test grün.",
+   "key": "settings.du_example",
+   "de": "Du: Bitte mach den fehlschlagenden Test grün.",
+   "en": "You: please make the failing test green."
+  },
+  {
+   "match": "Bearbeiten",
+   "key": "settings.edit",
+   "de": "Bearbeiten",
+   "en": "Edit"
+  },
+  {
+   "match": "Aktivierte Modelle (Komma-getrennt)",
+   "key": "settings.enabled_models",
+   "de": "Aktivierte Modelle (Komma-getrennt)",
+   "en": "Enabled models (comma-separated)"
+  },
+  {
+   "match": "Endpunkt (optional)",
+   "key": "settings.endpoint_optional",
+   "de": "Endpunkt (optional)",
+   "en": "Endpoint (optional)"
+  },
+  {
+   "match": "http://100.64.0.10:8100/v1",
+   "key": "settings.endpoint_url",
+   "de": "http://100.64.0.10:8100/v1",
+   "en": "http://100.64.0.10:8100/v1"
+  },
+  {
+   "match": "Endpunkt-URL",
+   "key": "settings.endpoint_url2",
+   "de": "Endpunkt-URL",
+   "en": "Endpoint URL"
+  },
+  {
+   "match": "Preset exportieren",
+   "key": "settings.export_preset",
+   "de": "Preset exportieren",
+   "en": "Export preset"
+  },
+  {
+   "match": "Fetch-Zeitlimit",
+   "key": "settings.fetch_timeout",
+   "de": "Fetch-Zeitlimit",
+   "en": "Fetch timeout"
+  },
+  {
+   "match": "Schrift",
+   "key": "settings.font",
+   "de": "Schrift",
+   "en": "Font"
+  },
+  {
+   "match": "Schriftart Code",
+   "key": "settings.font_code",
+   "de": "Schriftart Code",
+   "en": "Code font"
+  },
+  {
+   "match": "Schriftgröße",
+   "key": "settings.font_size",
+   "de": "Schriftgröße",
+   "en": "Font size"
+  },
+  {
+   "match": "Schriftart Oberfläche",
+   "key": "settings.font_ui",
+   "de": "Schriftart Oberfläche",
+   "en": "UI font"
+  },
+  {
+   "match": "Querformat erzwingen",
+   "key": "settings.force_landscape",
+   "de": "Querformat erzwingen",
+   "en": "Force landscape"
+  },
+  {
+   "match": "Forge: GitHub",
+   "key": "settings.forge_github",
+   "de": "Forge: GitHub",
+   "en": "Forge: GitHub"
+  },
+  {
+   "match": "Forge GitHub-Token",
+   "key": "settings.forge_github_token",
+   "de": "Forge GitHub-Token",
+   "en": "Forge GitHub token"
+  },
+  {
+   "match": "Volle Breite",
+   "key": "settings.full_width",
+   "de": "Volle Breite",
+   "en": "Full width"
+  },
+  {
+   "match": "Gemini · Bilder und Scans lesen",
+   "key": "settings.gemini_reads",
+   "de": "Gemini · Bilder und Scans lesen",
+   "en": "Gemini · read images and scans"
+  },
+  {
+   "match": "github_pat_…",
+   "key": "settings.github_pat",
+   "de": "github_pat_…",
+   "en": "github_pat_…"
+  },
+  {
+   "match": "Nur wenn die lokale Auslese (OCR, PDF, Office) nichts findet, geht die Datei an Google. Kostenloser Schlüssel: aistudio.google.com → „Get API key“.",
+   "key": "settings.google_fallback",
+   "de": "Nur wenn die lokale Auslese (OCR, PDF, Office) nichts findet, geht die Datei an Google. Kostenloser Schlüssel: aistudio.google.com → „Get API key“.",
+   "en": "Only when the local extraction (OCR, PDF, Office) finds nothing does the file go to Google. Free key: aistudio.google.com → “Get API key”."
+  },
+  {
+   "match": "Gpubox",
+   "key": "settings.gpubox",
+   "de": "Gpubox",
+   "en": "Gpubox"
+  },
+  {
+   "match": "halogen-qwen, halogen-vision",
+   "key": "settings.halogen_models",
+   "de": "halogen-qwen, halogen-vision",
+   "en": "halogen-qwen, halogen-vision"
+  },
+  {
+   "match": "Hex",
+   "key": "settings.hex",
+   "de": "Hex",
+   "en": "Hex"
+  },
+  {
+   "match": "Farbton",
+   "key": "settings.hue",
+   "de": "Farbton",
+   "en": "Hue"
+  },
+  {
+   "match": "Ich habe die Ursache gefunden: der Timer wird zu früh gelöscht.",
+   "key": "settings.i_found_cause",
+   "de": "Ich habe die Ursache gefunden: der Timer wird zu früh gelöscht.",
+   "en": "I found the cause: the timer is cleared too early. "
+  },
+  {
+   "match": "Bilderkennung",
+   "key": "settings.image_recognition",
+   "de": "Bilderkennung",
+   "en": "Image recognition"
+  },
+  {
+   "match": "Preset importieren",
+   "key": "settings.import_preset",
+   "de": "Preset importieren",
+   "en": "Import preset"
+  },
+  {
+   "match": "Schriftgröße erhöhen",
+   "key": "settings.increase_font",
+   "de": "Schriftgröße erhöhen",
+   "en": "Increase font size"
+  },
+  {
+   "match": "Installierter Stand",
+   "key": "settings.installed_state",
+   "de": "Installierter Stand",
+   "en": "Installed version"
+  },
+  {
+   "match": "Oberfläche",
+   "key": "settings.interface",
+   "de": "Oberfläche",
+   "en": "Interface"
+  },
+  {
+   "match": "Issue-Bridge &amp; Actions-Anzeige",
+   "key": "settings.issue_bridge",
+   "de": "Issue-Bridge &amp; Actions-Anzeige",
+   "en": "Issue bridge & actions display"
+  },
+  {
+   "match": "Der Hub speichert vom Schlüssel nur einen Hash — „Prüfen“ fragt nur Erreichbarkeit ab, ohne Schlüssel zu senden.",
+   "key": "settings.key_hash",
+   "de": "Der Hub speichert vom Schlüssel nur einen Hash — „Prüfen“ fragt nur Erreichbarkeit ab, ohne Schlüssel zu senden.",
+   "en": "The hub stores only a hash of the key — “Check” only probes reachability, without sending the key."
+  },
+  {
+   "match": "Größer",
+   "key": "settings.larger",
+   "de": "Größer",
+   "en": "Larger"
+  },
+  {
+   "match": "zuletzt",
+   "key": "settings.last ",
+   "de": "zuletzt",
+   "en": "last "
+  },
+  {
+   "match": "Hell",
+   "key": "settings.light",
+   "de": "Hell",
+   "en": "Light"
+  },
+  {
+   "match": "Link",
+   "key": "settings.link",
+   "de": "Link",
+   "en": "Link"
+  },
+  {
+   "match": "LLM",
+   "key": "settings.llm",
+   "de": "LLM",
+   "en": "LLM"
+  },
+  {
+   "match": "Lokales Hintergrundbild",
+   "key": "settings.local_background",
+   "de": "Lokales Hintergrundbild",
+   "en": "Local background image"
+  },
+  {
+   "match": "Erscheinungsbild",
+   "key": "settings.look",
+   "de": "Erscheinungsbild",
+   "en": "Appearance"
+  },
+  {
+   "match": "Hauptbranch",
+   "key": "settings.main_branch",
+   "de": "Hauptbranch",
+   "en": "Main branch"
+  },
+  {
+   "match": "Main-Synchronisation",
+   "key": "settings.main_sync",
+   "de": "Main-Synchronisation",
+   "en": "Main synchronization"
+  },
+  {
+   "match": "Neue Sessions starten auf dem aktuellen Hauptbranch (origin), laufende Sessions werden im Takt geprüft. Nicht passieren: kein Rebase, kein Push nach main, kein Merge in laufende Züge — gemergt wird nur in wartende Sessions.",
+   "key": "settings.main_sync_note",
+   "de": "Neue Sessions starten auf dem aktuellen Hauptbranch (origin), laufende Sessions werden im Takt geprüft. Nicht passieren: kein Rebase, kein Push nach main, kein Merge in laufende Züge — gemergt wird nur in wartende Sessions.",
+   "en": "New sessions start on the current main branch (origin), running sessions are checked on beat. Must not happen: no rebase, no push to main, no merge into running turns — merges happen only into waiting sessions."
+  },
+  {
+   "match": "Automatisch mergen",
+   "key": "settings.merge_automatically",
+   "de": "Automatisch mergen",
+   "en": "Merge automatically"
+  },
+  {
+   "match": "Modell- &amp; Tool-Endpoints",
+   "key": "settings.model_tool",
+   "de": "Modell- &amp; Tool-Endpoints",
+   "en": "Model & tool endpoints"
+  },
+  {
+   "match": "Modell- und Tool-Endpoints",
+   "key": "settings.model_tool_endpoints",
+   "de": "Modell- und Tool-Endpoints",
+   "en": "Model and tool endpoints"
+  },
+  {
+   "match": "Bewegung",
+   "key": "settings.motion",
+   "de": "Bewegung",
+   "en": "Motion"
+  },
+  {
+   "match": "Neu",
+   "key": "settings.new",
+   "de": "Neu",
+   "en": "New"
+  },
+  {
+   "match": "Neue Sessions starten auf",
+   "key": "settings.new_sessions_start",
+   "de": "Neue Sessions starten auf",
+   "en": "New sessions start on"
+  },
+  {
+   "match": "Noch kein Endpoint eingetragen.",
+   "key": "settings.no_endpoint",
+   "de": "Noch kein Endpoint eingetragen.",
+   "en": "No endpoint entered yet."
+  },
+  {
+   "match": "Noch keine Instanz eingetragen.",
+   "key": "settings.no_instance",
+   "de": "Noch keine Instanz eingetragen.",
+   "en": "No instance entered yet."
+  },
+  {
+   "match": "Dieser Browser kann hier kein Push. Auf dem iPhone: AncientVoid erst „Zum Home-Bildschirm“ hinzufügen und von dort öffnen.",
+   "key": "settings.no_push_browser",
+   "de": "Dieser Browser kann hier kein Push. Auf dem iPhone: AncientVoid erst „Zum Home-Bildschirm“ hinzufügen und von dort öffnen.",
+   "en": "This browser cannot do push here. On the iPhone: add AncientVoid to the Home Screen first and open it from there."
+  },
+  {
+   "match": "Keine — alle Projekte folgen den globalen Werten.",
+   "key": "settings.none_global",
+   "de": "Keine — alle Projekte folgen den globalen Werten.",
+   "en": "None — all projects follow the global values."
+  },
+  {
+   "match": "nicht konfiguriert",
+   "key": "settings.not_configured",
+   "de": "nicht konfiguriert",
+   "en": "not configured"
+  },
+  {
+   "match": "Benachrichtigungen sind für diese Seite blockiert — in den Browser- bzw. Geräteeinstellungen erlauben.",
+   "key": "settings.notifications_blocked",
+   "de": "Benachrichtigungen sind für diese Seite blockiert — in den Browser- bzw. Geräteeinstellungen erlauben.",
+   "en": "Notifications are blocked for this page — allow them in the browser or device settings."
+  },
+  {
+   "match": "Nyx Board",
+   "key": "settings.nyx_board",
+   "de": "Nyx Board",
+   "en": "Nyx board"
+  },
+  {
+   "match": "Auf diesem Gerät aus",
+   "key": "settings.off_on_device",
+   "de": "Auf diesem Gerät aus",
+   "en": "Off on this device"
+  },
+  {
+   "match": "“ — einmalig sichtbar",
+   "key": "settings.once_shown",
+   "de": "“ — einmalig sichtbar",
+   "en": "” — shown once"
+  },
+  {
+   "match": "Nur bei wartenden Sessions",
+   "key": "settings.only_waiting",
+   "de": "Nur bei wartenden Sessions",
+   "en": "Only for waiting sessions"
+  },
+  {
+   "match": "origin/HEAD",
+   "key": "settings.origin_head",
+   "de": "origin/HEAD",
+   "en": "origin/HEAD"
+  },
+  {
+   "match": "Passkey",
+   "key": "settings.passkey",
+   "de": "Passkey",
+   "en": "Passkey"
+  },
+  {
+   "match": "PC-Eingabe",
+   "key": "settings.pc_input",
+   "de": "PC-Eingabe",
+   "en": "PC input"
+  },
+  {
+   "match": "Fenster-Preset „Handy“: neue Browser-Fenster mit 390 × 844 Pixeln, an die Anzeige angepasst.",
+   "key": "settings.phone_preset",
+   "de": "Fenster-Preset „Handy“: neue Browser-Fenster mit 390 × 844 Pixeln, an die Anzeige angepasst.",
+   "en": "Browser window preset “Phone”: new browser windows at 390 × 844 pixels, adapted to the display."
+  },
+  {
+   "match": "Pinch-Zoom",
+   "key": "settings.pinch_zoom",
+   "de": "Pinch-Zoom",
+   "en": "Pinch zoom"
+  },
+  {
+   "match": "http://pixel:8080",
+   "key": "settings.pixel_url",
+   "de": "http://pixel:8080",
+   "en": "http://pixel:8080"
+  },
+  {
+   "match": "Preset-JSON",
+   "key": "settings.preset_json",
+   "de": "Preset-JSON",
+   "en": "Preset JSON"
+  },
+  {
+   "match": "Preset-Name",
+   "key": "settings.preset_name",
+   "de": "Preset-Name",
+   "en": "Preset name"
+  },
+  {
+   "match": "Preset-Status",
+   "key": "settings.preset_status",
+   "de": "Preset-Status",
+   "en": "Preset status"
+  },
+  {
+   "match": "Vorgaben",
+   "key": "settings.presets",
+   "de": "Vorgaben",
+   "en": "Presets"
+  },
+  {
+   "match": "Vorschau",
+   "key": "settings.preview",
+   "de": "Vorschau",
+   "en": "Preview"
+  },
+  {
+   "match": "Projekt-Überschreibungen",
+   "key": "settings.project_overrides",
+   "de": "Projekt-Überschreibungen",
+   "en": "Project overrides"
+  },
+  {
+   "match": "Projekt-Wurzeln",
+   "key": "settings.project_roots",
+   "de": "Projekt-Wurzeln",
+   "en": "Project roots"
+  },
+  {
+   "match": "Push geht über den Dienst des Browser-Herstellers (Google, Apple, Mozilla, Microsoft) und verlässt damit das Tailnet. Übertragen wird nur eine Kennung — kein Prompt, kein Befehl, nichts auf dem Sperrbildschirm außer „Freigabe nötig“, „Fehler“ oder „Zug fertig“. Die Glocke bleibt die vollständige Liste.",
+   "key": "settings.push_note",
+   "de": "Push geht über den Dienst des Browser-Herstellers (Google, Apple, Mozilla, Microsoft) und verlässt damit das Tailnet. Übertragen wird nur eine Kennung — kein Prompt, kein Befehl, nichts auf dem Sperrbildschirm außer „Freigabe nötig“, „Fehler“ oder „Zug fertig“. Die Glocke bleibt die vollständige Liste.",
+   "en": "Push goes through the browser vendor's service (Google, Apple, Mozilla, Microsoft) and thus leaves the tailnet. Only an identifier is transmitted — no prompt, no command, nothing on the lock screen except “Approval needed”, “Error” or “Turn done”. The bell remains the full list."
+  },
+  {
+   "match": "Push auf diesem Hub",
+   "key": "settings.push_on_hub",
+   "de": "Push auf diesem Hub",
+   "en": "Push on this hub"
+  },
+  {
+   "match": "Ruhe ab",
+   "key": "settings.quiet_from",
+   "de": "Ruhe ab",
+   "en": "Quiet from"
+  },
+  {
+   "match": "Ruhezeit",
+   "key": "settings.quiet_time",
+   "de": "Ruhezeit",
+   "en": "Quiet time"
+  },
+  {
+   "match": "Ruhe bis",
+   "key": "settings.quiet_until",
+   "de": "Ruhe bis",
+   "en": "Until"
+  },
+  {
+   "match": "Erreichbar über",
+   "key": "settings.reachable_via",
+   "de": "Erreichbar über",
+   "en": "Reachable via"
+  },
+  {
+   "match": "Lesebreite",
+   "key": "settings.reading_width",
+   "de": "Lesebreite",
+   "en": "Reading width"
+  },
+  {
+   "match": "Zuletzt benutzt",
+   "key": "settings.recently_used",
+   "de": "Zuletzt benutzt",
+   "en": "Recently used"
+  },
+  {
+   "match": "Stand neu prüfen",
+   "key": "settings.recheck",
+   "de": "Stand neu prüfen",
+   "en": "Re-check state"
+  },
+  {
+   "match": "✓ registriert",
+   "key": "settings.registered",
+   "de": "✓ registriert",
+   "en": "registered"
+  },
+  {
+   "match": "Entfernen",
+   "key": "settings.remove",
+   "de": "Entfernen",
+   "en": "Remove"
+  },
+  {
+   "match": "Bild entfernen",
+   "key": "settings.remove_image",
+   "de": "Bild entfernen",
+   "en": "Remove image"
+  },
+  {
+   "match": "Schlüssel entfernen",
+   "key": "settings.remove_key",
+   "de": "Schlüssel entfernen",
+   "en": "Remove key"
+  },
+  {
+   "match": "Token ersetzen (altes wird ungültig)",
+   "key": "settings.replace_token",
+   "de": "Token ersetzen (altes wird ungültig)",
+   "en": "Replace token (old becomes invalid)"
+  },
+  {
+   "match": "Zurücksetzen",
+   "key": "settings.reset",
+   "de": "Zurücksetzen",
+   "en": "Reset"
+  },
+  {
+   "match": "Darstellung zurücksetzen",
+   "key": "settings.reset_appearance",
+   "de": "Darstellung zurücksetzen",
+   "en": "Reset appearance"
+  },
+  {
+   "match": "Schriftgröße zurücksetzen",
+   "key": "settings.reset_font",
+   "de": "Schriftgröße zurücksetzen",
+   "en": "Reset font size"
+  },
+  {
+   "match": "Sidebar zurücksetzen",
+   "key": "settings.reset_sidebar",
+   "de": "Sidebar zurücksetzen",
+   "en": "Reset sidebar"
+  },
+  {
+   "match": "Alte Farbe wiederherstellen",
+   "key": "settings.restore_old_color",
+   "de": "Alte Farbe wiederherstellen",
+   "en": "Restore old color"
+  },
+  {
+   "match": "wiederherstellen (",
+   "key": "settings.restore_open",
+   "de": "wiederherstellen (",
+   "en": "restore ("
+  },
+  {
+   "match": "Sättigung und Helligkeit",
+   "key": "settings.saturation_brightness",
+   "de": "Sättigung und Helligkeit",
+   "en": "Saturation and brightness"
+  },
+  {
+   "match": "Darstellung und Layout speichern",
+   "key": "settings.save_appearance",
+   "de": "Darstellung und Layout speichern",
+   "en": "Save appearance and layout"
+  },
+  {
+   "match": "Token speichern",
+   "key": "settings.save_token",
+   "de": "Token speichern",
+   "en": "Save token"
+  },
+  {
+   "match": "Auf diesem Gerät gespeichert. Import enthält ausschließlich Darstellung und Fenstergrößen.",
+   "key": "settings.saved_on_device",
+   "de": "Auf diesem Gerät gespeichert. Import enthält ausschließlich Darstellung und Fenstergrößen.",
+   "en": "Saved on this device. Import contains only appearance and window sizes."
+  },
+  {
+   "match": "Sicherheit & Verbindung",
+   "key": "settings.security_connection",
+   "de": "Sicherheit & Verbindung",
+   "en": "Security & connection"
+  },
+  {
+   "match": "Test senden",
+   "key": "settings.send_test",
+   "de": "Test senden",
+   "en": "Send test"
+  },
+  {
+   "match": "Dienste",
+   "key": "settings.services",
+   "de": "Dienste",
+   "en": "Services"
+  },
+  {
+   "match": "Einstellungen nicht erreichbar.",
+   "key": "settings.settings_unreachable",
+   "de": "Einstellungen nicht erreichbar.",
+   "en": "Settings unreachable."
+  },
+  {
+   "match": "Shortcut-Hinweise",
+   "key": "settings.shortcut_hints",
+   "de": "Shortcut-Hinweise",
+   "en": "Shortcut hints"
+  },
+  {
+   "match": "Reihenfolge und Sichtbarkeit auf PC und Tablet. Die Sidebar bleibt über ihre eigene Taste erreichbar.",
+   "key": "settings.sidebar_order",
+   "de": "Reihenfolge und Sichtbarkeit auf PC und Tablet. Die Sidebar bleibt über ihre eigene Taste erreichbar.",
+   "en": "Order and visibility on PC and tablet. The sidebar remains reachable via its own key."
+  },
+  {
+   "match": "Kleiner",
+   "key": "settings.smaller",
+   "de": "Kleiner",
+   "en": "Smaller"
+  },
+  {
+   "match": "Töne",
+   "key": "settings.sounds",
+   "de": "Töne",
+   "en": "Sounds"
+  },
+  {
+   "match": "Töne insgesamt",
+   "key": "settings.sounds_overall",
+   "de": "Töne insgesamt",
+   "en": "Sounds overall"
+  },
+  {
+   "match": "steht jetzt nach dem",
+   "key": "settings.stands_after",
+   "de": "steht jetzt nach dem",
+   "en": "now stands after the "
+  },
+  {
+   "match": "Oberflächenfarbe",
+   "key": "settings.surface_color",
+   "de": "Oberflächenfarbe",
+   "en": "Surface color"
+  },
+  {
+   "match": "Token für „",
+   "key": "settings.token_for",
+   "de": "Token für „",
+   "en": "Token for “"
+  },
+  {
+   "match": "Token (github_pat_…)",
+   "key": "settings.token_github",
+   "de": "Token (github_pat_…)",
+   "en": "Token (github_pat_…)"
+  },
+  {
+   "match": "forge.github.tokenFile fehlt in der Hub-Config — Pfad dort eintragen, dann hier den Token ablegen.",
+   "key": "settings.tokenfile_missing",
+   "de": "forge.github.tokenFile fehlt in der Hub-Config — Pfad dort eintragen, dann hier den Token ablegen.",
+   "en": "forge.github.tokenFile is missing in the hub config — enter the path there, then store the token here."
+  },
+  {
+   "match": "Auf diesem Gerät einschalten",
+   "key": "settings.turn_on_device",
+   "de": "Auf diesem Gerät einschalten",
+   "en": "Turn on on this device"
+  },
+  {
+   "match": "Typ",
+   "key": "settings.type",
+   "de": "Typ",
+   "en": "Type"
+  },
+  {
+   "match": "Die Oberflächenschrift gilt für Texte und Bedienung. Code, Diff und Terminal bleiben in einer Festbreitenschrift.",
+   "key": "settings.ui_font_note",
+   "de": "Die Oberflächenschrift gilt für Texte und Bedienung. Code, Diff und Terminal bleiben in einer Festbreitenschrift.",
+   "en": "The UI font applies to texts and controls. Code, diff and terminal stay in a monospace font."
+  },
+  {
+   "match": "Zoom der Oberfläche",
+   "key": "settings.ui_zoom",
+   "de": "Zoom der Oberfläche",
+   "en": "UI zoom"
+  },
+  {
+   "match": "bis",
+   "key": "settings.until",
+   "de": "bis",
+   "en": "until"
+  },
+  {
+   "match": "Variante",
+   "key": "settings.variant",
+   "de": "Variante",
+   "en": "Variant"
+  },
+  {
+   "match": "Videoerkennung",
+   "key": "settings.video_recognition",
+   "de": "Videoerkennung",
+   "en": "Video recognition"
+  },
+  {
+   "match": "Spracheingabe",
+   "key": "settings.voice_input",
+   "de": "Spracheingabe",
+   "en": "Voice input"
+  },
+  {
+   "match": "Quelle der Spracheingabe",
+   "key": "settings.voice_source",
+   "de": "Quelle der Spracheingabe",
+   "en": "Voice input source"
+  },
+  {
+   "match": "VoidWarden-Instanzen",
+   "key": "settings.voidwarden",
+   "de": "VoidWarden-Instanzen",
+   "en": "VoidWarden instances"
+  },
+  {
+   "match": "VoidWarden-Instanzen (Handy-Kiosk, ESP32-Board) und Modell-/Tool-Endpoints mit eigenem Schlüssel — alles bleibt über Neuladen hinweg gespeichert.",
+   "key": "settings.voidwarden_note",
+   "de": "VoidWarden-Instanzen (Handy-Kiosk, ESP32-Board) und Modell-/Tool-Endpoints mit eigenem Schlüssel — alles bleibt über Neuladen hinweg gespeichert.",
+   "en": "VoidWarden instances (phone kiosk, ESP32 board) and model/tool endpoints with their own key — everything persists across reloads."
+  },
+  {
+   "match": "Lautstärke",
+   "key": "settings.volume",
+   "de": "Lautstärke",
+   "en": "Volume"
+  },
+  {
+   "match": "Bei Rückstand",
+   "key": "settings.when_behind",
+   "de": "Bei Rückstand",
+   "en": "When behind"
+  },
+  {
+   "match": "Write-only: der Hub schreibt die erste Zeile der Token-Datei (0600) und liest sie nie wieder zurück — Ersetzen überschreibt den alten Token.",
+   "key": "settings.write_only",
+   "de": "Write-only: der Hub schreibt die erste Zeile der Token-Datei (0600) und liest sie nie wieder zurück — Ersetzen überschreibt den alten Token.",
+   "en": "Write-only: the hub writes the first line of the token file (0600) and never reads it back — replace overwrites the old token."
+  },
+  {
+   "match": "A ist der obige Zeitraum, B dieser Vergleichszeitraum — gleiche Projekt-/Host-/Harness-Wahl. Beschreibender Vergleich, kein Rang.",
+   "key": "statistics.ab_explain",
+   "de": "A ist der obige Zeitraum, B dieser Vergleichszeitraum — gleiche Projekt-/Host-/Harness-Wahl. Beschreibender Vergleich, kein Rang.",
+   "en": "A is the period above, B this comparison period — same project/host/harness selection. Descriptive comparison, no ranking."
+  },
+  {
+   "match": "Aktiv",
+   "key": "statistics.active",
+   "de": "Aktiv",
+   "en": "Active"
+  },
+  {
+   "match": "Adapter · Modell",
+   "key": "statistics.adapter_model",
+   "de": "Adapter · Modell",
+   "en": "Adapter · model"
+  },
+  {
+   "match": "Alter",
+   "key": "statistics.age",
+   "de": "Alter",
+   "en": "Age"
+  },
+  {
+   "match": "KI-Server",
+   "key": "statistics.ai_servers",
+   "de": "KI-Server",
+   "en": "AI servers"
+  },
+  {
+   "match": "Anomalien",
+   "key": "statistics.anomalies",
+   "de": "Anomalien",
+   "en": "Anomalies"
+  },
+  {
+   "match": ", aber keinem Host- oder Harness-Schnitt.",
+   "key": "statistics.but_no_cut",
+   "de": ", aber keinem Host- oder Harness-Schnitt.",
+   "en": ", but no host or harness cut."
+  },
+  {
+   "match": "Calls",
+   "key": "statistics.calls",
+   "de": "Calls",
+   "en": "Calls"
+  },
+  {
+   "match": "Cloud-Modelle: Tokens je Zug mit Herkunft (gemeldet oder geschätzt). Input-/Output- und Cache-Token sind über die Provider nicht kanonisch belegt; EUR-Kosten folgen mit P31.",
+   "key": "statistics.cloud_models",
+   "de": "Cloud-Modelle: Tokens je Zug mit Herkunft (gemeldet oder geschätzt). Input-/Output- und Cache-Token sind über die Provider nicht kanonisch belegt; EUR-Kosten folgen mit P31.",
+   "en": "Cloud models: tokens per turn with provenance (reported or estimated). Input/output and cache tokens are not canonically evidenced across providers; EUR costs follow with P31."
+  },
+  {
+   "match": "Vergleichszeitraum B",
+   "key": "statistics.comparison_b",
+   "de": "Vergleichszeitraum B",
+   "en": "Comparison period B"
+  },
+  {
+   "match": "Schnitt",
+   "key": "statistics.cut",
+   "de": "Schnitt",
+   "en": "Cut"
+  },
+  {
+   "match": "done",
+   "key": "statistics.done",
+   "de": "done",
+   "en": "done "
+  },
+  {
+   "match": "done ist worker_done, kein bestandenes Gate (P40). Team-Zahlen folgen dem Projekt- und Zeitschnitt",
+   "key": "statistics.done_note",
+   "de": "done ist worker_done, kein bestandenes Gate (P40). Team-Zahlen folgen dem Projekt- und Zeitschnitt",
+   "en": "done is worker_done, not a passed gate (P40). Team numbers follow the project and time cut"
+  },
+  {
+   "match": "CSV herunterladen",
+   "key": "statistics.download_csv",
+   "de": "CSV herunterladen",
+   "en": "Download CSV"
+  },
+  {
+   "match": "Ende",
+   "key": "statistics.end",
+   "de": "Ende",
+   "en": "End"
+  },
+  {
+   "match": "Enden",
+   "key": "statistics.ends",
+   "de": "Enden",
+   "en": "Ends"
+  },
+  {
+   "match": "Fehler / belegte Ergebnisse",
+   "key": "statistics.errors_evidenced",
+   "de": "Fehler / belegte Ergebnisse",
+   "en": "Errors / evidenced results"
+  },
+  {
+   "match": "belegt,",
+   "key": "statistics.evidenced",
+   "de": "belegt,",
+   "en": "evidenced, "
+  },
+  {
+   "match": "Abgelaufen",
+   "key": "statistics.expired",
+   "de": "Abgelaufen",
+   "en": "Expired"
+  },
+  {
+   "match": ", failed",
+   "key": "statistics.failed",
+   "de": ", failed",
+   "en": ", failed "
+  },
+  {
+   "match": "Feld",
+   "key": "statistics.field",
+   "de": "Feld",
+   "en": "Field"
+  },
+  {
+   "match": "Gates",
+   "key": "statistics.gates",
+   "de": "Gates",
+   "en": "Gates"
+  },
+  {
+   "match": "&gt;",
+   "key": "statistics.gt",
+   "de": "&gt;",
+   "en": ">"
+  },
+  {
+   "match": "Host-Probe nicht konfiguriert — in der Hub-Config `aiMetrics.hostProbe` einschalten. Keine Zahl wird geraten.",
+   "key": "statistics.host_probe",
+   "de": "Host-Probe nicht konfiguriert — in der Hub-Config `aiMetrics.hostProbe` einschalten. Keine Zahl wird geraten.",
+   "en": "Host probe not configured — enable `aiMetrics.hostProbe` in the hub config. No number is guessed."
+  },
+  {
+   "match": "Sofort erlaubt",
+   "key": "statistics.immediately_allowed",
+   "de": "Sofort erlaubt",
+   "en": "Immediately allowed"
+  },
+  {
+   "match": "Keine Anomalien — entweder unauffällig oder zu wenige Sessions je Gruppe für eine Aussage (Klein-n).",
+   "key": "statistics.no_anomalies",
+   "de": "Keine Anomalien — entweder unauffällig oder zu wenige Sessions je Gruppe für eine Aussage (Klein-n).",
+   "en": "No anomalies — either unremarkable or too few sessions per group for a statement (small n)."
+  },
+  {
+   "match": "Keine Freigaben in diesem Schnitt.",
+   "key": "statistics.no_approvals",
+   "de": "Keine Freigaben in diesem Schnitt.",
+   "en": "No approvals in this cut."
+  },
+  {
+   "match": "Keine Sessions in diesem Schnitt.",
+   "key": "statistics.no_sessions",
+   "de": "Keine Sessions in diesem Schnitt.",
+   "en": "No sessions in this cut."
+  },
+  {
+   "match": "Keine Quellen konfiguriert — der Hub beprobt nur Konfiguriertes (`aiMetrics` in der Hub-Config).",
+   "key": "statistics.no_sources",
+   "de": "Keine Quellen konfiguriert — der Hub beprobt nur Konfiguriertes (`aiMetrics` in der Hub-Config).",
+   "en": "No sources configured — the hub only probes configured ones (`aiMetrics` in the hub config)."
+  },
+  {
+   "match": "Keine Teams in diesem Schnitt.",
+   "key": "statistics.no_teams",
+   "de": "Keine Teams in diesem Schnitt.",
+   "en": "No teams in this cut."
+  },
+  {
+   "match": "Keine Tool-Aufrufe in diesem Schnitt.",
+   "key": "statistics.no_tools",
+   "de": "Keine Tool-Aufrufe in diesem Schnitt.",
+   "en": "No tool calls in this cut."
+  },
+  {
+   "match": "Keine Züge in diesem Schnitt.",
+   "key": "statistics.no_turns",
+   "de": "Keine Züge in diesem Schnitt.",
+   "en": "No turns in this cut."
+  },
+  {
+   "match": "· Zahlen beschreiben, sie empfehlen kein Modell.",
+   "key": "statistics.numbers_describe",
+   "de": "· Zahlen beschreiben, sie empfehlen kein Modell.",
+   "en": "· Numbers describe, they do not recommend a model."
+  },
+  {
+   "match": ", offen",
+   "key": "statistics.open",
+   "de": ", offen",
+   "en": ", open "
+  },
+  {
+   "match": "Offen ohne Antwort",
+   "key": "statistics.open_no_answer",
+   "de": "Offen ohne Antwort",
+   "en": "Open without answer"
+  },
+  {
+   "match": "Zeitraum",
+   "key": "statistics.period",
+   "de": "Zeitraum",
+   "en": "Period"
+  },
+  {
+   "match": "Zeitraum-Vergleich (A/B)",
+   "key": "statistics.period_ab",
+   "de": "Zeitraum-Vergleich (A/B)",
+   "en": "Period comparison (A/B)"
+  },
+  {
+   "match": "Probe fehlgeschlagen:",
+   "key": "statistics.probe_failed",
+   "de": "Probe fehlgeschlagen:",
+   "en": "Probe failed: "
+  },
+  {
+   "match": "Schnitt zurücksetzen",
+   "key": "statistics.reset_cut",
+   "de": "Schnitt zurücksetzen",
+   "en": "Reset cut"
+  },
+  {
+   "match": "Retry-Rate",
+   "key": "statistics.retry_rate",
+   "de": "Retry-Rate",
+   "en": "Retry rate"
+  },
+  {
+   "match": "Rollup-Stand:",
+   "key": "statistics.rollup",
+   "de": "Rollup-Stand:",
+   "en": "Rollup state: "
+  },
+  {
+   "match": "Sessions A/B",
+   "key": "statistics.sessions_ab",
+   "de": "Sessions A/B",
+   "en": "Sessions A/B"
+  },
+  {
+   "match": "Metrik-Quelle nicht erreichbar — der Hub meldet nicht.",
+   "key": "statistics.source_unreachable",
+   "de": "Metrik-Quelle nicht erreichbar — der Hub meldet nicht.",
+   "en": "Metric source unreachable — the hub is not reporting."
+  },
+  {
+   "match": "System (Hub-Host)",
+   "key": "statistics.system_hub",
+   "de": "System (Hub-Host)",
+   "en": "System (hub host)"
+  },
+  {
+   "match": "Teams",
+   "key": "statistics.teams",
+   "de": "Teams",
+   "en": "Teams"
+  },
+  {
+   "match": "Teams · Aufgaben",
+   "key": "statistics.teams_tasks",
+   "de": "Teams · Aufgaben",
+   "en": "Teams · tasks"
+  },
+  {
+   "match": "Tokens/Zug",
+   "key": "statistics.tokens_turn",
+   "de": "Tokens/Zug",
+   "en": "Tokens/turn"
+  },
+  {
+   "match": "Tool",
+   "key": "statistics.tool",
+   "de": "Tool",
+   "en": "Tool"
+  },
+  {
+   "match": "Tools",
+   "key": "statistics.tools",
+   "de": "Tools",
+   "en": "Tools"
+  },
+  {
+   "match": "Zugdauer",
+   "key": "statistics.turn_duration",
+   "de": "Zugdauer",
+   "en": "Turn duration"
+  },
+  {
+   "match": "Züge",
+   "key": "statistics.turns",
+   "de": "Züge",
+   "en": "Turns"
+  },
+  {
+   "match": "Züge vs p95",
+   "key": "statistics.turns_p95",
+   "de": "Züge vs p95",
+   "en": "Turns vs p95"
+  },
+  {
+   "match": "Züge/Session",
+   "key": "statistics.turns_session",
+   "de": "Züge/Session",
+   "en": "Turns/session"
+  },
+  {
+   "match": "Züge/Session p50 A/B",
+   "key": "statistics.turns_session_p50",
+   "de": "Züge/Session p50 A/B",
+   "en": "Turns/session p50 A/B"
+  },
+  {
+   "match": "Züge und Tokens",
+   "key": "statistics.turns_tokens",
+   "de": "Züge und Tokens",
+   "en": "Turns and tokens"
+  },
+  {
+   "match": ", unbekannt",
+   "key": "statistics.unknown",
+   "de": ", unbekannt",
+   "en": ", unknown "
+  },
+  {
+   "match": "unbekannt)",
+   "key": "statistics.unknown_paren",
+   "de": "unbekannt)",
+   "en": "unknown)"
+  },
+  {
+   "match": "Wert",
+   "key": "statistics.value",
+   "de": "Wert",
+   "en": "Value"
+  },
+  {
+   "match": "Wartezeit",
+   "key": "statistics.wait_time",
+   "de": "Wartezeit",
+   "en": "Wait time"
+  },
+  {
+   "match": "Wall p50 A/B",
+   "key": "statistics.wall_p50",
+   "de": "Wall p50 A/B",
+   "en": "Wall p50 A/B"
+  },
+  {
+   "match": "Wall vs p95",
+   "key": "statistics.wall_p95",
+   "de": "Wall vs p95",
+   "en": "Wall vs p95"
+  },
+  {
+   "match": "Wallzeit",
+   "key": "statistics.wall_time",
+   "de": "Wallzeit",
+   "en": "Wall time"
+  },
+  {
+   "match": "Ohne Ergebnis",
+   "key": "statistics.without_result",
+   "de": "Ohne Ergebnis",
+   "en": "Without result"
+  },
+  {
+   "match": "Worker-Ende-Quote",
+   "key": "statistics.worker_end_rate",
+   "de": "Worker-Ende-Quote",
+   "en": "Worker end rate"
+  },
+  {
+   "match": "Browser-Erkennung — läuft meist über einen Cloud-Dienst des Browsers",
+   "key": "stt.browser_recognition",
+   "de": "Browser-Erkennung — läuft meist über einen Cloud-Dienst des Browsers",
+   "en": "Browser recognition — usually runs through a cloud service of the browser"
+  },
+  {
+   "match": "Erkennung",
+   "key": "stt.recognition",
+   "de": "Erkennung",
+   "en": "Recognition "
+  },
+  {
+   "match": "× neu gestartet — nichts verloren",
+   "key": "stt.restarted",
+   "de": "× neu gestartet — nichts verloren",
+   "en": "× restarted — nothing lost"
+  },
+  {
+   "match": "— erneut tippen stoppt",
+   "key": "stt.stops_typing",
+   "de": "— erneut tippen stoppt",
+   "en": "— typing again stops"
+  },
+  {
+   "match": "Quelle der Spracheingabe",
+   "key": "stt.voice_source",
+   "de": "Quelle der Spracheingabe",
+   "en": "Voice input source"
+  },
+  {
+   "match": "Wort-für-Wort (Vorschau, wird nicht ausgeführt)",
+   "key": "stt.word_for_word",
+   "de": "Wort-für-Wort (Vorschau, wird nicht ausgeführt)",
+   "en": "Word-for-word (preview, not executed)"
+  },
+  {
+   "match": "· Adapter:",
+   "key": "team.adapter_frag",
+   "de": "· Adapter:",
+   "en": "· Adapter: "
+  },
+  {
+   "match": "Erlaubte Modelle",
+   "key": "team.allowed_models",
+   "de": "Erlaubte Modelle",
+   "en": "Allowed models "
+  },
+  {
+   "match": "Stand:",
+   "key": "team.as_of",
+   "de": "Stand:",
+   "en": "As of: "
+  },
+  {
+   "match": "· Versuch",
+   "key": "team.attempt_frag",
+   "de": "· Versuch",
+   "en": "· Attempt "
+  },
+  {
+   "match": ", Änderungen gesperrt.",
+   "key": "team.changes_locked",
+   "de": ", Änderungen gesperrt.",
+   "en": ", changes locked."
+  },
+  {
+   "match": "Koordinator",
+   "key": "team.coordinator",
+   "de": "Koordinator",
+   "en": "Coordinator "
+  },
+  {
+   "match": "Koordinator-Session",
+   "key": "team.coordinator_session",
+   "de": "Koordinator-Session",
+   "en": "Coordinator session"
+  },
+  {
+   "match": "Neues Team anlegen",
+   "key": "team.create_team",
+   "de": "Neues Team anlegen",
+   "en": "Create new team"
+  },
+  {
+   "match": "Lieferungen",
+   "key": "team.deliveries",
+   "de": "Lieferungen",
+   "en": "Deliveries"
+  },
+  {
+   "match": "hängt ab von",
+   "key": "team.depends_on",
+   "de": "hängt ab von",
+   "en": "depends on "
+  },
+  {
+   "match": "erledigt ·",
+   "key": "team.done_frag",
+   "de": "erledigt ·",
+   "en": "done · "
+  },
+  {
+   "match": "leer = Standardmodell je Adapter; mehrere per Komma",
+   "key": "team.empty_default",
+   "de": "leer = Standardmodell je Adapter; mehrere per Komma",
+   "en": "empty = default model per adapter; several comma-separated"
+  },
+  {
+   "match": "vom",
+   "key": "team.from_the",
+   "de": "vom",
+   "en": "from the "
+  },
+  {
+   "match": "· Modelle:",
+   "key": "team.models_frag",
+   "de": "· Modelle:",
+   "en": "· Models: "
+  },
+  {
+   "match": "Neues Team",
+   "key": "team.new_team",
+   "de": "Neues Team",
+   "en": "New team"
+  },
+  {
+   "match": "Noch keine Teams",
+   "key": "team.no_teams",
+   "de": "Noch keine Teams",
+   "en": "No teams yet"
+  },
+  {
+   "match": "Offline / Host nicht erreichbar — letzter Stand",
+   "key": "team.offline_last",
+   "de": "Offline / Host nicht erreichbar — letzter Stand",
+   "en": "Offline / host unreachable — last state"
+  },
+  {
+   "match": "Parallelität",
+   "key": "team.parallelism",
+   "de": "Parallelität",
+   "en": "Parallelism "
+  },
+  {
+   "match": "· Parallelität:",
+   "key": "team.parallelism_frag",
+   "de": "· Parallelität:",
+   "en": "· Parallelism: "
+  },
+  {
+   "match": "· Plan:",
+   "key": "team.plan_frag",
+   "de": "· Plan:",
+   "en": "· Plan: "
+  },
+  {
+   "match": "Projekt:",
+   "key": "team.project_colon",
+   "de": "Projekt:",
+   "en": "Project: "
+  },
+  {
+   "match": "Ergebnis als Blob abgelegt:",
+   "key": "team.result_blob",
+   "de": "Ergebnis als Blob abgelegt:",
+   "en": "Result stored as blob: "
+  },
+  {
+   "match": "Session ↗",
+   "key": "team.session_arrow",
+   "de": "Session ↗",
+   "en": "Session ↗"
+  },
+  {
+   "match": "Team starten",
+   "key": "team.start_team",
+   "de": "Team starten",
+   "en": "Start team"
+  },
+  {
+   "match": "Team stoppen",
+   "key": "team.stop_team",
+   "de": "Team stoppen",
+   "en": "Stop team"
+  },
+  {
+   "match": "Tasks erledigt ·",
+   "key": "team.tasks_done",
+   "de": "Tasks erledigt ·",
+   "en": "Tasks done · "
+  },
+  {
+   "match": "Ein Team ist ein großer Auftrag, den der Hub auf mehrere Agenten-Sessions verteilt.",
+   "key": "team.team_explain",
+   "de": "Ein Team ist ein großer Auftrag, den der Hub auf mehrere Agenten-Sessions verteilt.",
+   "en": "A team is a large assignment that the hub spreads across several agent sessions."
+  },
+  {
+   "match": "Teams",
+   "key": "team.teams",
+   "de": "Teams",
+   "en": "Teams"
+  },
+  {
+   "match": "Titel",
+   "key": "team.title",
+   "de": "Titel",
+   "en": "Title "
+  },
+  {
+   "match": "Worker-Adapter",
+   "key": "team.worker_adapter",
+   "de": "Worker-Adapter",
+   "en": "Worker adapter"
+  },
+  {
+   "match": "Keine Terminal-Ziele. In hub.config.json unter terminals z. B. { \"id\": \"evo\", \"label\": \"evox2\", \"ssh\": \"evo\" } eintragen (ADR-0087).",
+   "key": "terminal.no_targets",
+   "de": "Keine Terminal-Ziele. In hub.config.json unter terminals z. B. { \"id\": \"evo\", \"label\": \"evox2\", \"ssh\": \"evo\" } eintragen (ADR-0087).",
+   "en": "No terminal targets. Add one in hub.config.json under terminals, e.g. { \"id\": \"evo\", \"label\": \"evox2\", \"ssh\": \"evo\" } (ADR-0087)."
+  },
+  {
+   "match": "Keine Ziele",
+   "key": "terminal.no_targets2",
+   "de": "Keine Ziele",
+   "en": "No targets"
+  },
+  {
+   "match": "Beenden",
+   "key": "terminal.quit",
+   "de": "Beenden",
+   "en": "Quit"
+  },
+  {
+   "match": "Terminal-Ziel",
+   "key": "terminal.terminal_target",
+   "de": "Terminal-Ziel",
+   "en": "Terminal target"
+  },
+  {
+   "match": "Ordner wechseln",
+   "key": "vault.change_folder",
+   "de": "Ordner wechseln",
+   "en": "Change folder"
+  },
+  {
+   "match": "Zielordner für Notizen wählen",
+   "key": "vault.choose_target",
+   "de": "Zielordner für Notizen wählen",
+   "en": "Choose target folder for notes"
+  },
+  {
+   "match": "Anlegen",
+   "key": "vault.create",
+   "de": "Anlegen",
+   "en": "Create"
+  },
+  {
+   "match": "Bearbeiten",
+   "key": "vault.edit",
+   "de": "Bearbeiten",
+   "en": "Edit"
+  },
+  {
+   "match": "Startpunkte",
+   "key": "vault.entry_points",
+   "de": "Startpunkte",
+   "en": "Entry points"
+  },
+  {
+   "match": "Wissen",
+   "key": "vault.knowledge",
+   "de": "Wissen",
+   "en": "Knowledge"
+  },
+  {
+   "match": "Liste gekappt — sehr viele Dateien im Vault-Ordner.",
+   "key": "vault.list_capped",
+   "de": "Liste gekappt — sehr viele Dateien im Vault-Ordner.",
+   "en": "List capped — very many files in the vault folder."
+  },
+  {
+   "match": "Ordner laden …",
+   "key": "vault.load_folder",
+   "de": "Ordner laden …",
+   "en": "Load folder …"
+  },
+  {
+   "match": "Neue Notiz",
+   "key": "vault.new_note",
+   "de": "Neue Notiz",
+   "en": "New note"
+  },
+  {
+   "match": "Neue Notiz (nur .md)",
+   "key": "vault.new_note_md",
+   "de": "Neue Notiz (nur .md)",
+   "en": "New note (.md only)"
+  },
+  {
+   "match": "Die Notiz hat sich unterdessen geändert — neu laden und erneut versuchen (kein stiller Verlust).",
+   "key": "vault.note_changed",
+   "de": "Die Notiz hat sich unterdessen geändert — neu laden und erneut versuchen (kein stiller Verlust).",
+   "en": "The note changed in the meantime — reload and try again (no silent loss)."
+  },
+  {
+   "match": "Notizen-Bereich",
+   "key": "vault.notes_area",
+   "de": "Notizen-Bereich",
+   "en": "Notes area"
+  },
+  {
+   "match": "Offline — Speichern gesperrt, der Text bleibt im Fenster.",
+   "key": "vault.offline_locked",
+   "de": "Offline — Speichern gesperrt, der Text bleibt im Fenster.",
+   "en": "Offline — saving locked, the text stays in the window."
+  },
+  {
+   "match": "… oder absoluten Pfad eingeben, z. B. /home/dev/notizen",
+   "key": "vault.or_absolute",
+   "de": "… oder absoluten Pfad eingeben, z. B. /home/dev/notizen",
+   "en": "… or enter an absolute path, e.g. /home/dev/notes"
+  },
+  {
+   "match": "← übergeordneter Ordner",
+   "key": "vault.parent_folder",
+   "de": "← übergeordneter Ordner",
+   "en": "← parent folder"
+  },
+  {
+   "match": "Notiz suchen",
+   "key": "vault.search_note",
+   "de": "Notiz suchen",
+   "en": "Search note"
+  },
+  {
+   "match": "Notiz suchen…",
+   "key": "vault.search_note2",
+   "de": "Notiz suchen…",
+   "en": "Search note…"
+  },
+  {
+   "match": "Vault lädt…",
+   "key": "vault.vault_loading",
+   "de": "Vault lädt…",
+   "en": "Vault loading…"
+  },
+  {
+   "match": "Der Knowledge Vault legt und bearbeitet ausschließlich Markdown-Dateien in diesem Ordner.",
+   "key": "vault.vault_markdown",
+   "de": "Der Knowledge Vault legt und bearbeitet ausschließlich Markdown-Dateien in diesem Ordner.",
+   "en": "The knowledge vault stores and edits Markdown files in this folder only."
+  },
+  {
+   "match": "Vault-Ordner als Pfad eingeben",
+   "key": "vault.vault_path",
+   "de": "Vault-Ordner als Pfad eingeben",
+   "en": "Enter vault folder as path"
+  },
+  {
+   "match": "Ansehen",
+   "key": "vault.view",
+   "de": "Ansehen",
+   "en": "View"
+  },
+  {
+   "match": "In die App zurück",
+   "key": "windows.back_to_app",
+   "de": "In die App zurück",
+   "en": "Back to the app"
+  },
+  {
+   "match": "Herauslösen",
+   "key": "windows.detach",
+   "de": "Herauslösen",
+   "en": "Detach"
+  },
+  {
+   "match": "nicht mehr offen",
+   "key": "windows.no_longer_open",
+   "de": "nicht mehr offen",
+   "en": "no longer open"
+  },
+  {
+   "match": "Nicht angemeldet — bitte im Hauptfenster anmelden und dieses Fenster neu laden.",
+   "key": "windows.not_signed_in",
+   "de": "Nicht angemeldet — bitte im Hauptfenster anmelden und dieses Fenster neu laden.",
+   "en": "Not signed in — please sign in in the main window and reload this window."
+  },
+  {
+   "match": "Offline — dieses Fenster zeigt den letzten Stand und verbindet sich neu, sobald das Netz wieder da ist.",
+   "key": "windows.offline_reconnect",
+   "de": "Offline — dieses Fenster zeigt den letzten Stand und verbindet sich neu, sobald das Netz wieder da ist.",
+   "en": "Offline — this window shows the last state and reconnects as soon as the network is back."
+  },
+  {
+   "match": "öffnen",
+   "key": "windows.open",
+   "de": "öffnen",
+   "en": "open"
+  },
+  {
+   "match": "Pop-ups blockiert — bitte erlauben.",
+   "key": "windows.popups_blocked",
+   "de": "Pop-ups blockiert — bitte erlauben.",
+   "en": "Pop-ups blocked — please allow."
+  },
+  {
+   "match": "Dieses Fenster hat kein Ziel.",
+   "key": "windows.window_no_target",
+   "de": "Dieses Fenster hat kein Ziel.",
+   "en": "This window has no target."
+  },
+  {
+   "match": "Basis",
+   "key": "workspace.base",
+   "de": "Basis",
+   "en": "Base "
+  },
+  {
+   "match": "Dateikarte schließen",
+   "key": "workspace.close_file_card",
+   "de": "Dateikarte schließen",
+   "en": "Close file card"
+  },
+  {
+   "match": "Kachel schließen",
+   "key": "workspace.close_tile",
+   "de": "Kachel schließen",
+   "en": "Close tile"
+  },
+  {
+   "match": "Kachel schließen (Alt+W)",
+   "key": "workspace.close_tile_altw",
+   "de": "Kachel schließen (Alt+W)",
+   "en": "Close tile (Alt+W)"
+  },
+  {
+   "match": "✕ Schließen",
+   "key": "workspace.close_x",
+   "de": "✕ Schließen",
+   "en": "✕ Close"
+  },
+  {
+   "match": "Aus dem Fenster ziehen: eigenes Fenster (Alternative: ⧉)",
+   "key": "workspace.drag_out",
+   "de": "Aus dem Fenster ziehen: eigenes Fenster (Alternative: ⧉)",
+   "en": "Drag out of the window: own window (alternative: ⧉)"
+  },
+  {
+   "match": "‹ Fokus",
+   "key": "workspace.focus_left",
+   "de": "‹ Fokus",
+   "en": "‹ Focus"
+  },
+  {
+   "match": "Fokus ›",
+   "key": "workspace.focus_right",
+   "de": "Fokus ›",
+   "en": "Focus ›"
+  },
+  {
+   "match": "Vollständige Ausgabe als Blob",
+   "key": "workspace.full_output_blob",
+   "de": "Vollständige Ausgabe als Blob",
+   "en": "Full output as blob "
+  },
+  {
+   "match": "in „",
+   "key": "workspace.in_quote",
+   "de": "in „",
+   "en": "in “"
+  },
+  {
+   "match": "ist frei — Session links wählen",
+   "key": "workspace.is_free",
+   "de": "ist frei — Session links wählen",
+   "en": "is free — select a session on the left"
+  },
+  {
+   "match": "Tastatur: ? zeigt alle Kürzel · Öffnen:",
+   "key": "workspace.keyboard_hint",
+   "de": "Tastatur: ? zeigt alle Kürzel · Öffnen:",
+   "en": "Keyboard: ? shows all shortcuts · Open: "
+  },
+  {
+   "match": "⟳ Layout",
+   "key": "workspace.layout",
+   "de": "⟳ Layout",
+   "en": "⟳ Layout"
+  },
+  {
+   "match": "Inhalte aus der Liste öffnen zusätzliche Kacheln",
+   "key": "workspace.list_opens_tiles",
+   "de": "Inhalte aus der Liste öffnen zusätzliche Kacheln",
+   "en": "Opening items from the list adds tiles"
+  },
+  {
+   "match": "Logs",
+   "key": "workspace.logs",
+   "de": "Logs",
+   "en": "Logs"
+  },
+  {
+   "match": "· Manifest",
+   "key": "workspace.manifest_frag",
+   "de": "· Manifest",
+   "en": "· Manifest "
+  },
+  {
+   "match": "Diese Session hat keinen Workspace — ohne `ancientvoid.workspace.json` gilt der unveränderte alte Ablauf (ADR-0051 §7).",
+   "key": "workspace.no_workspace",
+   "de": "Diese Session hat keinen Workspace — ohne `ancientvoid.workspace.json` gilt der unveränderte alte Ablauf (ADR-0051 §7).",
+   "en": "This session has no workspace — without `ancientvoid.workspace.json` the unchanged old flow applies (ADR-0051 §7)."
+  },
+  {
+   "match": "Port",
+   "key": "workspace.port",
+   "de": "Port",
+   "en": "Port "
+  },
+  {
+   "match": "Aktualisieren",
+   "key": "workspace.refresh",
+   "de": "Aktualisieren",
+   "en": "Refresh"
+  },
+  {
+   "match": "Kachelhöhe ändern",
+   "key": "workspace.resize_tile_height",
+   "de": "Kachelhöhe ändern",
+   "en": "Resize tile height"
+  },
+  {
+   "match": "Kachelbreite ändern",
+   "key": "workspace.resize_tile_width",
+   "de": "Kachelbreite ändern",
+   "en": "Resize tile width"
+  },
+  {
+   "match": "Diese Session gibt es nicht mehr oder sie ist nicht erreichbar.",
+   "key": "workspace.session_gone",
+   "de": "Diese Session gibt es nicht mehr oder sie ist nicht erreichbar.",
+   "en": "This session no longer exists or is not reachable."
+  },
+  {
+   "match": "⇄ Tauschen",
+   "key": "workspace.swap",
+   "de": "⇄ Tauschen",
+   "en": "⇄ Swap"
+  },
+  {
+   "match": "— danach neu öffnen.",
+   "key": "workspace.then_reopen",
+   "de": "— danach neu öffnen.",
+   "en": "— then reopen."
+  },
+  {
+   "match": "Ticket gültig bis",
+   "key": "workspace.ticket_valid",
+   "de": "Ticket gültig bis",
+   "en": "Ticket valid until "
+  },
+  {
+   "match": "Kachel",
+   "key": "workspace.tile",
+   "de": "Kachel",
+   "en": "Tile "
+  },
+  {
+   "match": "Kachel-Aktionen",
+   "key": "workspace.tile_actions",
+   "de": "Kachel-Aktionen",
+   "en": "Tile actions"
+  },
+  {
+   "match": "Kachel-Layout",
+   "key": "workspace.tile_layout",
+   "de": "Kachel-Layout",
+   "en": "Tile layout"
+  },
+  {
+   "match": "Name unbelegt",
+   "key": "statistics.name_unbelegt",
+   "de": "Name unbelegt",
+   "en": "Name unattributed"
   }
  ]
 }

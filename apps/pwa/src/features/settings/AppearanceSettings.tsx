@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { applyTheme, getTheme, THEME_KEY, type Theme } from "../../app/theme.ts";
 import { applyCtxMotion, ctxMotionOn, getScale, setScale, SCALE_MAX, SCALE_MIN, SCALE_STEP } from "../../app/ui-scale.ts";
@@ -28,10 +29,10 @@ export function AppearanceSettings() {
   }, []);
 
   return (
-    <SettingsSection title="Darstellung">
-      <SettingRow label="Erscheinungsbild">
+    <SettingsSection title={t("settings.appearance")}>
+      <SettingRow label={t("settings.look")}>
         <Segmented
-          label="Erscheinungsbild"
+          label={t("settings.look")}
           value={theme}
           options={[
             { value: "dark", label: "Dunkel" },
@@ -44,15 +45,15 @@ export function AppearanceSettings() {
         />
       </SettingRow>
       <AccentSetting />
-      <SettingRow label="Zoom der Oberfläche" hint="Strg + Mausrad, Strg + / − , Strg + 0">
+      <SettingRow label={t("settings.ui_zoom")} hint="Strg + Mausrad, Strg + / − , Strg + 0">
         <span class="scale-control">
-          <Button aria-label="Kleiner" title="Kleiner" disabled={scale <= SCALE_MIN} onClick={() => setScale(scale - SCALE_STEP)}>
+          <Button aria-label={t("settings.smaller")} title={t("settings.smaller")} disabled={scale <= SCALE_MIN} onClick={() => setScale(scale - SCALE_STEP)}>
             −
           </Button>
           <span class="scale-value mono" aria-live="polite">
             {Math.round(scale * 100)} %
           </span>
-          <Button aria-label="Größer" title="Größer" disabled={scale >= SCALE_MAX} onClick={() => setScale(scale + SCALE_STEP)}>
+          <Button aria-label={t("settings.larger")} title={t("settings.larger")} disabled={scale >= SCALE_MAX} onClick={() => setScale(scale + SCALE_STEP)}>
             +
           </Button>
           <Button disabled={scale === 1} onClick={() => setScale(1)}>
@@ -60,9 +61,9 @@ export function AppearanceSettings() {
           </Button>
         </span>
       </SettingRow>
-      <SettingRow label="Bewegung" hint="Atmen, Schimmer, Ruf und Übergänge; „Bewegung reduzieren“ des Systems schaltet sie immer ab">
+      <SettingRow label={t("settings.motion")} hint="Atmen, Schimmer, Ruf und Übergänge; „Bewegung reduzieren“ des Systems schaltet sie immer ab">
         <Switch
-          label="Bewegung"
+          label={t("settings.motion")}
           checked={motion}
           onChange={(next) => {
             applyCtxMotion(next);
@@ -71,9 +72,9 @@ export function AppearanceSettings() {
         />
       </SettingRow>
       {/* EPIC-P51 T51.8: Klick-Hinweise auf vorhandene Kürzel — Standard an (Lernphase). */}
-      <SettingRow label="Shortcut-Hinweise" hint="Klick auf eine Aktion mit Kürzel zeigt kurz die Kombination unten an">
+      <SettingRow label={t("settings.shortcut_hints")} hint="Klick auf eine Aktion mit Kürzel zeigt kurz die Kombination unten an">
         <Switch
-          label="Shortcut-Hinweise"
+          label={t("settings.shortcut_hints")}
           checked={hints}
           onChange={(next) => {
             applyShortcutHints(next);

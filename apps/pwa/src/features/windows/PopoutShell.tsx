@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { getToken, hostApi, hubApi, remoteHost, type AdapterUsage, type FleetHost, type SessionRecord } from "../../shared/api.ts";
 import { parseAppHash, type ToolPageId, TOOL_PAGE_IDS } from "../../app/route.ts";
@@ -79,7 +80,7 @@ export function PopoutShell() {
   const id = useRef(crypto.randomUUID()).current;
   const [session, setSession] = useState<SessionRecord | null>(null);
   // Titel-Zeile: Session-Titel, sonst der Projektname — eine Session ohne Titel heißt nicht nur „Session“.
-  const sessionLabel = session?.title ?? (session ? projectName(session.project) : undefined) ?? "Session";
+  const sessionLabel = session?.title ?? (session ? projectName(session.project) : undefined) ?? t("common.session_cap");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -118,7 +119,7 @@ export function PopoutShell() {
       .session(target.sessionId)
       .then((s) => {
         setSession(s);
-        const label = s.title ?? projectName(s.project) ?? "Session";
+        const label = s.title ?? projectName(s.project) ?? t("common.session_cap");
         document.title = `⧉ ${target.kind === "graph" ? `Graph · ${label}` : target.kind === "file" ? `${target.path.split("/").pop()} · ${label}` : isViewTarget(target) ? `${VIEW_LABEL[target.kind]} · ${label}` : label}`;
       })
       .catch(() => setError("Diese Session gibt es nicht mehr oder sie ist nicht erreichbar."));
@@ -143,8 +144,8 @@ export function PopoutShell() {
     window.close();
   };
 
-  if (!target) return <div class="popout-shell"><div class="ui-empty">Dieses Fenster hat kein Ziel.</div></div>;
-  if (!getToken()) return <div class="popout-shell"><div class="ui-empty">Nicht angemeldet — bitte im Hauptfenster anmelden und dieses Fenster neu laden.</div></div>;
+  if (!target) return <div class="popout-shell"><div class="ui-empty">{t("windows.window_no_target")}</div></div>;
+  if (!getToken()) return <div class="popout-shell"><div class="ui-empty">{t("windows.not_signed_in")}</div></div>;
   return (
     <div class="popout-shell">
       <header class="popout-bar">
@@ -152,10 +153,10 @@ export function PopoutShell() {
           ⧉ {isViewTarget(target) ? `${VIEW_LABEL[target.kind]} · ${sessionLabel}` : target.kind === "queue" ? "Warteschlange" : target.kind === "nyx" ? "Nyx" : target.kind === "tool" ? "Werkzeug" : target.kind === "filetree" ? "Dateibaum" : target.kind === "vault" ? `Notizen${target.path ? ` · ${target.path.split("/").pop()}` : ""}` : target.kind === "browser" ? `Browser · ${sessionLabel}` : target.kind === "device" ? "Android-Geräte" : target.kind === "graph" ? `Repo-Graph · ${sessionLabel}` : target.kind === "file" ? `Datei · ${target.path.split("/").pop()}` : sessionLabel}
         </span>
         <Button onClick={giveBack}>
-          In die App zurück
+          {t("windows.back_to_app")}
         </Button>
       </header>
-      {!online && <div class="popout-offline" role="status">Offline — dieses Fenster zeigt den letzten Stand und verbindet sich neu, sobald das Netz wieder da ist.</div>}
+      {!online && <div class="popout-offline" role="status">{t("windows.offline_reconnect")}</div>}
       {isViewTarget(target) ? (
         // ADR-0068: genau diese Ansicht — keine Reiter, kein Antwortfeld, kein Session-Menü.
         error ? (
@@ -165,7 +166,7 @@ export function PopoutShell() {
             <SessionTail key={session.id} session={session} onNavigate={() => undefined} tile={{ active: true, compact: false, only: VIEW_TAB[target.kind] }} />
           </section>
         ) : (
-          <div class="ui-empty dim">lädt…</div>
+          <div class="ui-empty dim">{t("common.loading_dots")}</div>
         )
       ) : target.kind === "nyx" ? (
         <div class="popout-tool">
@@ -190,11 +191,11 @@ export function PopoutShell() {
         error ? (
           <div class="ui-empty">{error}</div>
         ) : session ? (
-          <section class="tile popout-tile" data-tile="1" aria-label="Session">
+          <section class="tile popout-tile" data-tile="1" aria-label={t("common.session_cap")}>
             <SessionTail key={session.id} session={session} onNavigate={() => undefined} tile={{ active: true, compact: false }} />
           </section>
         ) : (
-          <div class="ui-empty dim">lädt…</div>
+          <div class="ui-empty dim">{t("common.loading_dots")}</div>
         )
       ) : target.kind === "graph" ? (
         error ? (
@@ -230,7 +231,7 @@ export function PopoutShell() {
           <div class="popout-browser">
             <BrowserPanel
               sessionId={target.sessionId}
-              label={sessionLabel === "Session" ? null : sessionLabel}
+              label={sessionLabel === t("common.session_cap") ? null : sessionLabel}
               hostId={target.hostId ?? null}
               onClose={giveBack}
             />
@@ -247,7 +248,7 @@ export function PopoutShell() {
             page={target.page}
             onClose={giveBack}
             onSwitchToken={() => location.reload()}
-            closeLabel="In die App zurück"
+            closeLabel={t("windows.back_to_app")}
             escCloses={false}
           />
         </div>

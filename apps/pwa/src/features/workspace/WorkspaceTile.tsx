@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { hostApi, type SessionRecord } from "../../shared/api.ts";
 import type { Page } from "../../app/Dock.tsx";
@@ -72,7 +73,7 @@ export function WorkspaceTile({
     <>
       <span class="tile-no">{index + 1}</span>
       {onPopout && (
-        <span class={`tile-grip${dragOut ? " dragging" : ""}`} aria-hidden="true" title="Aus dem Fenster ziehen: eigenes Fenster (Alternative: ⧉)" onPointerDown={startGrip}>
+        <span class={`tile-grip${dragOut ? " dragging" : ""}`} aria-hidden="true" title={t("workspace.drag_out")} onPointerDown={startGrip}>
           ⠿{dragOut ? " Loslassen öffnet ein eigenes Fenster" : ""}
         </span>
       )}
@@ -81,11 +82,11 @@ export function WorkspaceTile({
   const headEnd = (
     <>
       {onPopout && (
-        <button type="button" class="tile-popout" aria-label={`Kachel ${index + 1} in eigenem Fenster öffnen`} title="In eigenem Fenster öffnen" onClick={() => onPopout()}>
+        <button type="button" class="tile-popout" aria-label={`Kachel ${index + 1} in eigenem Fenster öffnen`} title={t("common.open_in_window")} onClick={() => onPopout()}>
           ⧉
         </button>
       )}
-      <button type="button" class="tile-close" aria-label={`Kachel ${index + 1} schließen`} title="Kachel schließen (Alt+W)" onClick={(e) => { e.stopPropagation(); onClose(); }}>
+      <button type="button" class="tile-close" aria-label={`Kachel ${index + 1} schließen`} title={t("workspace.close_tile_altw")} onClick={(e) => { e.stopPropagation(); onClose(); }}>
         ×
       </button>
     </>
@@ -108,21 +109,21 @@ export function WorkspaceTile({
         <ContentCard card={tileRef} active={active} onClose={onClose} onSwitchToken={onSwitchToken} onPopout={onPopout ? () => onPopout() : undefined} />
       ) : !tileRef ? (
         <div class="ui-empty tile-empty">
-          Kachel {index + 1} ist frei — Session links wählen
-          {index > 0 && <div class="dim">Inhalte aus der Liste öffnen zusätzliche Kacheln</div>}
+          {t("workspace.tile")} {index + 1} {t("workspace.is_free")}
+          {index > 0 && <div class="dim">{t("workspace.list_opens_tiles")}</div>}
         </div>
       ) : missing ? (
         // P18 premortem 4: a remembered session that is gone says so.
         <div class="ui-empty tile-empty" data-testid="tile-missing">
-          Diese Session gibt es nicht mehr oder sie ist nicht erreichbar.
+          {t("workspace.session_gone")}
           <Button onClick={onClose}>
-            Kachel schließen
+            {t("workspace.close_tile")}
           </Button>
         </div>
       ) : session ? (
         <SessionTail key={JSON.stringify(tileRef)} session={session} onNavigate={onNavigate} onArchived={onClose} {...(tileRef?.content?.kind === "session" ? { workspaceTab: tileRef.content.tab, ...(tileRef.content.file ? { initialFile: tileRef.content.file } : {}), ...(tileRef.content.code ? { initialCode: tileRef.content.code } : {}) } : {})} tile={{ active, compact, head: { start: headStart, end: headEnd } }} />
       ) : (
-        <EmptyState class="tile-empty dim" text="lädt…" />
+        <EmptyState class="tile-empty dim" text={t("common.loading_dots")} />
       )}
     </section>
   );

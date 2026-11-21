@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { Sheet } from "../../shared/ui/Sheet.tsx";
 import { Button, EmptyState, Switch } from "../../shared/ui/index.ts";
@@ -234,12 +235,12 @@ export function ClipboardShelf() {
   };
 
   return (
-    <Sheet open={open} onClose={() => setOpen(false)} label="Zwischenablage-Ablage" testid="clipboard-shelf">
+    <Sheet open={open} onClose={() => setOpen(false)} label={t("clipboard.clipboard_shelf")} testid="clipboard-shelf">
       <div class="shelf">
         <header class="shelf-head">
-          <h2 class="shelf-title">Ablage</h2>
+          <h2 class="shelf-title">{t("clipboard.shelf")}</h2>
           <p class="shelf-sub">
-            {entries.length === 0 ? "leer" : `${entries.length} von ${SHELF_MAX} Stufen`} · neueste zuerst
+            {entries.length === 0 ? "leer" : `${entries.length} von ${SHELF_MAX} Stufen`} {t("clipboard.newest_first")}
           </p>
           {entries.length > 0 && (
             <button
@@ -247,7 +248,7 @@ export function ClipboardShelf() {
               class="link-btn shelf-clear"
               data-testid="shelf-clear"
               onClick={clearAll}
-              title="Erstmal tippen fragt nach, nochmal tippen leert"
+              title={t("clipboard.tap_asks")}
             >
               {armed ? "wirklich alles löschen?" : "alle löschen"}
             </button>
@@ -257,8 +258,8 @@ export function ClipboardShelf() {
         {entries.length === 0 && aufnahmen.length === 0 ? (
           <EmptyState
             icon={<ShelfGlyph />}
-            text="Noch nichts abgelegt. Was die App kopiert — Diktat, Markierung, Befehl, Eintrag — liegt eine Stufe tiefer hier; beim Wiederkommen kommt auch extern Kopiertes herein (Text und Screenshot). Token bleiben draußen."
-            action={<Button size="sm" onClick={() => setOpen(false)}>schließen</Button>}
+            text={t("clipboard.shelf_empty")}
+            action={<Button size="sm" onClick={() => setOpen(false)}>{t("clipboard.close")}</Button>}
           />
         ) : (
           <ul class="shelf-list" data-testid="shelf-list">
@@ -277,20 +278,20 @@ export function ClipboardShelf() {
                 <div class="shelf-meta">
                   <span class="shelf-origin">{SHELF_ORIGIN_LABEL[entry.origin]}</span>
                   <span class="dim">{ago(entry.at)}</span>
-                  {entry.uses > 0 && <span class="dim">{entry.uses + 1}× geholt</span>}
-                  {entry.cut && <span class="dim">gekürzt</span>}
+                  {entry.uses > 0 && <span class="dim">{entry.uses + 1}{t("clipboard.fetched")}</span>}
+                  {entry.cut && <span class="dim">{t("clipboard.truncated")}</span>}
                 </div>
                 {/* Eine echte Taste, der Rest als Textstelle — sechs Reihen mit drei
                     gleich grossen Knöpfen schreien, und "einfügen" ist die Entscheidung. */}
                 <div class="shelf-actions">
                   {entry.kind === "bild" ? (
-                    <Button size="sm" data-testid="shelf-attach" onClick={() => void anhaengen(entry)}>anhängen</Button>
+                    <Button size="sm" data-testid="shelf-attach" onClick={() => void anhaengen(entry)}>{t("clipboard.attach")}</Button>
                   ) : (
-                    <Button size="sm" data-testid="shelf-insert" onClick={() => void insert(entry)}>Einfügen</Button>
+                    <Button size="sm" data-testid="shelf-insert" onClick={() => void insert(entry)}>{t("clipboard.paste")}</Button>
                   )}
-                  <button type="button" class="link-btn shelf-copy" data-testid="shelf-copy" onClick={() => void (entry.kind === "bild" ? bildZurueck(entry) : copyBack(entry))}>in die Zwischenablage</button>
+                  <button type="button" class="link-btn shelf-copy" data-testid="shelf-copy" onClick={() => void (entry.kind === "bild" ? bildZurueck(entry) : copyBack(entry))}>{t("clipboard.to_clipboard")}</button>
                   <span class="shelf-dot" aria-hidden="true">·</span>
-                  <button type="button" class="link-btn shelf-drop" data-testid="shelf-drop" onClick={() => remove(entry)}>entfernen</button>
+                  <button type="button" class="link-btn shelf-drop" data-testid="shelf-drop" onClick={() => remove(entry)}>{t("clipboard.remove")}</button>
                 </div>
                 </div>
               </li>
@@ -338,8 +339,8 @@ export function ClipboardShelf() {
 
         {note && <p class="shelf-note" role="status" data-testid="shelf-note">{note}</p>}
         <div class="shelf-ingest">
-          <span>aus anderen Apps übernehmen</span>
-          <Switch label="aus anderen Apps übernehmen" checked={an} onChange={(next) => { setAn(next); setIngestEnabled(next); }} />
+          <span>{t("clipboard.import_other_apps")}</span>
+          <Switch label={t("clipboard.import_other_apps")} checked={an} onChange={(next) => { setAn(next); setIngestEnabled(next); }} />
         </div>
         <p class="shelf-ingest-hinweis">
           {lage === "verweigert"
@@ -347,7 +348,7 @@ export function ClipboardShelf() {
             : "Beim Wiederkommen wird einmal ins System-Clipboard geschaut (Text und Screenshot). Was kopiert wurde, während die App geschlossen war, kann kein Browser nachholen."}
         </p>
         <p class="shelf-privacy">
-          Nur auf diesem Gerät in diesem Browser — die Ablage geht nie zum Hub. Sichtbar sind {SHELF_LEVELS} Stufen, gemerkt bis {SHELF_MAX}; Bilder liegen getrennt (zwölf Stück, höchstens 24 MB), Sprachnachrichten ebenso (drei neueste, höchstens 12 MB).
+          {t("clipboard.device_only")} {SHELF_LEVELS} {t("clipboard.levels_until")} {SHELF_MAX}{t("clipboard.images_separate")}
         </p>
       </div>
     </Sheet>

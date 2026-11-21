@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { FileMeta } from "@ancientvoid/contracts";
 import type { HubApi } from "../../shared/api.ts";
@@ -124,7 +125,7 @@ export function RenderedView({ api, target, meta, kind, onStale }: { api: HubApi
 
 function TextRendered({ api, target, meta, kind, onStale }: { api: HubApi; target: string; meta: FileMeta; kind: Exclude<RenderKind, "archive" | "office" | "svg">; onStale: () => void }) {
   const state = useWholeText(api, target, meta, kind === "table" ? CSV_MAX_BYTES : MAX_TEXT_VIEW, onStale);
-  if (!state) return <EmptyState text="lädt …" />;
+  if (!state) return <EmptyState text={t("common.loading")} />;
   if ("error" in state) return <div class="files-error" role="status">{state.error}</div>;
   const { text } = state;
   if (kind === "markdown") return <div class="md-view" data-testid="md-view">{parseMarkdown(text).map((b, k) => <MdBlockView key={k} block={b} />)}</div>;
@@ -132,7 +133,7 @@ function TextRendered({ api, target, meta, kind, onStale }: { api: HubApi; targe
     try {
       return <div class="json-view" data-testid="json-view"><JsonTree node={jsonNodes(JSON.parse(text), "$")} open /></div>;
     } catch (err) {
-      return <div class="files-error" role="status">Kein gültiges JSON: {err instanceof Error ? err.message : "Syntaxfehler"}. „Text“ zeigt die Datei unverändert.</div>;
+      return <div class="files-error" role="status">{t("files.no_valid_json")} {err instanceof Error ? err.message : "Syntaxfehler"}{t("files.text_unchanged")}</div>;
     }
   }
   if (kind === "yaml") return <YamlTree text={text} />;
@@ -143,7 +144,7 @@ function TextRendered({ api, target, meta, kind, onStale }: { api: HubApi; targe
     return (
       <div class="file-table-wrap" data-testid="csv-view">
         <table class="file-table"><tbody>{shown.map((r, k) => <tr key={k}>{r.map((c, j) => (k === 0 ? <th key={j}>{c}</th> : <td key={j}>{c}</td>))}</tr>)}</tbody></table>
-        {rows.length > shown.length && <div class="dim">{rows.length - shown.length} weitere Zeilen — „Text“ liest die Datei vollständig.</div>}
+        {rows.length > shown.length && <div class="dim">{rows.length - shown.length} {t("files.more_lines")}</div>}
       </div>
     );
   }
@@ -151,7 +152,7 @@ function TextRendered({ api, target, meta, kind, onStale }: { api: HubApi; targe
     const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'">`;
     return (
       <>
-        <div class="dim file-note">Gesicherte Vorschau: keine Skripte, kein Netzwerk, keine Formulare.</div>
+        <div class="dim file-note">{t("files.secured_preview")}</div>
         <iframe class="file-html" title={meta.path} sandbox="" referrerPolicy="no-referrer" srcDoc={`${csp}${text}`} />
       </>
     );
@@ -160,7 +161,7 @@ function TextRendered({ api, target, meta, kind, onStale }: { api: HubApi; targe
   if (!nb.ok) return <div class="files-error" role="status">{nb.reason}</div>;
   return (
     <div class="nb-view" data-testid="notebook-view">
-      <div class="dim file-note">Nur Lesen — es wird nichts ausgeführt, HTML-/Skript-Ausgaben werden nicht dargestellt.</div>
+      <div class="dim file-note">{t("files.read_only")}</div>
       {nb.cells.map((c, k) => (
         <section key={k} class={`nb-cell nb-${c.kind}`}>
           {c.kind === "markdown" ? <div class="md-view">{parseMarkdown(c.source).map((b, j) => <MdBlockView key={j} block={b} />)}</div> : <pre class="nb-src">{c.source}</pre>}
@@ -182,7 +183,7 @@ function SvgView({ api, target, meta }: { api: HubApi; target: string; meta: Fil
   }, [target, meta.path, meta.revision]);
   if (error) return <div class="files-error" role="alert">{error}</div>;
   // <img> führt keine Skripte aus, auch nicht in SVG.
-  return url ? <img class="file-media" src={url} alt={meta.path} data-testid="svg-view" /> : <EmptyState text="lädt …" />;
+  return url ? <img class="file-media" src={url} alt={meta.path} data-testid="svg-view" /> : <EmptyState text={t("common.loading")} />;
 }
 
 function ArchiveView({ api, target, meta }: { api: HubApi; target: string; meta: FileMeta }) {
@@ -192,12 +193,12 @@ function ArchiveView({ api, target, meta }: { api: HubApi; target: string; meta:
     api.codeArchive(target, meta.path).then((r) => alive && setRes(r)).catch((e) => alive && setRes({ error: e instanceof Error ? e.message : "Archiv nicht lesbar" }));
     return () => { alive = false; };
   }, [target, meta.path, meta.revision]);
-  if (!res) return <EmptyState text="lädt …" />;
-  if ("error" in res) return <div class="files-error" role="status">{res.error} — „Hex“ zeigt die Originalbytes.</div>;
+  if (!res) return <EmptyState text={t("common.loading")} />;
+  if ("error" in res) return <div class="files-error" role="status">{res.error} {t("files.hex_original_quote")}</div>;
   return (
     <div class="archive-view" data-testid="archive-view">
-      <div class="dim file-note">Inhaltsverzeichnis — es wird nichts entpackt. {res.total} Einträge{res.truncated ? " (Liste gekürzt)" : ""}.</div>
-      <table class="file-table"><thead><tr><th>Name</th><th>Größe</th><th>gepackt</th></tr></thead><tbody>
+      <div class="dim file-note">{t("files.toc_no_unpacking")} {res.total} {t("files.entries")}{res.truncated ? " (Liste gekürzt)" : ""}.</div>
+      <table class="file-table"><thead><tr><th>{t("composer.name")}</th><th>{t("files.size")}</th><th>{t("files.packed")}</th></tr></thead><tbody>
         {res.entries.map((e, k) => <tr key={k}><td class="mono">{e.name}{e.encrypted ? " 🔒" : ""}</td><td>{e.directory ? "" : formatBytes(e.size)}</td><td>{e.directory ? "" : formatBytes(e.compressedSize)}</td></tr>)}
       </tbody></table>
     </div>
@@ -211,8 +212,8 @@ function OfficeView({ api, target, meta }: { api: HubApi; target: string; meta: 
     api.codeOffice(target, meta.path).then((r) => alive && setRes(r)).catch((e) => alive && setRes({ error: e instanceof Error ? e.message : "Dokument nicht lesbar" }));
     return () => { alive = false; };
   }, [target, meta.path, meta.revision]);
-  if (!res) return <EmptyState text="lädt …" />;
-  if ("error" in res) return <div class="files-error" role="status">{res.error} — „Hex“ zeigt die Originalbytes.</div>;
+  if (!res) return <EmptyState text={t("common.loading")} />;
+  if ("error" in res) return <div class="files-error" role="status">{res.error} {t("files.hex_original_quote")}</div>;
   return (
     <div class="office-view" data-testid="office-view">
       <div class="dim file-note">{res.note}</div>
@@ -235,8 +236,8 @@ function YamlTree({ text }: { text: string }) {
       .catch((err) => alive && setState({ error: err instanceof Error ? err.message.split("\n")[0]! : "YAML-Syntaxfehler" }));
     return () => { alive = false; };
   }, [text]);
-  if (!state) return <EmptyState text="lädt …" />;
-  if ("error" in state) return <div class="files-error" role="status">Kein gültiges YAML: {state.error}. „Text“ zeigt die Datei unverändert.</div>;
+  if (!state) return <EmptyState text={t("common.loading")} />;
+  if ("error" in state) return <div class="files-error" role="status">{t("files.no_valid_yaml")} {state.error}{t("files.text_unchanged")}</div>;
   return <div class="json-view" data-testid="yaml-view"><JsonTree node={state.node} open /></div>;
 }
 
@@ -271,9 +272,9 @@ function MermaidBlock({ source }: { source: string }) {
   }, [source]);
   return (
     <figure class="md-code" data-testid="mermaid-block">
-      {state && "error" in state && <div class="dim" role="status">Mermaid nicht gerendert: {state.error} — Quelltext:</div>}
-      {!state && <figcaption class="dim">Diagramm wird gerendert …</figcaption>}
-      {state && "url" in state && !showSource && <img class="file-media" data-testid="mermaid-img" src={state.url} alt="Mermaid-Diagramm" />}
+      {state && "error" in state && <div class="dim" role="status">{t("files.mermaid_not_rendered")} {state.error} {t("files.source_code")}</div>}
+      {!state && <figcaption class="dim">{t("files.mermaid_rendering")}</figcaption>}
+      {state && "url" in state && !showSource && <img class="file-media" data-testid="mermaid-img" src={state.url} alt={t("files.mermaid_diagram")} />}
       {(showSource || !state || "error" in state) && <pre><code>{source}</code></pre>}
       {state && "url" in state && <Chip onClick={() => setShowSource(!showSource)}>{showSource ? "Diagramm" : "Quelltext"}</Chip>}
     </figure>

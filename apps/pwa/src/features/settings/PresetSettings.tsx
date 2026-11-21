@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { getOpenWindows, openPopout, windowGeometry } from "../windows/windows.ts";
 import { useEffect, useState } from "preact/hooks";
 import { APPEARANCE_EVENT } from "../../app/appearance.ts";
@@ -40,15 +41,15 @@ export function PresetSettings() {
     // Nur die Anordnung ändern: belegte Kacheln und ihre Verbindungen bleiben erhalten.
     window.dispatchEvent(new CustomEvent("ancientvoid:restore-layout", { detail: next.layout }));
   };
-  return <SettingsSection title="Darstellungs- und Layout-Presets">
-    <p class="settings-intro dim">Auf diesem Gerät gespeichert. Import enthält ausschließlich Darstellung und Fenstergrößen.</p>
-    <SettingRow label="Dichte"><select aria-label="Dichte" value={p.density} onChange={e => change({ density: e.currentTarget.value as DevicePreset["density"] })}><option value="comfortable">Komfortabel</option><option value="compact">Kompakt</option></select></SettingRow>
-    <SettingRow label="Chatbreite"><select aria-label="Chatbreite" value={p.chatWidth} onChange={e => change({ chatWidth: e.currentTarget.value as DevicePreset["chatWidth"] })}><option value="full">Volle Breite</option><option value="readable">Lesebreite</option></select></SettingRow>
-    <SettingRow label="Codegröße"><input aria-label="Codegröße" type="range" min="0.85" max="1.3" step="0.05" value={p.codeScale} onInput={e => change({ codeScale: Number(e.currentTarget.value) })} /><output>{Math.round(p.codeScale * 100)} %</output></SettingRow>
-    <SettingRow label="Rundung"><input aria-label="Rundung" type="range" min="0" max="20" value={p.radius} onInput={e => change({ radius: Number(e.currentTarget.value) })} /></SettingRow>
-    <SettingRow label="Rahmenbreite"><input aria-label="Rahmenbreite" type="range" min="1" max="3" value={p.border} onInput={e => change({ border: Number(e.currentTarget.value) })} /></SettingRow>
-    <SettingRow label="Oberflächenfarbe" hint="Wird nur bei lesbarem Textkontrast übernommen."><input type="color" aria-label="Oberflächenfarbe" value={p.surface ?? (p.theme === "dark" ? "#121316" : "#ffffff")} onChange={e => change({ surface: e.currentTarget.value })} /><Button onClick={() => change({ surface: null })}>Standardfläche</Button></SettingRow>
-    <SettingRow label="Lokales Hintergrundbild" hint="PNG, JPEG oder WebP; maximal 500 KB."><input type="file" aria-label="Lokales Hintergrundbild" accept="image/png,image/jpeg,image/webp" onChange={e => {
+  return <SettingsSection title={t("settings.appearance_layout_presets")}>
+    <p class="settings-intro dim">{t("settings.saved_on_device")}</p>
+    <SettingRow label={t("settings.density")}><select aria-label={t("settings.density")} value={p.density} onChange={e => change({ density: e.currentTarget.value as DevicePreset["density"] })}><option value="comfortable">{t("settings.comfortable")}</option><option value="compact">{t("settings.compact")}</option></select></SettingRow>
+    <SettingRow label={t("settings.chat_width")}><select aria-label={t("settings.chat_width")} value={p.chatWidth} onChange={e => change({ chatWidth: e.currentTarget.value as DevicePreset["chatWidth"] })}><option value="full">{t("settings.full_width")}</option><option value="readable">{t("settings.reading_width")}</option></select></SettingRow>
+    <SettingRow label={t("settings.code_size")}><input aria-label={t("settings.code_size")} type="range" min="0.85" max="1.3" step="0.05" value={p.codeScale} onInput={e => change({ codeScale: Number(e.currentTarget.value) })} /><output>{Math.round(p.codeScale * 100)} %</output></SettingRow>
+    <SettingRow label={t("settings.corner_radius")}><input aria-label={t("settings.corner_radius")} type="range" min="0" max="20" value={p.radius} onInput={e => change({ radius: Number(e.currentTarget.value) })} /></SettingRow>
+    <SettingRow label={t("settings.border_width")}><input aria-label={t("settings.border_width")} type="range" min="1" max="3" value={p.border} onInput={e => change({ border: Number(e.currentTarget.value) })} /></SettingRow>
+    <SettingRow label={t("settings.surface_color")} hint="Wird nur bei lesbarem Textkontrast übernommen."><input type="color" aria-label={t("settings.surface_color")} value={p.surface ?? (p.theme === "dark" ? "#121316" : "#ffffff")} onChange={e => change({ surface: e.currentTarget.value })} /><Button onClick={() => change({ surface: null })}>{t("settings.default_surface")}</Button></SettingRow>
+    <SettingRow label={t("settings.local_background")} hint="PNG, JPEG oder WebP; maximal 500 KB."><input type="file" aria-label={t("settings.local_background")} accept="image/png,image/jpeg,image/webp" onChange={e => {
       const file = e.currentTarget.files?.[0];
       if (!file) return;
       if (file.size > 500_000 || !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setMessage("Nur PNG/JPEG/WebP bis 500 KB erlaubt."); return; }
@@ -56,20 +57,20 @@ export function PresetSettings() {
       reader.onerror = () => setMessage("Bild konnte nicht gelesen werden.");
       reader.onload = () => change({ background: String(reader.result) });
       reader.readAsDataURL(file);
-    }} /><Button onClick={() => change({ background: null })}>Bild entfernen</Button></SettingRow>
-    <div class="preset-actions"><Button onClick={() => attempt(() => setPreset(defaultPreset()))}>Darstellung zurücksetzen</Button>
-      <Button onClick={() => { const next = { ...defaultPreset(), theme: "light" as const }; attempt(() => setPreset(next)); }}>Hell</Button>
-      <Button onClick={() => attempt(() => setPreset(defaultPreset()))}>Dunkel</Button>
+    }} /><Button onClick={() => change({ background: null })}>{t("settings.remove_image")}</Button></SettingRow>
+    <div class="preset-actions"><Button onClick={() => attempt(() => setPreset(defaultPreset()))}>{t("settings.reset_appearance")}</Button>
+      <Button onClick={() => { const next = { ...defaultPreset(), theme: "light" as const }; attempt(() => setPreset(next)); }}>{t("settings.light")}</Button>
+      <Button onClick={() => attempt(() => setPreset(defaultPreset()))}>{t("settings.dark")}</Button>
     </div>
-    <label>Preset-Name<input aria-label="Preset-Name" maxLength={60} value={name} onInput={e => setName(e.currentTarget.value)} /></label>
-    <Button disabled={!name.trim() || (Object.keys(saved).length >= 20 && !Object.hasOwn(saved, name.trim()))} onClick={() => attempt(() => store({ ...saved, [name.trim()]: parsePreset(JSON.stringify(capture())) }))}>Darstellung und Layout speichern</Button>
-    {Object.entries(saved).map(([title, preset]) => <div class="preset-actions" key={title}><span>{title}</span><Button aria-label={`Preset anwenden: ${title}`} onClick={() => attempt(() => { setPreset(preset); restoreLayout(preset); })}>Anwenden</Button><Button aria-label={`Preset löschen: ${title}`} onClick={() => attempt(() => store(Object.fromEntries(Object.entries(saved).filter(([k]) => k !== title))))}>Löschen</Button></div>)}
-    <p class="dim">Fenster-Preset „Handy“: neue Browser-Fenster mit 390 × 844 Pixeln, an die Anzeige angepasst.</p>
-    <Button onClick={() => change({ layout: { ...p.layout, window: { left: 0, top: 0, width: 390, height: 844 } } })}>Browser-Fenster-Preset Handy</Button>
-    {(p.windows ?? []).map((w, i) => <Button key={i} onClick={() => { void openPopout(w.target, undefined, w.geometry).then(result => setMessage(result === "blocked" ? "Fenster blockiert — bitte Pop-ups für diese Seite erlauben." : "Fenster wiederhergestellt.")); }}>Fenster {i + 1} wiederherstellen ({w.target.kind})</Button>)}
-    <label>Preset-JSON<textarea aria-label="Preset-JSON" rows={5} value={json} onInput={e => setJson(e.currentTarget.value)} /></label>
-    <div class="preset-actions"><Button onClick={() => attempt(() => setJson(JSON.stringify(parsePreset(JSON.stringify(capture())), null, 2)))}>Preset exportieren</Button>
-    <Button disabled={!json.trim()} onClick={() => attempt(() => { const next = parsePreset(json); setPreset(next); restoreLayout(next); })}>Preset importieren</Button></div>
-    {message && <p role="status" aria-label="Preset-Status">{message}</p>}
+    <label>{t("settings.preset_name")}<input aria-label={t("settings.preset_name")} maxLength={60} value={name} onInput={e => setName(e.currentTarget.value)} /></label>
+    <Button disabled={!name.trim() || (Object.keys(saved).length >= 20 && !Object.hasOwn(saved, name.trim()))} onClick={() => attempt(() => store({ ...saved, [name.trim()]: parsePreset(JSON.stringify(capture())) }))}>{t("settings.save_appearance")}</Button>
+    {Object.entries(saved).map(([title, preset]) => <div class="preset-actions" key={title}><span>{title}</span><Button aria-label={`Preset anwenden: ${title}`} onClick={() => attempt(() => { setPreset(preset); restoreLayout(preset); })}>{t("settings.apply")}</Button><Button aria-label={`Preset löschen: ${title}`} onClick={() => attempt(() => store(Object.fromEntries(Object.entries(saved).filter(([k]) => k !== title))))}>{t("common.delete")}</Button></div>)}
+    <p class="dim">{t("settings.phone_preset")}</p>
+    <Button onClick={() => change({ layout: { ...p.layout, window: { left: 0, top: 0, width: 390, height: 844 } } })}>{t("settings.browser_preset_phone")}</Button>
+    {(p.windows ?? []).map((w, i) => <Button key={i} onClick={() => { void openPopout(w.target, undefined, w.geometry).then(result => setMessage(result === "blocked" ? "Fenster blockiert — bitte Pop-ups für diese Seite erlauben." : "Fenster wiederhergestellt.")); }}>{t("common.windows")} {i + 1} {t("settings.restore_open")}{w.target.kind})</Button>)}
+    <label>{t("settings.preset_json")}<textarea aria-label={t("settings.preset_json")} rows={5} value={json} onInput={e => setJson(e.currentTarget.value)} /></label>
+    <div class="preset-actions"><Button onClick={() => attempt(() => setJson(JSON.stringify(parsePreset(JSON.stringify(capture())), null, 2)))}>{t("settings.export_preset")}</Button>
+    <Button disabled={!json.trim()} onClick={() => attempt(() => { const next = parsePreset(json); setPreset(next); restoreLayout(next); })}>{t("settings.import_preset")}</Button></div>
+    {message && <p role="status" aria-label={t("settings.preset_status")}>{message}</p>}
   </SettingsSection>;
 }

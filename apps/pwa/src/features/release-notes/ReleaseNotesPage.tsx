@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { ReleaseNotesDetail, ReleaseNotesEntry, ReleaseNotesListReport } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
@@ -56,7 +57,7 @@ export function ReleaseNotesPage() {
     const sha = entry.mergeSha;
     setExpanded((cur) => (cur === sha ? null : sha));
     if (details.has(sha) || !project) return;
-    setDetails((cur) => new Map(cur).set(sha, "lade…"));
+    setDetails((cur) => new Map(cur).set(sha, t("common.loading_short")));
     hubApi
       .releaseNotesDetail(`project=${encodeURIComponent(project)}`, sha)
       .then((d) => setDetails((cur) => new Map(cur).set(sha, d)))
@@ -68,18 +69,18 @@ export function ReleaseNotesPage() {
   const label = useMemo(() => (path: string) => projects.find((p) => p.path === path)?.name ?? path, [projects]);
 
   return (
-    <section class="rn-page" data-testid="release-notes-page" aria-label="Release-Notes">
+    <section class="rn-page" data-testid="release-notes-page" aria-label={t("common.release_notes")}>
       <header class="rn-head-page">
-        <h2>Release-Notes</h2>
+        <h2>{t("common.release_notes")}</h2>
         <label class="rn-project">
-          <span class="rn-project-label">Projekt</span>
+          <span class="rn-project-label">{t("newsession.project")}</span>
           <select
             data-testid="rn-project"
             value={project ?? ""}
             onChange={(e) => setProject((e.currentTarget as HTMLSelectElement).value || null)}
           >
             <option value="" disabled>
-              Projekt wählen…
+              {t("release-notes.choose_project2")}
             </option>
             {projects.map((p) => (
               <option key={p.path} value={p.path}>
@@ -91,13 +92,13 @@ export function ReleaseNotesPage() {
       </header>
 
       {!project && (
-        <EmptyState icon="▤" text="Wähle ein Projekt — seine gemergten PRs erscheinen hier chronologisch." />
+        <EmptyState icon="▤" text={t("release-notes.choose_project")} />
       )}
       {project && error && <EmptyState icon="⚠" text={`Release-Notes nicht lesbar: ${error}`} />}
-      {project && !error && !report && <EmptyState icon="▤" text="Release-Notes werden geladen…" />}
+      {project && !error && !report && <EmptyState icon="▤" text={t("release-notes.loading")} />}
       {project && report?.error && <EmptyState icon="▤" text={report.error} />}
       {project && report && !report.error && report.entries.length === 0 && (
-        <EmptyState icon="▤" text="Keine gemergten Pull-Requests im Verlauf." />
+        <EmptyState icon="▤" text={t("release-notes.no_merged")} />
       )}
       {project && report && !report.error && report.entries.length > 0 && (
         <div class="rn-list">
@@ -109,7 +110,7 @@ export function ReleaseNotesPage() {
                   <span class="rn-summary">{entry.notation.summary}</span>
                 </span>
                 <span class="rn-meta">
-                  {entry.notation.unparsed && <span class="rn-badge rn-unparsed">ohne Notation</span>}
+                  {entry.notation.unparsed && <span class="rn-badge rn-unparsed">{t("release-notes.no_notation")}</span>}
                   {!entry.notation.unparsed && <span class="rn-badge">{notationLine(entry.notation)}</span>}
                   <span class="rn-date">{formatDate(entry.mergedAt)}</span>
                   {statsLine(entry.stats) && <span class="rn-stats">{statsLine(entry.stats)}</span>}
@@ -118,7 +119,7 @@ export function ReleaseNotesPage() {
               {expanded === entry.mergeSha && <PrDetail detail={details.get(entry.mergeSha)} />}
             </article>
           ))}
-          {report.truncated && <p class="rn-truncated">ältere PRs nicht geladen (Cap {report.maxEntries})</p>}
+          {report.truncated && <p class="rn-truncated">{t("release-notes.older_not_loaded")} {report.maxEntries})</p>}
         </div>
       )}
     </section>
@@ -126,15 +127,15 @@ export function ReleaseNotesPage() {
 }
 
 function PrDetail({ detail }: { detail: ReleaseNotesDetail | string | undefined }) {
-  if (detail === undefined) return <div class="rn-detail"><p class="rn-wait">lade…</p></div>;
+  if (detail === undefined) return <div class="rn-detail"><p class="rn-wait">{t("common.loading_short")}</p></div>;
   if (typeof detail === "string") return <div class="rn-detail"><p class="rn-wait">{detail}</p></div>;
   return (
     <div class="rn-detail" data-testid="rn-detail">
-      <h3>Warum</h3>
-      {detail.body ? <Markdown text={detail.body} /> : <p class="rn-nobody">keine PR-Beschreibung im Merge-Commit</p>}
-      {detail.bodyTruncated && <p class="rn-truncated">Beschreibung gekürzt (Cap)</p>}
+      <h3>{t("release-notes.why")}</h3>
+      {detail.body ? <Markdown text={detail.body} /> : <p class="rn-nobody">{t("release-notes.no_pr_desc")}</p>}
+      {detail.bodyTruncated && <p class="rn-truncated">{t("release-notes.desc_truncated")}</p>}
       <h3>
-        Was — {detail.commits.length}
+        {t("release-notes.what")} {detail.commits.length}
         {detail.commitsTruncated ? "+" : ""} {detail.commits.length === 1 ? "Commit" : "Commits"}
       </h3>
       <ul class="rn-commits">
@@ -147,19 +148,19 @@ function PrDetail({ detail }: { detail: ReleaseNotesDetail | string | undefined 
             </span>
             <span class="rn-summary">{c.notation.summary}</span>
             {c.body && <Markdown class="rn-commit-body" text={c.body} />}
-            {c.bodyTruncated && <p class="rn-truncated">Commit-Beschreibung gekürzt (Cap)</p>}
+            {c.bodyTruncated && <p class="rn-truncated">{t("release-notes.commit_desc_truncated")}</p>}
           </li>
         ))}
       </ul>
       {detail.stats && (
         <p class="rn-stats">
           {statsLine(detail.stats)} · {detail.files.length}
-          {detail.filesTruncated ? "+" : ""} {detail.files.length === 1 ? "Datei" : "Dateien"} gelistet
+          {detail.filesTruncated ? "+" : ""} {detail.files.length === 1 ? "Datei" : t("release-notes.files")} {t("release-notes.listed")}
         </p>
       )}
       {detail.files.length > 0 && (
         <details class="rn-files">
-          <summary>Dateien</summary>
+          <summary>{t("release-notes.files")}</summary>
           <ul>
             {detail.files.map((f) => (
               <li key={`${f.status}-${f.path}`}>
@@ -170,7 +171,7 @@ function PrDetail({ detail }: { detail: ReleaseNotesDetail | string | undefined 
               </li>
             ))}
           </ul>
-          {detail.filesTruncated && <p class="rn-truncated">Dateiliste gekürzt (Cap)</p>}
+          {detail.filesTruncated && <p class="rn-truncated">{t("release-notes.filelist_truncated")}</p>}
         </details>
       )}
     </div>

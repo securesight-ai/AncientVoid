@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { recordingSupported, sttStatus } from "../../shared/local-stt.ts";
 import { speechRecognitionSupported } from "../../shared/speech.ts";
@@ -86,10 +87,10 @@ export function SttModeMenu({ onClose }: { onClose: () => void }) {
       class="stt-modus-menue"
       data-testid="stt-modus-menu"
       role="dialog"
-      aria-label="Quelle der Spracheingabe"
+      aria-label={t("stt.voice_source")}
       ref={feld}
     >
-      <div class="stt-modus-head" data-testid="stt-modus-head">Quelle der Spracheingabe</div>
+      <div class="stt-modus-head" data-testid="stt-modus-head">{t("stt.voice_source")}</div>
       <div class="segmented">
         {OPTIONEN.map((o) => (
           <button

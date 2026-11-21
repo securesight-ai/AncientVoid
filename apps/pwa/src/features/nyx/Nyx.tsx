@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import type { ComponentChildren } from "preact";
 import { Sheet, Button } from "../../shared/ui/index.ts";
 import { createPortal } from "preact/compat";
@@ -84,7 +85,7 @@ function NyxItem({ req, session, onDone, onOpen }: { req: ApprovalRequest; sessi
         <div class="nyx-item-elsewhere">
           <span>{req.reasonRequired ? "Braucht eine Begründung." : "Braucht deinen Passkey."}</span>
           <Button onClick={open}>
-            In der Session entscheiden
+            {t("nyx.decide_in_session")}
           </Button>
         </div>
       )}
@@ -118,7 +119,7 @@ function NyxPanel({ online, sessions, approvals, onChanged, onOpen, actions }: {
         {actions}
       </div>
       {queue.length === 0 ? (
-        <p class="dim nyx-empty">Nichts wartet auf dich.</p>
+        <p class="dim nyx-empty">{t("nyx.nothing_waits")}</p>
       ) : (
         <ul class="nyx-list">
           {queue.map((req) => (
@@ -156,7 +157,7 @@ export function NyxButton({ online, sessions, approvals, onChanged }: { online: 
       {/* Ins <body>: die Kopfzeile ist ein eigener Stapelkontext (sticky, z-index 10) — darin läge das Blatt unter dem Dock. */}
       {open &&
         createPortal(
-          <Sheet open onClose={() => setOpen(false)} label="Nyx" class="nyx-sheet">
+          <Sheet open onClose={() => setOpen(false)} label={t("nyx.nyx")} class="nyx-sheet">
             <NyxPanel
               online={online}
               sessions={sessions}
@@ -168,10 +169,10 @@ export function NyxButton({ online, sessions, approvals, onChanged }: { online: 
               }}
               actions={
                 <>
-                  <Button aria-label="Schließen" title="Schließen" onClick={() => setOpen(false)}>
+                  <Button aria-label={t("common.close")} title={t("common.close")} onClick={() => setOpen(false)}>
                     ✕
                   </Button>
-                  <DetachButton target={{ kind: "nyx" }} label="Nyx" onDetached={() => setOpen(false)} />
+                  <DetachButton target={{ kind: "nyx" }} label={t("nyx.nyx")} onDetached={() => setOpen(false)} />
                 </>
               }
             />

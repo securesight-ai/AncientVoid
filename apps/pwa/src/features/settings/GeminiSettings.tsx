@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { SettingRow, SettingsSection } from "./parts.tsx";
 import { hubApi } from "../../shared/api.ts";
@@ -41,28 +42,28 @@ export function GeminiSettings() {
   };
 
   return (
-    <SettingsSection title="Dienste" testid="gemini-settings">
-      <SettingRow label="Gemini · Bilder und Scans lesen">
+    <SettingsSection title={t("settings.services")} testid="gemini-settings">
+      <SettingRow label={t("settings.gemini_reads")}>
         <span class={state?.configured ? "gemini-state ok" : "gemini-state dim"}>{state === null ? "…" : state.configured ? "Schlüssel hinterlegt ✓" : "kein Schlüssel"}</span>
       </SettingRow>
       <div class="dim settings-intro">
-        Nur wenn die lokale Auslese (OCR, PDF, Office) nichts findet, geht die Datei an Google. Kostenloser Schlüssel: aistudio.google.com → „Get API key“.
+        {t("settings.google_fallback")}
       </div>
       <label>
-        API-Schlüssel
+        {t("settings.api_key_full")}
         <input type="password" value={key} onInput={(e) => setKey((e.target as HTMLInputElement).value)} placeholder={state?.configured ? "neuen Schlüssel eingeben, um ihn zu ersetzen" : "AIza…"} autocomplete="off" />
       </label>
       <label>
-        Modell
+        {t("common.model")}
         <input value={model} onInput={(e) => setModel((e.target as HTMLInputElement).value)} autocapitalize="off" autocorrect="off" spellcheck={false} />
       </label>
       <div class="row" style="gap: 8px">
         <Button disabled={busy || (!key.trim() && model === state?.model)} onClick={() => void save({ ...(key.trim() ? { apiKey: key.trim() } : {}), ...(model.trim() && model !== state?.model ? { model: model.trim() } : {}) })} variant="primary" class={busy ? "busy" : undefined}>
-          Speichern
+          {t("common.save")}
         </Button>
         {state?.configured && (
           <Button disabled={busy} onClick={() => void save({ apiKey: null })} variant="danger">
-            Schlüssel entfernen
+            {t("settings.remove_key")}
           </Button>
         )}
       </div>

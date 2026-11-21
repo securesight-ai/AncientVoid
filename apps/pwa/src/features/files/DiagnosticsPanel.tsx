@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { DiagnosticsResult, FileMeta, ProjectTrust } from "@ancientvoid/contracts";
 import type { HubApi } from "../../shared/api.ts";
@@ -52,8 +53,8 @@ export function DiagnosticsPanel({ api, target, meta, result, onResult, onJump, 
       <div class="diag-head">
         <Button onClick={run} disabled={busy} data-testid="diag-run">{busy ? "prüft …" : "Prüfen"}</Button>
         {trust && (
-          <label class="dim" title="tsc kommt aus dem Projekt (node_modules) — Projektcode darf nur mit Freigabe laufen.">
-            <input type="checkbox" checked={trust.trusted} onChange={(e) => void setTrusted((e.target as HTMLInputElement).checked)} data-testid="diag-trust" /> Projekt für Prüfer freigeben
+          <label class="dim" title={t("files.tsc_project")}>
+            <input type="checkbox" checked={trust.trusted} onChange={(e) => void setTrusted((e.target as HTMLInputElement).checked)} data-testid="diag-trust" /> {t("files.approve_project")}
           </label>
         )}
       </div>
@@ -65,9 +66,9 @@ export function DiagnosticsPanel({ api, target, meta, result, onResult, onJump, 
             {result.provider && <span class="dim"> · {result.provider}{result.scope === "syntax" ? " (nur Syntax)" : result.scope === "types" ? " (Typen)" : ""}</span>}
           </div>
           {result.detail && <div class="dim">{result.detail}</div>}
-          {stale && <div class="files-stale" role="alert">Die Datei hat sich seit dieser Prüfung geändert — Ergebnis veraltet, bitte neu prüfen.</div>}
-          {result.otherFiles > 0 && <div class="dim">{result.otherFiles} weitere Meldungen in anderen Dateien des Projektchecks.</div>}
-          {result.truncated && <div class="dim">Liste gekürzt.</div>}
+          {stale && <div class="files-stale" role="alert">{t("files.file_changed_check")}</div>}
+          {result.otherFiles > 0 && <div class="dim">{result.otherFiles} {t("files.more_messages")}</div>}
+          {result.truncated && <div class="dim">{t("files.list_truncated")}</div>}
           <ul class="diag-list">
             {result.diagnostics.map((d, k) => (
               <li key={k} class={`diag-${d.severity}`}>
@@ -82,7 +83,7 @@ export function DiagnosticsPanel({ api, target, meta, result, onResult, onJump, 
                     onFeedbackAdded?.();
                   }}
                 >
-                  zum Feedback
+                  {t("files.to_feedback")}
                 </Chip>
               </li>
             ))}
