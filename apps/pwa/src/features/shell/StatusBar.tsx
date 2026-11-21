@@ -1,3 +1,5 @@
+import { fmtTime } from "../../shared/i18n/format.ts";
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { remoteHost } from "../../shared/api.ts";
 import { StatusDot } from "../../shared/StatusDot.tsx";
@@ -30,25 +32,25 @@ export function StatusBar({ focused, onOpenApprovals }: { focused: TileRef | nul
     ? `${focusName ?? ""} · ${session.adapter}${session.model ? ` · ${session.model}` : ""} · ${displayLabel({ status: session.status, question: hub.questionSessions.includes(session.id) })}`
     : "";
   return (
-    <div class="status-bar" role="status" aria-live="off" aria-label="Statusleiste">
-      <span class={`status-item ${hub.connected ? "" : "bad"}`} title={hub.connected ? "Verbindung zum Hub steht" : hub.error}>
+    <div class="status-bar" role="status" aria-live="off" aria-label={t("shell.status_bar")}>
+      <span class={`status-item ${hub.connected ? "" : "bad"}`} title={hub.connected ? t("shell.hub_connected") : hub.error}>
         <span class={`conn-dot ${hub.connected ? "live" : "closed"}`} />
-        {hub.connected ? "verbunden" : `keine Verbindung · Stand ${clockText(hub.lastOkAt)}`}
+        {hub.connected ? t("common.connected") : t("shell.no_connection", { "time": clockText(hub.lastOkAt) })}
       </span>
-      <span class={`status-item ${fleet.problem ? "bad" : ""}`} title="Flotte">
+      <span class={`status-item ${fleet.problem ? "bad" : ""}`} title={t("shell.fleet")}>
         {fleet.text}
       </span>
-      <span class="status-item" title="Sessions nach Zustand">
-        {counts.working} läuft · {counts.waiting} wartet · {counts.error} Fehler · {counts.idle} bereit
+      <span class="status-item" title={t("shell.sessions_by_state")}>
+        {counts.working} {t("common.running_dot")} {counts.waiting} {t("common.waiting_dot")} {counts.error} {t("common.errors_dot")} {counts.idle} {t("common.ready")}
       </span>
       {hub.pendingApprovals > 0 && (
         <button class="status-item status-link" type="button" onClick={onOpenApprovals} aria-live="polite">
-          {hub.pendingApprovals} Freigabe{hub.pendingApprovals === 1 ? "" : "n"} offen
+          {hub.pendingApprovals} {t("common.approval")}{hub.pendingApprovals === 1 ? "" : "n"} {t("common.open_count")}
         </button>
       )}
       {windows > 0 && (
-        <span class="status-item status-windows" title="Eigene Fenster">
-          ⧉ {windows} Fenster
+        <span class="status-item status-windows" title={t("shell.own_windows")}>
+          ⧉ {windows} {t("common.windows")}
         </span>
       )}
       <span class="status-spacer" />
@@ -58,7 +60,7 @@ export function StatusBar({ focused, onOpenApprovals }: { focused: TileRef | nul
           {session.model ? ` · ${session.model}` : ""} · <StatusDot status={session.status} question={hub.questionSessions.includes(session.id)} />
         </span>
       )}
-      <span class="status-item dim">{new Date(now).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</span>
+      <span class="status-item dim">{fmtTime(now)}</span>
     </div>
   );
 }

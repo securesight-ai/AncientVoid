@@ -48,7 +48,7 @@ export const CATALOG: ShortcutInfo[] = [
   { id: "workspace.tile-swap-3", combo: "Alt+Shift+3", label: "Alt+Umschalt+3", description: "Kachel 3 mit Fokus tauschen", scope: "global" },
   { id: "workspace.tile-swap-4", combo: "Alt+Shift+4", label: "Alt+Umschalt+4", description: "Kachel 4 mit Fokus tauschen", scope: "global" },
   { id: "workspace.layout", combo: "Alt+L", label: "Alt+L", description: "Kachel-Layout weiter-/zurückschalten (Umschalt: rückwärts)", scope: "global", lenientShift: true },
-  { id: "workspace.tile-close", combo: "Alt+W", label: "Alt+W", description: "Fokussierte Kachel leeren", scope: "global" },
+  { id: "workspace.tile-close", combo: "Alt+W", label: "Alt+W", description: "Fokussierte Kachel schließen", scope: "global" },
   { id: "tool.close", combo: "Esc", label: "Esc", description: "Werkzeug-Fläche schließen", scope: "overlay", inInput: true },
   { id: "dock.more-close", combo: "Esc", label: "Esc", description: "Mehr-Blatt im Dock schließen", scope: "overlay", inInput: true },
   { id: "nyx.close", combo: "Esc", label: "Esc", description: "Nyx-Blatt schließen", scope: "overlay", inInput: true },

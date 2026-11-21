@@ -54,6 +54,8 @@ export const PushSubscribeInput = z.object({
   quiet: z.object({ from: z.number().int().min(0).max(1439), to: z.number().int().min(0).max(1439), tzOffsetMinutes: z.number().int().min(-840).max(840) }).nullable().optional(),
   /** Also push when a turn is done (default: only approvals and errors). */
   done: z.boolean().optional(),
+  /** EPIC-P61 / ADR-0101: language for hub-rendered push texts. */
+  locale: z.enum(["de", "en"]).optional(),
 });
 export type PushSubscribeInput = z.infer<typeof PushSubscribeInput>;
 
@@ -71,6 +73,8 @@ export interface PushSubscriptionView {
   /** The push service said it no longer exists (404/410). */
   gone: boolean;
   mine: boolean;
+  /** EPIC-P61 / ADR-0101: language the hub uses when it renders push texts for this subscription. */
+  locale: "de" | "en";
 }
 
 export interface PushPayload {
@@ -78,6 +82,9 @@ export interface PushPayload {
   category: PushCategory;
   sessionId: string;
   hostId: string;
+  /** EPIC-P61 / ADR-0101: rendered from the server catalog in the subscription's language. */
+  title?: string;
+  body?: string;
 }
 
 /** Is `now` inside the quiet hours (device-local)? */

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { StatisticsPage } from "../statistics/StatisticsPage.tsx";
 import { CreateSession } from "../new-session/CreateSession.tsx";
 import { ApprovalQueuePane } from "../approvals/Approvals.tsx";
@@ -19,7 +20,7 @@ import { ReleaseNotesPage } from "../release-notes/ReleaseNotesPage.tsx";
 import { useHubStatus } from "./hub-status.ts";
 
 const TITLES: Partial<Record<ListPage, string>> = {
-  new: "Neue Session",
+  new: t("common.new_session"),
   approvals: "Freigaben",
   statistics: "Statistik",
   settings: "Einstellungen",
@@ -29,10 +30,10 @@ const TITLES: Partial<Record<ListPage, string>> = {
   vault: "Notizen",
   teams: "Agenten-Teams",
   automationen: "Automationen",
-  aimetrics: "Metrik",
-  inference: "Inferenz",
-  terminal: "Terminal",
-  releasenotes: "Release-Notes",
+  aimetrics: t("common.metrics"),
+  inference: t("common.inference"),
+  terminal: t("common.terminal"),
+  releasenotes: t("common.release_notes"),
 };
 
 /**
@@ -47,7 +48,7 @@ export function ToolPane({
   vaultFile = null,
   vaultTab = "notizen",
   onPopout,
-  closeLabel = "Schließen",
+  closeLabel = t("common.close"),
   escCloses = true,
   closeButton = escCloses,
   initialHash,
@@ -90,12 +91,12 @@ export function ToolPane({
         <h2>{title}</h2>
         <span >
           {onPopout && (
-            <button type="button" class="tool-pane-popout" aria-label="In eigenem Fenster öffnen" title="In eigenem Fenster öffnen" onClick={onPopout}>
+            <button type="button" class="tool-pane-popout" aria-label={t("common.open_in_window")} title={t("common.open_in_window")} onClick={onPopout}>
               ⧉
             </button>
           )}
           {closeButton && (
-            <button type="button" class="tool-pane-close" aria-label={closeLabel} title={`${closeLabel} (${comboLabel("tool.close")})`} aria-keyshortcuts={ariaCombo("tool.close")} data-shortcut="tool.close" onClick={onClose}>
+            <button type="button" class="tool-pane-close" aria-label={closeLabel} title={t("common.close_combo", { "label": closeLabel, "combo": comboLabel("tool.close") })} aria-keyshortcuts={ariaCombo("tool.close")} data-shortcut="tool.close" onClick={onClose}>
               ×
             </button>
           )}

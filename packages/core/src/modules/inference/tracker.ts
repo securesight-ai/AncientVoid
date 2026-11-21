@@ -86,7 +86,9 @@ export function createInferenceTracker(
   let timer: ReturnType<typeof setInterval> | null = null;
 
   async function hole(q: Quelle): Promise<EngineReading> {
-    const headers: Record<string, string> = { accept: "application/json, text/plain" };
+    // Accept strikt nach Quelle: Strata liefert auf „text/plain“ seine Prometheus-
+    // Exposition statt des JSON-Snapshots (im Live-Betrieb gegen die Engine beobachtet).
+    const headers: Record<string, string> = { accept: q.kind === "strata" ? "application/json" : "text/plain; version=0.0.4" };
     if (q.apiKeyFile) {
       const key = (await deps.readFile(q.apiKeyFile))?.trim();
       if (!key) throw new Error(`Schlüsseldatei ${q.apiKeyFile} ist leer oder fehlt`);

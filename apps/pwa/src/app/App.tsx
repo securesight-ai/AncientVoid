@@ -1,3 +1,4 @@
+import { t } from "../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { hubApi, type AdapterInfo, type AdapterUsage, type ApprovalRequest, type FleetHost, type SessionRecord } from "../shared/api.ts";
 import { Dashboard } from "../features/overview/Dashboard.tsx";
@@ -145,7 +146,7 @@ export function App({
       <div class="topbar">
         {/* EPIC-P23 T23.1: "AncientVoid" leads to the overview from everywhere, the last session marked there. */}
         <h1>
-          <button class="brand-link" type="button" title="Zur Übersicht" onClick={() => setPage("dashboard")}>
+          <button class="brand-link" type="button" title={t("app.to_overview")} onClick={() => setPage("dashboard")}>
             <img class="brand-logo" src="/assets/logo.webp" alt="" width="28" height="28" />
             <span class="brand-name">AncientVoid</span>
           </button>
@@ -157,17 +158,17 @@ export function App({
            * sit inline on the Dashboard, dominating small screens before
            * any session ever showed — moved to its own page, reached from
            * here. */}
-          <button class="link-btn command-open" type="button" onClick={openCommandBar} aria-label="Auftrag in Worten (Strg+K)" title="Auftrag in Worten (Strg+K)">
+          <button class="link-btn command-open" type="button" onClick={openCommandBar} aria-label={t("common.voice_order")} title={t("common.voice_order")}>
             ✦
           </button>
-          <button class="link-btn" onClick={() => setPage("status")} title="Provider-Status">
-            Status
+          <button class="link-btn" onClick={() => setPage("status")} title={t("common.provider_status")}>
+            {t("common.status")}
           </button>
           {/* Real connection health, not a decorative always-green dot — same
            * classes SessionTail already uses for its own WS status. */}
-          <span class={`conn-dot ${error ? "closed" : "live"}`} title={error ? error : "verbunden"} />
+          <span class={`conn-dot ${error ? "closed" : "live"}`} title={error ? error : t("common.connected")} />
           {/* EPIC-P43 T43.7: die Warteschlange als eigenes Fenster (nur am PC, letzte Taste im Kopf). */}
-          {shown === "dashboard" && <DetachButton target={{ kind: "queue" }} label="Warteschlange" />}
+          {shown === "dashboard" && <DetachButton target={{ kind: "queue" }} label={t("common.queue")} />}
           {/* EPIC-P64 T64.4: am PC mit sichtbarer Liste sitzt die Glocke als
            * Flusselement rechts im Kopf der Listenspalte — kein Overlay. */}
           {bell && <NotificationCenter flow />}
@@ -178,7 +179,7 @@ export function App({
         <div class="card" data-testid="load-error" role="alert" style="color: var(--err)">
           {error}{" "}
           <Button onClick={() => setRetry((n) => n + 1)}>
-            Erneut versuchen
+            {t("common.retry")}
           </Button>
         </div>
       )}
@@ -211,7 +212,7 @@ export function App({
       {shown === "releasenotes" && <ReleaseNotesPage />}
       {shown === "dashboard" &&
         (sessions === null ? (
-          <div class="empty">lade…</div>
+          <div class="empty">{t("common.loading_short")}</div>
         ) : (
           <Dashboard
             sessions={sessions}

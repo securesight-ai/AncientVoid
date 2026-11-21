@@ -1,7 +1,5 @@
 // EPIC-P79 (ADR-0102): Token-Tempo lokaler Inferenz — Katalog Deutsch.
 export const de = {
-  "inference.dock": "Inferenz",
-  "inference.dockTitle": "Token-Tempo der Inferenz-Engines: Decode, Vorbehandlung, KV-Reuse",
   "inference.title": "Token-Tempo der Inferenz",
   "inference.hint": "Gemessen an den Engines, die der Hub beprobt. Verteilungen rechnen über eigene Request-Historie, nicht über Gegenwerte.",
   "inference.empty.loading": "lädt …",
@@ -88,6 +86,7 @@ export const de = {
   "inference.asymptote.overhead": "Vorlauf",
   "inference.asymptote.guete": "Güte R²",
   "inference.asymptote.hint": "Anpassung Zeit ≈ Vorlauf + gelesene Token / Durchsatz",
+"inference.card.grenzen": "Was diese Quelle nicht meldet",
   "inference.card.protocol": "Letzte Anfragen",
   "inference.card.protocolHint": "abgeschlossene Anfragen, newest zuerst",
   "inference.protocol.leer": "keine Anfragen im Fenster",

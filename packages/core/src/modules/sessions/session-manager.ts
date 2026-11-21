@@ -26,7 +26,7 @@ import { createConsoleLogger } from "../../platform/index.ts";
 import { dedupeDiscovered, filterDiscovered, pageDiscovered } from "../discovery/index.ts";
 import { resolveSkillChain, withSkillChain } from "../skills/index.ts";
 import { notificationFor, projectName, type NotificationDraft } from "../notifications/index.ts";
-import { parseNotificationAction } from "../notifications/index.ts";
+import { parseNotificationAction, parseNotificationParams } from "../notifications/index.ts";
 import { deriveTurnMetrics, TurnMetricStore } from "../runs/index.ts";
 import { buildHandoverPrompt, HANDOVER_PROMPT_MAX } from "../handover/index.ts";
 import { SessionQueue, type QueuedPrompt } from "./session-queue.ts";
@@ -2026,10 +2026,10 @@ export class SessionManager {
     const ctx = { adapter: session.record.adapter, project: session.record.project };
     const store = (draft: NotificationDraft, ts: string) => {
       const res = this.db
-        .prepare("INSERT INTO notifications (session_id, level, title, detail, kind, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-        .run(session.record.id, draft.level, draft.title, draft.detail, draft.kind, ts);
+        .prepare("INSERT INTO notifications (session_id, level, title, detail, kind, created_at, message_key, params) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+        .run(session.record.id, draft.level, draft.title, draft.detail, draft.kind, ts, draft.messageKey ?? null, draft.params ? JSON.stringify(draft.params) : null);
       // T8.3: push and other listeners — after it is stored, never blocking.
-      const stored: HubNotification = { id: Number(res.lastInsertRowid), sessionId: session.record.id, level: draft.level, title: draft.title, detail: draft.detail, kind: draft.kind, createdAt: ts };
+      const stored: HubNotification = { id: Number(res.lastInsertRowid), sessionId: session.record.id, level: draft.level, title: draft.title, detail: draft.detail, kind: draft.kind, createdAt: ts, ...(draft.messageKey ? { messageKey: draft.messageKey } : {}), ...(draft.params ? { params: draft.params } : {}) };
       for (const listener of this.notificationListeners) {
         void Promise.resolve()
           .then(() => listener(stored))
@@ -2135,6 +2135,8 @@ export class SessionManager {
       kind: string;
       created_at: string;
       action: string | null;
+      message_key: string | null;
+      params: string | null;
     }[];
     const last = this.db.prepare("SELECT MAX(id) AS id FROM notifications").get() as { id: number | null };
     return {
@@ -2148,6 +2150,9 @@ export class SessionManager {
         createdAt: row.created_at,
         // EPIC-P67 T67.6: Aktionsknopf — kaputter JSON-Stand gilt als "keine Aktion", nie als Absturz der Liste
         action: parseNotificationAction(row.action),
+        // EPIC-P61 T61.7 / ADR-0101: Katalogschlüssel + Params — kaputter JSON-Stand gilt als "keine Params".
+        ...(row.message_key ? { messageKey: row.message_key } : {}),
+        ...(() => { const p = parseNotificationParams(row.params); return p ? { params: p } : {}; })(),
       })),
       lastId: last.id ?? 0,
     };
@@ -2163,9 +2168,9 @@ export class SessionManager {
     if (!this.get(sessionId)) return null;
     const ts = new Date().toISOString();
     const res = this.db
-      .prepare("INSERT INTO notifications (session_id, level, title, detail, kind, created_at, action) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .run(sessionId, draft.level, draft.title, draft.detail, draft.kind, ts, action ? JSON.stringify(action) : null);
-    const stored: HubNotification = { id: Number(res.lastInsertRowid), sessionId, level: draft.level, title: draft.title, detail: draft.detail, kind: draft.kind, createdAt: ts, ...(action ? { action } : {}) };
+      .prepare("INSERT INTO notifications (session_id, level, title, detail, kind, created_at, action, message_key, params) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(sessionId, draft.level, draft.title, draft.detail, draft.kind, ts, action ? JSON.stringify(action) : null, draft.messageKey ?? null, draft.params ? JSON.stringify(draft.params) : null);
+    const stored: HubNotification = { id: Number(res.lastInsertRowid), sessionId, level: draft.level, title: draft.title, detail: draft.detail, kind: draft.kind, createdAt: ts, ...(action ? { action } : {}), ...(draft.messageKey ? { messageKey: draft.messageKey } : {}), ...(draft.params ? { params: draft.params } : {}) };
     for (const listener of this.notificationListeners) {
       void Promise.resolve()
         .then(() => listener(stored))

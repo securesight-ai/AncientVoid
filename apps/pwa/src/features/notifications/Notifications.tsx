@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { hubApi, hostApi, type HubNotification } from "../../shared/api.ts";
+import { t, resolveNotificationTitle } from "../../shared/i18n/index.ts";
+import { fmtDate } from "../../shared/i18n/format.ts";
 import { sessionHash } from "../../app/route.ts";
 import { registerShortcut } from "../../shared/shortcuts/registry.ts";
 import { useOverlayFocus } from "../../shared/overlay-focus.ts";
@@ -57,10 +59,10 @@ function saveReadMarks(marks: Record<string, number>): void {
 
 function timeAgo(iso: string, now = Date.now()): string {
   const seconds = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
-  if (seconds < 60) return "gerade eben";
-  if (seconds < 3600) return `vor ${Math.floor(seconds / 60)} min`;
-  if (seconds < 86_400) return `vor ${Math.floor(seconds / 3600)} h`;
-  return new Date(iso).toLocaleDateString("de-DE");
+  if (seconds < 60) return t("time.now");
+  if (seconds < 3600) return t("time.minutes_ago", { "n": Math.floor(seconds / 60) });
+  if (seconds < 86_400) return t("time.hours_ago", { "n": Math.floor(seconds / 3600) });
+  return fmtDate(iso);
 }
 
 /** T8.1: at most two toasts over the content — errors first; the rest
@@ -84,7 +86,7 @@ function visibleToasts<T extends { level: string }>(toasts: T[]): T[] {
 /** Nutzerwunsch 2026-11-20: vier Abschnitte mit fester Farbbedeutung —
  * Fehler (rot), Rückfrage (blau), Fertig (grün), Sonstiges (gelb); die Farbe
  * trägt die CSS-Klasse je Abschnitt (14-notifications.css). */
-export const SECTION_LABEL: Record<SectionKey, string> = { errors: "Fehler", questions: "Rückfrage", done: "Fertig", rest: "Sonstiges" };
+export const SECTION_LABEL: Record<SectionKey, string> = { errors: t("notifications.section_errors"), questions: t("notifications.section_question"), done: t("notifications.section_done"), rest: t("notifications.section_rest") };
 export function NotificationCenter({ corner = false, flow = false }: { corner?: boolean; flow?: boolean }) {
   const [items, setItems] = useState<FleetNotification[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -162,7 +164,7 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
       ...n,
       hostId,
       key: `${key}#${n.id}`,
-      title: hostId ? `${hostId} · ${n.title}` : n.title,
+      title: hostId ? `${hostId} · ${resolveNotificationTitle(n)}` : resolveNotificationTitle(n),
     }));
     // BUG-0222: eine Seite, die ein überlappender Poll nochmal liefert, spielt
     // nichts nach — bereits Gesehenes (id <= known) wird gefiltert, der
@@ -239,14 +241,14 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
         try {
           const page = await hubApi.notifications(lastIds.current[""] ?? 0);
           if (!alive) return;
-          if (failures.current >= HUB_DOWN_AFTER) toast({ key: `hub-${Date.now()}`, level: "success", kind: null, title: "Verbindung zum Hub wieder da", detail: null, sessionId: null, hostId: null });
+          if (failures.current >= HUB_DOWN_AFTER) toast({ key: `hub-${Date.now()}`, level: "success", kind: null, title: t("notifications.hub_back"), detail: null, sessionId: null, hostId: null });
           failures.current = 0;
           take(null, page);
         } catch {
           if (!alive) return;
           failures.current += 1;
           if (failures.current === HUB_DOWN_AFTER) {
-            toast({ key: `hub-${Date.now()}`, level: "warning", kind: null, title: "Hub nicht erreichbar", detail: "Neue Meldungen kommen, sobald er wieder antwortet.", sessionId: null, hostId: null });
+            toast({ key: `hub-${Date.now()}`, level: "warning", kind: null, title: t("notifications.hub_down"), detail: t("notifications.hub_down_detail"), sessionId: null, hostId: null });
           }
         }
         // EPIC-P6 T6.6: other hosts' notifications through this hub. A host
@@ -305,7 +307,7 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
     } catch {
       // Fail loud (AGENTS.md): ein gescheiterter Aktionsruf darf nicht nur den
       // Knopf freigeben — der Nutzer sieht sonst nicht, dass nichts passierte.
-      toast({ key: `action-${n.key}-${Date.now()}`, level: "error", kind: null, title: "Aktion fehlgeschlagen", detail: n.title, sessionId: n.sessionId, hostId: n.hostId });
+      toast({ key: `action-${n.key}-${Date.now()}`, level: "error", kind: null, title: t("notifications.action_failed"), detail: n.title, sessionId: n.sessionId, hostId: n.hostId });
     } finally {
       const done = itemsRef.current.find((i) => i.key === n.key);
       if (done) done.actionBusy = false;
@@ -322,7 +324,7 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
       </button>
       {n.action && (
         <Button class="notif-item-action" disabled={n.actionBusy} onClick={() => void runAction(n)}>
-          {n.actionBusy ? "läuft…" : n.action.label}
+          {n.actionBusy ? t("common.running") : n.action.label}
         </Button>
       )}
     </div>
@@ -373,27 +375,27 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
         ref={bellRef}
         class={`notif-bell${corner ? " corner" : ""}${flow ? " flow" : ""}${urgency ? ` urgency-${urgency}` : ""}`}
         type="button"
-        aria-label={unread > 0 ? `Benachrichtigungen (${unread} neu)` : "Benachrichtigungen"}
-        title="Benachrichtigungen"
+        aria-label={unread > 0 ? t("notifications.unread_count", { "n": unread }) : t("notifications.title")}
+        title={t("notifications.title")}
         onClick={openPanel}
       >
         🔔{unread > 0 && <span class="notif-count">{unread > 9 ? "9+" : unread}</span>}
       </button>
       <div class="toast-stack" role="status" aria-live="polite">
-        {visibleToasts(toasts).map((t) => (
-          <div key={t.key} class={`toast ${t.level}${isQuestionKind(t.kind) ? " question" : ""}`}>
-            <button class="toast-body" type="button" onClick={() => goTo(t.sessionId, t.hostId)}>
-              <strong>{t.title}</strong>
-              {t.detail && <span>{t.detail}</span>}
+        {visibleToasts(toasts).map((toastItem) => (
+          <div key={toastItem.key} class={`toast ${toastItem.level}${isQuestionKind(toastItem.kind) ? " question" : ""}`}>
+            <button class="toast-body" type="button" onClick={() => goTo(toastItem.sessionId, toastItem.hostId)}>
+              <strong>{toastItem.title}</strong>
+              {toastItem.detail && <span>{toastItem.detail}</span>}
             </button>
-            <button class="toast-close" type="button" aria-label="Meldung schließen" onClick={() => setToasts((prev) => prev.filter((x) => x.key !== t.key))}>
+            <button class="toast-close" type="button" aria-label={t("notifications.close")} onClick={() => setToasts((prev) => prev.filter((x) => x.key !== toastItem.key))}>
               ✕
             </button>
           </div>
         ))}
         {toasts.length > TOASTS_SHOWN && (
           <button class="toast-more" type="button" onClick={openPanel}>
-            +{toasts.length - TOASTS_SHOWN} weitere Meldungen
+            +{toasts.length - TOASTS_SHOWN} {t("notifications.more_suffix")}
           </button>
         )}
       </div>
@@ -402,18 +404,18 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
           class={`notif-panel${corner ? " corner" : ""}${flow ? " flow" : ""}`}
           {...(flow && panelPos ? { style: panelPos } : {})}
           role="dialog"
-          aria-label="Benachrichtigungen"
+          aria-label={t("notifications.title")}
           ref={panelRef}
           tabIndex={-1}
         >
           <div class="notif-panel-head">
-            <strong>Benachrichtigungen</strong>
+            <strong>{t("notifications.title")}</strong>
             <Button
               icon
               onClick={toggleSoundMaster}
               aria-pressed={soundMuted}
-              aria-label="Töne stumm oder laut schalten"
-              title="Töne stumm/laut — mehr in den Tone-Einstellungen"
+              aria-label={t("notifications.sound_toggle")}
+              title={t("notifications.sound_toggle_hint")}
               data-testid="notif-sound-toggle"
             >
               {soundMuted ? "🔇" : "🔊"}
@@ -423,7 +425,7 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
             </Button>
           </div>
           {items.length === 0 ? (
-            <div class="ui-empty">noch keine Meldungen</div>
+            <div class="ui-empty">{t("notifications.empty")}</div>
           ) : (
             <>
               {SECTION_KEYS.map((key) => {

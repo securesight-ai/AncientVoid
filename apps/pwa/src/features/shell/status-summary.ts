@@ -1,3 +1,5 @@
+import { fmtTime } from "../../shared/i18n/format.ts";
+import { t } from "../../shared/i18n/index.ts";
 import type { FleetHost, SessionRecord } from "../../shared/api.ts";
 
 /** Session counts for the status bar. Archived sessions are not "in the system" any more. */
@@ -23,12 +25,12 @@ export function countSessions(sessions: readonly SessionRecord[]): SessionCounts
 /** Fleet in one phrase: nothing but this hub reads as "lokal". */
 export function fleetSummary(hosts: readonly FleetHost[]): { text: string; problem: boolean } {
   const remote = hosts.filter((h) => !h.self);
-  if (remote.length === 0) return { text: "lokal", problem: false };
+  if (remote.length === 0) return { text: t("shell.local_only"), problem: false };
   const bad = remote.filter((h) => h.state !== "reachable");
-  return bad.length === 0 ? { text: `${remote.length + 1} Hosts`, problem: false } : { text: `${bad.length} von ${remote.length} Hosts gestört`, problem: true };
+  return bad.length === 0 ? { text: t("shell.hosts_n", { "n": remote.length + 1 }), problem: false } : { text: t("shell.hosts_disturbed", { "bad": bad.length, "total": remote.length }), problem: true };
 }
 
 /** "14:05:12" — when the last good poll was; the bar shows it while the hub is unreachable. */
 export function clockText(at: number | null): string {
-  return at === null ? "nie" : new Date(at).toLocaleTimeString("de-DE");
+  return at === null ? t("common.never") : fmtTime(at, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }

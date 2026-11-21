@@ -1,0 +1,32 @@
+// EPIC-P61 T61.7 (ADR-0101): Server-Katalog Englisch — typgeprüft gegen de.
+import type { de } from "./de.ts";
+
+export const en: Record<keyof typeof de, string> = {
+  "notification.start_failed": "{project} · {adapter}: start failed",
+  "notification.recovery_failed": "{project} · recovery failed",
+  "notification.adapter_down": "{project} · {adapter} is not responding",
+  "notification.session_interrupted": "{project} · session interrupted",
+  "notification.turn_failed": "{project} · turn failed",
+  "notification.turn_done": "{project} · turn done",
+  "notification.question": "{project} · question",
+  "notification.approval_needed": "{project} · approval needed",
+  "notification.loop_hold": "{project} · loop is waiting for you",
+  "notification.loop_broken": "{project} · loop disturbed",
+  "notification.loop_escalated": "{project} · loop escalated (level {level})",
+  "notification.budget_paused": "{project} · budget reached, paused",
+  "notification.applied": "{project} · applied to the project",
+  "notification.writer_takeover": "{project} · device taken over",
+  "notification.operation_uncertain": "{project} · execution uncertain",
+  "notification.operation_rejected": "{project} · action not executed",
+  "notification.recovery_blocked": "{project} · background work failed",
+  "notification.recovered_uncontrollable": "{project} · not controllable after restart",
+  "notification.process_exit": "{project} · {adapter} exited (code {code})",
+  "push.category.approval.title": "AncientVoid — approval needed",
+  "push.category.approval.body": "A session is waiting for your decision.",
+  "push.category.error.title": "AncientVoid — error",
+  "push.category.error.body": "Something went wrong in a session.",
+  "push.category.done.title": "AncientVoid — turn done",
+  "push.category.done.body": "A session is waiting for your next step.",
+  "push.category.test.title": "AncientVoid — test",
+  "push.category.test.body": "Push reaches this device.",
+};

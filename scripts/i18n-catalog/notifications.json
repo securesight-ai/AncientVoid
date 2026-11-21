@@ -1,0 +1,242 @@
+{
+ "area": "notifications",
+ "entries": [
+  {
+   "match": null,
+   "key": "notification.start_failed",
+   "de": "{project} · {adapter}: Start fehlgeschlagen",
+   "en": "{project} · {adapter}: start failed"
+  },
+  {
+   "match": null,
+   "key": "notification.recovery_failed",
+   "de": "{project} · Wiederherstellung fehlgeschlagen",
+   "en": "{project} · recovery failed"
+  },
+  {
+   "match": null,
+   "key": "notification.adapter_down",
+   "de": "{project} · {adapter} antwortet nicht",
+   "en": "{project} · {adapter} is not responding"
+  },
+  {
+   "match": null,
+   "key": "notification.session_interrupted",
+   "de": "{project} · Session unterbrochen",
+   "en": "{project} · session interrupted"
+  },
+  {
+   "match": null,
+   "key": "notification.turn_failed",
+   "de": "{project} · Zug fehlgeschlagen",
+   "en": "{project} · turn failed"
+  },
+  {
+   "match": null,
+   "key": "notification.turn_done",
+   "de": "{project} · Zug fertig",
+   "en": "{project} · turn done"
+  },
+  {
+   "match": null,
+   "key": "notification.question",
+   "de": "{project} · Rückfrage",
+   "en": "{project} · question"
+  },
+  {
+   "match": null,
+   "key": "notification.approval_needed",
+   "de": "{project} · Freigabe nötig",
+   "en": "{project} · approval needed"
+  },
+  {
+   "match": null,
+   "key": "notification.loop_hold",
+   "de": "{project} · Loop wartet auf dich",
+   "en": "{project} · loop is waiting for you"
+  },
+  {
+   "match": null,
+   "key": "notification.loop_broken",
+   "de": "{project} · Loop gestört",
+   "en": "{project} · loop disturbed"
+  },
+  {
+   "match": null,
+   "key": "notification.loop_escalated",
+   "de": "{project} · Loop eskaliert (Stufe {level})",
+   "en": "{project} · loop escalated (level {level})"
+  },
+  {
+   "match": null,
+   "key": "notification.budget_paused",
+   "de": "{project} · Budget erreicht, pausiert",
+   "en": "{project} · budget reached, paused"
+  },
+  {
+   "match": null,
+   "key": "notification.applied",
+   "de": "{project} · ins Projekt übernommen",
+   "en": "{project} · applied to the project"
+  },
+  {
+   "match": null,
+   "key": "notification.writer_takeover",
+   "de": "{project} · Gerät übernommen",
+   "en": "{project} · device taken over"
+  },
+  {
+   "match": null,
+   "key": "notification.operation_uncertain",
+   "de": "{project} · Ausführung ungewiss",
+   "en": "{project} · execution uncertain"
+  },
+  {
+   "match": null,
+   "key": "notification.operation_rejected",
+   "de": "{project} · Aktion nicht ausgeführt",
+   "en": "{project} · action not executed"
+  },
+  {
+   "match": null,
+   "key": "notification.recovery_blocked",
+   "de": "{project} · Hintergrundarbeit fehlgeschlagen",
+   "en": "{project} · background work failed"
+  },
+  {
+   "match": null,
+   "key": "notification.recovered_uncontrollable",
+   "de": "{project} · nach Neustart nicht steuerbar",
+   "en": "{project} · not controllable after restart"
+  },
+  {
+   "match": null,
+   "key": "notification.process_exit",
+   "de": "{project} · {adapter} abgebrochen (Code {code})",
+   "en": "{project} · {adapter} exited (code {code})"
+  },
+  {
+   "match": "weitere Meldungen",
+   "key": "notifications.more_suffix",
+   "de": "weitere Meldungen",
+   "en": "more notifications"
+  },
+  {
+   "match": "Benachrichtigungen",
+   "key": "notifications.title",
+   "de": "Benachrichtigungen",
+   "en": "Notifications"
+  },
+  {
+   "match": "noch keine Meldungen",
+   "key": "notifications.empty",
+   "de": "noch keine Meldungen",
+   "en": "no notifications yet"
+  },
+  {
+   "match": "Meldung schließen",
+   "key": "notifications.close",
+   "de": "Meldung schließen",
+   "en": "Close message"
+  },
+  {
+   "match": "Töne stumm oder laut schalten",
+   "key": "notifications.sound_toggle",
+   "de": "Töne stumm oder laut schalten",
+   "en": "Toggle sounds on or off"
+  },
+  {
+   "match": "Töne stumm/laut — mehr in den Tone-Einstellungen",
+   "key": "notifications.sound_toggle_hint",
+   "de": "Töne stumm/laut — mehr in den Tone-Einstellungen",
+   "en": "Sounds mute/loud — more in sound settings"
+  },
+  {
+   "match": "gerade eben",
+   "key": "time.now",
+   "de": "gerade eben",
+   "en": "just now"
+  },
+  {
+   "match": "Verbindung zum Hub wieder da",
+   "key": "notifications.hub_back",
+   "de": "Verbindung zum Hub wieder da",
+   "en": "Connection to the hub is back"
+  },
+  {
+   "match": "Hub nicht erreichbar",
+   "key": "notifications.hub_down",
+   "de": "Hub nicht erreichbar",
+   "en": "Hub unreachable"
+  },
+  {
+   "match": "Neue Meldungen kommen, sobald er wieder antwortet.",
+   "key": "notifications.hub_down_detail",
+   "de": "Neue Meldungen kommen, sobald er wieder antwortet.",
+   "en": "New messages will arrive as soon as it answers again."
+  },
+  {
+   "match": "Aktion fehlgeschlagen",
+   "key": "notifications.action_failed",
+   "de": "Aktion fehlgeschlagen",
+   "en": "Action failed"
+  },
+  {
+   "match": "läuft…",
+   "key": "common.running",
+   "de": "läuft…",
+   "en": "running…"
+  },
+  {
+   "match": "Fehler",
+   "key": "notifications.section_errors",
+   "de": "Fehler",
+   "en": "Errors"
+  },
+  {
+   "match": "Rückfrage",
+   "key": "notifications.section_question",
+   "de": "Rückfrage",
+   "en": "Question"
+  },
+  {
+   "match": "Fertig",
+   "key": "notifications.section_done",
+   "de": "Fertig",
+   "en": "Done"
+  },
+  {
+   "match": "Sonstiges",
+   "key": "notifications.section_rest",
+   "de": "Sonstiges",
+   "en": "Other"
+  },
+  {
+   "match": "`vor ${Math.floor(seconds / 60)} min`",
+   "key": "time.minutes_ago",
+   "de": "vor {n} min",
+   "en": "{n} min ago",
+   "params": {
+    "Math.floor(seconds / 60)": "n"
+   }
+  },
+  {
+   "match": "`vor ${Math.floor(seconds / 3600)} h`",
+   "key": "time.hours_ago",
+   "de": "vor {n} h",
+   "en": "{n} h ago",
+   "params": {
+    "Math.floor(seconds / 3600)": "n"
+   }
+  },
+  {
+   "match": "`Benachrichtigungen (${unread} neu)`",
+   "key": "notifications.unread_count",
+   "de": "Benachrichtigungen ({n} neu)",
+   "en": "Notifications ({n} new)",
+   "params": {
+    "unread": "n"
+   }
+  }
+ ]
+}

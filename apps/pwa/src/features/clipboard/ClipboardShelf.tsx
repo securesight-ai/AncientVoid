@@ -7,6 +7,8 @@ import { copyImageIntoSystem } from "../../shared/clipboard-copy.ts";
 import { requestAttach } from "../../shared/attach-external.ts";
 import { INGEST_EVENT, erlaubnisLage, ingestEnabled, installClipboardIngest, setIngestEnabled } from "../../shared/clipboard-ingest.ts";
 import { pasteTranscript } from "../stt/paste-target.ts";
+import { discardReplay, reRecognize } from "../stt/replay-recognize.ts";
+import { listRecordings, REPLAY_EVENT, type ReplaySummary } from "../../shared/stt-replay.ts";
 import {
   clearShelf,
   closeClipboardShelf,
@@ -22,13 +24,22 @@ import {
   type ShelfEntry,
 } from "../../shared/clipboard-shelf.ts";
 
-/** Ablage-Stufen dieses Geräts — für Knöpfe ausserhalb des Blatts (Composer). */
+/** Ablage-Einträge dieses Geräts (Stufen und Sprachnachrichten) — für Knöpfe ausserhalb des Blatts (Composer). */
 export function useShelfCount(): number {
   const [count, setCount] = useState(() => visibleShelf().length);
   useEffect(() => {
-    const on = () => setCount(visibleShelf().length);
+    // Sprachnachrichten zählen mit: ihre Zahl am Knopf sagt, dass etwas wartet (ADR-0092-Nachtrag).
+    const on = () => {
+      const stufen = visibleShelf().length;
+      void listRecordings().then((r) => setCount(stufen + r.length));
+    };
+    on();
     window.addEventListener(SHELF_EVENT, on);
-    return () => window.removeEventListener(SHELF_EVENT, on);
+    window.addEventListener(REPLAY_EVENT, on);
+    return () => {
+      window.removeEventListener(SHELF_EVENT, on);
+      window.removeEventListener(REPLAY_EVENT, on);
+    };
   }, []);
   return count;
 }
@@ -77,6 +88,7 @@ function ShelfGlyph() {
 export function ClipboardShelf() {
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<ShelfEntry[]>(() => visibleShelf());
+  const [aufnahmen, setAufnahmen] = useState<ReplaySummary[]>([]);
   // ADR-0093: extern Kopiertes hereinholen — der Schalter bleibt hier sichtbar, weil
   // „die App liest mein Clipboard“ eine Entscheidung ist, keine Selbstverständlichkeit.
   const [an, setAn] = useState(() => ingestEnabled());
@@ -86,6 +98,7 @@ export function ClipboardShelf() {
   const [armed, setArmed] = useState(false);
 
   const sync = () => setEntries(visibleShelf());
+  const syncVoice = () => void listRecordings().then(setAufnahmen);
   // Das Blatt ist appweit montiert — hier hoert die App auf, beim Wiederkommen
   // ins System-Clipboard zu schauen (ADR-0093).
   useEffect(() => installClipboardIngest(), []);
@@ -116,6 +129,11 @@ export function ClipboardShelf() {
       window.removeEventListener(`${OPEN_SHELF_EVENT}:close`, close);
       window.removeEventListener(SHELF_EVENT, sync);
     };
+  }, []);
+  useEffect(() => {
+    window.addEventListener(REPLAY_EVENT, syncVoice);
+    syncVoice();
+    return () => window.removeEventListener(REPLAY_EVENT, syncVoice);
   }, []);
   useEffect(() => {
     if (!armed) return;
@@ -200,6 +218,21 @@ export function ClipboardShelf() {
     setNote("Ablage geleert");
   };
 
+  const [voiceBusy, setVoiceBusy] = useState(false);
+  const voiceNeu = async (aufnahme: ReplaySummary) => {
+    setVoiceBusy(true);
+    try {
+      setNote((await reRecognize(aufnahme)).note);
+    } finally {
+      setVoiceBusy(false);
+      syncVoice();
+    }
+  };
+  const voiceWeg = async (aufnahme: ReplaySummary) => {
+    await discardReplay(aufnahme);
+    syncVoice();
+  };
+
   return (
     <Sheet open={open} onClose={() => setOpen(false)} label="Zwischenablage-Ablage" testid="clipboard-shelf">
       <div class="shelf">
@@ -221,7 +254,7 @@ export function ClipboardShelf() {
           )}
         </header>
 
-        {entries.length === 0 ? (
+        {entries.length === 0 && aufnahmen.length === 0 ? (
           <EmptyState
             icon={<ShelfGlyph />}
             text="Noch nichts abgelegt. Was die App kopiert — Diktat, Markierung, Befehl, Eintrag — liegt eine Stufe tiefer hier; beim Wiederkommen kommt auch extern Kopiertes herein (Text und Screenshot). Token bleiben draußen."
@@ -265,6 +298,44 @@ export function ClipboardShelf() {
           </ul>
         )}
 
+        {aufnahmen.length > 0 && (
+          <div class="shelf-voices">
+            <p class="shelf-sub" data-testid="shelf-voice-sub">
+              {/* i18n-ignore: ADR-0092-Nachtrag — Sprachnachrichten-Abschnitt, t()-Welle steht aus */}
+              Sprachnachrichten — neu erkennen, solange sie da sind (die drei neuesten, höchstens 12 MB)
+            </p>
+            <ul class="shelf-list" data-testid="shelf-voice">
+              {aufnahmen.map((aufnahme) => (
+                <li class="shelf-row" data-testid="shelf-voice-row" key={aufnahme.id}>
+                  <span class="shelf-step" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                      <path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4" />
+                    </svg>
+                  </span>
+                  <div class="shelf-body">
+                    <p class="shelf-text shelf-caption">
+                      {/* i18n-ignore: ADR-0092-Nachtrag — Sprachnachricht-Zeile, t()-Welle steht aus */}
+                      Sprachnachricht · {aufnahme.seconds} s{aufnahme.failed ? " · Erkennung fehlgeschlagen" : ""}
+                    </p>
+                    <div class="shelf-meta">
+                      {/* i18n-ignore: ADR-0092-Nachtrag — Herkunftslabel wie SHELF_ORIGIN_LABEL, t()-Welle steht aus */}
+                      <span class="shelf-origin">Diktat</span>
+                      <span class="dim">{ago(new Date(aufnahme.at).toISOString())}</span>
+                    </div>
+                    <div class="shelf-actions">
+                      {/* i18n-ignore: ADR-0092-Nachtrag — Aktion der Sprachnachricht, t()-Welle steht aus */}
+                      <Button size="sm" data-testid="shelf-voice-run" disabled={voiceBusy} onClick={() => void voiceNeu(aufnahme)}>neu erkennen</Button>
+                      <span class="shelf-dot" aria-hidden="true">·</span>
+                      {/* i18n-ignore: ADR-0092-Nachtrag — Aktion der Sprachnachricht, t()-Welle steht aus */}
+                      <button type="button" class="link-btn shelf-drop" data-testid="shelf-voice-drop" onClick={() => void voiceWeg(aufnahme)}>weg</button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {note && <p class="shelf-note" role="status" data-testid="shelf-note">{note}</p>}
         <div class="shelf-ingest">
           <span>aus anderen Apps übernehmen</span>
@@ -276,7 +347,7 @@ export function ClipboardShelf() {
             : "Beim Wiederkommen wird einmal ins System-Clipboard geschaut (Text und Screenshot). Was kopiert wurde, während die App geschlossen war, kann kein Browser nachholen."}
         </p>
         <p class="shelf-privacy">
-          Nur auf diesem Gerät in diesem Browser — die Ablage geht nie zum Hub. Sichtbar sind {SHELF_LEVELS} Stufen, gemerkt bis {SHELF_MAX}; Bilder liegen getrennt (zwölf Stück, höchstens 24 MB).
+          Nur auf diesem Gerät in diesem Browser — die Ablage geht nie zum Hub. Sichtbar sind {SHELF_LEVELS} Stufen, gemerkt bis {SHELF_MAX}; Bilder liegen getrennt (zwölf Stück, höchstens 24 MB), Sprachnachrichten ebenso (drei neueste, höchstens 12 MB).
         </p>
       </div>
     </Sheet>

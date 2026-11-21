@@ -44,6 +44,11 @@ export function fmtTime(value: Date | number | string, opts: Intl.DateTimeFormat
   return dateFmt(opts).format(new Date(value));
 }
 
+/** Datum + Zeit nach Intl-Konvention der gewählten Sprache. */
+export function fmtDateTime(value: Date | number | string): string {
+  return dateFmt({ day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(value));
+}
+
 /** Zahl nach Intl-Konvention der gewählten Sprache (Tausender etc.). */
 export function fmtNumber(value: number, opts: Intl.NumberFormatOptions = {}): string {
   return numberFmt(opts).format(value);

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { hubApi, remoteHost, type SessionRecord } from "../../shared/api.ts";
 import { StatusDot } from "../../shared/StatusDot.tsx";
@@ -39,7 +40,7 @@ export function SessionStrip({ currentId }: { currentId: string }) {
   }, []);
   const questions = new Set(hub.questionSessions);
   return (
-    <nav class="session-strip" aria-label="Sessions">
+    <nav class="session-strip" aria-label={t("common.sessions_cap")}>
       {stripOrder(sessions).map((s) => {
         const name = s.title ?? projectName(s.project) ?? s.project;
         const here = s.id === currentId;
@@ -59,8 +60,8 @@ export function SessionStrip({ currentId }: { currentId: string }) {
           </button>
         );
       })}
-      <button type="button" class="strip-item strip-new" aria-label="Neue Session" title="Neue Session" onClick={() => (location.hash = pageHash("new"))}>
-        <TabIcon name="neu" />
+      <button type="button" class="strip-item strip-new" aria-label={t("common.new_session")} title={t("common.new_session")} onClick={() => (location.hash = pageHash("new"))}>
+        <TabIcon name={"neu"} />
       </button>
     </nav>
   );

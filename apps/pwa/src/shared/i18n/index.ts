@@ -129,3 +129,24 @@ export function t(key: I18nKey | string, params?: Record<string, string | number
 export function catalogKeys(): string[] {
   return Object.keys(de).sort();
 }
+
+/**
+ * EPIC-P61 T61.7 / ADR-0101: Hub-Nachrichten rendern — Katalogschlüssel zuerst,
+ * ein unbekannter Schlüssel zeigt den mitgelieferten Titel (fail-loud nur im
+ * Dev-Konsolen-Warnpfad von t(), hier schlichter Fallback).
+ */
+export function resolveNotificationTitle(n: { title: string; messageKey?: string | null; params?: Record<string, string | number> | null }): string {
+  if (!n.messageKey) return n.title;
+  const template = lookup(resolveLanguage(), n.messageKey);
+  return template === undefined ? n.title : interpolate(template, n.params ?? undefined);
+}
+
+/**
+ * EPIC-P61 T61.7 / ADR-0101: API-Fehler mit strukturiertem code werden über
+ * `error.<code>` übersetzt; ein unbekannter Code zeigt den Hub-Text unverändert.
+ */
+export function errorText(code: string | undefined, hubMessage: string, params?: Record<string, string | number | undefined>): string {
+  if (!code) return hubMessage;
+  const template = lookup(resolveLanguage(), `error.${code}`);
+  return template === undefined ? hubMessage : interpolate(template, params);
+}

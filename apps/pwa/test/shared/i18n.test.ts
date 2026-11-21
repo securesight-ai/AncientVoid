@@ -1,7 +1,7 @@
 // Tier A. EPIC-P61 T61.2: t(), Plural, Fallback, Browsersprach-Match.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { t, resolveLanguage, matchBrowserLanguage, getLanguageSetting, setLanguageSetting, catalogKeys } from "../../src/shared/i18n/index.ts";
-import { fmtDate, fmtNumber, fmtTime } from "../../src/shared/i18n/format.ts";
+import { t, resolveLanguage, matchBrowserLanguage, getLanguageSetting, setLanguageSetting, catalogKeys, resolveNotificationTitle, errorText } from "../../src/shared/i18n/index.ts";
+import { fmtDate, fmtDateTime, fmtNumber, fmtTime } from "../../src/shared/i18n/format.ts";
 import { en } from "../../src/shared/i18n/en.ts";
 
 function fakeStorage() {
@@ -82,5 +82,60 @@ describe("i18n (EPIC-P61)", () => {
     expect(fmtNumber(1234.5)).toBe("1.234,5");
     setLanguageSetting("en");
     expect(fmtNumber(1234.5)).toBe("1,234.5");
+  });
+
+  it("fmtDateTime: Datum+Zeit folgt der Sprache (EPIC-P61 T61.4)", () => {
+    fakeStorage();
+    const when = "2026-11-21T14:05:00.000Z";
+    setLanguageSetting("de");
+    const de = fmtDateTime(when);
+    expect(de).toContain("21.11.2026");
+    setLanguageSetting("en");
+    const en = fmtDateTime(when);
+    expect(en).not.toBe(de);
+    expect(en).toContain("11/21/2026");
+  });
+});
+
+// EPIC-P61 T61.7 / ADR-0101: Benachrichtigungs-Schlüssel des Hubs leben auch
+// im PWA-Katalog (der Hub sendet messageKey + Params; die PWA rendert in ihrer
+// Sprache, deutscher Titel bleibt Fallback für Alt-Journal).
+describe("EPIC-P61 T61.7: Benachrichtigungs-Schlüssel im PWA-Katalog", () => {
+  it("Deutsch: Schlüssel rendern exakt die bisherigen deutschen Titel", () => {
+    fakeStorage();
+    setLanguageSetting("de");
+    expect(t("notification.start_failed", { project: "tetris", adapter: "fake" })).toBe("tetris · fake: Start fehlgeschlagen");
+    expect(t("notification.turn_done", { project: "tetris" })).toBe("tetris · Zug fertig");
+    expect(t("notification.process_exit", { project: "tetris", adapter: "fake", code: "1" })).toBe("tetris · fake abgebrochen (Code 1)");
+  });
+
+  it("Englisch: derselbe Schlüssel, englische Worte", () => {
+    fakeStorage();
+    setLanguageSetting("en");
+    expect(t("notification.start_failed", { project: "tetris", adapter: "fake" })).toBe("tetris · fake: start failed");
+    expect(t("notification.turn_done", { project: "tetris" })).toBe("tetris · turn done");
+  });
+});
+
+describe("EPIC-P61 T61.7: Titel-Auflösung für Hub-Nachrichten", () => {
+  it("messageKey im Katalog → Katalogtext; unbekannter Schlüssel → deutscher Fallback-Titel", () => {
+    fakeStorage();
+    setLanguageSetting("en");
+    expect(resolveNotificationTitle({ title: "tetris · Zug fertig", messageKey: "notification.turn_done", params: { project: "tetris" } })).toBe("tetris · turn done");
+    expect(resolveNotificationTitle({ title: "tetris · irgendwas Dynamisches", messageKey: "notification.unbekannt" })).toBe("tetris · irgendwas Dynamisches");
+    expect(resolveNotificationTitle({ title: "tetris · Zug fertig" })).toBe("tetris · Zug fertig");
+  });
+});
+
+describe("EPIC-P61 T61.7: error.<code>-Mapping", () => {
+  it("bekannter Code → Katalogtext; unbekannter Code → Hub-Text unverändert", () => {
+    fakeStorage();
+    setLanguageSetting("en");
+    expect(errorText("adapter_not_allowed", "Loop-Adapter sind als Team-Worker nicht freigegeben.")).toBe("Loop adapters are not allowed as team workers.");
+    setLanguageSetting("de");
+    expect(errorText("adapter_not_allowed", "Loop-Adapter sind als Team-Worker nicht freigegeben.")).toBe("Loop-Adapter sind als Team-Worker nicht freigegeben.");
+    setLanguageSetting("en");
+    expect(errorText("brandneuer_code", "Der Hub-Text bleibt, was er ist.")).toBe("Der Hub-Text bleibt, was er ist.");
+    expect(errorText(undefined, "plain hub text")).toBe("plain hub text");
   });
 });

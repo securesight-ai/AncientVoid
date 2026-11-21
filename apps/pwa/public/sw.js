@@ -170,7 +170,10 @@ self.addEventListener("push", (event) => {
   } catch {
     data = {};
   }
-  const text = data.test ? { title: "AncientVoid — Test", body: "Push kommt auf diesem Gerät an." } : PUSH_TEXT[data.category] ?? PUSH_TEXT.error;
+  // EPIC-P61 / ADR-0101: der Hub rendert die Push-Texte selbst (pro Abo-Sprache)
+  und schickt sie mit; die feste Tabelle bleibt der Fallback für ältere Hubs.
+  const text = (data.title ? { title: data.title, body: data.body ?? "" } : null)
+    ?? (data.test ? { title: "AncientVoid — Test", body: "Push kommt auf diesem Gerät an." } : PUSH_TEXT[data.category] ?? PUSH_TEXT.error);
   const host = data.hostId && data.hostId !== "local" ? `/hosts/${encodeURIComponent(data.hostId)}` : "";
   const url = data.sessionId ? `/#${host}/sessions/${encodeURIComponent(data.sessionId)}` : "/#/";
   // BUG-0223: ist ein App-Fenster sichtbar, übernimmt der In-App-Toast —

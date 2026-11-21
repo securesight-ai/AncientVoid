@@ -1,5 +1,6 @@
 import { generateVAPIDKeys, sendNotification } from "web-push";
-import { DEFAULT_PUSH_HOSTS, PUSH_KIND_CATEGORY, inQuietHours, pushHostAllowed, type HubNotification, type PushPayload, type PushSubscribeInput, type PushSubscriptionView } from "@ancientvoid/contracts";
+import { DEFAULT_PUSH_HOSTS, PUSH_KIND_CATEGORY, inQuietHours, pushHostAllowed, type HubNotification, type PushCategory, type PushPayload, type PushSubscribeInput, type PushSubscriptionView } from "@ancientvoid/contracts";
+import { renderServerMessage } from "../notifications/index.ts";
 import type { HubDatabase } from "../../platform/index.ts";
 
 interface Row {
@@ -16,6 +17,7 @@ interface Row {
   last_error_at: string | null;
   gone: number;
   last_notification_id: number;
+  locale: string | null;
 }
 
 /** What actually sends — web-push in production, a fake in tests. */
@@ -81,11 +83,11 @@ export class PushService {
     if (input.oldEndpoint) this.db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").run(input.oldEndpoint);
     this.db
       .prepare(
-        `INSERT INTO push_subscriptions (endpoint, p256dh, auth, device, created_at, quiet, done, gone, last_notification_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 0, (SELECT COALESCE(MAX(id), 0) FROM notifications))
-         ON CONFLICT(endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth, device = excluded.device, quiet = excluded.quiet, done = excluded.done, gone = 0`,
+        `INSERT INTO push_subscriptions (endpoint, p256dh, auth, device, created_at, quiet, done, gone, last_notification_id, locale)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0, (SELECT COALESCE(MAX(id), 0) FROM notifications), ?)
+         ON CONFLICT(endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth, device = excluded.device, quiet = excluded.quiet, done = excluded.done, gone = 0, locale = excluded.locale`,
       )
-      .run(input.endpoint, input.keys.p256dh, input.keys.auth, device, this.now().toISOString(), input.quiet ? JSON.stringify(input.quiet) : null, input.done ? 1 : 0);
+      .run(input.endpoint, input.keys.p256dh, input.keys.auth, device, this.now().toISOString(), input.quiet ? JSON.stringify(input.quiet) : null, input.done ? 1 : 0, input.locale ?? "de");
     return { ok: true };
   }
 
@@ -107,6 +109,7 @@ export class PushService {
       lastErrorAt: r.last_error_at,
       gone: r.gone === 1,
       mine: device !== null && r.device === device,
+      locale: r.locale === "en" ? "en" : "de",
     }));
   }
 
@@ -114,13 +117,13 @@ export class PushService {
   async notify(n: HubNotification): Promise<number> {
     const category = PUSH_KIND_CATEGORY[n.kind];
     if (!category || !this.enabled()) return 0;
-    const payload: PushPayload = { id: n.id, category, sessionId: n.sessionId, hostId: this.opts.hostId ?? "local" };
     const rows = this.db.prepare("SELECT * FROM push_subscriptions WHERE gone = 0 AND last_notification_id < ?").all(n.id) as unknown as Row[];
     let sent = 0;
-    const body = JSON.stringify(payload);
     for (const r of rows) {
       if (category === "done" && r.done !== 1) continue;
       if (inQuietHours(r.quiet ? JSON.parse(r.quiet) : null, this.now())) continue;
+      // EPIC-P61 / ADR-0101: der Hub rendert die Push-Texte selbst — pro Abo in dessen Sprache.
+      const body = JSON.stringify(this.payloadFor(n, r, category!));
       let result = await this.deliver(r, body, n.id);
       // A flaky mobile push service must not swallow an approval request: retry transient failures.
       for (const wait of this.opts.retryDelaysMs ?? [2_000, 10_000, 30_000]) {
@@ -139,10 +142,25 @@ export class PushService {
     let sent = 0;
     const errors: string[] = [];
     for (const r of rows) {
-      if ((await this.deliver(r, JSON.stringify({ id: 0, category: "done", sessionId: "", hostId: this.opts.hostId ?? "local", test: true }), null)) === "ok") sent++;
+      if ((await this.deliver(r, JSON.stringify({ ...this.payloadFor({ id: 0, sessionId: "" }, r, "done", "push.category.test.title", "push.category.test.body"), test: true }), null)) === "ok") sent++;
       else errors.push(this.list(device).find((v) => v.id === r.id)?.lastError ?? "Fehler");
     }
     return { sent, errors };
+  }
+
+  /**
+   * EPIC-P61 / ADR-0101: Payload mit hub-seitig gerendertem Titel — pro Abo in
+   * dessen Sprache. Gerendert wird nur, was Katalogschlüssel ist; Prosadaten
+   * (detail/summary) bleiben aus der Lockscreen-Payload draußen (ADR-0026).
+   */
+  private payloadFor(n: { id: number; sessionId: string; messageKey?: string | null; params?: Record<string, string | number> | null }, r: Row | null, category: PushCategory, titleKey?: string, bodyKey?: string): PushPayload {
+    const locale: "de" | "en" = r?.locale === "en" ? "en" : "de";
+    const payload: PushPayload = { id: n.id, category, sessionId: n.sessionId, hostId: this.opts.hostId ?? "local" };
+    const title = renderServerMessage(titleKey ?? n.messageKey ?? `push.category.${category}.title`, locale, n.params ?? {});
+    const body = renderServerMessage(bodyKey ?? `push.category.${category}.body`, locale, {});
+    if (title) payload.title = title;
+    if (body) payload.body = body;
+    return payload;
   }
 
   private async deliver(r: Row, payload: string, notificationId: number | null): Promise<Delivery> {

@@ -6,6 +6,7 @@ import { clockText, countSessions, fleetSummary } from "../../../src/features/sh
 const store = new Map<string, string>();
 beforeEach(() => {
   store.clear();
+  store.set("ancientvoid.language", "de"); // Tests pinnen die Sprache (EPIC-P61)
   (globalThis as { localStorage?: unknown }).localStorage = {
     getItem: (k: string) => store.get(k) ?? null,
     setItem: (k: string, v: string) => void store.set(k, v),

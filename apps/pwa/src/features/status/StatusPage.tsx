@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import type { DeploymentIdentity } from "@ancientvoid/contracts";
 import { TOOL_GATE_LABEL, featureChips } from "./harness-features.ts";
@@ -15,7 +16,7 @@ import { Card, EmptyState } from "../../shared/ui/index.ts";
  * per provider (capabilities, version) instead of one repetitive line.
  */
 export function StatusPage({ adapters, usage }: { adapters: AdapterInfo[]; usage: Record<string, AdapterUsage> }) {
-  if (adapters.length === 0) return <EmptyState text="lädt …" />;
+  if (adapters.length === 0) return <EmptyState text={t("common.loading")} />;
   return (
     <div class="status-page">
       <DeploymentCard />
@@ -35,19 +36,19 @@ function DeploymentCard() {
     return () => { alive = false; };
   }, []);
   if (!deployment) return null;
-  const short = (sha: string | null) => sha?.slice(0, 8) ?? "unbekannt";
-  return <Card aria-label="Ausgelieferter Stand">
-    <strong>Ausgelieferter Stand</strong>
-    <p>Hub: <code>{short(deployment.runtimeSha)}</code> · PWA: <code>{short(deployment.pwaSha)}</code> · Checkout: <code>{short(deployment.checkoutSha)}</code></p>
-    <p>{deployment.consistent === true ? "Hub und Oberfläche sind auf demselben Stand." : deployment.consistent === false ? "Build oder Neustart ausstehend — Stände weichen ab." : "Build-Zuordnung noch unbekannt."}</p>
+  const short = (sha: string | null) => sha?.slice(0, 8) ?? t("status.unknown");
+  return <Card aria-label={t("status.deployed_build")}>
+    <strong>{t("status.deployed_build")}</strong>
+    <p>{t("status.hub_colon")} <code>{short(deployment.runtimeSha)}</code> {t("status.pwa_colon")} <code>{short(deployment.pwaSha)}</code> {t("status.checkout_colon")} <code>{short(deployment.checkoutSha)}</code></p>
+    <p>{deployment.consistent === true ? t("status.same_build") : deployment.consistent === false ? t("status.build_pending") : t("status.build_unknown")}</p>
   </Card>;
 }
 
 const SUPPORT_LABEL: Record<HarnessInventoryEntry["discovery"], string> = {
-  verified: "belegt",
-  "implemented-unverified": "gebaut, unbelegt",
-  missing: "fehlt",
-  blocked: "blockiert",
+  verified: t("status.occupied"),
+  "implemented-unverified": t("status.built_unverified"),
+  missing: t("status.missing"),
+  blocked: t("status.blocked"),
 };
 
 /** T5.1 / ADR-0012: which harness is installed and what the hub can honestly
@@ -59,31 +60,31 @@ function InventoryCard() {
     hubApi
       .inventory()
       .then((res) => setItems(res.items))
-      .catch((err) => setError(err instanceof Error ? err.message : "Inventar nicht erreichbar"));
+      .catch((err) => setError(err instanceof Error ? err.message : t("status.inventory_unreachable")));
   }, []);
   return (
     <Card>
       <div class="provider-card-head">
-        <strong>Harness-Inventar</strong>
+        <strong>{t("status.harness_inventory")}</strong>
       </div>
       {error && <div class="dim">{error}</div>}
-      {!items && !error && <div class="dim">lädt …</div>}
+      {!items && !error && <div class="dim">{t("common.loading")}</div>}
       {items && (
         <div class="table-scroll">
           <table class="inventory-table">
             <thead>
               <tr>
-                <th>Harness</th>
-                <th>Version</th>
-                <th>Discovery</th>
-                <th>Resume</th>
+                <th>{t("status.harness")}</th>
+                <th>{t("status.version")}</th>
+                <th>{t("status.discovery")}</th>
+                <th>{t("status.resume")}</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item) => (
                 <tr key={item.id} title={item.evidence}>
                   <td>{item.id}</td>
-                  <td class="mono">{item.version ?? "nicht installiert"}</td>
+                  <td class="mono">{item.version ?? t("status.not_installed")}</td>
                   <td class={`support ${item.discovery}`}>{SUPPORT_LABEL[item.discovery]}</td>
                   <td class={`support ${item.resume}`}>{SUPPORT_LABEL[item.resume]}</td>
                 </tr>
@@ -110,8 +111,8 @@ function ProviderCard({ adapter, usage }: { adapter: AdapterInfo; usage?: Adapte
             {label}
           </span>
         ))}
-        {caps.reasoning && <span  class="ui-chip subtle">Reasoning</span>}
-        {caps.cost && <span  class="ui-chip subtle">Kosten</span>}
+        {caps.reasoning && <span  class="ui-chip subtle">{t("status.reasoning")}</span>}
+        {caps.cost && <span  class="ui-chip subtle">{t("status.costs")}</span>}
       </div>
       <div class={caps.features.toolGate === "bypass" ? "tool-gate warn" : "tool-gate dim"}>{TOOL_GATE_LABEL[caps.features.toolGate]}</div>
       <div class="dim">{quotaLine(usage)}</div>
@@ -124,10 +125,10 @@ function ProviderCard({ adapter, usage }: { adapter: AdapterInfo; usage?: Adapte
  * never the same explanatory sentence repeated per adapter like the old
  * Dashboard row did. */
 function quotaLine(usage: AdapterUsage | undefined): string {
-  if (!usage || !usage.supported) return "Kein Kontingent-Signal";
-  if (usage.quota === null) return "Kontingent: noch keine Meldung";
+  if (!usage || !usage.supported) return t("status.no_quota_signal");
+  if (usage.quota === null) return t("status.quota_no_report");
   const windows = usage.quota.windows.map(formatWindow).join(" · ");
   const overage =
-    usage.quota.overageAvailable === false ? ` · ${usage.quota.overageBlockedReason ?? "kein Guthaben"}` : "";
+    usage.quota.overageAvailable === false ? ` · ${usage.quota.overageBlockedReason ?? t("status.no_credit")}` : "";
   return `Kontingent: ${windows}${overage}`;
 }

@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { hubApi, type SessionRecord } from "../../shared/api.ts";
 import { armFirstRun, dismissFirstSignal, FIRST_APPROVAL_EVENT, firstSignalPending } from "../../shared/first-run.ts";
@@ -21,28 +22,28 @@ export function StartGuide({ probeAvailable, onOpen }: { probeAvailable: boolean
       const { projects } = await hubApi.projects();
       const project = projects[0]?.path;
       if (!project) {
-        setError("Kein Projekt gefunden. Lege über „＋“ ein Projekt an oder trage projectRoots in hub.config.json ein.");
+        setError(t("startguide.no_project"));
         return;
       }
       onOpen(await hubApi.createSession({ adapter: "dummy", project }));
     } catch (err) {
-      setError(err instanceof Error ? `Probe-Session nicht gestartet: ${err.message}` : "Probe-Session nicht gestartet.");
+      setError(err instanceof Error ? t("startguide.probe_failed_detail", { "message": err.message }) : t("startguide.probe_failed"));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <Card aria-label="Erste Schritte">
-      <h2 style="margin: 0">Noch keine Sessions</h2>
+    <Card aria-label={t("common.first_steps")}>
+      <h2 style="margin: 0">{t("common.no_sessions_yet")}</h2>
       <p style="margin: 0">
         {probeAvailable
-          ? "Starte eine Probe-Session mit dem Testadapter (dummy) — dafür ist kein Provider nötig. Eine eigene Session legst du über „＋“ an."
-          : "Lege über „＋“ deine erste Session an: Projekt und Provider wählen, Auftrag eingeben, starten."}
+          ? t("startguide.step_probe")
+          : t("startguide.step_create")}
       </p>
       {probeAvailable && (
         <Button  aria-busy={busy} disabled={busy} onClick={() => void startProbe()} variant="primary" class={busy ? "busy" : undefined}>
-          Probe-Session (dummy)
+          {t("common.probe_session")}
         </Button>
       )}
       {error && (
@@ -51,7 +52,7 @@ export function StartGuide({ probeAvailable, onOpen }: { probeAvailable: boolean
         </div>
       )}
       <p class="dim" style="margin: 0">
-        Ganze Anleitung bis zur ersten Freigabe vom Handy: <code>docs/tutorial-erste-schritte.md</code> im Repo.
+        {t("common.full_guide")} <code>{t("startguide.guide_file")}</code> {t("common.in_repo")}
       </p>
     </Card>
   );
@@ -68,7 +69,7 @@ export function FirstSuccessSignal() {
   if (!shown) return null;
   return (
     <Card role="status">
-      <span>Freigabe entschieden — Agent läuft weiter.</span>{" "}
+      <span>{t("common.decided")}</span>{" "}
       <button
         type="button"
         class="link-btn"
@@ -77,7 +78,7 @@ export function FirstSuccessSignal() {
           setShown(false);
         }}
       >
-        Schließen
+        {t("common.close")}
       </button>
     </Card>
   );

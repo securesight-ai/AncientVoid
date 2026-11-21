@@ -298,7 +298,7 @@
  * (20) — und weil er einen Stapelkontext bildet, kommt kein Menuepunkt darin ueber die
  * Steuerung hinweg, gleichgueltig wie hoch sein eigener z-Wert ist. Gemessen im
  * Funktionsinventar (PC-Form, zweite Kachel): Menupunkt gefunden, sichtbar, stabil — aber
- * `dock-toggle`, `draft-state` und `reply-templates` fangen die Zeigerereignisse ab. Also
+ * `dock-toggle` und die Meldungen ueber der Eingabe fangen die Zeigerereignisse ab. Also
  * den Kopf erheben, solange dort ein Menue geoeffnet ist. */
 .session-topbar:has(.subtabs-more),
 .session-topbar:has(.session-menu[open]) {

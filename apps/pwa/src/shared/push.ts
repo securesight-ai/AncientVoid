@@ -1,4 +1,5 @@
 import { hubApi } from "./api.ts";
+import { resolveLanguage } from "./i18n/index.ts";
 
 /** T8.3: what this browser can do with Web Push. */
 export function pushSupport(): "ok" | "unsupported" | "denied" {
@@ -44,6 +45,8 @@ export async function subscribeThisDevice(publicKey: string, oldEndpoint?: strin
     ...(oldEndpoint && oldEndpoint !== json.endpoint ? { oldEndpoint } : {}),
     quiet: prefs.quiet ? { ...prefs.quiet, tzOffsetMinutes: new Date().getTimezoneOffset() } : null,
     done: prefs.done,
+    // EPIC-P61 / ADR-0101: der Hub rendert Push-Texte in der Sprache dieses Geräts.
+    locale: resolveLanguage(),
   });
 }
 

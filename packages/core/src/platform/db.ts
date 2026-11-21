@@ -612,6 +612,18 @@ export const MIGRATIONS: Migration[] = [
     // Bestand vor der Migration bleibt unverändert.
     sql: `ALTER TABLE notifications ADD COLUMN action TEXT;`,
   },
+  {
+    id: 39,
+    name: "notification-messagekey-locale",
+    // EPIC-P61 T61.7 / ADR-0101: Notify-Store trägt Katalogschlüssel + Params
+    // (JSON, K5-klein); Push-Abos tragen ihre Sprache. Deutsche Titel bleiben
+    // als Fallback stehen — Bestand vor P61 hat keine Schlüssel (K7 unverändert).
+    sql: `
+      ALTER TABLE notifications ADD COLUMN message_key TEXT;
+      ALTER TABLE notifications ADD COLUMN params TEXT;
+      ALTER TABLE push_subscriptions ADD COLUMN locale TEXT;
+    `,
+  },
 ];
 
 export class HubDatabase {

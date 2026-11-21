@@ -1,3 +1,4 @@
+import { errorText } from "./i18n/index.ts";
 import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity } from "@ancientvoid/contracts";
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
@@ -388,6 +389,9 @@ export interface HubNotification {
   createdAt: string;
   /** EPIC-P67 T67.6: optionaler Aktionsknopf (z. B. „Jetzt aktualisieren“ beim Main-Sync). */
   action?: { label: string; method: "POST"; path: string } | null;
+  /** EPIC-P61 T61.7 / ADR-0101: Katalogschlüssel + Params für Hub-eigene Texte; title bleibt deutscher Fallback. */
+  messageKey?: string | null;
+  params?: Record<string, string | number> | null;
 }
 
 /** EPIC-P67 T67.7: Main-Sync-Einstellungen wie der Hub-Contract (ADR-0088 §1). */
@@ -886,8 +890,10 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   });
   announceDataFreshness(res);
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { error?: string; detail?: string };
-    throw Object.assign(new Error(body.error ?? body.detail ?? `${res.status} ${res.statusText}`), { status: res.status });
+    const body = (await res.json().catch(() => ({}))) as { error?: string; detail?: string; code?: string };
+    // EPIC-P61 / ADR-0101: strukturierter code -> Katalogschlüssel error.<code>;
+    // unbekannter Code zeigt den Hub-Text unverändert.
+    throw Object.assign(new Error(errorText(body.code, body.error ?? body.detail ?? `${res.status} ${res.statusText}`)), { status: res.status, code: body.code });
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
@@ -1498,7 +1504,7 @@ function createHubApi(P: (path: string) => string) {
   /** T8.3 (ADR-0026): Web Push. */
   push: () => api<PushState>(P("/api/push")),
   setPushEnabled: (enabled: boolean) => api<{ enabled: boolean; publicKey: string | null }>(P("/api/push/enabled"), { method: "PUT", body: JSON.stringify({ enabled }) }),
-  pushSubscribe: (body: { endpoint: string; keys: { p256dh: string; auth: string }; oldEndpoint?: string; quiet?: { from: number; to: number; tzOffsetMinutes: number } | null; done?: boolean }) =>
+  pushSubscribe: (body: { endpoint: string; keys: { p256dh: string; auth: string }; oldEndpoint?: string; quiet?: { from: number; to: number; tzOffsetMinutes: number } | null; done?: boolean; locale?: "de" | "en" }) =>
     api<{ ok: boolean }>(P("/api/push/subscriptions"), { method: "POST", body: JSON.stringify(body) }),
   pushUnsubscribe: (endpoint: string) => api<{ ok: boolean }>(P("/api/push/subscriptions"), { method: "DELETE", body: JSON.stringify({ endpoint }) }),
   pushTest: () => api<{ sent: number; errors: string[] }>(P("/api/push/test"), { method: "POST", body: "{}" }),

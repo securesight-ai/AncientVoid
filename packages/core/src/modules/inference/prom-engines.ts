@@ -147,7 +147,7 @@ export function promReading(
 
   if (d == null) hinweise.push("Erster Abruf — Raten erscheinen ab dem zweiten Poll");
   hinweise.push("keine Einzel-Requests gemeldet — Verteilungen und Protokoll sind nicht möglich");
-  if (kind === "halogen") hinweise.push("kein GPU-/VRAM-Feld in der Metrik — Hardware-Karten bleiben leer");
+  hinweise.push("keine Hardware-Werte gemeldet — Gerät und GPU bleiben leer statt geschätzt");
 
   const features: InferenceFeatures = { perRequest: false, hardware: false, history: false, totals: true };
   const requests_: RequestRecord[] = [];

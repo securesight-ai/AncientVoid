@@ -82,6 +82,15 @@ describe("notifications feed (ADR-0015)", () => {
       const newer = manager.notifications(items[1]!.id);
       expect(newer.items.map((n) => n.id)).toEqual([items[0]!.id]);
       expect(lastId).toBe(items[0]!.id);
+
+      // EPIC-P61 T61.7 / ADR-0101: messageKey + Params überleben Persistenz (K7);
+      // der Catalog-Key ist nach dem Lesen noch da, die Titel-Fallbacks auch.
+      expect(items[1]).toMatchObject({
+        messageKey: "notification.turn_done",
+        params: { project: "tetris" },
+        title: "tetris · Zug fertig",
+      });
+      expect(items[0]!.messageKey).toBeUndefined();
     } finally {
       await manager.shutdown();
       db.close();
@@ -143,7 +152,7 @@ describe("Loop-Benachrichtigungen (EPIC-P19, AC-P19-2)", () => {
   const ctx = { adapter: "loop:securesight-factory", project: "/p/securesight" };
 
   it("ein Halt für eine Person, eine Störung und eine Eskalation erreichen das Handy", () => {
-    expect(notificationFor(ev({ kind: "loop.hold", reason: "Gates dreimal rot" }), ctx)).toEqual({ level: "warning", title: "securesight · Loop wartet auf dich", detail: "Gates dreimal rot", kind: "loop.hold" });
+    expect(notificationFor(ev({ kind: "loop.hold", reason: "Gates dreimal rot" }), ctx)).toEqual({ level: "warning", title: "securesight · Loop wartet auf dich", detail: "Gates dreimal rot", kind: "loop.hold", messageKey: "notification.loop_hold", params: { project: "securesight" } });
     expect(notificationFor(ev({ kind: "loop.broken", reason: "Watchdog ausgefallen" }), ctx)).toMatchObject({ level: "error", title: "securesight · Loop gestört", detail: "Watchdog ausgefallen" });
     expect(notificationFor(ev({ kind: "loop.notify", level: "2", reason: "gates-rot" }), ctx)).toMatchObject({ level: "warning", title: "securesight · Loop eskaliert (Stufe 2)" });
   });
@@ -174,6 +183,8 @@ describe("Abbruch und blockierte Hintergrundarbeit (ADR-0015 Nachtrag 2026-11-15
       title: "galaxy · Zug fehlgeschlagen",
       detail: "Messlauf (systemd)",
       kind: "session.turn_failed",
+      messageKey: "notification.turn_failed",
+      params: { project: "galaxy" },
     });
     expect(notificationFor(ev({ kind: "session.turn_end", code: 1, reason: "error" }), ctx)?.detail).toContain("Verlauf");
   });
@@ -189,6 +200,32 @@ describe("Abbruch und blockierte Hintergrundarbeit (ADR-0015 Nachtrag 2026-11-15
   it("Prozess-Ende und adapter.down bleiben Fehler in Worten — die Entfeinerung übernimmt recordNotifications", () => {
     expect(notificationFor(ev({ kind: "adapter.down", detail: "kein Lebenszeichen" }), ctx)).toMatchObject({ level: "error", title: "galaxy · acp antwortet nicht" });
     expect(notificationFor(ev({ kind: "x", code: 3 }, "acp: process exited with code 3"), ctx)).toMatchObject({ level: "error", title: "galaxy · acp abgebrochen (Code 3)", kind: "process.exit" });
+  });
+});
+
+// EPIC-P61 T61.7 / ADR-0101: der Hub erzeugt Katalogschlüssel statt Prosadaten —
+// title/detail bleiben als deutscher Fallback (Alt-Journal, Alt-Clients).
+describe("EPIC-P61 T61.7: messageKey und Params für determinierte Texte", () => {
+  const ev = (payload: Record<string, unknown>, summary = "x") => ({ seq: 1, ts: "t", sessionId: "s", type: "system", summary, payload, blobRef: null }) as never;
+  const ctx = { adapter: "acp", project: "/p/galaxy" };
+
+  it("Startfehler: Schlüssel mit Projekt- und Adapter-Param, deutscher Titel bleibt Fallback", () => {
+    expect(notificationFor(ev({ kind: "session.start_failed", error: "boom" }), ctx)).toMatchObject({
+      messageKey: "notification.start_failed",
+      params: { project: "galaxy", adapter: "acp" },
+      title: "galaxy · acp: Start fehlgeschlagen",
+    });
+  });
+
+  it("Prozess-Ende: Code als Param — die Zahl ist Daten, der Satz ist Katalog", () => {
+    expect(notificationFor(ev({ kind: "x", code: 3 }, "acp: process exited with code 3"), ctx)).toMatchObject({
+      messageKey: "notification.process_exit",
+      params: { project: "galaxy", adapter: "acp", code: "3" },
+    });
+  });
+
+  it("dynamische Provider-Prosa bekommt keinen Schlüssel — sie bleibt Daten", () => {
+    expect(notificationFor(ev({ kind: "provider.error", detail: "Rate limit" }, "Usage limit reached"), ctx)?.messageKey).toBeUndefined();
   });
 });
 

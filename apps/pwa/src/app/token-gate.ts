@@ -1,3 +1,5 @@
+import { fmtDateTime } from "../shared/i18n/format.ts";
+import { t } from "../shared/i18n/index.ts";
 /**
  * EPIC-P57 T57.9 (AC-P57-8): Meldungen des Token-Gates. Je Fall eine eigene Ursache mit nächstem Schritt —
  * leeres Token, abgelehntes Token, Hub nicht erreichbar. Nie ein Token in einer Meldung oder URL (PRD §8, ADR-0073).
@@ -13,25 +15,25 @@ export function classifyGateError(err: unknown): GateProblem {
 }
 
 const NEXT_STEP_REJECTED =
-  "Das Token ist falsch, unvollständig oder widerrufen. Das Auge zeigt, was im Feld steht. Auf dem Rechner mit dem Hub: " +
-  "hubctl token list zeigt die ausgestellten Geräte, hubctl token issue <label> stellt ein neues aus.";
+  t("tokengate.wrong_part1") +
+  t("tokengate.wrong_part2");
 
 /** lastContact: ISO-Zeitpunkt der letzten erfolgreichen Antwort dieses Hubs auf diesem Gerät (K10), falls bekannt. */
 export function gateMessage(problem: GateProblem, detail: string, lastContact: string | null = null): string {
   switch (problem) {
     case "empty":
-      return "Bitte ein Device-Token eingeben. Es kommt vom Setup-Wizard (setup.sh) oder wird auf dem Rechner mit dem Hub mit hubctl token issue <label> ausgestellt.";
+      return t("tokengate.enter_token");
     case "rejected":
-      return `Der Hub hat das Token abgelehnt. ${NEXT_STEP_REJECTED}`;
+      return t("tokengate.rejected", { "next": NEXT_STEP_REJECTED });
     case "unreachable": {
-      const seen = lastContact && !Number.isNaN(new Date(lastContact).getTime()) ? ` Letzte Verbindung zu diesem Hub: ${new Date(lastContact).toLocaleString("de-DE")}.` : "";
+      const seen = lastContact && !Number.isNaN(new Date(lastContact).getTime()) ? t("tokengate.last_contact", { "time": fmtDateTime(lastContact) }) : "";
       return (
-        "Der Hub ist nicht erreichbar. Läuft er (scripts/hub.sh status)? Am Handy: ist Tailscale verbunden und die https-Adresse aus " +
-        `scripts/setup-tailscale-serve.sh geöffnet?${seen}`
+        t("tokengate.unreachable_part1") +
+        t("tokengate.unreachable_part2", { "seen": seen })
       );
     }
     case "other":
-      return `Anmeldung fehlgeschlagen: ${detail}`;
+      return t("tokengate.failed", { "detail": detail });
   }
 }
 

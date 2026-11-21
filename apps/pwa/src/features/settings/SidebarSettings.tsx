@@ -22,8 +22,8 @@ export function SidebarSettings() {
     {prefs.order.map((id, i) => {
       const entry = SIDEBAR_ENTRIES.find((e) => e.id === id)!;
       return <SettingRow key={id} label={entry.label}>
-        <Button aria-label={`${entry.label} nach oben`} disabled={i === 0} onClick={() => move(i, -1)}>↑</Button>
-        <Button aria-label={`${entry.label} nach unten`} disabled={i === prefs.order.length - 1} onClick={() => move(i, 1)}>↓</Button>
+        <Button aria-label={`${entry.label} nach oben`} title={`${entry.label} nach oben`} disabled={i === 0} onClick={() => move(i, -1)}>↑</Button>
+        <Button aria-label={`${entry.label} nach unten`} title={`${entry.label} nach unten`} disabled={i === prefs.order.length - 1} onClick={() => move(i, 1)}>↓</Button>
         <Switch label={`${entry.label} anzeigen`} checked={!prefs.hidden.includes(id)} onChange={(show) => saveSidebar({ ...prefs, hidden: show ? prefs.hidden.filter((x) => x !== id) : [...prefs.hidden, id] })} />
       </SettingRow>;
     })}

@@ -10,7 +10,7 @@ test.describe("Entwürfe (T8.4, AC-P8-4)", () => {
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     const field = app.getByPlaceholder("Antworten…");
     await field.fill("Bitte noch die Randfälle");
-    await expect(app.locator(".draft-state")).toContainText("Entwurf gespeichert");
+    await expect.poll(async () => (await hub.api<{ text: string }>(`/api/sessions/${id}/draft`)).body.text).toBe("Bitte noch die Randfälle");
     await app.getByLabel("Zur Übersicht").click();
     await app.locator(".session-open").first().click();
     await expect(field).toHaveValue("Bitte noch die Randfälle");
@@ -34,7 +34,7 @@ test.describe("Entwürfe (T8.4, AC-P8-4)", () => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "Start" });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await app.getByPlaceholder("Antworten…").fill("Version vom Handy");
-    await expect(app.locator(".draft-state")).toContainText("gespeichert");
+    await expect.poll(async () => (await hub.api<{ text: string }>(`/api/sessions/${id}/draft`)).body.text).toBe("Version vom Handy");
     // The PC goes offline in thought: it edits on top of the same revision, the phone saves first.
     const d = (await hub.api<{ revision: number }>(`/api/sessions/${id}/draft`)).body;
     const res = await fetch(`${hub.origin}/api/sessions/${id}/draft`, {
@@ -52,22 +52,11 @@ test.describe("Entwürfe (T8.4, AC-P8-4)", () => {
     await expect.poll(async () => (await hub.api<{ text: string }>(`/api/sessions/${id}/draft`)).body.text).toBe("Version vom Handy, ergänzt");
   });
 
-  test("Vorlagen füllen das Feld, senden nie; eigene Vorlage bleibt; Antwort kopieren", async ({ app, hub }) => {
+  test("Antwort kopieren", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "Start" });
     await app.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: hub.origin });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await app.getByRole("button", { name: "Chat" }).click();
-    await app.locator(".reply-templates").getByRole("button", { name: "Weiter", exact: true }).click();
-    await expect(app.getByPlaceholder("Antworten…")).toHaveValue("Weiter");
-    expect((await hub.events(id)).filter((e) => e.type === "user")).toHaveLength(1);
-    await app.getByPlaceholder("Antworten…").fill("Prüfe die Migrationen");
-    await app.getByRole("button", { name: "+ als Vorlage merken" }).click();
-    await app.getByPlaceholder("Antworten…").fill("");
-    await expect(app.locator(".reply-templates").getByRole("button", { name: "Prüfe die Migrationen", exact: true })).toBeVisible();
-    await app.reload();
-    // Typed, then deleted again before it was saved: stays empty after reload.
-    await expect(app.getByPlaceholder("Antworten…")).toHaveValue("");
-    await expect(app.locator(".reply-templates").getByRole("button", { name: "Prüfe die Migrationen", exact: true })).toBeVisible();
 
     const answer = app.locator(".tail-scroll .event.assistant").first();
     await answer.getByRole("button", { name: "Kopieren" }).click();
@@ -96,7 +85,7 @@ test.describe("Entwürfe (T8.4, AC-P8-4)", () => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "Start" });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await app.getByPlaceholder("Antworten…").fill("Privater Entwurf");
-    await expect(app.locator(".draft-state")).toContainText("gespeichert");
+    await expect.poll(async () => (await hub.api<{ text: string }>(`/api/sessions/${id}/draft`)).body.text).toBe("Privater Entwurf");
     await app.waitForTimeout(1200);
     const before = await app.evaluate(() => Object.keys((globalThis as unknown as { localStorage: Record<string, unknown> }).localStorage).filter((k) => k.startsWith("ancientvoid.draft.") || k.startsWith("ancientvoid.tail.")));
     expect(before.length).toBeGreaterThan(0);

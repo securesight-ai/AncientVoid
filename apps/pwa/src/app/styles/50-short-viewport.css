@@ -4,12 +4,10 @@
  * Spezifität zurückgewannen: das Dock belegte 278 von 412 px und der Chat 80 px.
  * Diese Datei wird zuletzt importiert und entscheidet damit die Kaskade. */
 @media (max-height: 520px) {
-  /* BUG-0053: im Querformat nur Modus/Modell, Eingabe, Senden, Tabs. Vorlagen,
-   * Filterchips und Statuszeilen kommen im Hochformat zurück — Fortschritt und
+  /* BUG-0053: im Querformat nur Modus/Modell, Eingabe, Senden, Tabs. Filterchips
+   * und der PC-Hinweis kommen im Hochformat zurück — Fortschritt und
    * Kontingent stehen weiter im Bericht. */
-  .dock-stack .reply-templates,
   .dock-stack .dock-filter-bar,
-  .dock-stack .draft-state,
   .dock-stack .pc-open-notice,
   .run-strip {
     display: none;

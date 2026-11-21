@@ -1,3 +1,5 @@
+import { fmtTime } from "../../shared/i18n/format.ts";
+import { t } from "../../shared/i18n/index.ts";
 import { Sheet, Button, Chip, EmptyState, Card } from "../../shared/ui/index.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { registerField } from "../../shared/command-context.ts";
@@ -43,7 +45,7 @@ const WINDOW_LABELS: Record<string, string> = {
 export function formatWindow(w: { id: string; utilization: number; resetsAt: string }): string {
   const label = WINDOW_LABELS[w.id] ?? w.id;
   const pct = Math.round(w.utilization * 100);
-  const reset = new Date(w.resetsAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  const reset = fmtTime(w.resetsAt);
   return `${label} ${pct}% · reset ${reset}`;
 }
 
@@ -84,7 +86,7 @@ export interface DashboardProps {
  * redundant status-color indicator next to it.
  */
 const HOST_STATE_LABEL: Record<FleetHost["state"], string> = {
-  reachable: "verbunden",
+  reachable: t("common.connected"),
   stale: "veraltet",
   offline: "offline",
   incompatible: "inkompatibel",
@@ -124,8 +126,10 @@ function sessionKey(s: SessionRecord): string {
 /** EPIC-P47: Ansicht der Übersicht — Sessions (Karten), Projekte, Hosts oder Discovery (T47.5). */
 type OverviewView = "sessions" | "projects" | "hosts" | "discovery";
 const VIEW_KEY = "ancientvoid.overviewView";
-const VIEWS: readonly OverviewView[] = ["sessions", "projects", "hosts", "discovery"];
-const VIEW_TITLE: Record<OverviewView, string> = { sessions: "Sessions", projects: "Projekte", hosts: "Hosts", discovery: "Gefunden" };
+// Kein vierter Tab „Gefunden“ (Nutzerentscheid 2026-11-21): genau ein Einstieg — der Chip rechts
+// vom Archiv-Button der Session-Ansicht. Der Deeplink #/gefunden bleibt (FOUND_HASH_ALIAS unten).
+const VIEWS = ["sessions", "projects", "hosts"] as const;
+const VIEW_TITLE: Record<(typeof VIEWS)[number], string> = { sessions: t("common.sessions_cap"), projects: t("common.projects"), hosts: t("common.hosts") };
 
 export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, approvals = [], onOpenApprovals, lastSession = null, probeAvailable = false }: DashboardProps) {
   const windowKeys = new Set(Object.values(useOpenWindows()).map((e) => targetKey(e.target)));
@@ -184,7 +188,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
         setProjectsWarning(r.warnings.join(" · "));
       })
       .catch((err: unknown) => {
-        if (alive) setProjectsWarning(err instanceof Error ? err.message : "Projektliste nicht erreichbar.");
+        if (alive) setProjectsWarning(err instanceof Error ? err.message : t("common.projects_unreachable"));
       });
     return () => {
       alive = false;
@@ -221,7 +225,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
         .filter((s) => matches(s, query.trim()))
         .filter((s) => (hostFilter ? (s.hostId ?? "local") === hostFilter : true))
         // „wartende“ (Sprachbefehl T9.4) heißt blockiert: Freigabe, Frage, Fehler — ein fertiger Zug wartet nicht.
-        .filter((s) => showArchived || (statusFilter === "waiting" ? sectionOf(s) === "braucht" : statusFilter === "active" ? section(s) === "aktiv" || section(s) === "braucht" : true)),
+        .filter((s) => showArchived || (statusFilter === "waiting" ? sectionOf(s) === "braucht" /* i18n-ignore: Daten-Key */ : statusFilter === "active" ? section(s) === "aktiv" /* i18n-ignore: Daten-Key */ || section(s) === "braucht" /* i18n-ignore: Daten-Key */ : true)),
     [withOverride, showArchived, query, statusFilter, hostFilter],
   );
   const sorted = useMemo(() => [...visible].sort(compareByActivity), [visible]);
@@ -231,7 +235,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
   const open = useMemo(() => approvals.filter((a) => !decided.has(a.id)), [approvals, decided]);
   const sections = useMemo(() => {
     const out: Record<Section, SessionRecord[]> = { braucht: [], aktiv: [], pins: [], zuletzt: [] };
-    for (const s of sorted) out[showArchived ? "zuletzt" : section(s)].push(s);
+    for (const s of sorted) out[showArchived ? "zuletzt" /* i18n-ignore: Daten-Key */ : section(s)].push(s);
     out.braucht.sort(compareQueue((s) => (remoteHost(s.hostId) ? null : (pendingFor(open, s.id)?.timeoutAt ?? null))));
     return out;
   }, [sorted, showArchived, open]);
@@ -268,15 +272,15 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
       setActionError("");
     } catch (err) {
       setOverride((prev) => ({ ...prev, [session.id]: {} }));
-      setActionError(err instanceof Error ? err.message : "Änderung fehlgeschlagen.");
+      setActionError(err instanceof Error ? err.message : t("common.change_failed"));
     }
   };
   const archive = (s: SessionRecord) => change(s, { archived: !s.archived }, () => hostApi(s.hostId).setArchived(s.id, !s.archived));
   const pin = (s: SessionRecord) => change(s, { pinned: !s.pinned }, () => hostApi(s.hostId).setSessionMeta(s.id, { pinned: !s.pinned }));
   const remove = async (targets: SessionRecord[]) => {
     if (deleteInFlight.current || targets.length === 0) return;
-    const label = targets.length === 1 ? "1 Session" : `${targets.length} Sessions`;
-    if (!confirm(`${label} endgültig löschen? Laufende archivierte Sessions werden gestoppt. Verlauf, Statistik und Worktrees werden entfernt.`)) return;
+    const label = targets.length === 1 ? t("common.one_session") : t("common.n_sessions", { "n": targets.length });
+    if (!confirm(t("common.delete_forever", { "label": label }))) return;
     deleteInFlight.current = true;
     setDeleting(true);
     setActionError("");
@@ -293,11 +297,11 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
             return next;
           });
         } catch (err) {
-          const message = err instanceof Error ? err.message : "Löschen fehlgeschlagen.";
-          failures.push(`${s.title ?? projectName(s.project)}: ${message}`);
+          const message = err instanceof Error ? err.message : t("common.delete_failed");
+          failures.push(t("common.confirm_name_message", { "name": s.title ?? projectName(s.project), "message": message }));
         }
       }
-      if (failures.length) setActionError(`${failures.length} von ${targets.length} nicht gelöscht. ${failures.join(" · ")}`);
+      if (failures.length) setActionError(t("common.delete_fail", { "failed": failures.length, "total": targets.length, "failures": failures.join(" · ") }));
     } finally {
       deleteInFlight.current = false;
       setDeleting(false);
@@ -308,7 +312,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
     <div class="dashboard">
       {actionError && <div class="reply-error" role="alert">{actionError}</div>}
       {/* EPIC-P47 T47.1: ein Umschalter statt der rein informativen Host-Chips. */}
-      <div class="overview-switch" role="tablist" aria-label="Übersichtsansicht">
+      <div class="overview-switch" role="tablist" aria-label={t("common.overview_view")}>
         {VIEWS.map((v) => (
           <button key={v} type="button" role="tab" aria-selected={view === v} class={`chip${view === v ? " active" : ""}`} data-testid="overview-switch-btn" onClick={() => setOverviewView(v)}>
             {VIEW_TITLE[v]}
@@ -331,15 +335,15 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
         <>
           <FirstSuccessSignal />
           <div class="dashboard-summary dim">
-            {todayCost && <span>Heute: {todayCost}</span>}
+            {todayCost && <span>{t("common.today")} {todayCost}</span>}
             <button class={`chip ${showArchived ? "active" : ""}`} type="button" onClick={() => {
               setSelected(new Set());
               setShowArchived((on) => !on);
             }}>
-              {showArchived ? "Aktive" : `Archiv${archivedCount > 0 ? ` (${archivedCount})` : ""}`}
+              {showArchived ? t("common.actives") : `Archiv${archivedCount > 0 ? ` (${archivedCount})` : ""}`}
             </button>
             <Chip onClick={() => setOverviewView("discovery")}>
-              Gefunden
+              {t("common.found")}
             </Chip>
           </div>
           {!showArchived && statusFilter !== "all" && statusFilter !== "recent" && (
@@ -349,26 +353,26 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
                 setStatusFilter("all");
               }}
              active class="status-filter">
-              {statusFilter === "waiting" ? "nur wartende" : "nur aktive"} ✕
+              {statusFilter === "waiting" ? t("common.only_waiting") : t("common.only_active")} ✕
             </Chip>
           )}
           {hostFilter && (
             <Chip onClick={() => setHostFilter(null)} active class="status-filter">
-              Host: {hostLabel(hosts, hostFilter)} ✕
+              {t("common.host_colon")} {hostLabel(hosts, hostFilter)} ✕
             </Chip>
           )}
           {(sessions.length > 4 || query !== "") && (
-            <input class="dashboard-search" type="search" placeholder="Sessions filtern…" aria-label="Sessions filtern" value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
+            <input class="dashboard-search" type="search" placeholder={t("common.filter_sessions_placeholder")} aria-label={t("common.filter_sessions")} value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
           )}
           {showArchived && sorted.length > 0 && (
             <div class="archive-actions">
               <Button size="sm" disabled={deleting} onClick={() => setSelected(
                 selectedVisible.length === sorted.length ? new Set() : new Set(sorted.map(sessionKey)),
               )}>
-                {selectedVisible.length === sorted.length ? "Auswahl aufheben" : "Alle sichtbaren auswählen"}
+                {selectedVisible.length === sorted.length ? t("common.clear_selection") : t("common.select_all_visible")}
               </Button>
               <Button size="sm" variant="danger" disabled={deleting || selectedVisible.length === 0} onClick={() => void remove(selectedVisible)}>
-                {deleting ? "Wird gelöscht…" : selectedVisible.length === 1 ? "1 Session löschen" : `${selectedVisible.length} Sessions löschen`}
+                {deleting ? t("common.deleting") : selectedVisible.length === 1 ? t("common.delete_one") : t("common.delete_n", { "n": selectedVisible.length })}
               </Button>
             </div>
           )}
@@ -380,13 +384,13 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
             )
           ) : (
             SECTION_ORDER.filter((key) => sections[key].length > 0).map((key) => {
-                const folded = key === "zuletzt" && !showArchived && !quietShown;
-                const list = folded ? [] : key === "zuletzt" && !showArchived && !allRecent && !query ? sections[key].slice(0, RECENT_LIMIT) : sections[key];
-                const title = showArchived ? "Archiv" : SECTION_TITLE[key];
+                const folded = key === "zuletzt" /* i18n-ignore: Daten-Key */ && !showArchived && !quietShown;
+                const list = folded ? [] : key === "zuletzt" /* i18n-ignore: Daten-Key */ && !showArchived && !allRecent && !query ? sections[key].slice(0, RECENT_LIMIT) : sections[key];
+                const title = showArchived ? t("common.archive") : SECTION_TITLE[key];
                 return (
                   <section key={key} class={`session-section section-${key}`} aria-label={title}>
                     <h2 class="section-title">
-                      {key === "zuletzt" && !showArchived ? (
+                      {key === "zuletzt" /* i18n-ignore: Daten-Key */ && !showArchived ? (
                         <button
                           class="section-fold"
                           type="button"
@@ -404,9 +408,9 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
                           {title} <span class="dim num">{sections[key].length}</span>
                         </>
                       )}
-                      {key === "braucht" && pendingApprovals > 0 && onOpenApprovals && (
+                      {key === "braucht" /* i18n-ignore: Daten-Key */ && pendingApprovals > 0 && onOpenApprovals && (
                         <button class="link-btn approval-link" type="button" onClick={onOpenApprovals}>
-                          {pendingApprovals} {pendingApprovals === 1 ? "Freigabe" : "Freigaben"} · alle zeigen
+                          {pendingApprovals} {pendingApprovals === 1 ? t("common.approval") : t("common.approvals")} {t("common.show_all")}
                         </button>
                       )}
                     </h2>
@@ -440,7 +444,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
                     ))}
                     {list.length < sections[key].length && (
                       <Button onClick={() => setAllRecent(true)} class="more-sessions">
-                        Alle {sections[key].length} zeigen
+                        {t("common.all")} {sections[key].length} {t("common.show")}
                       </Button>
                     )}
                   </section>
@@ -450,7 +454,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
           {/* Ohne Karte in „Du bist dran“ (Freigabe ohne sichtbare Session) bleibt der Weg zur Liste. */}
           {pendingApprovals > 0 && onOpenApprovals && sections.braucht.length === 0 && (
             <button class="approval-banner" type="button" onClick={onOpenApprovals}>
-              {pendingApprovals} {pendingApprovals === 1 ? "Freigabe wartet" : "Freigaben warten"} auf dich
+              {pendingApprovals} {pendingApprovals === 1 ? t("common.approval_waits") : t("common.approvals_wait")} {t("common.waiting_for_you")}
             </button>
           )}
         </>
@@ -469,11 +473,11 @@ function ProjectsView({ projects, warning, sessions }: { projects: DiscoveredPro
     );
   }
   if (projects === null) return <EmptyState text="Projekte laden…" />;
-  if (projects.length === 0) return <EmptyState text="keine Projekte gefunden — lege eines an" />;
+  if (projects.length === 0) return <EmptyState text={t("common.no_projects")} />;
   return (
-    <section class="session-section" aria-label="Projekte">
+    <section class="session-section" aria-label={t("common.projects")}>
       <h2 class="section-title">
-        Projekte <span class="dim">{projects.length}</span>
+        {t("common.projects")} <span class="dim">{projects.length}</span>
       </h2>
       {projects.map((p) => {
         const n = sessions.filter((s) => s.archived !== true && s.project === p.path).length;
@@ -486,14 +490,14 @@ function ProjectsView({ projects, warning, sessions }: { projects: DiscoveredPro
             >
               <div class="row">
                 <strong class="session-title">{p.name}</strong>
-                {n > 0 && <span class="pill ok">{n} Session{n === 1 ? "" : "s"}</span>}
+                {n > 0 && <span class="pill ok">{n} {t("common.session_cap")}{n === 1 ? "" : "s"}</span>}
               </div>
               <div class="session-where dim">
                 {p.path}
                 {p.branch ? ` · ${p.branch}` : ""}
               </div>
               <div class="session-activity">
-                <span class="session-activity-text dim">Dateibaum öffnen</span>
+                <span class="session-activity-text dim">{t("common.open_file_tree")}</span>
               </div>
             </button>
           </Card>
@@ -506,11 +510,11 @@ function ProjectsView({ projects, warning, sessions }: { projects: DiscoveredPro
 /** EPIC-P47 T47.3: Karte je Fleet-Host; Klick filtert die Session-Ansicht auf den Host. */
 function HostsView({ hosts, sessions, onPick }: { hosts: FleetHost[]; sessions: SessionRecord[]; onPick: (hostId: string) => void }) {
   const list: FleetHost[] =
-    hosts.length > 0 ? hosts : [{ hostId: "local", label: "dieser Rechner", self: true, url: null, state: "reachable", lastSyncAt: null, detail: null, sessions: 0 }];
+    hosts.length > 0 ? hosts : [{ hostId: "local", label: t("common.this_machine"), self: true, url: null, state: "reachable", lastSyncAt: null, detail: null, sessions: 0 }];
   return (
-    <section class="session-section" aria-label="Hosts">
+    <section class="session-section" aria-label={t("common.hosts")}>
       <h2 class="section-title">
-        Hosts <span class="dim">{list.length}</span>
+        {t("common.hosts")} <span class="dim">{list.length}</span>
       </h2>
       {list.map((h) => {
         const n = sessions.filter((s) => s.archived !== true && (s.hostId ?? "local") === h.hostId).length;
@@ -523,10 +527,10 @@ function HostsView({ hosts, sessions, onPick }: { hosts: FleetHost[]; sessions: 
               </div>
               <div class="session-where dim">
                 {h.detail ?? h.hostId}
-                {h.state !== "reachable" && h.lastSyncAt ? ` · Stand ${new Date(h.lastSyncAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}` : ""}
+                {h.state !== "reachable" && h.lastSyncAt ? t("common.stand_time", { time: fmtTime(h.lastSyncAt) }) : ""}
               </div>
               <div class="session-activity">
-                <span class="session-activity-text dim">{n > 0 ? `${n} Session${n === 1 ? "" : "s"} zeigen` : "keine Sessions"}</span>
+                <span class="session-activity-text dim">{n > 0 ? `${n} Session${n === 1 ? "" : "s"} zeigen` : t("common.no_sessions")}</span>
               </div>
             </button>
           </Card>
@@ -600,13 +604,13 @@ function SessionRow({
   const name = session.title ?? project;
   const [handoverOpen, setHandoverOpen] = useState(false);
   const actions: { label: string; run: () => void; danger?: boolean; pressed?: boolean }[] = [
-    { label: "Repo-Graph", run: () => (location.hash = graphHash(session.id, remoteHost(session.hostId))) },
-    { label: session.pinned ? "Lösen" : "Anheften", run: () => void onPin(session), pressed: session.pinned === true },
+    { label: t("common.repo_graph"), run: () => (location.hash = graphHash(session.id, remoteHost(session.hostId))) },
+    { label: session.pinned ? t("common.detach") : t("common.pin"), run: () => void onPin(session), pressed: session.pinned === true },
     // 2026-11-12 (Nutzerwunsch, ADR-0039): Übergabe aus der Karte heraus — der
     // Hub parkt die Quelle beim Übergeben (kein doppeltes Weiterlaufen).
-    ...(!session.archived ? [{ label: "Übergeben…", run: () => setHandoverOpen(true) }] : []),
-    { label: session.archived ? "Zurückholen" : "Archivieren", run: () => void onArchive(session) },
-    ...(session.archived ? [{ label: "Löschen", run: () => onDelete(session), danger: true }] : []),
+    ...(!session.archived ? [{ label: t("common.handover_progress"), run: () => setHandoverOpen(true) }] : []),
+    { label: session.archived ? t("common.unarchive") : t("common.archive_btn"), run: () => void onArchive(session) },
+    ...(session.archived ? [{ label: t("common.delete"), run: () => onDelete(session), danger: true }] : []),
   ];
   return (
     <div
@@ -633,12 +637,12 @@ function SessionRow({
     >
       <button class="session-open" type="button" onClick={(ev) => onOpen(session, { newTile: ev.ctrlKey || ev.metaKey })}>
         <div class="row">
-          <strong class={`session-title${session.title ? "" : " dim"}`}>{session.title ?? (session.adapter === "loop:securesight-factory" ? `Factory-Beobachter · ${project}` : `${project} — ohne Auftrag`)}</strong>
+          <strong class={`session-title${session.title ? "" : " dim"}`}>{session.title ?? (session.adapter === "loop:securesight-factory" ? t("common.factory_observer", { "project": project }) : t("common.no_order", { "project": project }))}</strong>
           <StatusDot status={session.status} question={question} unseen={unseen} />
         </div>
         {inWindow && (
           <div >
-            <span class="badge-window" title="Ein Klick holt das Fenster nach vorn">⧉ eigenes Fenster</span>
+            <span class="badge-window" title={t("common.bring_front")}>{t("common.own_window")}</span>
           </div>
         )}
         <div class="session-where dim">
@@ -646,22 +650,22 @@ function SessionRow({
            * label (fallback short id), model or the honest "Standardmodell"
            * (no guessed provider). */}
           {session.hostId ? `${hostLabel(hosts ?? [], session.hostId)} · ` : ""}
-          <span data-testid="session-project">{project}</span> · {session.adapter} · {session.model ?? "Standardmodell"}
+          <span data-testid="session-project">{project}</span> · {session.adapter} · {session.model ?? t("common.default_model")}
           {session.costUsd > 0 ? ` · ${metricView(session, "cost", formatUsd, true).text}` : ""}
         </div>
         <div class="session-activity">
-          <span class="session-activity-text">{session.lastActivity?.text ?? "noch nichts passiert"}</span>
+          <span class="session-activity-text">{session.lastActivity?.text ?? t("common.nothing_yet")}</span>
           <span class="dim session-ago">
-            {unseen && <span class="badge new-badge">neu</span>} {ago(session.lastActivity?.at ?? session.updatedAt)}
+            {unseen && <span class="badge new-badge">{t("common.new")}</span>} {ago(session.lastActivity?.at ?? session.updatedAt)}
           </span>
         </div>
         {plan && (
-          <div class="card-plan" role="meter" aria-valuemin={0} aria-valuemax={plan.total} aria-valuenow={plan.done} aria-label="Planfortschritt">
+          <div class="card-plan" role="meter" aria-valuemin={0} aria-valuemax={plan.total} aria-valuenow={plan.done} aria-label={t("common.plan_progress")}>
             <span class="card-plan-bar">
               <span class="card-plan-fill" style={{ transform: `scaleX(${plan.total > 0 ? plan.done / plan.total : 0})` }} />
             </span>
             <span class="num dim">
-              Plan {plan.done}/{plan.total}
+              {t("common.plan")} {plan.done}/{plan.total}
             </span>
           </div>
         )}
@@ -669,8 +673,8 @@ function SessionRow({
       {selection && (
         <label class="archive-selection">
           <input type="checkbox" checked={selection.checked} disabled={selection.disabled} onChange={(e) => selection.toggle(e.currentTarget.checked)} />
-          <span aria-hidden="true">Auswählen</span>
-          <span class="sr-only">{name} auswählen</span>
+          <span aria-hidden="true">{t("common.select")}</span>
+          <span class="sr-only">{name} {t("common.select_lower")}</span>
         </label>
       )}
       {approval && decidableOnCard(approval) && <CardDecision req={approval} onDecided={() => onDecided(approval.id)} />}
@@ -679,29 +683,29 @@ function SessionRow({
         <button
           class="link-btn graph-open row-action"
           type="button"
-          aria-label={`Repo-Graph von ${name} öffnen`}
-          title="Repo-Graph"
+          aria-label={t("common.open_repo_graph", { "name": name })}
+          title={t("common.repo_graph")}
           onClick={() => (location.hash = graphHash(session.id, remoteHost(session.hostId)))}
         >
           <TabIcon name="graph" />
         </button>
         <button class="link-btn row-action" type="button" aria-pressed={session.pinned === true} onClick={() => void onPin(session)}>
-          {session.pinned ? "Lösen" : "Anheften"}
+          {session.pinned ? t("common.detach") : t("common.pin")}
         </button>
         <button class="link-btn row-action" type="button" onClick={() => void onArchive(session)}>
-          {session.archived ? "Zurückholen" : "Archivieren"}
+          {session.archived ? t("common.unarchive") : t("common.archive_btn")}
         </button>
         {session.archived && (
           <button class="link-btn danger row-action" type="button" onClick={() => onDelete(session)}>
-            Löschen
+            {t("common.delete")}
           </button>
         )}
         <span class="row-menu-wrap">
-          <button class="link-btn row-menu-btn" type="button" aria-label={`Aktionen für ${name}`} title="Aktionen" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((on) => !on)}>
-            <TabIcon name="mehr" />
+          <button class="link-btn row-menu-btn" type="button" aria-label={t("common.actions_for", { "name": name })} title={t("common.actions")} aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((on) => !on)}>
+            <TabIcon name={"mehr"} />
           </button>
           {menuOpen && (
-            <div class="row-menu" role="menu" aria-label={`Aktionen für ${name}`}>
+            <div class="row-menu" role="menu" aria-label={t("common.actions_for", { "name": name })}>
               {actions.map((a) => (
                 <button
                   key={a.label}
@@ -721,10 +725,10 @@ function SessionRow({
         </span>
       </div>
       {handoverOpen && (
-        <Sheet open onClose={() => setHandoverOpen(false)} label="Session übergeben">
+        <Sheet open onClose={() => setHandoverOpen(false)} label={t("common.handover")}>
             <div class="row" style="justify-content: space-between; align-items: center">
-              <strong>Session übergeben</strong>
-              <Button aria-label="Schließen" onClick={() => setHandoverOpen(false)}>
+              <strong>{t("common.handover")}</strong>
+              <Button aria-label={t("common.close")} onClick={() => setHandoverOpen(false)}>
                 ✕
               </Button>
             </div>
@@ -750,6 +754,6 @@ function SessionRow({
 function hostLabel(hosts: readonly FleetHost[], hostId: string): string {
   const host = hosts.find((h) => h.hostId === hostId);
   if (host?.label) return host.label;
-  if (hostId === "local") return "dieser Rechner";
+  if (hostId === "local") return t("common.this_machine");
   return hostId.slice(0, 8);
 }

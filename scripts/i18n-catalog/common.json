@@ -1,0 +1,1060 @@
+{
+  "area": "common",
+  "entries": [
+    {
+      "match": "Schließen",
+      "key": "common.close",
+      "de": "Schließen",
+      "en": "Close"
+    },
+    {
+      "match": "Erneut versuchen",
+      "key": "common.retry",
+      "de": "Erneut versuchen",
+      "en": "Try again"
+    },
+    {
+      "match": "lädt …",
+      "key": "common.loading",
+      "de": "lädt …",
+      "en": "loading …"
+    },
+    {
+      "match": "lade…",
+      "key": "common.loading_short",
+      "de": "lade…",
+      "en": "loading…"
+    },
+    {
+      "match": "lädt…",
+      "key": "common.loading_dots",
+      "de": "lädt…",
+      "en": "loading…"
+    },
+    {
+      "match": "löschen",
+      "key": "common.delete_lower",
+      "de": "löschen",
+      "en": "delete"
+    },
+    {
+      "match": "Löschen",
+      "key": "common.delete",
+      "de": "Löschen",
+      "en": "Delete"
+    },
+    {
+      "match": "Auswählen",
+      "key": "common.select",
+      "de": "Auswählen",
+      "en": "Select"
+    },
+    {
+      "match": "auswählen",
+      "key": "common.select_lower",
+      "de": "auswählen",
+      "en": "select"
+    },
+    {
+      "match": "Neue Session",
+      "key": "common.new_session",
+      "de": "Neue Session",
+      "en": "New session"
+    },
+    {
+      "match": "Freigaben",
+      "key": "common.approvals",
+      "de": "Freigaben",
+      "en": "Approvals"
+    },
+    {
+      "match": "Freigabe",
+      "key": "common.approval",
+      "de": "Freigabe",
+      "en": "Approval"
+    },
+    {
+      "match": "Einstellungen",
+      "key": "common.settings",
+      "de": "Einstellungen",
+      "en": "Settings"
+    },
+    {
+      "match": "Statistik",
+      "key": "common.statistics",
+      "de": "Statistik",
+      "en": "Statistics"
+    },
+    {
+      "match": "Medien",
+      "key": "common.media",
+      "de": "Medien",
+      "en": "Media"
+    },
+    {
+      "match": "Am PC eintippen",
+      "key": "common.type_at_pc",
+      "de": "Am PC eintippen",
+      "en": "Type at the PC"
+    },
+    {
+      "match": "Provider-Status",
+      "key": "common.provider_status",
+      "de": "Provider-Status",
+      "en": "Provider status"
+    },
+    {
+      "match": "Notizen",
+      "key": "common.notes",
+      "de": "Notizen",
+      "en": "Notes"
+    },
+    {
+      "match": "Agenten-Teams",
+      "key": "common.agent_teams",
+      "de": "Agenten-Teams",
+      "en": "Agent teams"
+    },
+    {
+      "match": "Automationen",
+      "key": "common.automations",
+      "de": "Automationen",
+      "en": "Automations"
+    },
+    {
+      "match": "Metrik",
+      "key": "common.metrics",
+      "de": "Metrik",
+      "en": "Metrics"
+    },
+    {
+      "match": "Terminal",
+      "key": "common.terminal",
+      "de": "Terminal",
+      "en": "Terminal"
+    },
+    {
+      "match": "Release-Notes",
+      "key": "common.release_notes",
+      "de": "Release-Notes",
+      "en": "Release notes"
+    },
+    {
+      "match": "Warteschlange",
+      "key": "common.queue",
+      "de": "Warteschlange",
+      "en": "Queue"
+    },
+    {
+      "match": "Statistik",
+      "key": "common.statistics",
+      "de": "Statistik",
+      "en": "Statistics"
+    },
+    {
+      "match": "Verbinden",
+      "key": "common.connect",
+      "de": "Verbinden",
+      "en": "Connect"
+    },
+    {
+      "match": "Fenster öffnen",
+      "key": "common.open_window",
+      "de": "Fenster öffnen",
+      "en": "Open window"
+    },
+    {
+      "match": "In eigenem Fenster öffnen",
+      "key": "common.open_in_window",
+      "de": "In eigenem Fenster öffnen",
+      "en": "Open in own window"
+    },
+    {
+      "match": "Token verbergen",
+      "key": "common.hide_token",
+      "de": "Token verbergen",
+      "en": "Hide token"
+    },
+    {
+      "match": "Token anzeigen",
+      "key": "common.show_token",
+      "de": "Token anzeigen",
+      "en": "Show token"
+    },
+    {
+      "match": "Lösen",
+      "key": "common.detach",
+      "de": "Lösen",
+      "en": "Detach"
+    },
+    {
+      "match": "Anheften",
+      "key": "common.pin",
+      "de": "Anheften",
+      "en": "Pin"
+    },
+    {
+      "match": "Archivieren",
+      "key": "common.archive_btn",
+      "de": "Archivieren",
+      "en": "Archive"
+    },
+    {
+      "match": "Zurückholen",
+      "key": "common.unarchive",
+      "de": "Zurückholen",
+      "en": "Unarchive"
+    },
+    {
+      "match": "Übergeben…",
+      "key": "common.handover_progress",
+      "de": "Übergeben…",
+      "en": "Handing over…"
+    },
+    {
+      "match": "mehr",
+      "key": "common.more",
+      "de": "mehr",
+      "en": "more"
+    },
+    {
+      "match": "Änderung fehlgeschlagen.",
+      "key": "common.change_failed",
+      "de": "Änderung fehlgeschlagen.",
+      "en": "Change failed."
+    },
+    {
+      "match": "Löschen fehlgeschlagen.",
+      "key": "common.delete_failed",
+      "de": "Löschen fehlgeschlagen.",
+      "en": "Delete failed."
+    },
+    {
+      "match": "Session übergeben",
+      "key": "common.handover",
+      "de": "Session übergeben",
+      "en": "Hand over session"
+    },
+    {
+      "match": "Status",
+      "key": "common.status",
+      "de": "Status",
+      "en": "Status"
+    },
+    {
+      "match": "läuft ·",
+      "key": "common.running_dot",
+      "de": "läuft ·",
+      "en": "running ·"
+    },
+    {
+      "match": "wartet ·",
+      "key": "common.waiting_dot",
+      "de": "wartet ·",
+      "en": "waiting ·"
+    },
+    {
+      "match": "Fehler ·",
+      "key": "common.errors_dot",
+      "de": "Fehler ·",
+      "en": "errors ·"
+    },
+    {
+      "match": "bereit",
+      "key": "common.ready",
+      "de": "bereit",
+      "en": "ready"
+    },
+    {
+      "match": "offen",
+      "key": "common.open_count",
+      "de": "offen",
+      "en": "open"
+    },
+    {
+      "match": "Fenster",
+      "key": "common.windows",
+      "de": "Fenster",
+      "en": "windows"
+    },
+    {
+      "match": "verbunden",
+      "key": "common.connected",
+      "de": "verbunden",
+      "en": "connected"
+    },
+    {
+      "match": "Erste Schritte",
+      "key": "common.first_steps",
+      "de": "Erste Schritte",
+      "en": "Getting started"
+    },
+    {
+      "match": "Noch keine Sessions",
+      "key": "common.no_sessions_yet",
+      "de": "Noch keine Sessions",
+      "en": "No sessions yet"
+    },
+    {
+      "match": "Probe-Session (dummy)",
+      "key": "common.probe_session",
+      "de": "Probe-Session (dummy)",
+      "en": "Probe session (dummy)"
+    },
+    {
+      "match": "Ganze Anleitung bis zur ersten Freigabe vom Handy:",
+      "key": "common.full_guide",
+      "de": "Ganze Anleitung bis zur ersten Freigabe vom Handy:",
+      "en": "Full guide up to the first approval from the phone:"
+    },
+    {
+      "match": "im Repo.",
+      "key": "common.in_repo",
+      "de": "im Repo.",
+      "en": "in the repo."
+    },
+    {
+      "match": "Freigabe entschieden — Agent läuft weiter.",
+      "key": "common.decided",
+      "de": "Freigabe entschieden — Agent läuft weiter.",
+      "en": "Approval decided — agent continues."
+    },
+    {
+      "match": "Session",
+      "key": "common.session_cap",
+      "de": "Session",
+      "en": "session"
+    },
+    {
+      "match": "Sessions",
+      "key": "common.sessions_cap",
+      "de": "Sessions",
+      "en": "sessions"
+    },
+    {
+      "match": "neu",
+      "key": "common.new",
+      "de": "neu",
+      "en": "new"
+    },
+    {
+      "match": "Plan",
+      "key": "common.plan",
+      "de": "Plan",
+      "en": "Plan"
+    },
+    {
+      "match": "Repo-Graph",
+      "key": "common.repo_graph",
+      "de": "Repo-Graph",
+      "en": "Repo graph"
+    },
+    {
+      "match": "Aktionen",
+      "key": "common.actions",
+      "de": "Aktionen",
+      "en": "Actions"
+    },
+    {
+      "match": "Dateibaum öffnen",
+      "key": "common.open_file_tree",
+      "de": "Dateibaum öffnen",
+      "en": "Open file tree"
+    },
+    {
+      "match": "⧉ eigenes Fenster",
+      "key": "common.own_window",
+      "de": "⧉ eigenes Fenster",
+      "en": "⧉ own window"
+    },
+    {
+      "match": "Ein Klick holt das Fenster nach vorn",
+      "key": "common.bring_front",
+      "de": "Ein Klick holt das Fenster nach vorn",
+      "en": "A click brings the window to the front"
+    },
+    {
+      "match": "Planfortschritt",
+      "key": "common.plan_progress",
+      "de": "Planfortschritt",
+      "en": "Plan progress"
+    },
+    {
+      "match": "Heute:",
+      "key": "common.today",
+      "de": "Heute:",
+      "en": "Today:"
+    },
+    {
+      "match": "Gefunden",
+      "key": "common.found",
+      "de": "Gefunden",
+      "en": "Found"
+    },
+    {
+      "match": "Host:",
+      "key": "common.host_colon",
+      "de": "Host:",
+      "en": "Host:"
+    },
+    {
+      "match": "Hosts",
+      "key": "common.hosts",
+      "de": "Hosts",
+      "en": "Hosts"
+    },
+    {
+      "match": "Projekte",
+      "key": "common.projects",
+      "de": "Projekte",
+      "en": "Projects"
+    },
+    {
+      "match": "Übersichtsansicht",
+      "key": "common.overview_view",
+      "de": "Übersichtsansicht",
+      "en": "Overview view"
+    },
+    {
+      "match": "Sessions filtern…",
+      "key": "common.filter_sessions_placeholder",
+      "de": "Sessions filtern…",
+      "en": "Filter sessions…"
+    },
+    {
+      "match": "Sessions filtern",
+      "key": "common.filter_sessions",
+      "de": "Sessions filtern",
+      "en": "Filter sessions"
+    },
+    {
+      "match": "· alle zeigen",
+      "key": "common.show_all",
+      "de": "· alle zeigen",
+      "en": "· show all"
+    },
+    {
+      "match": "Alle",
+      "key": "common.all",
+      "de": "Alle",
+      "en": "All"
+    },
+    {
+      "match": "zeigen",
+      "key": "common.show",
+      "de": "zeigen",
+      "en": "show"
+    },
+    {
+      "match": "auf dich",
+      "key": "common.waiting_for_you",
+      "de": "auf dich",
+      "en": "waiting for you"
+    },
+    {
+      "match": "Freigabe wartet",
+      "key": "common.approval_waits",
+      "de": "Freigabe wartet",
+      "en": "approval is waiting"
+    },
+    {
+      "match": "Freigaben warten",
+      "key": "common.approvals_wait",
+      "de": "Freigaben warten",
+      "en": "approvals are waiting"
+    },
+    {
+      "match": "Aktive",
+      "key": "common.actives",
+      "de": "Aktive",
+      "en": "Active"
+    },
+    {
+      "match": "Archiv",
+      "key": "common.archive",
+      "de": "Archiv",
+      "en": "Archive"
+    },
+    {
+      "match": "Auswahl aufheben",
+      "key": "common.clear_selection",
+      "de": "Auswahl aufheben",
+      "en": "Clear selection"
+    },
+    {
+      "match": "Alle sichtbaren auswählen",
+      "key": "common.select_all_visible",
+      "de": "Alle sichtbaren auswählen",
+      "en": "Select all visible"
+    },
+    {
+      "match": "Wird gelöscht…",
+      "key": "common.deleting",
+      "de": "Wird gelöscht…",
+      "en": "Deleting…"
+    },
+    {
+      "match": "nur wartende",
+      "key": "common.only_waiting",
+      "de": "nur wartende",
+      "en": "only waiting"
+    },
+    {
+      "match": "nur aktive",
+      "key": "common.only_active",
+      "de": "nur aktive",
+      "en": "only active"
+    },
+    {
+      "match": "1 Session",
+      "key": "common.one_session",
+      "de": "1 Session",
+      "en": "1 session"
+    },
+    {
+      "match": "1 Session löschen",
+      "key": "common.delete_one",
+      "de": "1 Session löschen",
+      "en": "Delete 1 session"
+    },
+    {
+      "match": "keine Sessions",
+      "key": "common.no_sessions",
+      "de": "keine Sessions",
+      "en": "no sessions"
+    },
+    {
+      "match": "dieser Rechner",
+      "key": "common.this_machine",
+      "de": "dieser Rechner",
+      "en": "this machine"
+    },
+    {
+      "match": "Standardmodell",
+      "key": "common.default_model",
+      "de": "Standardmodell",
+      "en": "default model"
+    },
+    {
+      "match": "noch nichts passiert",
+      "key": "common.nothing_yet",
+      "de": "noch nichts passiert",
+      "en": "nothing yet"
+    },
+    {
+      "match": "Projektliste nicht erreichbar.",
+      "key": "common.projects_unreachable",
+      "de": "Projektliste nicht erreichbar.",
+      "en": "Project list unreachable."
+    },
+    {
+      "match": "keine Projekte gefunden — lege eines an",
+      "key": "common.no_projects",
+      "de": "keine Projekte gefunden — lege eines an",
+      "en": "no projects found — create one"
+    },
+    {
+      "match": "`${targets.length} Sessions`",
+      "key": "common.n_sessions",
+      "de": "{n} sessions",
+      "en": "{n} sessions",
+      "params": {
+        "targets.length": "n"
+      }
+    },
+    {
+      "match": "`${selectedVisible.length} Sessions löschen`",
+      "key": "common.delete_n",
+      "de": "{n} sessions löschen",
+      "en": "delete {n} sessions",
+      "params": {
+        "selectedVisible.length": "n"
+      }
+    },
+    {
+      "match": "`${label} endgültig löschen? Laufende archivierte Sessions werden gestoppt. Verlauf, Statistik und Worktrees werden entfernt.`",
+      "key": "common.delete_forever",
+      "de": "{label} endgültig löschen? Laufende archivierte Sessions werden gestoppt. Verlauf, Statistik und Worktrees werden entfernt.",
+      "en": "{label} delete permanently? Running archived sessions will be stopped. History, statistics and worktrees will be removed.",
+      "params": {
+        "label": "label"
+      }
+    },
+    {
+      "match": "`${s.title ?? projectName(s.project)}: ${message}`",
+      "key": "common.confirm_name_message",
+      "de": "{name}: {message}",
+      "en": "{name}: {message}",
+      "params": {
+        "s.title ?? projectName(s.project)": "name",
+        "message": "message"
+      }
+    },
+    {
+      "match": "`${failures.length} von ${targets.length} nicht gelöscht. ${failures.join(\" · \")}`",
+      "key": "common.delete_fail",
+      "de": "{failed} von {total} nicht gelöscht. {failures}",
+      "en": "{failed} of {total} not deleted. {failures}",
+      "params": {
+        "failures.length": "failed",
+        "targets.length": "total",
+        "failures.join(\" · \")": "failures"
+      }
+    },
+    {
+      "match": "`Factory-Beobachter · ${project}`",
+      "key": "common.factory_observer",
+      "de": "Factory-Beobachter · {project}",
+      "en": "Factory observer · {project}",
+      "params": {
+        "project": "project"
+      }
+    },
+    {
+      "match": "`${project} — ohne Auftrag`",
+      "key": "common.no_order",
+      "de": "{project} — ohne Auftrag",
+      "en": "{project} — no order",
+      "params": {
+        "project": "project"
+      }
+    },
+    {
+      "match": "`Aktionen für ${name}`",
+      "key": "common.actions_for",
+      "de": "Aktionen für {name}",
+      "en": "Actions for {name}",
+      "params": {
+        "name": "name"
+      }
+    },
+    {
+      "match": "`Repo-Graph von ${name} öffnen`",
+      "key": "common.open_repo_graph",
+      "de": "Repo-Graph von {name} öffnen",
+      "en": "Open repo graph of {name}",
+      "params": {
+        "name": "name"
+      }
+    },
+    {
+      "match": "Zur Übersicht",
+      "key": "app.to_overview",
+      "de": "Zur Übersicht",
+      "en": "To overview"
+    },
+    {
+      "match": "Auftrag in Worten (Strg+K)",
+      "key": "common.voice_order",
+      "de": "Auftrag in Worten (Strg+K)",
+      "en": "Order in words (Ctrl+K)"
+    },
+    {
+      "match": "Anmeldung bei AncientVoid",
+      "key": "app.sign_in",
+      "de": "Anmeldung bei AncientVoid",
+      "en": "Sign in to AncientVoid"
+    },
+    {
+      "match": "Device-Token eingeben. Es kommt vom Setup-Wizard oder wird mit",
+      "key": "app.token_intro_1",
+      "de": "Device-Token eingeben. Es kommt vom Setup-Wizard oder wird mit",
+      "en": "Enter the device token. It comes from the setup wizard or is issued with"
+    },
+    {
+      "match": "auf dem Rechner mit dem Hub\n        ausgestellt — nie in eine Adresse kopieren.",
+      "key": "app.token_intro_2",
+      "de": "auf dem Rechner mit dem Hub\n        ausgestellt — nie in eine Adresse kopieren.",
+      "en": "on the machine running the hub\n        — never copy it into an address."
+    },
+    {
+      "match": "Device-Token",
+      "key": "common.device_token",
+      "de": "Device-Token",
+      "en": "Device token"
+    },
+    {
+      "match": "z. B. 00bYRN3zmTJJIsfneN4iZmOQKsJl5q-s",
+      "key": "app.token_placeholder",
+      "de": "z. B. 00bYRN3zmTJJIsfneN4iZmOQKsJl5q-s",
+      "en": "e.g. 00bYRN3zmTJJIsfneN4iZmOQKsJl5q-s"
+    },
+    {
+      "match": "Das Fenster wurde nicht geöffnet. Der Browser blockiert Pop-ups für diese Seite — bitte erlauben und noch einmal versuchen.",
+      "key": "app.popup_blocked",
+      "de": "Das Fenster wurde nicht geöffnet. Der Browser blockiert Pop-ups für diese Seite — bitte erlauben und noch einmal versuchen.",
+      "en": "The window was not opened. The browser blocks pop-ups for this page — please allow it and try again."
+    },
+    {
+      "match": "Daten vom",
+      "key": "app.data_from",
+      "de": "Daten vom",
+      "en": "Data from"
+    },
+    {
+      "match": "(offline) — tippen für Neu laden",
+      "key": "app.offline_tap",
+      "de": "(offline) — tippen für Neu laden",
+      "en": "(offline) — tap to reload"
+    },
+    {
+      "match": "Anmeldung abgelehnt",
+      "key": "app.login_rejected",
+      "de": "Anmeldung abgelehnt",
+      "en": "Login rejected"
+    },
+    {
+      "match": "Sidebar",
+      "key": "shell.sidebar",
+      "de": "Sidebar",
+      "en": "Sidebar"
+    },
+    {
+      "match": "Sidebar konfigurieren",
+      "key": "shell.sidebar_configure",
+      "de": "Sidebar konfigurieren",
+      "en": "Configure sidebar"
+    },
+    {
+      "match": "Sidebar ausklappen",
+      "key": "shell.sidebar_expand",
+      "de": "Sidebar ausklappen",
+      "en": "Expand sidebar"
+    },
+    {
+      "match": "Sidebar minimieren",
+      "key": "shell.sidebar_minimize",
+      "de": "Sidebar minimieren",
+      "en": "Minimize sidebar"
+    },
+    {
+      "match": "Statusleiste",
+      "key": "shell.status_bar",
+      "de": "Statusleiste",
+      "en": "Status bar"
+    },
+    {
+      "match": "Verbindung zum Hub steht",
+      "key": "shell.hub_connected",
+      "de": "Verbindung zum Hub steht",
+      "en": "Connection to the hub is up"
+    },
+    {
+      "match": "Flotte",
+      "key": "shell.fleet",
+      "de": "Flotte",
+      "en": "Fleet"
+    },
+    {
+      "match": "Sessions nach Zustand",
+      "key": "shell.sessions_by_state",
+      "de": "Sessions nach Zustand",
+      "en": "Sessions by state"
+    },
+    {
+      "match": "Eigene Fenster",
+      "key": "shell.own_windows",
+      "de": "Eigene Fenster",
+      "en": "Own windows"
+    },
+    {
+      "match": "`keine Verbindung · Stand ${clockText(hub.lastOkAt)}`",
+      "key": "shell.no_connection",
+      "de": "keine Verbindung · Stand {time}",
+      "en": "no connection · as of {time}",
+      "params": {
+        "clockText(hub.lastOkAt)": "time"
+      }
+    },
+    {
+      "match": "`${closeLabel} (${comboLabel(\"tool.close\")})`",
+      "key": "common.close_combo",
+      "de": "{label} ({combo})",
+      "en": "{label} ({combo})",
+      "params": {
+        "closeLabel": "label",
+        "comboLabel(\"tool.close\")": "combo"
+      }
+    },
+    {
+      "match": "Ausgelieferter Stand",
+      "key": "status.deployed_build",
+      "de": "Ausgelieferter Stand",
+      "en": "Deployed build"
+    },
+    {
+      "match": "Hub:",
+      "key": "status.hub_colon",
+      "de": "Hub:",
+      "en": "Hub:"
+    },
+    {
+      "match": "· PWA:",
+      "key": "status.pwa_colon",
+      "de": "· PWA:",
+      "en": "· PWA:"
+    },
+    {
+      "match": "· Checkout:",
+      "key": "status.checkout_colon",
+      "de": "· Checkout:",
+      "en": "· Checkout:"
+    },
+    {
+      "match": "Hub und Oberfläche sind auf demselben Stand.",
+      "key": "status.same_build",
+      "de": "Hub und Oberfläche sind auf demselben Stand.",
+      "en": "Hub and UI are on the same build."
+    },
+    {
+      "match": "Build oder Neustart ausstehend — Stände weichen ab.",
+      "key": "status.build_pending",
+      "de": "Build oder Neustart ausstehend — Stände weichen ab.",
+      "en": "Build or restart pending — builds differ."
+    },
+    {
+      "match": "Build-Zuordnung noch unbekannt.",
+      "key": "status.build_unknown",
+      "de": "Build-Zuordnung noch unbekannt.",
+      "en": "Build mapping not yet known."
+    },
+    {
+      "match": "unbekannt",
+      "key": "status.unknown",
+      "de": "unbekannt",
+      "en": "unknown"
+    },
+    {
+      "match": "belegt",
+      "key": "status.occupied",
+      "de": "belegt",
+      "en": "claimed"
+    },
+    {
+      "match": "gebaut, unbelegt",
+      "key": "status.built_unverified",
+      "de": "gebaut, unbelegt",
+      "en": "built, unverified"
+    },
+    {
+      "match": "fehlt",
+      "key": "status.missing",
+      "de": "fehlt",
+      "en": "missing"
+    },
+    {
+      "match": "blockiert",
+      "key": "status.blocked",
+      "de": "blockiert",
+      "en": "blocked"
+    },
+    {
+      "match": "Inventar nicht erreichbar",
+      "key": "status.inventory_unreachable",
+      "de": "Inventar nicht erreichbar",
+      "en": "Inventory unreachable"
+    },
+    {
+      "match": "Harness-Inventar",
+      "key": "status.harness_inventory",
+      "de": "Harness-Inventar",
+      "en": "Harness inventory"
+    },
+    {
+      "match": "Harness",
+      "key": "status.harness",
+      "de": "Harness",
+      "en": "harness"
+    },
+    {
+      "match": "Version",
+      "key": "status.version",
+      "de": "Version",
+      "en": "Version"
+    },
+    {
+      "match": "Discovery",
+      "key": "status.discovery",
+      "de": "Discovery",
+      "en": "Discovery"
+    },
+    {
+      "match": "Resume",
+      "key": "status.resume",
+      "de": "Resume",
+      "en": "Resume"
+    },
+    {
+      "match": "Reasoning",
+      "key": "status.reasoning",
+      "de": "Reasoning",
+      "en": "Reasoning"
+    },
+    {
+      "match": "Kosten",
+      "key": "status.costs",
+      "de": "Kosten",
+      "en": "Costs"
+    },
+    {
+      "match": "nicht installiert",
+      "key": "status.not_installed",
+      "de": "nicht installiert",
+      "en": "not installed"
+    },
+    {
+      "match": "Kein Kontingent-Signal",
+      "key": "status.no_quota_signal",
+      "de": "Kein Kontingent-Signal",
+      "en": "No quota signal"
+    },
+    {
+      "match": "Kontingent: noch keine Meldung",
+      "key": "status.quota_no_report",
+      "de": "Kontingent: noch keine Meldung",
+      "en": "Quota: no report yet"
+    },
+    {
+      "match": "kein Guthaben",
+      "key": "status.no_credit",
+      "de": "kein Guthaben",
+      "en": "no credit"
+    },
+    {
+      "match": "Kein Projekt gefunden. Lege über „＋“ ein Projekt an oder trage projectRoots in hub.config.json ein.",
+      "key": "startguide.no_project",
+      "de": "Kein Projekt gefunden. Lege über „＋“ ein Projekt an oder trage projectRoots in hub.config.json ein.",
+      "en": "No project found. Create one via “＋” or add projectRoots to hub.config.json."
+    },
+    {
+      "match": "Probe-Session nicht gestartet.",
+      "key": "startguide.probe_failed",
+      "de": "Probe-Session nicht gestartet.",
+      "en": "Probe session not started."
+    },
+    {
+      "match": "`Probe-Session nicht gestartet: ${err.message}`",
+      "key": "startguide.probe_failed_detail",
+      "de": "Probe-Session nicht gestartet: {message}",
+      "en": "Probe session not started: {message}",
+      "params": {
+        "err.message": "message"
+      }
+    },
+    {
+      "match": "Starte eine Probe-Session mit dem Testadapter (dummy) — dafür ist kein Provider nötig. Eine eigene Session legst du über „＋“ an.",
+      "key": "startguide.step_probe",
+      "de": "Starte eine Probe-Session mit dem Testadapter (dummy) — dafür ist kein Provider nötig. Eine eigene Session legst du über „＋“ an.",
+      "en": "Start a probe session with the test adapter (dummy) — no provider needed for that. Create your own session via “＋”."
+    },
+    {
+      "match": "Lege über „＋“ deine erste Session an: Projekt und Provider wählen, Auftrag eingeben, starten.",
+      "key": "startguide.step_create",
+      "de": "Lege über „＋“ deine erste Session an: Projekt und Provider wählen, Auftrag eingeben, starten.",
+      "en": "Create your first session via “＋”: choose project and provider, enter the order, start."
+    },
+    {
+      "match": "docs/tutorial-erste-schritte.md",
+      "key": "startguide.guide_file",
+      "de": "docs/tutorial-erste-schritte.md",
+      "en": "docs/tutorial-erste-schritte.md"
+    },
+    {
+      "match": "lokal",
+      "key": "shell.local_only",
+      "de": "lokal",
+      "en": "local"
+    },
+    {
+      "match": "`${remote.length + 1} Hosts`",
+      "key": "shell.hosts_n",
+      "de": "{n} Hosts",
+      "en": "{n} hosts",
+      "params": {
+        "remote.length + 1": "n"
+      }
+    },
+    {
+      "match": "`${bad.length} von ${remote.length} Hosts gestört`",
+      "key": "shell.hosts_disturbed",
+      "de": "{bad} von {total} Hosts gestört",
+      "en": "{bad} of {total} hosts disturbed",
+      "params": {
+        "bad.length": "bad",
+        "remote.length": "total"
+      }
+    },
+    {
+      "match": "nie",
+      "key": "common.never",
+      "de": "nie",
+      "en": "never"
+    },
+    {
+      "match": " · Stand {time}",
+      "key": "common.stand_time",
+      "de": " · Stand {time}",
+      "en": " · as of {time}"
+    },
+    {
+      "match": "Das Token ist falsch, unvollständig oder widerrufen. Das Auge zeigt, was im Feld steht. Auf dem Rechner mit dem Hub: ",
+      "key": "tokengate.wrong_part1",
+      "de": "Das Token ist falsch, unvollständig oder widerrufen. Das Auge zeigt, was im Feld steht. Auf dem Rechner mit dem Hub: ",
+      "en": "The token is wrong, incomplete or revoked. The eye shows what is in the field. On the machine with the hub: "
+    },
+    {
+      "match": "hubctl token list zeigt die ausgestellten Geräte, hubctl token issue <label> stellt ein neues aus.",
+      "key": "tokengate.wrong_part2",
+      "de": "hubctl token list zeigt die ausgestellten Geräte, hubctl token issue <label> stellt ein neues aus.",
+      "en": "hubctl token list shows the issued devices, hubctl token issue <label> issues a new one."
+    },
+    {
+      "match": "Bitte ein Device-Token eingeben. Es kommt vom Setup-Wizard (setup.sh) oder wird auf dem Rechner mit dem Hub mit hubctl token issue <label> ausgestellt.",
+      "key": "tokengate.enter_token",
+      "de": "Bitte ein Device-Token eingeben. Es kommt vom Setup-Wizard (setup.sh) oder wird auf dem Rechner mit dem Hub mit hubctl token issue <label> ausgestellt.",
+      "en": "Please enter a device token. It comes from the setup wizard (setup.sh) or is issued on the machine with the hub via hubctl token issue <label>."
+    },
+    {
+      "match": "`Der Hub hat das Token abgelehnt. ${NEXT_STEP_REJECTED}`",
+      "key": "tokengate.rejected",
+      "de": "Der Hub hat das Token abgelehnt. {next}",
+      "en": "The hub rejected the token. {next}",
+      "params": {
+        "NEXT_STEP_REJECTED": "next"
+      }
+    },
+    {
+      "match": "Der Hub ist nicht erreichbar. Läuft er (scripts/hub.sh status)? Am Handy: ist Tailscale verbunden und die https-Adresse aus ",
+      "key": "tokengate.unreachable_part1",
+      "de": "Der Hub ist nicht erreichbar. Läuft er (scripts/hub.sh status)? Am Handy: ist Tailscale verbunden und die https-Adresse aus ",
+      "en": "The hub is not reachable. Is it running (scripts/hub.sh status)? On the phone: is Tailscale connected and the https address from "
+    },
+    {
+      "match": "`scripts/setup-tailscale-serve.sh geöffnet?${seen}`",
+      "key": "tokengate.unreachable_part2",
+      "de": "scripts/setup-tailscale-serve.sh geöffnet?{seen}",
+      "en": "scripts/setup-tailscale-serve.sh open?{seen}",
+      "params": {
+        "seen": "seen"
+      }
+    },
+    {
+      "match": "`Anmeldung fehlgeschlagen: ${detail}`",
+      "key": "tokengate.failed",
+      "de": "Anmeldung fehlgeschlagen: {detail}",
+      "en": "Login failed: {detail}",
+      "params": {
+        "detail": "detail"
+      }
+    },
+    {
+      "match": "` Letzte Verbindung zu diesem Hub: ${new Date(lastContact).toLocaleString(\"de-DE\")}.`",
+      "key": "tokengate.last_contact",
+      "de": " Letzte Verbindung zu diesem Hub: {time}.",
+      "en": " Last contact with this hub: {time}.",
+      "params": {
+        "new Date(lastContact).toLocaleString(\"de-DE\")": "time"
+      }
+    }
+  ]
+}

@@ -360,6 +360,22 @@ a {
   color: var(--accent);
 }
 
+/* Pin-Glyph: ein fester Punkt im Raster — aktiv = gefüllt. */
+.tile-glyph.layout-fix {
+  place-items: center;
+}
+.tile-glyph.layout-fix > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background: transparent;
+  opacity: 1;
+}
+.tile-layout-fix.active .tile-glyph.layout-fix > span {
+  background: currentColor;
+}
+
 .tile-keys {
   margin-left: auto;
   font-size: var(--text-xs);

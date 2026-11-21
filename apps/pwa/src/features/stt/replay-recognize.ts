@@ -1,38 +1,19 @@
-import { useEffect, useState } from "preact/hooks";
-import { dropRecording, getRecording, latestRecording, REPLAY_EVENT, type ReplaySummary } from "../../shared/stt-replay.ts";
+import { dropRecording, getRecording, type ReplaySummary } from "../../shared/stt-replay.ts";
 import { hubApi } from "../../shared/api.ts";
 import { replaceOrPasteTranscript } from "./paste-target.ts";
 
 /**
- * ADR-0092: „neu erkennen“ — dieselbe Aufnahme ein zweites Mal durch die eigene
- * Erkennung schicken und den alten Text ersetzen, wenn er noch unveraendert im
- * Feld steht. Die Zeile dazu sitzt beim Eingabefeld, weil dort nach dem Diktat
- * die Aufmerksamkeit liegt (nicht schwebend ueber dem Chat).
+ * ADR-0092 (Nachtrag 21.11.2026): „neu erkennen“ lebt in der Ablage — dieselbe
+ * Aufnahme ein zweites Mal durch die eigene Erkennung schicken und den alten Text
+ * ersetzen, wenn er noch unveraendert im Feld steht. Kein zusätzlicher Platz am
+ * Eingabefeld; die Zahl am Ablage-Knopf zeigt, dass etwas wartet.
  */
-export function useReplay(): ReplaySummary | undefined {
-  const [aufnahme, setAufnahme] = useState<ReplaySummary | undefined>(undefined);
-  useEffect(() => {
-    let lebt = true;
-    const neu = () => void latestRecording().then((a) => lebt && setAufnahme(a));
-    neu();
-    window.addEventListener(REPLAY_EVENT, neu);
-    return () => {
-      lebt = false;
-      window.removeEventListener(REPLAY_EVENT, neu);
-    };
-  }, []);
-  return aufnahme;
-}
 
 /** Laeuft die Neu-Erkennung gerade? (Taste darf nicht zweimal druecken.) */
 let beschaeftigt = false;
 
-export function replayBusy(): boolean {
-  return beschaeftigt;
-}
-
 /**
- * Neu erkennen. Rueckgabe ist der Hinweis fuer die Zeile — ehrlich darueber, was
+ * Neu erkennen. Rueckgabe ist der Hinweis fuer die Ablage — ehrlich darueber, was
  * mit dem Feld passiert ist: ersetzt, angehaengt, oder gar nicht (kein Feld).
  */
 export async function reRecognize(aufnahme: ReplaySummary): Promise<{ ok: boolean; note: string }> {

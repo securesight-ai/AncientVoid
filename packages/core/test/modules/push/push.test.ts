@@ -40,13 +40,13 @@ describe("Web Push (T8.3, ADR-0026)", () => {
     expect(push.subscribe(sub(), "pixel")).toEqual({ ok: true });
   });
 
-  it("one push per notification and device, payload opaque; turn ends only when asked", async () => {
+  it("one push per notification and device, payload ohne Prosadaten; turn ends only when asked", async () => {
     const { push, sent } = setup();
     push.setEnabled(true);
     push.subscribe(sub(), "pixel");
     expect(await push.notify(note(1, "tool.permission_requested"))).toBe(1);
     expect(await push.notify(note(1, "tool.permission_requested"))).toBe(0);
-    expect(JSON.parse(sent[0]!.payload)).toEqual({ id: 1, category: "approval", sessionId: "s1", hostId: "workstation" });
+    expect(JSON.parse(sent[0]!.payload)).toEqual({ id: 1, category: "approval", sessionId: "s1", hostId: "workstation", title: "AncientVoid — Freigabe nötig", body: "Eine Session wartet auf deine Entscheidung." });
     expect(sent[0]!.payload).not.toContain("rm -rf");
     expect(await push.notify(note(2, "session.turn_end"))).toBe(0);
     expect(await push.notify(note(3, "session.applied"))).toBe(0);
@@ -100,5 +100,34 @@ describe("Web Push (T8.3, ADR-0026)", () => {
     push.subscribe(sub("https://fcm.googleapis.com/fcm/send/old"), "pixel");
     push.subscribe({ ...sub("https://fcm.googleapis.com/fcm/send/new"), oldEndpoint: "https://fcm.googleapis.com/fcm/send/old" }, "pixel");
     expect(push.list("pixel")).toHaveLength(1);
+  });
+});
+
+// EPIC-P61 T61.7 / ADR-0101: Der Hub rendert Push-Texte selbst — nach der
+// Sprache des Abos. Deutsche Abos behalten die bisherigen Worte unverändert.
+describe("EPIC-P61 T61.7: Push-Texte nach Sprache des Abos", () => {
+  const subL = (locale?: "de" | "en") => ({ endpoint: "https://fcm.googleapis.com/fcm/send/xyz", keys: { p256dh: "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM", auth: "tBHItJI5svbpez7KI4CCXg" }, ...(locale ? { locale } : {}) });
+  const noteKeyed = (id: number): HubNotification => ({ id, sessionId: "s1", level: "error", title: "galaxy · acp: Start fehlgeschlagen", detail: "boom", kind: "session.start_failed", messageKey: "notification.start_failed", params: { project: "galaxy", adapter: "acp" }, createdAt: "x" });
+
+  it("Abo mit locale en: Titel und Body englisch; Abo ohne locale bleibt deutsch", async () => {
+    const { push, sent } = setup();
+    push.setEnabled(true);
+    expect(push.subscribe(subL("en"), "pixel")).toMatchObject({ ok: true });
+    expect(push.subscribe({ ...subL(), endpoint: "https://fcm.googleapis.com/fcm/send/xyz2" }, "pixel2")).toMatchObject({ ok: true });
+    expect(await push.notify(noteKeyed(1))).toBe(2);
+    const en = sent.find((s) => s.endpoint.endsWith("xyz"))!;
+    const de = sent.find((s) => !s.endpoint.endsWith("xyz"))!;
+    expect(JSON.parse(en.payload)).toMatchObject({ title: "galaxy · acp: start failed", body: "Something went wrong in a session." });
+    expect(JSON.parse(de.payload)).toMatchObject({ title: "galaxy · acp: Start fehlgeschlagen", body: "In einer Session ist etwas schiefgegangen." });
+    expect(en.payload).not.toContain("boom"); // ADR-0026: Prosadaten bleiben aus der Lockscreen-Payload
+  });
+
+  it("die Abo-Sprache steht im View und überlebt einen Neustart des Dienstes (K7)", () => {
+    const { db, push } = setup();
+    push.setEnabled(true);
+    push.subscribe({ ...subL("en"), endpoint: "https://fcm.googleapis.com/fcm/send/abc" }, "pixel");
+    expect(push.list("pixel")[0]).toMatchObject({ locale: "en" });
+    const again = new PushService(db, new SettingsStore(db), { sender: async () => ({ statusCode: 201 }) });
+    expect(again.list("pixel")[0]).toMatchObject({ locale: "en" });
   });
 });

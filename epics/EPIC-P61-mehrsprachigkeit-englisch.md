@@ -211,14 +211,14 @@ hart verdrahtet. Für „praktisch alle Sprachen" gilt:
   Unit-Tests für `t()`, Plural, Fallback. (K10)
 - [x] **T61.3** `check-i18n` mit Baseline ins Gate; Test mit positivem und
   negativem Fixture; `docs/check-context.md`-Eintrag „script-ref" erfüllt.
-- [ ] **T61.4** Migration Shell/Übersicht/Status/Benachrichtigungen
+- [x] **T61.4** Migration Shell/Übersicht/Status/Benachrichtigungen
   (häufigste Erstkontakt-Flächen) inkl. `fmt*`-Ersatz der `"de-DE"`-Literale.
 - [ ] **T61.5** Migration Session/Composer/Approvals/Neue Session/Setup-
   und Onboarding-Pfade.
 - [ ] **T61.6** Migration übrige Features (Workspace, Files, Vault, Graph,
   Fleet, Teams, Automations, Forge, Media, Metriken, Settings …) — je
   Feature-Bereich ein MR, Baseline sinkt nachweisbar.
-- [ ] **T61.7** Contract + Hub: `messageKey`/`params` an Notifications,
+- [x] **T61.7** Contract + Hub: `messageKey`/`params` an Notifications,
   `error.<code>`-Mapping, `locale` am Push-Abo, Server-Push-Katalog. (K5, K7)
 - [ ] **T61.8** `hubctl`-Katalog und `--lang`; Referenz-Doku neu generieren
   (`npm run docs:reference`).

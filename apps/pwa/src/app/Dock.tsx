@@ -21,7 +21,7 @@ const MORE: readonly { page: Page; icon: TabIconName; label: string; title: stri
   { page: "automationen", icon: "automationen", label: t("dock.automations"), title: t("dock.automationsTitle") },
   { page: "settings", icon: "einstellungen", label: t("dock.settings"), title: t("dock.settingsTitle") },
   { page: "aimetrics", icon: "bericht", label: t("dock.aimetrics"), title: t("dock.aimetricsTitle") },
-  { page: "inference", icon: "bericht", label: t("inference.dock"), title: t("inference.dockTitle") },
+  { page: "inference", icon: "bericht", label: t("common.inference"), title: t("common.inference_title") },
   { page: "statistics", icon: "bericht", label: t("dock.statistics"), title: t("dock.statisticsTitle") },
   { page: "terminal", icon: "terminal", label: t("dock.terminal"), title: t("dock.terminalTitle") },
   { page: "releasenotes", icon: "verlauf", label: t("dock.releasenotes"), title: t("dock.releasenotesTitle") },

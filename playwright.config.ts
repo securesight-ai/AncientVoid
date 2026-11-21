@@ -20,7 +20,6 @@ const PHONE_SPECS = [
   "thinking-leer.spec.ts",
   "flackern.spec.ts",
   "session-scroll.spec.ts",
-  "ruhe-beim-tippen.spec.ts",
   "pc-offen.spec.ts",
   "workspace.spec.ts",
   "code.spec.ts",

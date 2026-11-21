@@ -434,6 +434,40 @@ async function main(): Promise<void> {
     });
   }
 
+  if (config.inference && config.inference.engines.length > 0) {
+    const engines: InferenceEngineConfig[] = config.inference.engines.map((e) => ({
+      ...(e.id ? { id: e.id } : {}),
+      kind: e.kind,
+      url: e.url,
+      ...(e.label ? { label: e.label } : {}),
+      ...(e.apiKeyFile ? { apiKeyFile: resolve(e.apiKeyFile.replace(/^~(?=\/)/, homedir())) } : {}),
+    }));
+    inference = createInferenceTracker(
+      {
+        fetch: (url, init) => fetch(url, init),
+        readFile: async (path) => readFile(path, "utf8").catch(() => null),
+        appendFile: async (path, data) => {
+          await appendFile(path, data, "utf8");
+        },
+        now: () => new Date(),
+        logger: {
+          info: (m) => logger.info(`inference: ${m}`),
+          warn: (m) => logger.warn(`inference: ${m}`),
+          error: (m) => logger.error(`inference: ${m}`),
+        },
+      },
+      engines,
+      {
+        intervalSec: config.inference.intervalSec,
+        windowHours: config.inference.windowHours,
+        minReadPrefill: config.inference.minReadPrefill,
+        storeFile: resolve(dataDir, "inference-requests.jsonl"),
+      },
+    );
+    inference.start();
+    logger.info(`inference: ${engines.length} Engine-Quellen (${engines.map((e) => e.kind).join(", ")})`);
+  }
+
   const app = await createHubApp({
     sessions,
     browser,
@@ -509,39 +543,6 @@ async function main(): Promise<void> {
   await app.listen({ port: config.server.port, host: listen });
   automations.start();
   issueBridge?.start();
-  if (config.inference && config.inference.engines.length > 0) {
-    const engines: InferenceEngineConfig[] = config.inference.engines.map((e) => ({
-      ...(e.id ? { id: e.id } : {}),
-      kind: e.kind,
-      url: e.url,
-      ...(e.label ? { label: e.label } : {}),
-      ...(e.apiKeyFile ? { apiKeyFile: resolve(e.apiKeyFile.replace(/^~(?=\/)/, homedir())) } : {}),
-    }));
-    inference = createInferenceTracker(
-      {
-        fetch: (url, init) => fetch(url, init),
-        readFile: async (path) => readFile(path, "utf8").catch(() => null),
-        appendFile: async (path, data) => {
-          await appendFile(path, data, "utf8");
-        },
-        now: () => new Date(),
-        logger: {
-          info: (m) => logger.info(`inference: ${m}`),
-          warn: (m) => logger.warn(`inference: ${m}`),
-          error: (m) => logger.error(`inference: ${m}`),
-        },
-      },
-      engines,
-      {
-        intervalSec: config.inference.intervalSec,
-        windowHours: config.inference.windowHours,
-        minReadPrefill: config.inference.minReadPrefill,
-        storeFile: resolve(dataDir, "inference-requests.jsonl"),
-      },
-    );
-    inference.start();
-    logger.info(`inference: ${engines.length} Engine-Quellen (${engines.map((e) => e.kind).join(", ")})`);
-  }
   aimetrics?.start();
   // EPIC-P67 T67.5/T67.6: laufende Main-Synchronisation — ein Fetch je Projekt
   // je Takt (K8). Meldungen werden persistente Benachrichtigungen (mit

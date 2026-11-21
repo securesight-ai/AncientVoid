@@ -228,6 +228,29 @@ function attrappen() {
   };
 }
 
+it("Tracker: Accept-Kopf passt zur Quelle (Strata liefert sonst Prometheus-Text)", async () => {
+  const gesehene: Record<string, string> = {};
+  const tracker = createInferenceTracker(
+    {
+      fetch: async (url, init) => {
+        gesehene[url] = String((init?.headers as Record<string, string> | undefined)?.accept ?? "");
+        return { status: 200, ok: true, text: async () => (url.includes("strata") ? JSON.stringify(strataBody) : llm1) };
+      },
+      readFile: async () => null,
+      appendFile: async () => {},
+      now: () => new Date("2026-11-21T12:00:00.000Z"),
+      logger: { info() {}, warn() {}, error() {} },
+    },
+    [
+      { id: "strata", kind: "strata", url: "http://strata/metrics" },
+      { id: "halo", kind: "halogen", url: "http://halo/metrics" },
+    ],
+  );
+  await tracker.tickNow();
+  assert.equal(gesehene["http://strata/metrics"], "application/json");
+  assert.match(gesehene["http://halo/metrics"] ?? "", /^text\/plain/);
+});
+
 it("Tracker: Snapshot gültig, Grenzen eingehalten, kaputte Quelle bleibt sichtbar", async () => {
   const a = attrappen();
   const tracker = createInferenceTracker(a.deps, [

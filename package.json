@@ -68,7 +68,10 @@
     "readme:diagram": "node scripts/readme-diagram.mjs",
     "check:skills": "node scripts/check-skills.mjs",
     "skills:curate": "node scripts/skill-curate.mjs",
-    "check:i18n": "node scripts/check-i18n.mjs"
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "i18n:scan": "node scripts/i18n-migrate.mjs list",
+    "i18n:migrate": "node scripts/i18n-migrate.mjs apply",
+    "i18n:catalog": "node scripts/i18n-catalog-gen.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

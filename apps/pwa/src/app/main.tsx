@@ -1,3 +1,4 @@
+import { fmtDateTime } from "../shared/i18n/format.ts";
 import { loadFilter } from "../features/session/event-filter.ts";
 import { contentHash } from "../features/workspace/content.ts";
 import { onWorkspaceOpen } from "../features/workspace/open-content.ts";
@@ -18,7 +19,7 @@ import { installShortcutHints } from "../shared/shortcut-hint.ts";
 import { installSoundUnlock } from "../shared/audio.ts";
 import { classifyGateError, gateMessage, lastHubContact, noteHubContact } from "./token-gate.ts";
 import { applyTheme, getTheme } from "./theme.ts";
-import { applyLanguage } from "../shared/i18n/index.ts";
+import { t, applyLanguage } from "../shared/i18n/index.ts";
 import { initAppearance } from "./appearance.ts";
 import { applyPinchZoom, pinchZoomAllowed } from "./zoom.ts";
 import { applyCtxMotion, applyScale, ctxMotionOn, getScale, installScaleShortcuts } from "./ui-scale.ts";
@@ -35,7 +36,7 @@ import { RestoreBar } from "../features/windows/RestoreBar.tsx";
 import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
-import { detachTile, forgetDetached, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
+import { detachTile, focusOpenSession, forgetDetached, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
 import { targetKey } from "../features/windows/protocol.ts";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
@@ -103,20 +104,19 @@ function TokenGate({ onReady, rejected }: { onReady: () => void; rejected: strin
   return (
     <div class="card form-grid" style="margin-top: 20vh">
       <img class="login-artwork" src="/assets/artwork-tempel.webp" alt="" width="1280" height="720" />
-      <h2 style="margin: 0">Anmeldung bei AncientVoid</h2>
+      <h2 style="margin: 0">{t("app.sign_in")}</h2>
       <p class="dim" style="margin: 0">
-        Device-Token eingeben. Es kommt vom Setup-Wizard oder wird mit <code>hubctl token issue &lt;label&gt;</code> auf dem Rechner mit dem Hub
-        ausgestellt — nie in eine Adresse kopieren.
+        {t("app.token_intro_1")} <code>hubctl token issue &lt;label&gt;</code> {t("app.token_intro_2")}
       </p>
       <label>
-        Device-Token
+        {t("common.device_token")}
         <div style="display: flex; gap: 8px">
           <input
             // Preact 11 typisiert <input> je type-Variante; ein Literal-Union passt zu keiner.
             {...(reveal ? { type: "text" as const } : { type: "password" as const })}
             value={token}
             onInput={(e) => setVal((e.target as HTMLInputElement).value)}
-            placeholder="z. B. 00bYRN3zmTJJIsfneN4iZmOQKsJl5q-s"
+            placeholder={t("app.token_placeholder")}
             autocapitalize="off"
             autocorrect="off"
             autocomplete="off"
@@ -125,7 +125,7 @@ function TokenGate({ onReady, rejected }: { onReady: () => void; rejected: strin
           />
           <Button
             onClick={() => setReveal((v) => !v)}
-            title={reveal ? "Token verbergen" : "Token anzeigen"}
+            title={reveal ? t("common.hide_token") : t("common.show_token")}
           >
             {reveal ? "🙈" : "👁"}
           </Button>
@@ -137,13 +137,16 @@ function TokenGate({ onReady, rejected }: { onReady: () => void; rejected: strin
         </div>
       )}
       <Button  aria-busy={checking} onClick={submit} disabled={checking} variant="primary" class={checking ? "busy" : undefined}>
-        {checking ? "lädt…" : "Verbinden"}
+        {checking ? t("common.loading_dots") : t("common.connect")}
       </Button>
     </div>
   );
 }
 
-const WIDE = "(min-width: 700px)";
+/** Ab 700 px teilen sich PC und Tablet den Kachel-Arbeitsplatz (dabe85d5) — aber nur
+ * bei nutzbarer Höhe: im Handy-Querformat (≤ 520 px, BUG-0053) bleibt das Mobil-Layout
+ * mit seiner Verdichtung, sonst frisst der Kachelkopf den Verlauf auf. */
+const WIDE = "(min-width: 700px) and (min-height: 521px)";
 const WORKSPACE_KEY = "ancientvoid.workspace";
 const LIST_COLLAPSED_KEY = "ancientvoid.listCollapsed";
 
@@ -215,7 +218,7 @@ function Main() {
         else {
           setReady(false);
           // BUG-0054: a rejected stored token used to leave the gate silent.
-          if (getToken()) setGateError(gateMessage(classifyGateError(err), err instanceof Error ? err.message : "Anmeldung abgelehnt", lastHubContact()));
+          if (getToken()) setGateError(gateMessage(classifyGateError(err), err instanceof Error ? err.message : t("app.login_rejected"), lastHubContact()));
         }
       });
   }, []);
@@ -356,7 +359,7 @@ function Main() {
       pendingForget.clear();
     };
   }, []);
-  const blockedNotice = "Das Fenster wurde nicht geöffnet. Der Browser blockiert Pop-ups für diese Seite — bitte erlauben und noch einmal versuchen.";
+  const blockedNotice = t("app.popup_blocked");
   const popoutTile = async (index: number, drop?: DropPoint) => {
     const ref = latest.current.ws.slots[index];
     if (!ref) return;
@@ -379,7 +382,9 @@ function Main() {
     setRoute({ view: "tail", session });
     // Kein Fenster mehr da (geschlossen, abgestürzt): die Session gehört wieder in eine Kachel.
     const base = forgetDetached(ws, ref);
-    changeWorkspace(openInNewTile(base, ref));
+    // Schon offen in einer Kachel → nur hinspringen, keine zweite Karte.
+    const focused = focusOpenSession(base, ref);
+    changeWorkspace(focused ?? openInNewTile(base, ref));
   };
   // Every route has its own remembered target. Existing cards never consume new route props.
   useEffect(() => {
@@ -387,7 +392,16 @@ function Main() {
     const current = latest.current.ws;
     let ref: TileRef;
     if (route.view === "tail") {
-      ref = { ...tileRefOf(route.session), ...(route.tab || route.code ? { content: { kind: "session" as const, tab: route.code ? "code" as const : route.tab!, ...(route.file ? { file: route.file } : {}), ...(route.code ? { code: route.code } : {}) } } : {}) };
+      const deep = !!(route.tab || route.code);
+      ref = { ...tileRefOf(route.session), ...(deep ? { content: { kind: "session" as const, tab: route.code ? "code" as const : route.tab!, ...(route.file ? { file: route.file } : {}), ...(route.code ? { code: route.code } : {}) } } : {}) };
+      // Listen-/Session-Wechsel: schon offene Karte fokussieren, statt Tab-Default als neue Kachel.
+      if (!deep) {
+        const focused = focusOpenSession(current, ref);
+        if (focused) {
+          latest.current.changeWorkspace(focused);
+          return;
+        }
+      }
     } else {
       if (route.page === "dashboard") return;
       ref = { sessionId: "", content: { kind: "page", page: route.page, ...(route.vaultFile ? { vaultFile: route.vaultFile } : {}), ...(route.vaultTab ? { vaultTab: route.vaultTab } : {}), hash: location.hash } };
@@ -459,7 +473,7 @@ function Main() {
         <div class="topbar">
           {/* K10: tippen lädt neu — der Service Worker holt dann wieder Netz-zuerst. */}
           <button type="button" class="badge-stale" data-testid="badge-refresh" onClick={() => location.reload()}>
-            Daten vom {staleAt.toLocaleString("de-DE")} (offline) — tippen für Neu laden
+            {t("app.data_from")} {fmtDateTime(staleAt)} {t("app.offline_tap")}
           </button>
         </div>
       )}
@@ -488,11 +502,11 @@ function Main() {
                 retryPopout();
               }}
             >
-              Fenster öffnen
+              {t("common.open_window")}
             </Button>
           )}{" "}
           <button type="button" class="link-btn" onClick={() => setPopoutNotice("")}>
-            Schließen
+            {t("common.close")}
           </button>
         </div>
       )}

@@ -135,6 +135,16 @@
   font-size: var(--text-xs);
 }
 
+/* ADR-0092-Nachtrag: Sprachnachrichten — eigener Abschnitt unter den Stufen,
+ * dieselbe Zeilenform. */
+.shelf-voices {
+  margin-top: var(--space-3);
+}
+
+.shelf-voices .shelf-step {
+  color: var(--fg-dim);
+}
+
 .shelf-note {
   margin: 0;
   color: var(--fg-dim);

@@ -2,7 +2,7 @@ import { WorkspaceTile } from "./WorkspaceTile.tsx";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Page } from "../../app/Dock.tsx";
 import type { DropPoint } from "../windows/drag.ts";
-import { closeTile, cycleLayout, focusTile, LAYOUT_LABELS, LAYOUTS, resizeTile, setLayout, swapWith, tileCount, tileFractions, visibleTiles, type Layout, type TileRef, type Workspace } from "./tiles.ts";
+import { closeTile, cycleLayout, focusTile, isLayoutFixed, LAYOUT_LABELS, LAYOUTS, resizeTile, setLayout, setLayoutFixed, swapWith, tileCount, tileFractions, visibleTiles, type Layout, type TileRef, type Workspace } from "./tiles.ts";
 import { ariaCombo, comboLabel, registerShortcut } from "../../shared/shortcuts/registry.ts";
 import { Button, Chip } from "../../shared/ui/index.ts";
 
@@ -123,16 +123,25 @@ export function TileWorkspace({
         {LAYOUTS.map((layout) => (
           <Button
             key={layout}
-            
             aria-pressed={layout === ws.layout}
             aria-label={LAYOUT_LABELS[layout]}
             aria-keyshortcuts={ariaCombo("workspace.layout")}
             title={`${LAYOUT_LABELS[layout]} (${comboLabel("workspace.layout")} wechselt)`}
             onClick={() => onChange(setLayout(ws, layout))}
-           class={`tile-layout-btn${layout === ws.layout ? " active" : ""}`}>
+            class={`tile-layout-btn${layout === ws.layout ? " active" : ""}`}
+          >
             <LayoutGlyph layout={layout} />
           </Button>
         ))}
+        <Button
+          aria-pressed={isLayoutFixed(ws)}
+          aria-label={isLayoutFixed(ws) ? "Layout lösen" : "Layout fixieren"}
+          title={isLayoutFixed(ws) ? "Layout gelöst — Öffnen kann neue Kacheln anlegen" : "Layout fixieren — Öffnen bleibt im Raster, schon offene Sessions springen hin"}
+          onClick={() => onChange(setLayoutFixed(ws, !isLayoutFixed(ws)))}
+          class={`tile-layout-btn tile-layout-fix${isLayoutFixed(ws) ? " active" : ""}`}
+        >
+          <span class="tile-glyph layout-fix" aria-hidden="true"><span /></span>
+        </Button>
         {/* Dieselben Aktionen wie die Tastenkürzel, damit sie auch per Tipp gehen (Tablet, Touch). */}
         <div class="tile-actions" role="group" aria-label="Kachel-Aktionen">
           <Chip title={`Fokus auf die vorige Kachel (${comboLabel("workspace.tile-1")}–4 wählt direkt)`} data-shortcut="workspace.tile-1" disabled={count < 2} onClick={() => onChange(focusTile(ws, (ws.focus + count - 1) % count))}>
@@ -147,11 +156,11 @@ export function TileWorkspace({
           <Chip title={`Nächstes Layout (${comboLabel("workspace.layout")})`} data-shortcut="workspace.layout" onClick={() => onChange(cycleLayout(ws, 1))}>
             ⟳ Layout
           </Chip>
-          <Chip title={`Fokussierte Kachel leeren (${comboLabel("workspace.tile-close")})`} data-shortcut="workspace.tile-close" onClick={() => onChange(closeTile(ws, ws.focus))}>
-            ✕ Leeren
+          <Chip title={`Fokussierte Kachel schließen (${comboLabel("workspace.tile-close")})`} data-shortcut="workspace.tile-close" onClick={() => onChange(closeTile(ws, ws.focus))}>
+            ✕ Schließen
           </Chip>
           {/* EPIC-P51 T51.7: detaillierte Kürzelzeile durch ?-Übersicht ersetzt (aus T43.6 hierher gezogen). */}
-          <span class="tile-keys dim">Tastatur: ? zeigt alle Kürzel · Öffnen: neue Kachel</span>
+          <span class="tile-keys dim">Tastatur: ? zeigt alle Kürzel · Öffnen: {isLayoutFixed(ws) ? "Raster fixiert" : "neue Kachel"}</span>
         </div>
       </div>
       <div ref={gridRef} class={`tile-grid ${overflow ? "layout-overflow" : `layout-${ws.layout.replace("+", "p")}`}`} style={overflow ? undefined : template}>

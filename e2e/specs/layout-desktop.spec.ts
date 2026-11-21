@@ -54,11 +54,12 @@ test.describe("Desktop (T8.5, AC-P8-6)", () => {
     await expect(tabs.getByRole("button", { name: /^Änderungen/ })).toHaveAttribute("aria-current", "page");
     await expect(app.locator(".tile .kv-list").first()).toContainText("Kontextfenster");
 
-    // Kürzel als Knöpfe: Layout wechseln und eine zweite Kachel leeren.
+    // Kürzel als Knöpfe: Layout wechseln; mit gelöstem Raster schließt kompakt.
     await app.getByRole("group", { name: "Kachel-Aktionen" }).getByRole("button", { name: /Layout/ }).click();
     await expect(app.locator(".tile")).not.toHaveCount(1);
+    await app.getByRole("button", { name: "Layout lösen" }).click();
     const tiles = await app.locator(".tile").count();
-    await app.getByRole("button", { name: /Leeren/ }).click();
-    await expect(app.locator(".tile")).toHaveCount(tiles);
+    await app.getByRole("button", { name: /Schließen/ }).click();
+    expect(await app.locator(".tile").count()).toBeLessThan(tiles);
   });
 });

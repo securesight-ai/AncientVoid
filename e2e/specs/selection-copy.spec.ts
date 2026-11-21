@@ -35,7 +35,7 @@ test.describe("Markieren kopiert in die Zwischenablage", () => {
       range.selectNodeContents(best);
       sel?.removeAllRanges();
       sel?.addRange(range);
-      document.dispatchEvent(new Event("pointerup"));
+      document.querySelector(".tail-scroll")!.dispatchEvent(new Event("pointerup", { bubbles: true }));
       return best.textContent ?? "";
     });
 
@@ -55,7 +55,7 @@ test.describe("Markieren kopiert in die Zwischenablage", () => {
     const field = app.getByPlaceholder("Antworten…");
     await field.fill("EINGABEFELD_NICHT_KOPIEREN");
     await field.selectText();
-    await app.evaluate(() => document.dispatchEvent(new Event("pointerup")));
+    await app.evaluate(() => document.querySelector(".tail-scroll")!.dispatchEvent(new Event("pointerup", { bubbles: true })));
     // Kein Flash — die Auswahl liegt außerhalb des Verlaufs.
     await expect(app.locator(".copy-flash")).toHaveCount(0);
   });

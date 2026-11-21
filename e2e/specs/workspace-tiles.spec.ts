@@ -11,11 +11,13 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
   test("Strg-Klick öffnet weitere Kacheln bis 2×2, jede Kachel zeigt ihre Session mit Token-Zeile (AC-P18-2)", async ({ app, hub }) => {
     for (const name of ["Eins", "Zwei", "Drei", "Vier"]) await hub.createSession({ adapter: "opencode", prompt: `Aufgabe ${name}` });
     await card(app, "Aufgabe Eins").click();
+    // Default ist fixiert — zum Wachsen erst lösen.
+    await app.getByRole("button", { name: "Layout lösen" }).click();
     await card(app, "Aufgabe Zwei").click({ modifiers: ["Control"] });
-    await expect(app.locator(".tile-layout-btn.active")).toHaveAttribute("aria-label", "Zwei nebeneinander");
+    await expect(app.getByRole("button", { name: "Zwei nebeneinander" })).toHaveAttribute("aria-pressed", "true");
     await card(app, "Aufgabe Drei").click({ modifiers: ["Control"] });
     await card(app, "Aufgabe Vier").click({ modifiers: ["Control"] });
-    await expect(app.locator(".tile-layout-btn.active")).toHaveAttribute("aria-label", "Vier als Raster");
+    await expect(app.getByRole("button", { name: "Vier als Raster" })).toHaveAttribute("aria-pressed", "true");
     for (const [n, name] of ["Eins", "Zwei", "Drei", "Vier"].entries()) {
       await expect(tile(app, n + 1).locator(".session-top-title")).toHaveText(`Aufgabe ${name}`);
       // EPIC-P43 T43.4: die Statuszeile zeigt nur Gemessenes; die Attrappe meldet Tokens, kein Kontextfenster.
@@ -30,17 +32,18 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
     await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Drittel" });
     await card(app, "Aufgabe Drittel").click();
     await app.getByRole("button", { name: "Drei nebeneinander" }).click();
-    await expect(app.locator(".tile-layout-btn.active")).toHaveAttribute("aria-label", "Drei nebeneinander");
+    await expect(app.getByRole("button", { name: "Drei nebeneinander" })).toHaveAttribute("aria-pressed", "true");
     await expect(app.locator(".tile")).toHaveCount(3);
     await expect(app.locator(".tile-grid .tile-divider.col")).toHaveCount(2);
     await app.reload();
-    await expect(app.locator(".tile-layout-btn.active")).toHaveAttribute("aria-label", "Drei nebeneinander");
+    await expect(app.getByRole("button", { name: "Drei nebeneinander" })).toHaveAttribute("aria-pressed", "true");
   });
 
   test("eine Antwort in Kachel 3 geht nur an die Session in Kachel 3 (P18-Premortem 1)", async ({ app, hub }) => {
     const ids: string[] = [];
     for (const name of ["Eins", "Zwei", "Drei"]) ids.push(await hub.createSession({ adapter: "opencode", prompt: `Aufgabe ${name}` }));
     await card(app, "Aufgabe Eins").click();
+    await app.getByRole("button", { name: "Layout lösen" }).click();
     await card(app, "Aufgabe Zwei").click({ modifiers: ["Control"] });
     await card(app, "Aufgabe Drei").click({ modifiers: ["Control"] });
     const third = tile(app, 3);
@@ -52,10 +55,11 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
     for (const id of ids.slice(0, 2)) expect((await hub.events(id)).some((e) => e.summary.includes("Nur für Drei"))).toBe(false);
   });
 
-  test("Tastatur: Layout wechseln, Fokus, Tauschen, Leeren (AC-P18-3)", async ({ app, hub }) => {
+  test("Tastatur: Layout wechseln, Fokus, Tauschen, Schließen (AC-P18-3)", async ({ app, hub }) => {
     await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Links" });
     await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Rechts" });
     await card(app, "Aufgabe Links").click();
+    await app.getByRole("button", { name: "Zwei nebeneinander" }).click();
     await card(app, "Aufgabe Rechts").click({ modifiers: ["Control"] });
     await expect(tile(app, 2)).toHaveClass(/focused/);
     await app.keyboard.press("Alt+1");
@@ -65,16 +69,37 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
     await expect(tile(app, 2).locator(".session-top-title")).toHaveText("Aufgabe Links");
     await expect(tile(app, 2)).toHaveClass(/focused/);
     await app.keyboard.press("Alt+L");
-    await expect(app.locator(".tile-layout-btn.active")).toHaveAttribute("aria-label", "Drei nebeneinander");
+    await expect(app.getByRole("button", { name: "Drei nebeneinander" })).toHaveAttribute("aria-pressed", "true");
     await app.keyboard.press("Alt+W");
+    // Default fixiert: Slot leer, Raster bleibt.
+    await expect(app.locator(".tile")).toHaveCount(3);
     await expect(tile(app, 2).locator(".tile-empty")).toBeVisible();
     await expect(tile(app, 1).locator(".session-top-title")).toHaveText("Aufgabe Rechts");
+  });
+
+  test("Layout ist default fixiert: Öffnen bleibt im Raster; schon offene Session springt hin", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Alpha" });
+    await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Beta" });
+    await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Gamma" });
+    await card(app, "Aufgabe Alpha").click();
+    await expect(app.getByRole("button", { name: "Layout lösen" })).toHaveAttribute("aria-pressed", "true");
+    await app.getByRole("button", { name: "Zwei nebeneinander" }).click();
+    await card(app, "Aufgabe Beta").click({ modifiers: ["Control"] });
+    await expect(app.locator(".tile")).toHaveCount(2);
+    await card(app, "Aufgabe Gamma").click({ modifiers: ["Control"] });
+    await expect(app.locator(".tile")).toHaveCount(2);
+    await expect(tile(app, 2).locator(".session-top-title")).toHaveText("Aufgabe Gamma");
+    await card(app, "Aufgabe Alpha").click();
+    await expect(tile(app, 1)).toHaveClass(/focused/);
+    await expect(tile(app, 1).locator(".session-top-title")).toHaveText("Aufgabe Alpha");
+    await expect(app.locator(".tile")).toHaveCount(2);
   });
 
   test("zwei Kürzel im selben Tick arbeiten auf dem Ergebnis des ersten (BUG-0071)", async ({ app, hub }) => {
     await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Links" });
     await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Rechts" });
     await card(app, "Aufgabe Links").click();
+    await app.getByRole("button", { name: "Zwei nebeneinander" }).click();
     await card(app, "Aufgabe Rechts").click({ modifiers: ["Control"] });
     await expect(tile(app, 2)).toHaveClass(/focused/);
     // Both keydowns before Preact renders in between — what a fast typist or a loaded machine produces.
@@ -91,10 +116,10 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
     await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Bleibt" });
     const gone = await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Geht" });
     await card(app, "Aufgabe Bleibt").click();
-    await card(app, "Aufgabe Geht").click({ modifiers: ["Control"] });
     await app.getByRole("button", { name: "Zwei übereinander" }).click();
+    await card(app, "Aufgabe Geht").click({ modifiers: ["Control"] });
     await app.reload();
-    await expect(app.locator(".tile-layout-btn.active")).toHaveAttribute("aria-label", "Zwei übereinander");
+    await expect(app.getByRole("button", { name: "Zwei übereinander" })).toHaveAttribute("aria-pressed", "true");
     await expect(tile(app, 1).locator(".session-top-title")).toHaveText("Aufgabe Bleibt");
     await expect(tile(app, 2).locator(".session-top-title")).toHaveText("Aufgabe Geht");
     await hub.api(`/api/sessions/${gone}/stop`, { body: {} });
@@ -102,8 +127,11 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
     expect((await hub.api(`/api/sessions/${gone}`, { method: "DELETE", body: {} })).status).toBeLessThan(300);
     await app.reload();
     await expect(tile(app, 2).locator("[data-testid=tile-missing]")).toContainText("gibt es nicht mehr");
-    await tile(app, 2).getByRole("button", { name: "Kachel leeren" }).last().click();
+    await tile(app, 2).getByRole("button", { name: "Kachel schließen" }).last().click();
+    // Fixiert: leerer Slot bleibt, Raster 2h bleibt.
+    await expect(app.locator(".tile")).toHaveCount(2);
     await expect(tile(app, 2).locator(".tile-empty")).toContainText("frei");
+    await expect(tile(app, 1).locator(".session-top-title")).toHaveText("Aufgabe Bleibt");
   });
 
   test("2560 px: volle Breite, mit eingeklappter Liste ≥ 90 % für die Kacheln (AC-P18-1)", async ({ app, hub }) => {
@@ -167,6 +195,7 @@ test.describe("Desktop-Workspace: Kacheln ohne Fokus (EPIC-P18 T18.6)", () => {
     await app.reload();
     await app.locator(".split-list .session-card").first().waitFor();
     await app.locator(".split-list .session-card").filter({ hasNotText: "Aufgabe Nachbar" }).locator(".session-open").click();
+    await app.getByRole("button", { name: "Zwei nebeneinander" }).click();
     await cardOf("Aufgabe Nachbar").click({ modifiers: ["Control"] });
     const first = app.locator('.tile[data-tile="1"]');
     await expect(first.locator("[data-testid=older-hidden]")).toContainText("ältere Einträge");

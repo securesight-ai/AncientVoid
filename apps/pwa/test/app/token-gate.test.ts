@@ -8,7 +8,10 @@ Object.defineProperty(globalThis, "localStorage", {
 
 const { classifyGateError, gateMessage, lastHubContact, noteHubContact } = await import("../../src/app/token-gate.ts");
 
-beforeEach(() => mem.clear());
+beforeEach(() => {
+  mem.clear();
+  mem.set("ancientvoid.language", "de"); // Tests pinnen die Sprache (EPIC-P61)
+});
 
 describe("Token-Gate: Ursache je Fall (AC-P57-8)", () => {
   it("401/403 heißt abgelehnt, fehlender Status und 502–504 heißt unerreichbar, sonst anderer Fehler", () => {
@@ -34,7 +37,7 @@ describe("Token-Gate: Ursache je Fall (AC-P57-8)", () => {
 
   it("unerreichbar nennt die letzte Verbindung als Zeitstempel (K10), sofern bekannt", () => {
     const at = "2026-11-13T08:30:00.000Z";
-    expect(gateMessage("unreachable", "", at)).toContain(new Date(at).toLocaleString("de-DE"));
+    expect(gateMessage("unreachable", "", at)).toMatch(new Date(at).toLocaleString("de-DE"));
     expect(gateMessage("unreachable", "", null)).not.toMatch(/Letzte Verbindung/);
     expect(gateMessage("unreachable", "", "kein-datum")).not.toMatch(/Letzte Verbindung/);
   });

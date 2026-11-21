@@ -130,6 +130,10 @@ Spec: [automations.spec.ts](../../e2e/specs/automations.spec.ts)
 `#/metriken`. Direct samples from your local AI server: CPU/GPU, tokens/s,
 prefill/decode, KV cache. The aggregation home is the statistics page.
 
+### page:inference — Inference token tempo
+
+`#/inferenz`. Per engine: decode/prefill tokens/s, time to first token, KV reuse and the request distribution (p10/median/p90/peak, outliers called out). Counter-only engines (llama.cpp, Halogen) refuse a distribution and say why; a failed probe stays visible. Spec: [inference-tempo.spec.ts](../../e2e/specs/inference-tempo.spec.ts)
+
 Spec: [ki-server-metriken.spec.ts](../../e2e/specs/ki-server-metriken.spec.ts)
 
 ### page:statistics — Statistiken
@@ -226,6 +230,10 @@ Spec: [auth.spec.ts](../../e2e/specs/auth.spec.ts)
 ### feature:aimetrics
 
 AI server sampling and display — see [page:aimetrics](#pageaimetrics--ai-server-metrics). Spec: [ki-server-metriken.spec.ts](../../e2e/specs/ki-server-metriken.spec.ts)
+
+### feature:inference
+
+Engine adapters (Strata, Halogen, llama.cpp), per-source JSONL request history and the percentile math — see [page:inference](#pageinference--inference-token-tempo). Spec: [inference-tempo.spec.ts](../../e2e/specs/inference-tempo.spec.ts)
 
 ### feature:approvals
 

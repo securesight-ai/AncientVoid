@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { closeTile, compactTiles, detachTile, isDetached, openInTile, reattach, cycleLayout, emptyWorkspace, focusTile, openInNewTile, openSession, parseWorkspace, serializeWorkspace, setLayout, swapWith, tileCount, visibleTiles } from "../../../src/features/workspace/tiles.ts";
+import { closeTile, compactTiles, detachTile, focusOpenSession, isDetached, isLayoutFixed, openInTile, reattach, cycleLayout, emptyWorkspace, focusTile, openInNewTile, openSession, parseWorkspace, serializeWorkspace, setLayout, setLayoutFixed, swapWith, tileCount, visibleTiles } from "../../../src/features/workspace/tiles.ts";
 
 const a = { sessionId: "a" };
 const b = { sessionId: "b" };
 const c = { sessionId: "c", hostId: "h2" };
 
 describe("Kachel-Zustand (T18.2)", () => {
-  it("startet mit einer leeren Kachel", () => {
+  it("startet mit einer leeren, fixierten Kachel", () => {
     const ws = emptyWorkspace();
     expect(ws.layout).toBe("1");
+    expect(ws.layoutFixed).toBe(true);
     expect(visibleTiles(ws)).toEqual([null]);
   });
 
@@ -31,8 +32,8 @@ describe("Kachel-Zustand (T18.2)", () => {
     expect(ws.focus).toBe(1);
   });
 
-  it("in einer neuen Kachel öffnen wächst 1 → 2v → 1+2 → 2x2, danach wächst das Grid ohne Verdrängen", () => {
-    let ws = openSession(emptyWorkspace(), a);
+  it("gelöst: in einer neuen Kachel öffnen wächst 1 → 2v → 1+2 → 2x2, danach wächst das Grid ohne Verdrängen", () => {
+    let ws = setLayoutFixed(openSession(emptyWorkspace(), a), false);
     ws = openInNewTile(ws, b);
     expect(ws.layout).toBe("2v");
     ws = openInNewTile(ws, c);
@@ -87,18 +88,75 @@ describe("Kachel-Zustand (T18.2)", () => {
     expect(ws.focus).toBe(1);
   });
 
-  it("Schließen leert die Kachel", () => {
-    const ws = closeTile(openSession(emptyWorkspace(), a), 0);
-    expect(visibleTiles(ws)).toEqual([null]);
+  it("fixiert: Schließen lässt leere Slots; gelöst: Schließen schrumpft", () => {
+    let ws = openSession(setLayout(emptyWorkspace(), "2v"), a);
+    ws = openSession(ws, b);
+    ws = closeTile(ws, 1);
+    expect(visibleTiles(ws)).toEqual([a, null]);
+    expect(ws.layout).toBe("2v");
+    ws = setLayoutFixed(openSession(setLayout(setLayoutFixed(ws, false), "2v"), b), false);
+    ws = closeTile(ws, 1);
+    expect(visibleTiles(ws)).toEqual([a]);
+    expect(ws.layout).toBe("1");
   });
 
   it("Speichern und Laden, kaputte Daten ergeben einen leeren Arbeitsplatz", () => {
-    let ws = openInNewTile(openSession(emptyWorkspace(), a), c);
+    let ws = openInNewTile(openSession(setLayout(emptyWorkspace(), "2v"), a), c);
     expect(parseWorkspace(serializeWorkspace(ws))).toEqual(ws);
     expect(parseWorkspace("{kaputt")).toEqual(emptyWorkspace());
     expect(parseWorkspace(JSON.stringify({ layout: "9x9", slots: [], focus: 7 }))).toEqual(emptyWorkspace());
     ws = parseWorkspace(JSON.stringify({ layout: "2v", slots: [{ sessionId: "a" }, { sessionId: 5 }, null, null], focus: 1 }));
     expect(visibleTiles(ws)).toEqual([a, null]);
+    expect(isLayoutFixed(ws)).toBe(true);
+  });
+});
+
+describe("Layout fixieren und Session-Reuse", () => {
+  it("Default ist fixiert: wächst nicht und ersetzt die Fokus-Kachel", () => {
+    let ws = openSession(setLayout(emptyWorkspace(), "2v"), a);
+    expect(isLayoutFixed(ws)).toBe(true);
+    ws = openInNewTile(ws, b);
+    expect(ws.layout).toBe("2v");
+    expect(visibleTiles(ws)).toEqual([a, b]);
+    ws = openInNewTile(ws, c);
+    expect(ws.layout).toBe("2v");
+    expect(visibleTiles(ws).map((t) => t?.sessionId)).toEqual(["a", "c"]);
+    expect(ws.focus).toBe(1);
+  });
+
+  it("fixiert: anderer Tab derselben Session aktualisiert die Karte statt neu zu öffnen", () => {
+    let ws = openInNewTile(emptyWorkspace(), { sessionId: "a", content: { kind: "session", tab: "chat" } });
+    ws = openInNewTile(ws, { sessionId: "a", content: { kind: "session", tab: "graph" } });
+    expect(visibleTiles(ws)).toHaveLength(1);
+    expect(visibleTiles(ws)[0]).toEqual({ sessionId: "a", content: { kind: "session", tab: "graph" } });
+  });
+
+  it("fixiert: Schließen lässt leere Slots stehen; Lösen kompaktiert", () => {
+    let ws = openSession(openSession(setLayout(emptyWorkspace(), "2v"), a), b);
+    ws = closeTile(ws, 0);
+    expect(ws.layout).toBe("2v");
+    expect(visibleTiles(ws)).toEqual([null, b]);
+    ws = setLayoutFixed(ws, false);
+    expect(visibleTiles(ws)).toEqual([b]);
+    expect(ws.layout).toBe("1");
+    expect(ws.layoutFixed).toBe(false);
+  });
+
+  it("focusOpenSession springt zur offenen Session, ohne Inhalt zu überschreiben", () => {
+    const graph = { sessionId: "a", content: { kind: "session" as const, tab: "graph" as const } };
+    let ws = openInNewTile(setLayout(emptyWorkspace(), "2v"), graph);
+    ws = openInNewTile(ws, b);
+    const focused = focusOpenSession(ws, { sessionId: "a", content: { kind: "session", tab: "chat" } });
+    expect(focused?.focus).toBe(0);
+    expect(focused?.slots[0]).toEqual(graph);
+    expect(focusOpenSession(ws, { sessionId: "missing" })).toBeNull();
+  });
+
+  it("layoutFixed Default an; explizit false übersteht Speichern und Laden", () => {
+    expect(parseWorkspace(serializeWorkspace(emptyWorkspace())).layoutFixed).toBe(true);
+    expect(parseWorkspace(JSON.stringify({ layout: "1", slots: [null, null, null, null], focus: 0 })).layoutFixed).toBe(true);
+    const unlocked = setLayoutFixed(emptyWorkspace(), false);
+    expect(parseWorkspace(serializeWorkspace(unlocked)).layoutFixed).toBe(false);
   });
 });
 

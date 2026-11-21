@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import type { InferencePerfRow, InferenceSnapshot, InferenceSourceList } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
-import { Card, EmptyState } from "../../shared/ui/index.ts";
+import { Card, Chip, EmptyState } from "../../shared/ui/index.ts";
 import { t } from "../../shared/i18n/index.ts";
 import { alter, anteil, byteGroesse, dauer, tempo, verlauf, zahl } from "./format.ts";
 
@@ -108,26 +108,25 @@ export function InferencePage() {
           <strong>{t("inference.title")}</strong>
           <p class="inference-hinweis">{t("inference.hint")}</p>
         </div>
-        <div class="inference-quellen" role="group" aria-label={t("inference.dock")}>
+        <div class="inference-quellen" role="group" aria-label={t("common.inference")}>
           {quellen.quellen.map((q) => (
-            <button
-              type="button"
-              class={q.id === auswahl ? "chip chip--on" : "chip"}
+            <Chip
+              active={q.id === auswahl}
+              tone={q.status.ok ? undefined : "err"}
               onClick={() => {
                 setAuswahl(q.id);
                 ablegen(QUELLEN_KEY, q.id);
               }}
             >
               {q.label}
-              {!q.status.ok ? " ✕" : ""}
-            </button>
+              {q.status.ok ? "" : " ✕"}
+            </Chip>
           ))}
         </div>
         <div class="inference-fenster" role="group" aria-label={t("inference.fenster")}>
           {FENSTER.map((f) => (
-            <button
-              type="button"
-              class={fensterH === f.h ? "chip chip--on" : "chip"}
+            <Chip
+              active={fensterH === f.h}
               title={t("inference.fenster.hint")}
               onClick={() => {
                 setFensterH(f.h);
@@ -135,7 +134,7 @@ export function InferencePage() {
               }}
             >
               {t(`inference.fenster.${f.key}`)}
-            </button>
+            </Chip>
           ))}
         </div>
       </div>
@@ -174,6 +173,7 @@ export function InferencePage() {
             {snap.cache && <CacheCard snap={snap} />}
             {snap.hardware && <HardwareCard snap={snap} />}
             <ProtocolCard snap={snap} />
+            {snap.hinweise.length > 0 && <HinweiseCard hinweise={snap.hinweise} />}
           </div>
         </>
       )}
@@ -414,6 +414,23 @@ function HardwareCard({ snap }: { snap: InferenceSnapshot }) {
       <Balken anteilWert={h.gpuUtil} />
       <Balken anteilWert={vramAnteil} klassen={vramAnteil != null && vramAnteil >= 0.9 ? "inference-balken--warn" : undefined} />
       <Balken anteilWert={h.gpuTempC == null ? null : h.gpuTempC / 100} klassen={h.gpuTempC != null && h.gpuTempC >= 85 ? "inference-balken--err" : undefined} />
+    </Card>
+  );
+}
+
+/**
+ * Was die Quelle nicht meldet — die Gründe stehen sicht bar im Weg, damit eine
+ * fehlende Karte nicht als „0“ oder als Fehler der Seite gelesen wird (K9).
+ */
+function HinweiseCard({ hinweise }: { hinweise: string[] }) {
+  return (
+    <Card aria-label={t("inference.card.grenzen")}>
+      <strong>{t("inference.card.grenzen")}</strong>
+      <ul class="inference-hinweis-liste">
+        {hinweise.map((h) => (
+          <li key={h}>{h}</li>
+        ))}
+      </ul>
     </Card>
   );
 }

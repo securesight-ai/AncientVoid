@@ -85,7 +85,6 @@ import { getSeen, markSeen, seenKey } from "../../shared/seen.ts";
 import { loadTail, saveTail } from "./tail-cache.ts";
 import { QuickConfirm, lastAssistantQuestion } from "./QuickConfirm.tsx";
 import { backgroundActivities } from "./background-activities.ts";
-import { ReplyTemplates } from "./ReplyTemplates.tsx";
 import type { CodeTarget } from "../../app/route.ts";
 import {
   estimateText,
@@ -315,10 +314,15 @@ export function SessionTail({
   const [copyFlash, setCopyFlash] = useState(false);
   useEffect(() => {
     let flashTimer: number | undefined;
-    const onUp = () => {
+    const onUp = (ev: PointerEvent) => {
       const el = tailRef.current;
       const sel = window.getSelection();
       const text = sel?.toString() ?? "";
+      // Nur die Geste ueber dem Verlauf selbst zaehlt: ein spaeterer Tipp anderswo
+      // (z. B. im Ablage-Blatt) darf eine stehende Auswahl nicht erneut einlagern —
+      // sonst kommt eine soeben entfernte Stufe zurueck (copyIntoShelf schiebt
+      // asynchron nach dem Clipboard-Versuch).
+      if (!(ev.target instanceof Node) || !el?.contains(ev.target)) return;
       if (!el || !sel || !text.trim() || !el.contains(sel.anchorNode)) return;
       // BUG-0107: transient abgelehntes writeText wurde still geschluckt — der Flash ist
       // der Beleg fürs Kopieren, ein Einzel-Retry gehört dazu. ADR-0090: ohne Clipboard-API
@@ -1426,13 +1430,6 @@ export function SessionTail({
   const showReply = steerSupported;
   // T1.6-3/AC-P1.6-2: no back-arrow up top anymore — "Übersicht" in the
   // dock below is the one way back, reachable from anywhere with one tap.
-  // BUG-0049: "saving" is a moment between two saves, not a state worth a message — keep showing the last
-  // settled one, otherwise the line folds away and back at every pause while typing and pushes the dock.
-  const settledDraft = useRef<"saved" | "local" | null>(null);
-  if (draft.state === "saved" || draft.state === "local")
-    settledDraft.current = draft.state;
-  else if (draft.state === "idle") settledDraft.current = null;
-  const draftShown = settledDraft.current;
   const modelLabel = session.model ?? latestModelName(events);
   // 2026-10-26: the model is ALWAYS visible — the adapter's own event wins
   // (it names what really runs), then the record (session choice or the
@@ -2561,15 +2558,6 @@ export function SessionTail({
                       </div>
                     </div>
                   )}
-                  {showReply &&
-                    draftShown &&
-                    (reply || replyAttachments.length > 0) && (
-                      <div class={`draft-state dim ${draftShown}`}>
-                        {draftShown === "saved"
-                          ? "Entwurf gespeichert — auch auf deinen anderen Geräten"
-                          : "Entwurf nur auf diesem Gerät (Hub nicht erreichbar)"}
-                      </div>
-                    )}
                   {showReply && (
                     <PcOpenNotice
                       sessionId={session.id}
@@ -2583,9 +2571,6 @@ export function SessionTail({
                       api={api}
                       refreshKey={queueTick}
                     />
-                  )}
-                  {showReply && !draft.conflict && (
-                    <ReplyTemplates value={reply} onPick={setReply} />
                   )}
                   {showReply &&
                     !draft.conflict &&

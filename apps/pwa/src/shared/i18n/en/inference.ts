@@ -1,7 +1,5 @@
 // EPIC-P79 (ADR-0102): inference token tempo — English catalogue (parity checked by tsc).
 export const en = {
-  "inference.dock": "Inference",
-  "inference.dockTitle": "Token tempo of the inference engines: decode, prefill, KV reuse",
   "inference.title": "Inference token tempo",
   "inference.hint": "Measured on the engines the hub probes. Distributions are computed over our own request history, never over counters.",
   "inference.empty.loading": "loading …",
@@ -88,6 +86,7 @@ export const en = {
   "inference.asymptote.overhead": "Overhead",
   "inference.asymptote.guete": "fit R²",
   "inference.asymptote.hint": "fit: time ≈ overhead + read tokens / throughput",
+"inference.card.grenzen": "What this source does not report",
   "inference.card.protocol": "Recent requests",
   "inference.card.protocolHint": "completed requests, newest first",
   "inference.protocol.leer": "no requests in the window",

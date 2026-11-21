@@ -30,6 +30,14 @@ export interface Workspace {
   sizes?: { col?: number; row?: number; col2?: number };
   /** EPIC-P34 T34.10: Sessions, die in einem eigenen Fenster laufen. Fehlt in alten Ständen. */
   detached?: TileRef[];
+  /** Fixiertes Raster (Default an): Öffnen wächst nicht; Schließen lässt leere Slots stehen.
+   * Nur `false` löst — fehlendes Feld in alten Ständen gilt als fixiert. */
+  layoutFixed?: boolean;
+}
+
+/** Default an: nur explizites `false` löst das Raster. */
+export function isLayoutFixed(ws: Workspace): boolean {
+  return ws.layoutFixed !== false;
 }
 
 const COUNT: Record<Layout, number> = { "1": 1, "2v": 2, "3v": 3, "2h": 2, "1+2": 3, "2x2": 4 };
@@ -50,7 +58,7 @@ export function tileCount(layout: Layout): number {
 }
 
 export function emptyWorkspace(): Workspace {
-  return { layout: "1", slots: [null, null, null, null], focus: 0 };
+  return { layout: "1", slots: [null, null, null, null], focus: 0, layoutFixed: true };
 }
 
 export function visibleTiles(ws: Workspace): (TileRef | null)[] {
@@ -59,6 +67,15 @@ export function visibleTiles(ws: Workspace): (TileRef | null)[] {
 
 function same(x: TileRef | null, y: TileRef): boolean {
   return x !== null && x.sessionId === y.sessionId && (x.hostId ?? null) === (y.hostId ?? null) && JSON.stringify(parseContent(x.content) ?? { kind: "session", tab: "chat" }) === JSON.stringify(parseContent(y.content) ?? { kind: "session", tab: "chat" });
+}
+
+function isSessionCard(ref: TileRef): boolean {
+  const content = parseContent(ref.content);
+  return !!ref.sessionId && (!content || content.kind === "session");
+}
+
+function sameSessionCard(x: TileRef | null, y: TileRef): boolean {
+  return x !== null && isSessionCard(x) && isSessionCard(y) && x.sessionId === y.sessionId && (x.hostId ?? null) === (y.hostId ?? null);
 }
 
 function put(ws: Workspace, index: number, ref: TileRef | null): Workspace {
@@ -72,14 +89,53 @@ export function openSession(ws: Workspace, ref: TileRef): Workspace {
   return openInNewTile(ws, ref);
 }
 
+/**
+ * Schon offene Session-Karte fokussieren (Liste/Wechsel), ohne zweite Kachel.
+ * Inhalt/Tab der bestehenden Karte bleibt; nur der Fokus springt hin.
+ */
+export function focusOpenSession(ws: Workspace, ref: TileRef): Workspace | null {
+  if (!isSessionCard(ref)) return null;
+  const at = ws.slots.findIndex((t) => sameSessionCard(t, ref));
+  if (at < 0) return null;
+  const visible = COUNT[ws.layout];
+  if (at < visible) return { ...ws, focus: at };
+  if (isLayoutFixed(ws)) {
+    // Hinter dem fixierten Raster: mit dem Fokus-Slot tauschen, Layout bleibt.
+    const target = Math.min(Math.max(0, ws.focus), visible - 1);
+    const slots = [...ws.slots];
+    [slots[target], slots[at]] = [slots[at]!, slots[target] ?? null];
+    return { ...ws, slots, focus: target };
+  }
+  const layout = (GROW[at] ?? "2x2") as Layout;
+  return { ...ws, layout, focus: at };
+}
+
 /** Open without eviction, including slots hidden by a smaller chosen layout. */
 export function openInNewTile(ws: Workspace, ref: TileRef): Workspace {
   const at = ws.slots.findIndex((t) => same(t, ref));
+  if (at >= 0) {
+    const layout = !isLayoutFixed(ws) && at >= COUNT[ws.layout] ? (GROW[at] ?? "2x2") : ws.layout;
+    return { ...ws, layout, focus: at };
+  }
+
+  // Fixiertes Raster: dieselbe Session (anderer Tab) aktualisiert die bestehende Karte.
+  if (isLayoutFixed(ws) && isSessionCard(ref)) {
+    const sessionAt = ws.slots.findIndex((t) => sameSessionCard(t, ref));
+    if (sessionAt >= 0) return put(ws, sessionAt, ref);
+  }
+
+  if (isLayoutFixed(ws)) {
+    const visible = COUNT[ws.layout];
+    const empty = ws.slots.slice(0, visible).findIndex((t) => t === null);
+    const index = empty >= 0 ? empty : Math.min(Math.max(0, ws.focus), visible - 1);
+    return put(ws, index, ref);
+  }
+
   const empty = ws.slots.indexOf(null);
-  const index = at >= 0 ? at : empty >= 0 ? empty : ws.slots.length;
-  const needed = Math.max(index + 1, ws.slots.reduce((last, t, i) => t === null ? last : i + 1, 0));
+  const index = empty >= 0 ? empty : ws.slots.length;
+  const needed = Math.max(index + 1, ws.slots.reduce((last, t, i) => (t === null ? last : i + 1), 0));
   const layout = needed > COUNT[ws.layout] ? (GROW[needed - 1] ?? "2x2") : ws.layout;
-  return at >= 0 ? { ...ws, layout, focus: at } : put({ ...ws, layout }, index, ref);
+  return put({ ...ws, layout }, index, ref);
 }
 
 /** BUG-0244: feste Kachel (Neue Session → Index 0). Belegte Kachel wird verschoben, nicht verworfen. */
@@ -97,7 +153,7 @@ export function openInTile(ws: Workspace, ref: TileRef, index: number): Workspac
     else slots.push(displaced);
   }
   const needed = slots.reduce((last, t, i) => (t === null ? last : i + 1), 0);
-  const layout = needed > COUNT[ws.layout] ? (GROW[needed - 1] ?? "2x2") : ws.layout;
+  const layout = !isLayoutFixed(ws) && needed > COUNT[ws.layout] ? (GROW[needed - 1] ?? "2x2") : ws.layout;
   return { ...ws, slots, layout, focus: index };
 }
 
@@ -113,6 +169,11 @@ export function compactTiles(ws: Workspace): Workspace {
 
 export function setLayout(ws: Workspace, layout: Layout): Workspace {
   return { ...ws, layout, focus: Math.min(ws.focus, COUNT[layout] - 1) };
+}
+
+export function setLayoutFixed(ws: Workspace, layoutFixed: boolean): Workspace {
+  if (isLayoutFixed(ws) === layoutFixed) return ws;
+  return layoutFixed ? { ...ws, layoutFixed: true } : compactTiles({ ...ws, layoutFixed: false });
 }
 
 export function cycleLayout(ws: Workspace, dir: 1 | -1): Workspace {
@@ -132,8 +193,13 @@ export function swapWith(ws: Workspace, index: number): Workspace {
   return { ...ws, slots, focus: index };
 }
 
+/** Kachel schließen: ohne Fix kompakt (Slot weg, Layout schrumpft); mit Fix nur leeren. */
 export function closeTile(ws: Workspace, index: number): Workspace {
-  return put(ws, index, null);
+  if (index < 0 || index >= ws.slots.length || ws.slots[index] === null) return ws;
+  const slots = [...ws.slots];
+  slots[index] = null;
+  const next = { ...ws, slots, focus: Math.min(ws.focus, Math.max(0, (isLayoutFixed(ws) ? COUNT[ws.layout] : Math.max(1, slots.filter(Boolean).length)) - 1)) };
+  return isLayoutFixed(ws) ? next : compactTiles(next);
 }
 
 const MIN_TILE_SHARE = 0.2;
@@ -204,7 +270,7 @@ export function parseWorkspace(raw: string | null): Workspace {
   } catch {
     return emptyWorkspace();
   }
-  const { layout, slots, focus, sizes, detached } = (data ?? {}) as { layout?: unknown; slots?: unknown; focus?: unknown; sizes?: unknown; detached?: unknown };
+  const { layout, slots, focus, sizes, detached, layoutFixed } = (data ?? {}) as { layout?: unknown; slots?: unknown; focus?: unknown; sizes?: unknown; detached?: unknown; layoutFixed?: unknown };
   if (!LAYOUTS.includes(layout as Layout) || !Array.isArray(slots)) return emptyWorkspace();
   const ws: Workspace = { layout: layout as Layout, slots: Array.from({ length: Math.max(4, slots.length) }, (_, i) => tileRef(slots[i])), focus: 0 };
   const sized =
@@ -216,5 +282,10 @@ export function parseWorkspace(raw: string | null): Workspace {
         }
       : undefined;
   const away = Array.isArray(detached) ? detached.map(tileRef).filter((r): r is TileRef => r !== null) : [];
-  return focusTile({ ...ws, ...(sized && (sized.col !== undefined || sized.row !== undefined || sized.col2 !== undefined) ? { sizes: sized } : {}), ...(away.length > 0 ? { detached: away } : {}) }, typeof focus === "number" ? focus : 0);
+  return focusTile({
+    ...ws,
+    ...(sized && (sized.col !== undefined || sized.row !== undefined || sized.col2 !== undefined) ? { sizes: sized } : {}),
+    ...(away.length > 0 ? { detached: away } : {}),
+    layoutFixed: layoutFixed !== false,
+  }, typeof focus === "number" ? focus : 0);
 }
