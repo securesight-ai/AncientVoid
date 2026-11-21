@@ -86,7 +86,6 @@ const controls = async (c: Ctx) => {
 const GLOBAL: Entry[] = [
   { id: "G01", name: "Start", from: "#/neu", reach: async (c) => { await c.tap(dock(c, "Start")); await expect(c.page.locator(".dashboard")).toBeVisible(); } },
   { id: "G02", name: "Neue Session", from: "start", reach: async (c) => { await c.tap(dock(c, "Neue Session")); await expect(c.page.getByRole("button", { name: "Starten" })).toBeVisible(); } },
-  { id: "G03", name: "Entdeckt", from: "start", reach: async (c) => { await c.tap(c.page.locator(".overview-switch").getByRole("tab", { name: "Gefunden", exact: true })); await expect(c.page.locator(".discovery")).toBeVisible(); } },
   { id: "G04", name: "Entdeckt über den Chip „Gefunden“", from: "start", reach: async (c) => { await c.tap(c.page.locator(".dashboard-summary").getByRole("button", { name: "Gefunden" })); await expect(c.page.locator(".discovery")).toBeVisible(); } },
   { id: "G05", name: "Medien", from: "start", reach: async (c) => { await nav(c, "Medien"); await expect(c.page.locator(".media-caps")).toBeVisible(); } },
   { id: "G06", name: "Teams", from: "start", reach: async (c) => { await c.tap(dock(c, "Teams")); await expect(c.page.getByTestId("teams-pane").first()).toBeVisible(); } },

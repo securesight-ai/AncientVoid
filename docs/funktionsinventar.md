@@ -33,8 +33,7 @@ Werkzeugseiten füllen die Detailspalte.
 |---|---|---|---|---|
 | G01 | Start (Übersicht) | Dock „Start“ | — | inventar |
 | G02 | Neue Session | Dock-Haupttaste „＋“ | — | inventar |
-| G03 | Entdeckt (gefundene Sessions) | Dock „Mehr“ → „Entdeckt“; PC: Leiste | — | inventar |
-| G04 | Entdeckt über den Chip | Start → Chip „Gefunden“ | T43.3 | inventar |
+| G04 | Entdeckt (gefundene Sessions) | Start → Chip „Gefunden“ rechts vom Archiv-Button | T43.3 | inventar |
 | G05 | Medien | Dock „Mehr“ → „Medien“; PC: Leiste | — | inventar |
 | G06 | Teams | Dock „Teams“ | — | inventar |
 | G07 | Notizen | Dock „Mehr“ → „Notizen“; PC: Leiste | — | inventar |

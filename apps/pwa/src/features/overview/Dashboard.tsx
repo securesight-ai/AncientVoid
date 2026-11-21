@@ -126,8 +126,10 @@ function sessionKey(s: SessionRecord): string {
 /** EPIC-P47: Ansicht der Übersicht — Sessions (Karten), Projekte, Hosts oder Discovery (T47.5). */
 type OverviewView = "sessions" | "projects" | "hosts" | "discovery";
 const VIEW_KEY = "ancientvoid.overviewView";
-const VIEWS: readonly OverviewView[] = ["sessions", "projects", "hosts", "discovery"];
-const VIEW_TITLE: Record<OverviewView, string> = { sessions: t("common.sessions_cap"), projects: t("common.projects"), hosts: t("common.hosts"), discovery: t("common.found") };
+// Kein vierter Tab „Gefunden“ (Nutzerentscheid 2026-11-21): genau ein Einstieg — der Chip rechts
+// vom Archiv-Button der Session-Ansicht. Der Deeplink #/gefunden bleibt (FOUND_HASH_ALIAS unten).
+const VIEWS = ["sessions", "projects", "hosts"] as const;
+const VIEW_TITLE: Record<(typeof VIEWS)[number], string> = { sessions: t("common.sessions_cap"), projects: t("common.projects"), hosts: t("common.hosts") };
 
 export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, approvals = [], onOpenApprovals, lastSession = null, probeAvailable = false }: DashboardProps) {
   const windowKeys = new Set(Object.values(useOpenWindows()).map((e) => targetKey(e.target)));
