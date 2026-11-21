@@ -16,6 +16,7 @@ import { VaultTabs } from "../features/vault/VaultTabs.tsx";
 import { TeamsPane } from "../features/team/TeamsPane.tsx";
 import { AutomationsPane } from "../features/automations/AutomationsPane.tsx";
 import { AiMetricsPage } from "../features/aimetrics/AiMetricsPage.tsx";
+import { InferencePage } from "../features/inference/InferencePage.tsx";
 import { StatisticsPage } from "../features/statistics/StatisticsPage.tsx";
 import { TerminalPage } from "../features/terminal/TerminalPage.tsx";
 import { ReleaseNotesPage } from "../features/release-notes/ReleaseNotesPage.tsx";
@@ -204,6 +205,7 @@ export function App({
       {shown === "teams" && <TeamsPane />}
       {shown === "automationen" && <AutomationsPane />}
       {shown === "aimetrics" && <AiMetricsPage />}
+      {shown === "inference" && <InferencePage />}
       {shown === "statistics" && <StatisticsPage />}
       {shown === "terminal" && <TerminalPage />}
       {shown === "releasenotes" && <ReleaseNotesPage />}

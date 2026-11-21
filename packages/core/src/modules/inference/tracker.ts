@@ -1,4 +1,4 @@
-import type { InferenceEngineKind, InferenceSnapshot, InferenceSourceEntry, InferenceSourceList } from "@ancientvoid/contracts";
+import type { InferenceApi, InferenceEngineKind, InferenceSnapshot, InferenceSourceEntry, InferenceSourceList } from "@ancientvoid/contracts";
 import { type EngineReading, type RequestRecord } from "./engine.ts";
 import { assertPromShape, promReading } from "./prom-engines.ts";
 import type { DeltaBook } from "./prom.ts";
@@ -41,10 +41,7 @@ export interface InferenceTrackerOptions {
   timeoutMs?: number;
 }
 
-export type InferenceTracker = Pick<
-  import("@ancientvoid/contracts").InferenceApi,
-  "sources" | "snapshot" | "start" | "stop" | "tickNow"
->;
+export type InferenceTracker = Pick<InferenceApi, "sources" | "snapshot" | "start" | "stop" | "tickNow">;
 type Quelle = {
   id: string;
   kind: InferenceEngineKind;
@@ -96,7 +93,11 @@ export function createInferenceTracker(
       headers.authorization = `Bearer ${key}`;
     }
     const hol = async (url: string) => {
-      const res = await deps.fetch(url, { headers });
+      // Frist ablauf lassen wirlaufen, damit eine hängende Engine den Poll-Takt nicht legt.
+      const frist = new Promise<never>((_, verwerf) => {
+        setTimeout(() => verwerf(new Error(`${url}: keine Antwort in ${timeoutMs} ms`)), timeoutMs).unref?.();
+      });
+      const res = await Promise.race([deps.fetch(url, { headers }), frist]);
       if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
       return res.text();
     };

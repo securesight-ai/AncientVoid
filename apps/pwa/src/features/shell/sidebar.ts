@@ -12,6 +12,7 @@ export const SIDEBAR_ENTRIES: readonly { id: string; label: string; icon: TabIco
   { id: "automationen", label: "Automationen", icon: "automationen", page: "automationen" },
   { id: "settings", label: "Einstellungen", icon: "einstellungen", page: "settings" },
   { id: "aimetrics", label: "Metrik", icon: "bericht", page: "aimetrics" },
+  { id: "inference", label: "Inferenz", icon: "bericht", page: "inference" },
   { id: "statistics", label: "Statistik", icon: "bericht", page: "statistics" },
   { id: "terminal", label: "Terminal", icon: "terminal", page: "terminal" },
   { id: "releasenotes", label: "Release-Notes", icon: "verlauf", page: "releasenotes" },

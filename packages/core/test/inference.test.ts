@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { it } from "vitest";
 
 import { InferenceSnapshot as SnapshotSchema, InferenceSourceList as SourceListSchema } from "@ancientvoid/contracts";
 
@@ -26,7 +26,7 @@ const strataBody = {
   ],
 };
 
-test("Strata: Vorbehandlungs-Tempo bezieht sich auf gelesene Token, nicht auf Prompt-Token", () => {
+it("Strata: Vorbehandlungs-Tempo bezieht sich auf gelesene Token, nicht auf Prompt-Token", () => {
   const r = strataReading(strataBody, "2026-11-21T12:00:00.000Z");
   const [r1] = r.requests;
   assert.ok(r1);
@@ -39,7 +39,7 @@ test("Strata: Vorbehandlungs-Tempo bezieht sich auf gelesene Token, nicht auf Pr
   assert.equal(r.features.hardware, true);
 });
 
-test("Strata: Summen, Wiederverwendungs-Anteil und Hardware-Felder", () => {
+it("Strata: Summen, Wiederverwendungs-Anteil und Hardware-Felder", () => {
   const r = strataReading(strataBody, "2026-11-21T12:00:00.000Z");
   assert.equal(r.totals?.read, 90000);
   assert.ok(Math.abs((r.totals?.reuseShare ?? 0) - 0.9) < 1e-9);
@@ -50,7 +50,7 @@ test("Strata: Summen, Wiederverwendungs-Anteil und Hardware-Felder", () => {
   assert.equal(r.engine.kvResident, true);
 });
 
-test("Strata: unpassendes Antwort-Schema wirft, statt halbe Zahlen zu zeigen", () => {
+it("Strata: unpassendes Antwort-Schema wirft, statt halbe Zahlen zu zeigen", () => {
   assert.throws(() => assertStrataShape({ totals: {} }, "http://strata/metrics"), /Antwort-Schema/);
   assert.throws(() => assertPromShape("# TYPE x gauge\nx 1\n", "http://h/metrics"), /keine llamacpp/);
 });
@@ -79,7 +79,7 @@ const llm2 = llm1
   .replace("llamacpp:tokens_predicted_total 500", "llamacpp:tokens_predicted_total 700")
   .replace("llamacpp:tokens_predicted_seconds_total 10", "llamacpp:tokens_predicted_seconds_total 12.5");
 
-test("llama.cpp: erster Abruf ohne Rate, zweiter mit Rate aus Deltas", () => {
+it("llama.cpp: erster Abruf ohne Rate, zweiter mit Rate aus Deltas", () => {
   const erste = promReading("llamacpp", llm1, { prev: null, nowMs: 0 });
   assert.equal(erste.reading.totals?.window, null);
   assert.ok(erste.reading.hints.some((h) => h.includes("Erster Abruf")));
@@ -92,7 +92,7 @@ test("llama.cpp: erster Abruf ohne Rate, zweiter mit Rate aus Deltas", () => {
   assert.equal(zweite.reading.totals?.requests, null, "llama.cpp meldet keine Request-Zähler");
 });
 
-test("llama.cpp: keine Einzel-Requests -> Verteilungen sind nicht möglich", () => {
+it("llama.cpp: keine Einzel-Requests -> Verteilungen sind nicht möglich", () => {
   const { reading } = promReading("llamacpp", llm1, { prev: null, nowMs: 0 });
   assert.equal(reading.features.perRequest, false);
   assert.equal(reading.features.hardware, false);
@@ -101,14 +101,14 @@ test("llama.cpp: keine Einzel-Requests -> Verteilungen sind nicht möglich", () 
   assert.equal(reading.live?.queued, 3);
 });
 
-test("llama.cpp: Zähler-Reset erzeugt keine Fantasierate", () => {
+it("llama.cpp: Zähler-Reset erzeugt keine Fantasierate", () => {
   const erste = promReading("llamacpp", llm2, { prev: null, nowMs: 0 });
   const zweite = promReading("llamacpp", llm1, { prev: erste.book, nowMs: 10_000 });
   assert.equal(zweite.reading.totals?.window?.prefillTokS, null);
   assert.ok(zweite.reading.hints.some((h) => h.includes("negativ")));
 });
 
-test("Halogen: Cache aus /cache und /health, Experten-Treffer bleibt null", () => {
+it("Halogen: Cache aus /cache und /health, Experten-Treffer bleibt null", () => {
   const text = `${llm1}# TYPE halogen:requests_total counter\nhalogen:requests_total 40\n# TYPE halogen:cache_entries gauge\nhalogen:cache_entries 7\n`;
   const { reading } = promReading("halogen", text, {
     prev: null,
@@ -156,7 +156,7 @@ const rekord = (id: string, at: string, read: number, prefillTokS: number, quell
   finish: "stop",
 });
 
-test("Store: dedupliziert, überlebt Neustart und hält sich ans Fenster (K7)", async () => {
+it("Store: dedupliziert, überlebt Neustart und hält sich ans Fenster (K7)", async () => {
   const { deps } = storeDeps();
   const a = createRequestStore(deps, "r.jsonl", { maxAgeH: 72 });
   assert.equal(await a.add([rekord("x1", "2026-11-21T11:59:00.000Z", 5000, 900)]), 1);
@@ -172,7 +172,7 @@ test("Store: dedupliziert, überlebt Neustart und hält sich ans Fenster (K7)", 
 
 // --- Perzentile -----------------------------------------------------------
 
-test("Perzentile: R6-Interpolation, Tukey-Ausreißer und Stichprobenminimum", () => {
+it("Perzentile: R6-Interpolation, Tukey-Ausreißer und Stichprobenminimum", () => {
   assert.equal(percentile([1, 2, 3, 4], 0.5), 2.5);
   const s = summarize([10, 11, 12, 13, 14, 15, 16, 17, 400]);
   assert.equal(s.n, 9);
@@ -186,7 +186,7 @@ test("Perzentile: R6-Interpolation, Tukey-Ausreißer und Stichprobenminimum", ()
   assert.equal(klein.reasons["zu wenige Stichproben"], 1);
 });
 
-test("perfOf: Vorbehandlung nach Größe der gelesenen Token geschichtet", () => {
+it("perfOf: Vorbehandlung nach Größe der gelesenen Token geschichtet", () => {
   const recs = [
     ...Array.from({ length: 10 }, (_, i) => rekord(`b${i}`, "2026-11-21T11:00:00.000Z", 50, 120)),
     ...Array.from({ length: 10 }, (_, i) => rekord(`g${i}`, "2026-11-21T11:10:00.000Z", 4_000 + i * 300, 1_400 + i * 40)),
@@ -228,7 +228,7 @@ function attrappen() {
   };
 }
 
-test("Tracker: Snapshot gültig, Grenzen eingehalten, kaputte Quelle bleibt sichtbar", async () => {
+it("Tracker: Snapshot gültig, Grenzen eingehalten, kaputte Quelle bleibt sichtbar", async () => {
   const a = attrappen();
   const tracker = createInferenceTracker(a.deps, [
       { id: "strata", kind: "strata", url: "http://strata/metrics", apiKeyFile: "/tmp/key" },
@@ -255,7 +255,7 @@ test("Tracker: Snapshot gültig, Grenzen eingehalten, kaputte Quelle bleibt sich
   assert.equal(tracker.snapshot("unbekannt"), null);
 });
 
-test("Tracker: Raten entstehen erst über den zweiten Poll derselben Quelle", async () => {
+it("Tracker: Raten entstehen erst über den zweiten Poll derselben Quelle", async () => {
   let abrufe = 0;
   const uhr = { ms: Date.parse("2026-11-21T12:00:00.000Z") };
   const tracker = createInferenceTracker(

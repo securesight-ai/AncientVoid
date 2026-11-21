@@ -1,0 +1,152 @@
+/* EPIC-P79 (ADR-0102): Token-Tempo-Seite. Phone zuerst; ab 700 px (Z-Fold-inner)
+   zweispaltig, ab 1280 px dreispaltig. Nur Tokens und Breakpoint-Leiter
+   (css-tokens.test.ts). */
+
+.inference {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.inference-kopf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.inference-quellen,
+.inference-fenster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.inference-hero {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.inference-hero > div {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+}
+
+.inference-hero dt {
+  font-size: var(--text-xs);
+  color: var(--fg-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inference-hero dd {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.inference-hero dd small {
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}
+
+.inference-kacheln {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.inference-werte {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+}
+
+.inference-werte > div {
+  min-width: 0;
+}
+
+.inference-werte dt {
+  font-size: var(--text-xs);
+  color: var(--fg-dim);
+}
+
+.inference-werte dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.inference-balken {
+  height: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--border);
+  overflow: hidden;
+  margin-top: var(--space-1);
+}
+
+.inference-balken > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.inference-balken--warn > span {
+  background: var(--warn);
+}
+
+.inference-balken--err > span {
+  background: var(--err);
+}
+
+.inference-tabelle {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.inference-tabelle th,
+.inference-tabelle td {
+  text-align: right;
+  padding: var(--space-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.inference-tabelle th:first-child,
+.inference-tabelle td:first-child {
+  text-align: left;
+  color: var(--fg-dim);
+}
+
+.inference-hinweis {
+  color: var(--fg-dim);
+  font-size: var(--text-sm);
+  margin: var(--space-2) 0 0;
+}
+
+.inference-fehler {
+  color: var(--err);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 700px) {
+  .inference-hero {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .inference-kacheln {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inference-werte {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .inference-kacheln {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

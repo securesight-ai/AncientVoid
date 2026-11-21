@@ -1,7 +1,8 @@
 import type { InferenceCache, InferenceEngine, InferenceFeatures, InferenceLive, InferenceTotals } from "@ancientvoid/contracts";
 import { anteil, NO_HISTORY, num, text } from "./engine.ts";
 import type { EngineReading, RequestRecord } from "./engine.ts";
-import { counter, deltas, type DeltaBook, gauge, parseProm } from "./prom.ts";
+import { counter, deltas, gauge, parseProm } from "./prom.ts";
+import type { DeltaBook, MetricFamily } from "./prom.ts";
 
 /**
  * EPIC-P79 T79.2: Adapter für **llama.cpp** (`--metrics`) und **Halogen**
@@ -45,7 +46,7 @@ function zaehler(text_: string): Record<string, number> {
   return out;
 }
 
-function hole(families: Map<string, import("./prom.ts").MetricFamily>, name: string): number | null {
+function hole(families: Map<string, MetricFamily>, name: string): number | null {
   return gauge(families, name);
 }
 
@@ -63,9 +64,6 @@ export function promReading(
   const cached = now.values["llamacpp:prompt_tokens_cached_total"] ?? now.values["halogen:prompt_tokens_cached_total"] ?? null;
   const output = now.values["llamacpp:tokens_predicted_total"] ?? null;
   const requests = kind === "halogen" ? (now.values["halogen:requests_total"] ?? null) : null;
-
-  const gPromptSec = now.values["llamacpp:prompt_seconds_total"] ?? null;
-  const gPredSec = now.values["llamacpp:tokens_predicted_seconds_total"] ?? null;
 
   // Raten aus Deltas — die Schwelle sitzt an der geleisteten Arbeit, nicht an der
   // Zeitspanne: 60 gelesene Token in 0,05 s sind messbar, 2 Token in 0,01 s sind Müll.

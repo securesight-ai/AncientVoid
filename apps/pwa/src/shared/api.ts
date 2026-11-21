@@ -1,7 +1,7 @@
 import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity } from "@ancientvoid/contracts";
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
-import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
+import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
 export type { TerminalTarget };
 import { noteApprovalDecided } from "./first-run.ts";
 export interface SessionRecord {
@@ -924,6 +924,10 @@ function createHubApi(P: (path: string) => string) {
   health: () => api<{ ok: boolean; serverTime: string; deployment?: DeploymentIdentity }>(P("/api/health")),
   /** EPIC-P59 (ADR-0078): Report der Metrik-Seite — REST, nicht EventBus (K5). */
   aimetrics: () => api<AiMetricsReport>(P("/api/aimetrics")),
+  /** EPIC-P79 (ADR-0102): Token-Tempo der Inferenz-Engines (REST, gekappt — K5). */
+  inferenceSources: () => api<InferenceSourceList>(P("/api/inference/sources")),
+  inferenceSnapshot: (id: string, fensterH?: number) =>
+    api<InferenceSnapshot>(P(`/api/inference/snapshot?id=${encodeURIComponent(id)}${fensterH ? `&fenster=${fensterH}` : ""}`)),
   /** EPIC-P56 T56.3: Statistik-Report mit Schnitt-Query (leere Objekte-teile bleiben weg). */
   statistics: (query: { project?: string; host?: string; harness?: string; since?: string; until?: string } = {}) => {
     const qs = Object.entries(query).filter(([, v]) => v !== undefined).map(([k, v]) => `${k}=${encodeURIComponent(v!)}`).join("&");

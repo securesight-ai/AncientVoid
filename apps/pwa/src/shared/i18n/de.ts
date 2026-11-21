@@ -2,9 +2,11 @@
 // (Snake-Case, bereichspräfigiert). Bereichs-Dateien in de/ werden hier
 // aggregiert; en/<bereich>.ts ist gegen diesen Katalog typgeprüft (Lücken = tsc-Fehler).
 import { de as dock } from "./de/dock.ts";
+import { de as inference } from "./de/inference.ts";
 
 export const de = {
   ...dock,
+  ...inference,
 
   "settings.language.title": "Sprache",
   "settings.language.hint": "Gerät-Einstellung; folgt dem System beim ersten Start. Ein Wechsel lädt neu — Entwürfe bleiben erhalten.",

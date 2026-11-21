@@ -95,4 +95,8 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `aiMetrics.servers` | array<object> | [] |
 | `aiMetrics.mergePeers` | boolean | true |
 | `aiMetrics.probeKnown` | boolean | true |
+| `inference.intervalSec` | integer | 2 |
+| `inference.windowHours` | integer | 72 |
+| `inference.minReadPrefill` | integer | 4000 |
+| `inference.engines` | array<object> | [] |
 | `terminals` | array<object> | [] |

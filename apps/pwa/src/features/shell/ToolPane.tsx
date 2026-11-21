@@ -13,6 +13,7 @@ import { VaultTabs } from "../vault/VaultTabs.tsx";
 import { TeamsPane } from "../team/TeamsPane.tsx";
 import { AutomationsPane } from "../automations/AutomationsPane.tsx";
 import { AiMetricsPage } from "../aimetrics/AiMetricsPage.tsx";
+import { InferencePage } from "../inference/InferencePage.tsx";
 import { TerminalPage } from "../terminal/TerminalPage.tsx";
 import { ReleaseNotesPage } from "../release-notes/ReleaseNotesPage.tsx";
 import { useHubStatus } from "./hub-status.ts";
@@ -29,6 +30,7 @@ const TITLES: Partial<Record<ListPage, string>> = {
   teams: "Agenten-Teams",
   automationen: "Automationen",
   aimetrics: "Metrik",
+  inference: "Inferenz",
   terminal: "Terminal",
   releasenotes: "Release-Notes",
 };
@@ -111,6 +113,7 @@ export function ToolPane({
         {page === "teams" && <TeamsPane initialHash={initialHash} />}
         {page === "automationen" && <AutomationsPane />}
         {page === "aimetrics" && <AiMetricsPage />}
+        {page === "inference" && <InferencePage />}
         {page === "terminal" && <TerminalPage />}
         {page === "releasenotes" && <ReleaseNotesPage />}
       </div>
