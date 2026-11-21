@@ -1,7 +1,7 @@
 ---
 id: BUG-0242
 slug: harness-metadaten-fehlen
-status: fixed
+status: done
 severity: S3
 area: adapters, pwa
 instance: dev

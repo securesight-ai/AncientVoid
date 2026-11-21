@@ -1,7 +1,7 @@
 ---
 id: BUG-0153
 slug: erstinstallation-ohne-projektwurzeln
-status: fixed
+status: done
 severity: S2
 area: pwa
 instance: dev

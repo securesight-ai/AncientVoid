@@ -1,7 +1,7 @@
 ---
 id: BUG-0219
 slug: mainsync-stand-gehört-zur-auswahl
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
@@ -86,6 +86,11 @@ Rot ohne Fix: neue Fälle „Kachelfokus fragt neu“ (@desktop) und
 (Kachelfokus `tile.active`, `visibilitychange` der offenen Ansicht) stellt die
 Abfrage nie neu; `refreshMainSync` hat zudem keinen Abbruchschutz, eine späte
 Antwort könnte einen neueren Stand überschreiben.
+
+
+## Fix
+
+Behoben: PR #182 (`54762797`). Doku-Abschluss 2026-11-21 (Status-Nachzug).
 
 ## Handoff
 

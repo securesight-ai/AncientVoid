@@ -1,7 +1,7 @@
 ---
 id: BUG-0230
 slug: graph-vollbild-ohne-schliessen
-status: fixed
+status: done
 severity: S2
 area: pwa
 instance: dev

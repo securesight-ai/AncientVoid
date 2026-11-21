@@ -1,7 +1,7 @@
 ---
 id: BUG-0241
 slug: omp-kontingent-reset-fehlt
-status: fixed
+status: done
 severity: S3
 area: contracts, pwa
 instance: dev

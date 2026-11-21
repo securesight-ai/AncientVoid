@@ -1,12 +1,12 @@
 ---
 id: BUG-0208
 slug: nach-strom-ende-auf-nachrichtenanfang-scrollen
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
 commit: ""
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/pull/142"
 epic: "ADR-0083 (betroffen: Live-Frames → Block), EPIC-P43 (Lesbarkeit des Chats)"
 created: 2026-11-18
 reporter: Nutzer (Kai, Handy/PWA) + Agent (Harness nachgemessen)
@@ -72,6 +72,11 @@ gerollt (`scrollTo({ top: scrollHeight })`), eine Adresse für den Anfang der eb
 fertigen Nachricht gab es nicht. Zusätzlich musste die Zählung der laufenden Ströme nach
 `turnId` erfolgen — sonst zog der nächste Frame den gerade gesetzten Sprung sofort wieder
 nach unten.
+
+
+## Fix
+
+Behoben: PR #142 (`42350c8d`). Doku-Abschluss 2026-11-21 (Status-Nachzug).
 
 ## Handoff
 

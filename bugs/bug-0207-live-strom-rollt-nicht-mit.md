@@ -1,12 +1,12 @@
 ---
 id: BUG-0207
 slug: live-strom-rollt-nicht-mit
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
 commit: ""
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/pull/142"
 epic: "ADR-0083 (betroffen: Live-Frames), EPIC-P43 (Lesbarkeit des Chats)"
 created: 2026-11-18
 reporter: Nutzer (Kai, Handy/PWA) + Agent (Harness nachgemessen)
@@ -75,6 +75,11 @@ Frames nie wieder scharf wurde.
 `useEffect` mit Abhängigkeit `[events, activeTab, filter]` — Live-Frames landen in
 `liveText` und änderten diese Abhängigkeit nie. Zusätzlich blieb `stickRef` nach einer
 gemerkten Position auf `false` und wurde durch Frames nie wieder eingeschaltet.
+
+
+## Fix
+
+Behoben: PR #142 (`42350c8d`). Doku-Abschluss 2026-11-21 (Status-Nachzug).
 
 ## Handoff
 

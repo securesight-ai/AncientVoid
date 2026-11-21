@@ -1,7 +1,7 @@
 ---
 id: BUG-0221
 slug: hintergrundbild-upload-quetscht-beschriftung
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev

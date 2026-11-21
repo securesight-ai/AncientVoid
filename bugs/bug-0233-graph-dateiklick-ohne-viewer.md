@@ -1,7 +1,7 @@
 ---
 id: BUG-0233
 slug: graph-dateiklick-ohne-viewer
-status: fixed
+status: done
 severity: S2
 area: pwa
 instance: dev

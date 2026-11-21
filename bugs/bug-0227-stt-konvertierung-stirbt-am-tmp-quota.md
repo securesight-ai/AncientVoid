@@ -1,7 +1,7 @@
 ---
 id: BUG-0227
 slug: stt-konvertierung-stirbt-am-tmp-quota
-status: fixed
+status: done
 severity: S2
 area: hub
 instance: dev

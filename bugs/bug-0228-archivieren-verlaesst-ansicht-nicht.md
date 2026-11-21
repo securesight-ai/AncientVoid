@@ -1,7 +1,7 @@
 ---
 id: BUG-0228
 slug: archivieren-verlaesst-ansicht-nicht
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev

@@ -1,7 +1,7 @@
 ---
 id: BUG-0239
 slug: hintergrundaufgaben-ohne-details
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev
