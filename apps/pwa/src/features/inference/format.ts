@@ -1,7 +1,7 @@
 /**
  * EPIC-P79 T79.4: Zahlenformate der Token-Tempo-Seite. Bewusst hier und nicht
  * in shared/metrics.ts: diese Seite braucht kompakte Großzahlen (`49,1 Mio`)
- * undBinäreinheiten, und „nicht gemeldet“ ist hier ein Gedankenstrich, weil
+ * und Binäreinheiten, und „nicht gemeldet“ ist hier ein Gedankenstrich, weil
  * die Karten sonst unleserlich werden.
  */
 
@@ -10,7 +10,9 @@ const DE = new Intl.NumberFormat("de-DE");
 /** null → „—“ (nie 0). Große Token-Mengen kompakt, damit sie in eine Handyspalte passen. */
 export function zahl(wert: number | null | undefined, nachkomma = 0): string {
   if (wert == null || !Number.isFinite(wert)) return "—";
-  if (Math.abs(wert) >= 100_000_000) return `${DE.format(Math.round(wert / 1_000_000) / 10)} Mio`;
+  if (Math.abs(wert) >= 100_000_000) return `${DE.format(Math.round(wert / 100_000) / 10)} Mio`;
+  // zwei Nachkommastellen ab 1 Mio: bei ~98 % Reuse würden sonst Prompt und
+  // wiederverwendet auf dieselbe Zahl runden (12,73 und 12,51 Mio bleiben getrennt).
   if (Math.abs(wert) >= 1_000_000) return `${DE.format(Math.round(wert / 10_000) / 100)} Mio`;
   if (Math.abs(wert) >= 10_000) return DE.format(Math.round(wert));
   return new Intl.NumberFormat("de-DE", { maximumFractionDigits: nachkomma, minimumFractionDigits: nachkomma }).format(wert);
@@ -62,7 +64,8 @@ export function verlauf(werte: number[], breite = 100, hohe = 32): string | null
   if (sauber.length < 2) return null;
   const min = Math.min(...sauber);
   const max = Math.max(...sauber);
-  const span = max - min || 1;
+  if (min === max) return null; // Konstante Serie wäre eine flache Linie als „stabil“-Lüge.
+  const span = max - min;
   return sauber
     .map((v, i) => {
       const x = (i / (sauber.length - 1)) * breite;
