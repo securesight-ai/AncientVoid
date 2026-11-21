@@ -278,6 +278,31 @@ it("Tracker: Snapshot gültig, Grenzen eingehalten, kaputte Quelle bleibt sichtb
   assert.equal(tracker.snapshot("unbekannt"), null);
 });
 
+it("Tracker: volle Antwort bleibt gekappt und messbar klein (K5)", async () => {
+  const voll = structuredClone(strataBody) as Record<string, unknown>;
+  voll.history = { tok_s: Array.from({ length: 120 }, (_, i) => 40 + i), prefill_tok_s_mean: Array.from({ length: 120 }, (_, i) => 300 + i), ram_used: Array.from({ length: 120 }, (_, i) => 60_000_000_000 + i) };
+  voll.requests = Array.from({ length: 40 }, (_, i) => ({
+    id: `voll-${i}`, prompt_tokens: 90_000, reused: 88_000, prompt_read: 2_000 + i * 100, output_tokens: 400,
+    prompt_ms: 1_200, decode_ms: 6_000, first_engine_token_s: 1.1, finish: "stop", hit_rate: 0.9,
+  }));
+  const tracker = createInferenceTracker(
+    {
+      fetch: async () => ({ status: 200, ok: true, text: async () => JSON.stringify(voll) }),
+      readFile: async () => null,
+      appendFile: async () => {},
+      now: () => new Date("2026-11-21T12:00:00.000Z"),
+      logger: { info() {}, warn() {}, error() {} },
+    },
+    [{ id: "strata", kind: "strata", url: "http://strata/metrics" }],
+  );
+  await tracker.tickNow();
+  const snap = SnapshotSchema.parse(tracker.snapshot("strata"));
+  assert.equal(snap.history.decodeTokS.length, 120);
+  assert.equal(snap.requests.length, 12, "Requests sind gekappt");
+  const groesse = JSON.stringify(snap).length;
+  assert.ok(groesse < 12_000, `volle Antwort gemessen: ${groesse} Byte`);
+});
+
 it("Tracker: Raten entstehen erst über den zweiten Poll derselben Quelle", async () => {
   let abrufe = 0;
   const uhr = { ms: Date.parse("2026-11-21T12:00:00.000Z") };

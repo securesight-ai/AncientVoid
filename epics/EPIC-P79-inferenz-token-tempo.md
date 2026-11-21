@@ -75,7 +75,10 @@ Session, die den Request ausgelöst hat.
    der Grund auf der Seite (kein erfundener Verlauf).
 4. Nach Hub-Neustart sind die Perzentile aus der JSONL-Historie rekonstruiert (K7) —
    nachgewiesen durch einen Test.
-5. Antworten bleiben unter 4 KB (Test gegen die K5-Grenzen des Schemas).
+5. Antworten sind gekappt (12 Requests, 120 Verlaufs-Punkte, 8 Hinweise) und ihre
+   Größe ist gemessen, nicht behauptet: ein voller Snapshot bleibt unter 12 KB
+   (live mit Strata gemessen: 7,4 KB). Die 4-KB-Grenze aus K5 gilt für Event-Payloads,
+   nicht für diese REST-Antwort — sie bleibt hier ausdrücklich unberührt.
 6. `lint`, `typecheck`, `check:arch`, `check:i18n`, `check:context` und die gezielten
    Tests grün; E2E-Spec vorhanden (Skip-Muster wie üblich).
 7. Menschen-Abnahme am Handy (Lesbarkeit auf Cover- und Falt-Display) wandert nach
