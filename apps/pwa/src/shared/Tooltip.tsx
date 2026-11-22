@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "preact/hooks";
-import { createLongPress, tipText } from "./tooltip-logic.ts";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { createLongPress, placeTip, tipText } from "./tooltip-logic.ts";
 
 /** Alles, was sich anklicken lässt. Ein ausdrückliches `data-tip` macht auch andere Elemente zum Ziel. */
 const TIP_TARGET = 'button, a[href], summary, select, [role="button"], [role="tab"], [role="menuitem"], input[type="checkbox"], input[type="radio"], [data-tip]';
@@ -11,6 +11,7 @@ interface Shown {
   x: number;
   top: number;
   bottom: number;
+  right: number;
 }
 
 function targetOf(node: EventTarget | null): HTMLElement | null {
@@ -66,6 +67,8 @@ function textFor(el: HTMLElement): string {
  */
 export function TooltipLayer() {
   const [shown, setShown] = useState<Shown | null>(null);
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -87,7 +90,7 @@ export function TooltipLayer() {
       const text = textFor(el);
       if (!text) return;
       const r = el.getBoundingClientRect();
-      setShown({ text, x: r.left + r.width / 2, top: r.top, bottom: r.bottom });
+      setShown({ text, x: r.left + r.width / 2, top: r.top, bottom: r.bottom, right: r.right });
     };
 
     let touchTarget: HTMLElement | null = null;
@@ -199,14 +202,39 @@ export function TooltipLayer() {
     };
   }, []);
 
+  // BUG-0255: die Box-Klemmung braucht die echte Tooltip-Größe — erst messen
+  // (Layout-Effect, vor dem Paint), dann zeigen. Bis dahin unsichtbar, damit
+  // er keinen Frame am falschen Ort steht.
+  useLayoutEffect(() => {
+    if (!shown) {
+      setSize(null);
+      return;
+    }
+    const el = tipRef.current;
+    if (!el) return;
+    const zoom = Number(document.documentElement.style.zoom) || 1;
+    const r = el.getBoundingClientRect();
+    setSize({ width: r.width / zoom, height: r.height / zoom });
+  }, [shown]);
+
   if (!shown) return null;
-  // Oben am Element, am Rand eingeklemmt; ganz oben fällt er unter das Element. Zoom: die Wurzel ist `zoom`-skaliert.
+  // Platzierung nach placeTip: am linken Rand (Icon-Leiste) rechts neben das
+  // Icon, sonst mittig über dem Ziel, Box komplett im Viewport (BUG-0255).
   const zoom = Number(document.documentElement.style.zoom) || 1;
-  const maxX = window.innerWidth / zoom - 8;
-  const x = Math.min(Math.max(shown.x / zoom, 8), maxX);
-  const below = shown.top / zoom < 40;
+  const placement = placeTip(
+    { x: shown.x / zoom, top: shown.top / zoom, bottom: shown.bottom / zoom, right: shown.right / zoom },
+    { width: window.innerWidth / zoom, height: window.innerHeight / zoom },
+    size ?? { width: 0, height: 0 },
+  );
   return (
-    <div class="tooltip" role="tooltip" data-below={below ? "1" : undefined} style={{ left: `${x}px`, top: `${(below ? shown.bottom : shown.top) / zoom}px` }}>
+    <div
+      ref={tipRef}
+      class="tooltip"
+      role="tooltip"
+      data-below={placement.mode === "below" ? "1" : undefined}
+      data-side={placement.mode === "side" ? "1" : undefined}
+      style={{ left: `${placement.left}px`, top: `${placement.top}px`, visibility: size ? undefined : "hidden" }}
+    >
       {shown.text}
     </div>
   );

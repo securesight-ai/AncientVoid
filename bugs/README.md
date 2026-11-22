@@ -288,6 +288,7 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 | [BUG-0252](bug-0252-sw-js-kommentarzeile-ohne-kommentarzeichen.md) | sw.js-Kommentarzeile ohne `//` — ServiceWorker-Eval schlägt fehl | fixed | S3 | pwa | — |
 | [BUG-0253](bug-0253-toter-fleet-hub-heisst-inkompatibel.md) | Abgeschalteter Hub wird als „inkompatibel“ gemeldet | done | S2 | core | — |
 | [BUG-0254](bug-0254-tts-upstream-json-statt-multipart.md) | TTS-Upstream-Aufruf spricht JSON, der echte Dienst (pocket-tts) will Multipart | done | S2 | hub | [#279](https://github.com/securesight-ai/AncientVoid/issues/279) · [PR #278](https://github.com/securesight-ai/AncientVoid/pull/278) |
+| [BUG-0255](bug-0255-sidebar-tooltips-tablet.md) | Seitenleisten-Tooltips am Tablet ragen links aus dem Bildschirm (Anker-Klemmung statt Box-Klemmung) | open | S3 | pwa | [#284](https://github.com/securesight-ai/AncientVoid/issues/284) · [PR #285](https://github.com/securesight-ai/AncientVoid/pull/285) |
 | [BUG-0259](bug-0259-ralph-loop-review-workflow-fehlt.md) | Ralph: Beobachter statt hub-Loop registriert (keine freie Adapterwahl), kein Agent-Review, kein Heartbeat | open | S2 | loops | [#289](https://github.com/securesight-ai/AncientVoid/issues/289) · [PR #290](https://github.com/securesight-ai/AncientVoid/pull/290) |
 
 Die nächste freie Nummer ist **0260** (gemerged, 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
