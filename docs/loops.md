@@ -57,10 +57,29 @@ sichtbar, gesperrt, mit dem Grund. Ohne Eintrag steht er als „nicht eingericht
 `runLoopContractTests(createLoopConnector, …)` aus `@ancientvoid/adapter-testkit` grün bekommen. Der Fake-Loop
 (`@ancientvoid/adapter-testkit/fake-loop`) ist die Vorlage und läuft in den E2E-Specs.
 
+
+## Ralph im Hub (`@ancientvoid/loop-ralph-hub`, ADR-0110)
+
+Der hub-getriebene Ralph-Loop treibt **jede promptbare Agenten-CLI** — Adapter
+und LLM wählst du über den Befehl, der Hub liefert nur die Schleife:
+
+```json
+{ "id": "ralph-hub", "module": "@ancientvoid/loop-ralph-hub", "config": {
+    "turnTimeoutMs": 3600000, "maxTurns": 40 } }
+```
+
+Start-Optionen: `target` (Epic oder Bug, z. B. `EPIC-P54`), `command`
+(Agenten-Befehl mit `{prompt}`-Platzhalter, sonst hängt der Hinten, z. B.
+`claude -p {prompt}` oder `codex exec {prompt}`), `maxTurns`. Ablauf: Der
+Connector sät `<workdir>/.ralph/<target>-state.json` aus der Epic-Datei,
+spawn`t pro Turn einen Agenten mit dem Ralph-Protokoll-Prompt, meldet
+Fortschritt/Gates als `loop.*`-Events (Ausgabe gekürzt + Blob, K5) und stoppt
+bei `wartend` — Abnahme bleibt deins. Pause stoppt neue Turns; der Hermes-Beobachter
+`ralph` (ADR-0038) bleibt davon unberührt der zweite Weg.
+
 ## aSPARK-Factory (`@ancientvoid/loop-aspark-factory`)
 
 Der Hub ist ein Leitstand-Client einer Linie (AsyncAPI 0.9.0, alle Nachrichten `v:1`). Pro Session ein MQTT-Client
-`ancientvoid-<sessionId>`, abonniert wird nur die gewählte Linie (Option `line`).
 
 | Topic | im Hub |
 |---|---|

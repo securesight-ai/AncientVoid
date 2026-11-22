@@ -1,0 +1,21 @@
+{
+  "name": "@ancientvoid/loop-ralph-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hub-getriebener Ralph-Goal-Gate-Loop (ADR-0110): treibt JEDE promptbare Agenten-CLI (claude, codex, pi, opencode, …) über ctx.spawnWorker durch die Ralph-Mechanik — State-Datei ist die Wahrheit, wartend ist das Menschen-Gate.",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ../../.. --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ancientvoid/contracts": "0.1.0"
+  },
+  "devDependencies": {
+    "@ancientvoid/adapter-testkit": "0.1.0"
+  }
+}

@@ -69,6 +69,8 @@ export interface HubOptions {
   inference?: Record<string, unknown>;
   /** ADR-0087: Allowlist für den PWA-Terminal-Tab. */
   terminals?: Array<{ id: string; label: string; ssh?: string; local?: boolean }>;
+  /** EPIC-P54 (ADR-0110): registriert den hub-getriebenen Ralph-Loop mit Stand-in-CLI. */
+  ralphHub?: boolean;
 }
 
 export interface ApiResult<T> {
@@ -210,6 +212,8 @@ export class TestHub {
       loops: [
         { id: "fake-loop", module: "@ancientvoid/adapter-testkit/fake-loop" },
         { id: "securesight-factory", module: "@ancientvoid/loop-securesight-factory", config: { pollMs: 500, factory: standIn("factory") } },
+        // EPIC-P54: hub-getriebener Ralph mit einer Stand-in-CLI (echte Agenten bleiben der Menschenabnahme).
+        ...(this.options.ralphHub ? [{ id: "ralph-hub", module: "@ancientvoid/loop-ralph-hub", config: { stateDir: ".ralph", turnTimeoutMs: 60_000, maxTurns: 10 } }] : []),
       ],
       adapters: [
         {
