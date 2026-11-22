@@ -38,6 +38,7 @@ export * from "./knowledge/knowledge.ts";
 export * from "./commands/commands.ts";
 export * from "./media/media.ts";
 export * from "./voice/stt.ts";
+export * from "./voice/tts.ts";
 export * from "./desktop/desktop.ts";
 export * from "./runs/turn-metrics.ts";
 export * from "./loops/loop.ts";
