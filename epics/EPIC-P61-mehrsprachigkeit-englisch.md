@@ -233,11 +233,16 @@ hart verdrahtet. Für „praktisch alle Sprachen" gilt:
   ihre Sprache und sind grün; `check-i18n` bleibt 0/0. Der K6-Messlauf
   mit `en` braucht gpubox und liegt nach P000 verschoben dort als
   T000.29.)
-- [ ] **T61.10** E2E: Locale-Fixture für Bestands-Specs, neue
+- [x] **T61.10** E2E: Locale-Fixture für Bestands-Specs, neue
   `i18n-language.spec.ts`; Eintrag in `docs/funktionsinventar.md`.
-- [ ] **T61.11** Englisches Korrekturlesen aller Kataloge (ein Durchgang,
+  (2026-11-22: Fixture pinnt `de` (Set-default, das Sprach-Spec schreibt
+  selbst um); `i18n-language.spec.ts` grünt; Inventar-Zeile G79 ergänzt.)
+- [x] **T61.11** Englisches Korrekturlesen aller Kataloge (ein Durchgang,
   konsistente Terminologie: Session, Hub, Harness, Approval, Fleet …),
   Glossar als Kopf von `en.ts`.
+  (2026-11-22: Glossar als Kopf in beiden en-Katalogen; Term SCAN — Session/Hub/
+  Harness/Adapter/Provider/Freigabe/Flotte/Zug/Ablage/Gerät/Geräte... konsistent;
+  5 Abweichungen im Auftrag-Feld berichtigt (command/prompt nach Bedeutung).)
 
 ## 5. Acceptance Criteria (AC-P61-k)
 

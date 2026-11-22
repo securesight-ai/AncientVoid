@@ -755,7 +755,7 @@
       "match": "Prompt (leer lassen behält den bisherigen Auftrag)",
       "key": "automations.prompt_keep",
       "de": "Prompt (leer lassen behält den bisherigen Auftrag)",
-      "en": "Prompt (leave empty to keep the current assignment)"
+      "en": "Prompt (leave empty to keep the current prompt)"
     },
     {
       "match": "Grund:",
@@ -1640,7 +1640,7 @@
       "match": "Auftrag in Worten",
       "key": "commands.voice_order",
       "de": "Auftrag in Worten",
-      "en": "Voice order",
+      "en": "Voice command",
       "only": [
         "CommandBar.tsx"
       ]
@@ -6419,7 +6419,7 @@
       "match": "`Letzter Auftrag: ${text}`",
       "key": "session.last_order",
       "de": "Letzter Auftrag: {text}",
-      "en": "Last order: {text}",
+      "en": "Last prompt: {text}",
       "params": {
         "text": "text"
       },
