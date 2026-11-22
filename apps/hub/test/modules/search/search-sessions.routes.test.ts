@@ -120,7 +120,7 @@ describe("GET /api/search/transcript", () => {
       archived: false,
       sessionHits: 1,
     });
-    expect(res.body.hits[0].snippet).toContain("\u0002");
+    expect(res.body.hits[0]!.snippet).toContain("\u0002");
     expect(res.body.index.engine).toBe("fts5");
     await app.close();
   });
@@ -172,7 +172,7 @@ describe("GET /api/search/transcript", () => {
 
     const scoped = await get(app, `/api/search/transcript?q=${encodeURIComponent("Distanzrohr")}&project=${encodeURIComponent(projectDir)}`);
     expect(scoped.body.total).toBe(1);
-    expect(scoped.body.hits[0].sessionId).toBe("sA");
+    expect(scoped.body.hits[0]!.sessionId).toBe("sA");
 
     const underRoot = await get(app, `/api/search/transcript?q=${encodeURIComponent("Distanzrohr")}&projectUnder=${encodeURIComponent(projectDir)}`);
     expect(underRoot.body.total).toBe(1);
@@ -205,6 +205,27 @@ describe("GET /api/search/all", () => {
     expect(res.body.sessionStatus).toBe("unavailable");
     expect(res.body.sessions).toEqual([]);
     expect(res.body.index.lines).toBe(0);
+    await app.close();
+  });
+
+  it("Sitzungen und Doku haben getrennte Projekt-Schalter", async () => {
+    addSessionRow("s4", projectDir, "Projekt A");
+    addSessionRow("s5", dataDir, "Projekt B");
+    await seedEvent("s4", "user", "Kotflügel richten", 1);
+    await seedEvent("s5", "user", "Kotflügel bestellen", 1);
+    const app = await buildApp({ transcript: new SessionTextIndex(db, dataDir) });
+
+    const s4 = await get(app, `/api/search/all?q=${encodeURIComponent("Kotflügel")}&scope=sessions`);
+    expect(s4.body.sessionTotal).toBe(2);
+
+    const here = await get(app, `/api/search/all?q=${encodeURIComponent("Kotflügel")}&scope=sessions&sessionProject=${encodeURIComponent(projectDir)}`);
+    expect(here.body.sessionTotal).toBe(1);
+    expect(here.body.sessions[0]).toMatchObject({ sessionId: "s4", sessionTitle: "Projekt A" });
+
+    // Ein Projekt außerhalb der projectRoots — auch als Sitzungsfilter — ist
+    // eine 422, nie eine Suche, die so tut, als fände sie nichts.
+    const foreign = await get(app, `/api/search/all?q=${encodeURIComponent("Kotflügel")}&sessionProject=${encodeURIComponent("/etc")}`);
+    expect(foreign.code).toBe(422);
     await app.close();
   });
 

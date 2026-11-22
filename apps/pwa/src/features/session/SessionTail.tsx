@@ -411,6 +411,10 @@ export function SessionTail({
   >("mehr" /* i18n-ignore: Daten-Key */);
   /** BUG-0208: Seq des Blocks, der einen Live-Strom eingeholt hat — an seinen Anfang rollen. */
   const jumpSeqRef = useRef<number | null>(null);
+  /** Suche: derselbe Sprung, aber von außen gesetzt (Fundstelle in der Suche).
+   * Der Zähler ist der einzige Weg, den Roll-Effekt neu anzustoßen — ohne ihn
+   * ändert sich an den Abhängigkeiten nichts. */
+  const [jumpTick, setJumpTick] = useState(0);
   /** laeuft gerade ein Live-Strom? Gezählt wird nach turnId — ein Strom gilt erst mit
    * seinem final-Frame als beendet, sonst ueberlappen sich Bloecke und der gerade
    * gesetzte Sprung an den Nachrichtenanfang wird sofort wieder nach unten gezogen. */
@@ -1111,7 +1115,7 @@ export function SessionTail({
       return () => cancelAnimationFrame(raf);
     }
     if (stickRef.current) el.scrollTo({ top: el.scrollHeight });
-  }, [events, chat.events, liveText, activeTab, filter, session.id]);
+  }, [events, chat.events, liveText, activeTab, filter, session.id, jumpTick]);
 
   /** BUG-0211: der Schwanz des Hubs enthaelt alles, der Client hielt nur die letzten
    *  TAIL_ROWS — damit war der Anfang eines langen Chats nie erreichbar. Aeltere werden in
@@ -1160,6 +1164,21 @@ export function SessionTail({
     } finally {
       loadingOlderRef.current = false;
     }
+  };
+
+  /** Suche: eine Fundstelle in **dieser** Sitzung anspringen. Liegt sie
+   * außerhalb des gehaltenen Fensters, werden die älteren Seiten so weit
+   * nachgeholt, bis sie da ist — sonst läuft der Sprung ins Leere (der
+   * DOM-Wartezyklus unten nach 120 Frames ehrlich aufgibt). */
+  const jumpToSeq = async (seq: number): Promise<void> => {
+    setActiveTab("chat");
+    for (let tries = 0; tries < 15; tries++) {
+      const floor = floorSeqRef.current;
+      if (loadingOlderRef.current || floor === 0 || seq >= floor) break;
+      await loadOlder();
+    }
+    jumpSeqRef.current = seq;
+    setJumpTick((n) => n + 1);
   };
 
   // Vorgelagerte Eintraege verschieben den Inhalt — die Lesestelle haelt an ihrem Abstand.
@@ -2325,7 +2344,7 @@ export function SessionTail({
             ) : activeTab === "suche" ? (
               <>
                 {detachHead}
-                <SearchPane project={session.project} />
+                <SearchPane project={session.project} sessionId={session.id} onJumpToSeq={(seq) => void jumpToSeq(seq)} />
               </>
             ) : activeTab === "code" ? (
               <>

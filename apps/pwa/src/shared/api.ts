@@ -5,6 +5,7 @@ export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine 
 import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
 export type { TerminalTarget };
 import type { TtsSettingsPatch, TtsSettingsView, TtsStatusResponse } from "@ancientvoid/contracts";
+import type { SessionTextSearchResponse, TranscriptRole, UnifiedSearchResponse } from "@ancientvoid/contracts";
 import { noteApprovalDecided } from "./first-run.ts";
 export interface SessionRecord {
   id: string;
@@ -133,7 +134,38 @@ interface SearchStatus {
 
 interface SearchResponse {
   status: "indexing" | "ready";
+  /** Welche Stufe geantwortet hat — „local“ ohne qmd, „qmd“ mit. */
+  engine?: "qmd" | "local";
   results: SearchResult[];
+}
+
+/** Suche (Nachschärfe 2026-11-22): Parameter der beiden neuen Endpunkte. */
+export interface SearchInput {
+  q: string;
+  /** Projekt der Dokuchecke. */
+  project?: string;
+  /** Grenze der Sitzungsseite — unabhängig von der Dokuchecke. */
+  sessionProject?: string;
+  projectUnder?: string;
+  session?: string;
+  scope?: "all" | "docs" | "sessions";
+  roles?: TranscriptRole[];
+  limit?: number;
+  offset?: number;
+}
+
+function searchQuery(input: SearchInput): string {
+  const p = new URLSearchParams();
+  p.set("q", input.q);
+  if (input.project) p.set("project", input.project);
+  if (input.sessionProject) p.set("sessionProject", input.sessionProject);
+  if (input.projectUnder) p.set("projectUnder", input.projectUnder);
+  if (input.session) p.set("session", input.session);
+  if (input.scope && input.scope !== "all") p.set("scope", input.scope);
+  if (input.roles && input.roles.length) p.set("roles", input.roles.join(","));
+  if (input.limit) p.set("limit", String(input.limit));
+  if (input.offset) p.set("offset", String(input.offset));
+  return p.toString();
 }
 
 export interface ProjectFile {
@@ -1150,6 +1182,11 @@ function createHubApi(P: (path: string) => string) {
   searchFile: (project: string, path: string) =>
     api<ProjectFile>(P(`/api/search/file?project=${encodeURIComponent(project)}&path=${encodeURIComponent(path)}`)),
   searchDocs: (project: string) => api<{ docs: ProjectDoc[] }>(P(`/api/search/docs?project=${encodeURIComponent(project)}`)),
+  /** Suche (Nachschärfe 2026-11-22): ein Feld, beide Körper — die Sessiontexte
+   * (Fragen, Antworten, Denk- und Werkzeugspuren) plus die Projekt-Doku. */
+  searchAll: (input: SearchInput) => api<UnifiedSearchResponse>(P(`/api/search/all?${searchQuery(input)}`)),
+  /** Nur die Sitzungstexte — für Scope-Umschalten ohne die Doku erneut zu befragen. */
+  searchTranscript: (input: SearchInput) => api<SessionTextSearchResponse>(P(`/api/search/transcript?${searchQuery(input)}`)),
   /** T2.4/T2.6: the approval queue. 501 (approvals not configured on this
    * hub) is treated as "no queue" by callers, not a hard error — see
    * Approvals.tsx. */
