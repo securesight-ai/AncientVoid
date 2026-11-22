@@ -4,9 +4,17 @@
 Die Suche des Hubs war zu billig (nur Markdown, nur ein Projekt). Sie sucht
 jetzt den ganzen Fundus: **Sessiontexte — Fragen und Antworten** — plus Doku,
 in einem Feld. Implementierung, Tests und E2E sind fertig und am laufenden
-Interface verifiziert (Branch `feat/suche-sessiontexte`, 5 Commits). Der PR läuft:
-**#276** (https://github.com/securesight-ai/AncientVoid/pull/276), Gate `verify`
-**pass 3m46s**, `mergeable=true`. Mergen steht aus (Entscheidung Kai).
+Interface verifiziert (Branch `feat/suche-sessiontexte`, 5 Commits). Fertig und **live**: PR
+**#276** ist gemergt (Merge-Commit `00dc288c`, Quellzweig gelöscht), Gate
+`verify` **pass 3m19s**. Hub neu gestartet (Wachhund `systemctl --user restart`):
+health 200 nach 3 s, `version.json` sha `00dc288c`, `dirty:false`, Hub-Log
+`search: Sessiontext-Index 17247 Zeilen (fts5)`. Nachweis am laufenden Hub:
+`GET /api/search/all?q=flowkey&scope=all` → `mode and`, `sessionStatus ready`,
+`sessionTotal 2`, Fundstellen seq 19 (Frage) und 474 (Antwort) mit markiertem
+Fundwort; Indexzeile in der PWA „17283 Texte aus 5 Sitzungen". Für den Nachweis
+gelegtes Gerätetoken ist widerrufen (`token revoke`, Route antwortet danach 401).
+Der Deploy bringt auch **P75 Sprachausgabe** auf den Hub (main enthielt es seit
+11:46; der Live-Hub stand vorher auf `5701180b`).
 
 ## Erledigt (verifiziert)
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
@@ -102,10 +110,15 @@ Interface verifiziert (Branch `feat/suche-sessiontexte`, 5 Commits). Der PR läu
   die PWA zeigt eine Grenzen-Karte mit den Gründen der Quelle.
 
 ## In Arbeit
-- **PR #276 mergen** (Merge-Commit, PR-Titel behält die Stufe). Danach: Hub
-  neu starten und die Suche am echten Bestand prüfen
-  (`/api/search/all?q=…&scope=all`, Rolle `teil` mit einem zusammengesetzten
-  Begriff testen).
+- **`teil`-Stufe am echten Bestand zeigen**: ein zusammengesetzter Begriff, der
+  im Bestand nur in Zusammensetzungen steckt (z. B. „Angebot" dort, wo nur
+  „Sonderangebot" steht) — im Fixture und am Kopie-Bestand belegt, am Live-Bestand
+  bisher nur `and` beobachtet.
+- **Token-Hygiene auf dem Hub**: `p79-vergleich2`, `p79-vergleich3`, `p79-v4`
+  liegen seit 21.11. in `data/hub.db`, zwei davon nie benutzt — widerrufen, wenn
+  sie nicht mehr gebraucht werden. Und: der GitHub-Zugang auf diesem Rechner ist
+  ein klassischer Token mit allen Scopes; ein feingranularer mit Resource owner
+  `securesight-ai` (Contents + Pull requests + Issues) wäre angemessener.
 - **Lehre fürs Gate** (gemessen, 22.11.): ein PR mit **Merge-Konflikt** zum
   Base-Zweig bekommt **keinen** Workflow-Lauf — GitHub kann den Merge-Commit
   nicht bilden. Da main inzwischen P75 (Sprachausgabe) enthält, stritten sich
