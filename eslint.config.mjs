@@ -74,7 +74,7 @@ export default tseslint.config(
   },
   {
     // EPIC-P37: glab-Stub für Integrationstests/E2E — Node-Skript mit Shebang
-    files: ["apps/hub/test/fixtures/glab-stub.mjs"],
+    files: ["apps/hub/test/fixtures/glab-stub.mjs", "e2e/support/ralph-agent.mjs"],
     languageOptions: {
       globals: {
         process: "readonly",
