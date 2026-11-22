@@ -85,6 +85,11 @@ describe("STT-Modus: Speichern und Lesen", () => {
 });
 
 describe("STT-Modus: die Entscheidung", () => {
+  // Bestands-Tests festigen Deutsch (EPIC-P61); der T61.9-Fall setzt en selbst.
+  beforeEach(() => {
+    lagern.set("ancientvoid.language", "de");
+  });
+
   it("Automatisch nimmt die lokale, wenn sie da ist", () => {
     expect(waehlePfad("auto", alles)).toBe("lokal");
   });
@@ -109,6 +114,16 @@ describe("STT-Modus: die Entscheidung", () => {
     expect(waehlePfad("auto", { ...alles, lokalVerfuegbar: false, aufnahmeMoeglich: false, browserFaehig: false })).toBe("kein");
     expect(waehlePfad("browser", { ...alles, browserFaehig: false })).toBe("kein");
     expect(grund("browser", { ...alles, browserFaehig: false })).toMatch(/keine Spracherkennung/);
+  });
+
+  it("EPIC-P61 T61.9: Titel und Hinweise folgen der gewählten Sprache", () => {
+    lagern.set("ancientvoid.language", "en");
+    expect(titelDesKnopfs("browser")).toBe("Speech input (browser, usually cloud)");
+    expect(titelDesKnopfs("kein")).toBe("Speech input not available right now");
+    expect(titelDesKnopfs("lokal", "whisper.cpp turbo")).toBe("Speech input local (whisper.cpp turbo)");
+    expect(modusHinweis("browser", alles)).toMatch(/leave the device/i);
+    expect(modusHinweis("lokal", alles, "whisper.cpp turbo")).toBe("Local on the hub: whisper.cpp turbo");
+    lagern.set("ancientvoid.language", "de");
   });
 
   it("die Titel und Hinweise nennen die Quelle beim Namen", () => {

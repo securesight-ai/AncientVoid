@@ -36,13 +36,16 @@ for (const file of mode === "apply" ? args.slice(0, 1) : args) {
     continue;
   }
   const byMatch = new Map();
-  for (const m of mapping) byMatch.set(m.match, m);
+  for (const m of mapping) {
+    if (!byMatch.has(m.match)) byMatch.set(m.match, []);
+    byMatch.get(m.match).push(m);
+  }
   const used = new Set();
   const pieces = [];
   let last = 0;
   for (const f of found.sort((a, b) => a.pos - b.pos)) {
-    const entry = byMatch.get(f.match);
-    if (!entry || (entry.only && !entry.only.some((o) => abs.endsWith(o)))) continue;
+    const entry = byMatch.get(f.match)?.find((m) => !m.only || m.only.some((o) => abs.endsWith(o)));
+    if (!entry) continue;
     if (f.comment) throw new Error(`${relative(REPO, abs)}: ${JSON.stringify(f.match)} ist i18n-ignore-escape`);
     let call = `t(${JSON.stringify(entry.key)}`;
     if (entry.params) {
@@ -73,7 +76,8 @@ for (const file of mode === "apply" ? args.slice(0, 1) : args) {
 
 function collect(source, file) {
   const out = [];
-  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.ESNext, true, ts.ScriptKind.TSX);
+  // .ts braucht TS-Kind: generische Arrow-Functions (<T>(x)) wären sonst JSX.
+  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.ESNext, true, file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
   const lines = source.split("\n");
   const hasWord = (s) => /\p{L}{2}/u.test(s);
   const ignored = (pos) => {

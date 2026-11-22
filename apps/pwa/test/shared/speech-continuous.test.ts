@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { startContinuousStt } from "../../src/shared/speech.ts";
+import { setLanguageSetting } from "../../src/shared/i18n/index.ts";
 
 /**
  * BUG-0177: Diktat über Minuten statt eines 1-Sekunden-Stossts. Die Stelle, an der
@@ -53,11 +54,23 @@ function install(scripts: Script[]) {
   (globalThis as unknown as { window: unknown }).window = { SpeechRecognition: Ctor };
 }
 
+function fakeStorage() {
+  const store = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  });
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
+  fakeStorage();
+  setLanguageSetting("de"); // die Meldung im Mikrofon-Fall ist deutsch festgemacht (EPIC-P61)
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   vi.useRealTimers();
   delete (globalThis as unknown as { window?: unknown }).window;
 });

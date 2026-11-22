@@ -59,8 +59,6 @@ export const de = {
   "common.loading_short": "lade…",
   "common.media": "Medien",
   "common.metrics": "Metrik",
-  "common.inference": "Inferenz",
-  "common.inference_title": "Token-Tempo der Inferenz-Engines: Decode, Vorbehandlung, KV-Reuse",
   "common.n_sessions": "{n} sessions",
   "common.never": "nie",
   "common.new": "neu",

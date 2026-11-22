@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { dropRecording, getRecording, type ReplaySummary } from "../../shared/stt-replay.ts";
 import { hubApi } from "../../shared/api.ts";
 import { replaceOrPasteTranscript } from "./paste-target.ts";
@@ -17,20 +18,20 @@ let beschaeftigt = false;
  * mit dem Feld passiert ist: ersetzt, angehaengt, oder gar nicht (kein Feld).
  */
 export async function reRecognize(aufnahme: ReplaySummary): Promise<{ ok: boolean; note: string }> {
-  if (beschaeftigt) return { ok: false, note: "läuft schon" };
+  if (beschaeftigt) return { ok: false, note: t("stt.already_running") };
   const voll = await getRecording(aufnahme.id);
-  if (!voll) return { ok: false, note: "Aufnahme ist nicht mehr da" };
+  if (!voll) return { ok: false, note: t("stt.recording_gone") };
   beschaeftigt = true;
   try {
-    const t = await hubApi.transcribe(voll.blob);
-    if (!t.text) return { ok: false, note: "wieder nichts erkannt — Aufnahme bleibt gemerkt" };
-    const ergebnis = await replaceOrPasteTranscript(voll.text, t.text, { origin: "diktat" });
-    const wie = ergebnis.mode === "replace" ? "ersetzt" : voll.text ? "angehängt — das Feld war von Hand geändert" : "eingefügt";
-    const wo = ergebnis.where === "pasted" ? "" : " · nur Zwischenablage";
+    const rec = await hubApi.transcribe(voll.blob);
+    if (!rec.text) return { ok: false, note: t("stt.none_again_kept") };
+    const ergebnis = await replaceOrPasteTranscript(voll.text, rec.text, { origin: "diktat" });
+    const wie = ergebnis.mode === "replace" ? t("stt.replaced") : voll.text ? t("stt.appended_manual") : t("stt.inserted");
+    const wo = ergebnis.where === "pasted" ? "" : ` ${t("stt.clipboard_only")}`;
     await dropRecording(aufnahme.id);
-    return { ok: true, note: `${t.engine} · ${(t.latencyMs / 1000).toFixed(1)} s · ${wie}${wo}` };
+    return { ok: true, note: `${rec.engine} · ${(rec.latencyMs / 1000).toFixed(1)} s · ${wie}${wo}` };
   } catch (err) {
-    return { ok: false, note: `${err instanceof Error ? err.message : "Neu-Erkennung fehlgeschlagen"} — Aufnahme bleibt gemerkt` };
+    return { ok: false, note: `${err instanceof Error ? err.message : t("stt.rerecognize_failed")} — Aufnahme bleibt gemerkt` };
   } finally {
     beschaeftigt = false;
   }

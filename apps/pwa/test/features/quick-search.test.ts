@@ -1,5 +1,22 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { quickMatches, type QuickSources } from "../../src/features/commands/quick.ts";
+import { setLanguageSetting } from "../../src/shared/i18n/index.ts";
+
+function fakeStorage() {
+  const store = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  });
+}
+
+// Bestands-Tests festigen Deutsch (EPIC-P61); die T61.9-Fälle setzen en selbst.
+beforeEach(() => {
+  fakeStorage();
+  setLanguageSetting("de");
+});
+afterEach(() => vi.unstubAllGlobals());
 
 const src: QuickSources = {
   sessions: [
@@ -48,6 +65,25 @@ describe("quickMatches (EPIC-P43 T43.6)", () => {
   it("Dateien nur mit offener Session und ab zwei Zeichen", () => {
     expect(quickMatches("a", src).some((m) => m.kind === "datei")).toBe(false);
     expect(quickMatches("alpha", { ...src, here: null }).some((m) => m.kind === "datei")).toBe(false);
+  });
+});
+
+describe("EPIC-P61 T61.9: Schnellsuche matcht über beide Sprachen", () => {
+  beforeEach(() => setLanguageSetting("en"));
+
+  it("englische Eingabe findet das Werkzeug mit englischem Label", () => {
+    const hit = quickMatches("settings", src).find((m) => m.kind === "werkzeug" && m.target.kind === "werkzeug" && (m.target as { page?: string }).page === "settings");
+    expect(hit?.label).toBe("Settings");
+  });
+
+  it("deutsche Eingabe findet dasselbe Werkzeug weiterhin", () => {
+    const hit = quickMatches("Einstellungen", src).find((m) => m.kind === "werkzeug" && m.target.kind === "werkzeug" && (m.target as { page?: string }).page === "settings");
+    expect(hit?.label).toBe("Settings");
+  });
+
+  it("Befehle matchen in beiden Sprachen", () => {
+    expect(quickMatches("antworte", src).some((m) => m.kind === "befehl")).toBe(true);
+    expect(quickMatches("answer", src).some((m) => m.kind === "befehl")).toBe(true);
   });
 });
 

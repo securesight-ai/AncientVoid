@@ -1,3 +1,4 @@
+import { t, sttLocale } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { speechRecognitionSupported, startContinuousStt, type ContinuousSttHandle } from "../../shared/speech.ts";
 import { LocalRecorder, recordingSupported, refreshSttStatus, sttStatus } from "../../shared/local-stt.ts";
@@ -78,11 +79,11 @@ export function usePushToTalk() {
   // BUG-0157: info/error dürfen nicht für alle Zeit stehen bleiben.
   useEffect(() => {
     if (active || (!info && !error)) return;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       setInfo("");
       setError("");
     }, FEEDBACK_HIDE_MS);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [active, info, error]);
 
   // BUG-0177: Sekundenzähler — die UI zeigt damit belegt, dass die Erkennung lebt.
@@ -92,11 +93,11 @@ export function usePushToTalk() {
       setSeconds(0);
       return;
     }
-    const t = setInterval(() => {
+    const ticker = setInterval(() => {
       secondsRef.current += 1;
       setSeconds(secondsRef.current);
     }, 1000);
-    return () => clearInterval(t);
+    return () => clearInterval(ticker);
   }, [active]);
 
   // BUG-0177: Wach-Riegel, damit das Handy die Erkennung nicht nach dem Display-Sleep
@@ -122,7 +123,7 @@ export function usePushToTalk() {
   useEffect(() => {
     if (!active) return;
     capTimer.current = setTimeout(() => {
-      setInfo(`15-Minuten-Grenze erreicht — Diktat wird abgeschlossen.`);
+      setInfo(t("stt.limit_15min"));
       if (handle.current) handle.current.stop();
       else if (recorder.current) void stopLocal();
     }, MAX_DICTATION_MS);
@@ -139,7 +140,7 @@ export function usePushToTalk() {
   useEffect(() => {
     if (!recording) return;
     const notice = () => {
-      if (document.visibilityState === "hidden") setInfo("Bildschirm gesperrt — Aufnahme läuft weiter, solange der Browser das Mikro hält.");
+      if (document.visibilityState === "hidden") setInfo(t("stt.locked_reco"));
       else setInfo("");
     };
     const lost = () => {
@@ -149,7 +150,7 @@ export function usePushToTalk() {
       rec.cancel();
       setRecording(false);
       setPartial("");
-      setError("Aufnahme abgebrochen — Mikrofon nicht mehr verfügbar.");
+      setError(t("stt.mic_lost"));
     };
     document.addEventListener("visibilitychange", notice);
     const track = recorder.current?.track();
@@ -162,9 +163,9 @@ export function usePushToTalk() {
 
   const applyText = async (text: string, meta?: string) => {
     const where = await pasteTranscript(text);
-    if (where === "nowhere") setError("Kein Eingabefeld fokussiert — Text nicht eingefügt (Zwischenablage ebenfalls fehlgeschlagen).");
-    else if (where === "clipboard-only") setInfo(`${meta ? `${meta} · ` : ""}nur Zwischenablage — kein fokussiertes Feld`);
-    else setInfo(meta ?? "eingefügt");
+    if (where === "nowhere") setError(t("stt.no_field_focus"));
+    else if (where === "clipboard-only") setInfo(`${meta ? `${meta} · ` : ""}${t("stt.clipboard_only_nofield")}`);
+    else setInfo(meta ?? t("stt.inserted"));
   };
 
   const stopLocal = async () => {
@@ -177,21 +178,21 @@ export function usePushToTalk() {
     let blob: Blob | undefined;
     try {
       blob = await rec.stop();
-      const t = await rec.transcribe(blob);
-      if (t.text) {
-        await applyText(t.text, `lokal · ${t.engine} · ${(t.k6Ms / 1000).toFixed(1)} s${streamNotice ? " · Live-Vorschau nicht verfügbar" : ""}`);
+      const res = await rec.transcribe(blob);
+      if (res.text) {
+        await applyText(res.text, `${t("stt.meta_local", { engine: res.engine, s: (res.k6Ms / 1000).toFixed(1) })}${streamNotice ? ` · ${t("stt.no_live_preview")}` : ""}`);
         // ADR-0092: die Aufnahme bleibt — fuer eine spaetere Neu-Erkennung aus der Ablage.
-        await gemerkt({ blob, seconds: dauer, engine: t.engine, text: t.text });
+        await gemerkt({ blob, seconds: dauer, engine: res.engine, text: res.text });
       } else {
-        setError("Nichts erkannt — nochmal versuchen.");
-        await gemerkt({ blob, seconds: dauer, failed: true, reason: "nichts erkannt" });
+        setError(t("stt.nothing_retry"));
+        await gemerkt({ blob, seconds: dauer, failed: true, reason: t("stt.nothing_recognized") });
       }
     } catch (err) {
       // BUG-0214: nach einem Ausfall der eigenen Erkennung die Auskunft neu holen — sonst
       // hält die App für den Rest der Sitzung an einem toten Weg fest.
       const fresh = await refreshSttStatus().catch(() => ({ available: false as const }));
       setLocalStt(fresh);
-      const grund = err instanceof Error ? err.message : "Spracherkennung fehlgeschlagen.";
+      const grund = err instanceof Error ? err.message : t("stt.recognition_failed");
       const faehigkeiten = ableitbar(localStt);
       setError(
         fresh.available
@@ -200,8 +201,8 @@ export function usePushToTalk() {
             // Wer "lokal" gewaehlt hat, kriegt NICHT heimlich die Cloud untergeschoben.
             ? `${grund} — ${ablehnungsGrund("lokal", { ...faehigkeiten, lokalVerfuegbar: false })}`
             : speechRecognitionSupported()
-              ? `${grund} — eigene Erkennung nicht erreichbar; beim nächsten Drücken übernimmt die Browser-Erkennung.`
-              : `${grund} — eigene Erkennung ist gerade nicht erreichbar.`,
+              ? t("stt.fallback_browser", { reason: grund })
+              : t("stt.unreachable_now", { reason: grund }),
       );
       // ADR-0092: der Fehlversuch bleibt als Sprachnachricht liegen und darf neu
       // erkannt werden, sobald die Erkennung wieder laeuft.
@@ -222,7 +223,7 @@ export function usePushToTalk() {
     setInfo("");
     setPartial("");
     setRestarts(0);
-  const lang = navigator.language || "de-DE";
+  const lang = sttLocale();
     handle.current = startContinuousStt(lang, {
       onPreview: setPartial,
       onRestarts: setRestarts,
@@ -232,16 +233,16 @@ export function usePushToTalk() {
         const took = secondsRef.current;
         if (info.reason === "fatal") {
           setPartial("");
-          setError(info.message ?? "Spracherkennung fehlgeschlagen.");
+          setError(info.message ?? t("stt.recognition_failed"));
           return;
         }
         if (!info.text) {
           setPartial("");
-          setError(info.message ?? "Nichts gehört — bitte näher ans Mikrofon sprechen oder länger am Stück diktieren.");
+          setError(info.message ?? t("stt.nothing_heard"));
           return;
         }
         setPartial("");
-        void applyText(info.text, `Diktat · ${took} s${restarts ? ` · ${restarts}× neu gestartet` : ""}`);
+        void applyText(info.text, `${t("stt.dictation_meta", { s: took })}${restarts ? ` · ${t("stt.restarted_n", { n: restarts })}` : ""}`);
       },
     });
     setListening(true);
@@ -275,14 +276,14 @@ export function usePushToTalk() {
       setStreamNotice("");
       // BUG-0177: ohne streamendes ASR am Hub kann es keine Live-Wörter geben —
       // das muss sichtbar gesagt werden, sonst hält die Person die App für kaputt.
-      if (!localStt.streaming) setStreamNotice("Live-Wörter brauchen ein streamendes ASR am Hub (stt.streaming) — der Text erscheint hier nach dem Stoppen.");
+      if (!localStt.streaming) setStreamNotice(t("stt.needs_streaming_asr"));
       try {
         const rec = new LocalRecorder();
         await rec.start(() => void stopLocal(), { onPartial: setPartial, onStreamError: setStreamNotice });
         recorder.current = rec;
         setRecording(true);
       } catch {
-        setError("Mikrofon-Zugriff verweigert.");
+        setError(t("stt.mic_denied"));
       }
       return;
     }

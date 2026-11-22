@@ -67,7 +67,7 @@ function NyxItem({ req, session, onDone, onOpen }: { req: ApprovalRequest; sessi
       await hubApi.decideApproval(req.id, decision, undefined, answers);
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Antwort fehlgeschlagen");
+      setError(err instanceof Error ? err.message : t("nyx.answer_failed"));
       setBusy(false);
     }
   };
@@ -83,7 +83,7 @@ function NyxItem({ req, session, onDone, onOpen }: { req: ApprovalRequest; sessi
         <CardDecision req={req} onDecided={onDone} />
       ) : (
         <div class="nyx-item-elsewhere">
-          <span>{req.reasonRequired ? "Braucht eine Begründung." : "Braucht deinen Passkey."}</span>
+          <span>{req.reasonRequired ? t("nyx.needs_reason") : t("nyx.needs_passkey")}</span>
           <Button onClick={open}>
             {t("nyx.decide_in_session")}
           </Button>

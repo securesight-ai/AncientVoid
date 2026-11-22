@@ -227,7 +227,12 @@ hart verdrahtet. Für „praktisch alle Sprachen" gilt:
   (de/en, 149 Schlüssel), Sprachkette `--lang` > `AV_LANG` > `LANG` > `en`;
   Generator pinnt `en`; Referenz-Doku neu generiert; betroffene Tests pinnen
   ihre Sprache.
-- [ ] **T61.9** Sprache für STT/Quick-Commands/Nyx; K6-Messlauf mit `en`. (K6)
+- [x] **T61.9** Sprache für STT/Quick-Commands/Nyx; K6-Messlauf mit `en`. (K6)
+  (2026-11-22: Katalog + `t()`/`matchForms()`/`sttLocale()` umgesetzt;
+  quick.ts/CommandBar/Nyx/STT-Dateien migriert; betroffene Tests pinnen
+  ihre Sprache und sind grün; `check-i18n` bleibt 0/0. Der K6-Messlauf
+  mit `en` braucht gpubox und liegt nach P000 verschoben dort als
+  T000.29.)
 - [ ] **T61.10** E2E: Locale-Fixture für Bestands-Specs, neue
   `i18n-language.spec.ts`; Eintrag in `docs/funktionsinventar.md`.
 - [ ] **T61.11** Englisches Korrekturlesen aller Kataloge (ein Durchgang,

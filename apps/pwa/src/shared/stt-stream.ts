@@ -1,3 +1,4 @@
+import { t } from "./i18n/index.ts";
 import { STT_STREAM_MAX_BUFFERED_BYTES, type SttStreamEvent } from "@ancientvoid/contracts";
 import { hubApi } from "./api.ts";
 
@@ -48,9 +49,9 @@ export class LocalSttStream {
   async start(stream: MediaStream): Promise<void> {
     this.startedAt = performance.now();
     try {
-      if (typeof AudioWorkletNode === "undefined" || typeof WebSocket === "undefined") throw new Error("Dieses Gerät unterstützt kein lokales Streaming-Diktat.");
+      if (typeof AudioWorkletNode === "undefined" || typeof WebSocket === "undefined") throw new Error(t("stt.no_stream_device"));
       this.context = new AudioContext({ sampleRate: SAMPLE_RATE });
-      if (this.context.sampleRate !== SAMPLE_RATE) throw new Error("Das Gerät kann Audio nicht lokal auf 16 kHz verarbeiten.");
+      if (this.context.sampleRate !== SAMPLE_RATE) throw new Error(t("stt.no_16k"));
       await this.context.audioWorklet.addModule("/pcm-capture.worklet.js");
       this.source = this.context.createMediaStreamSource(stream);
       this.processor = new AudioWorkletNode(this.context, "ancientvoid-pcm16-capture", { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [1] });
@@ -62,14 +63,14 @@ export class LocalSttStream {
       this.socket = new WebSocket(hubApi.sttStreamUrl(ticket));
       this.socket.binaryType = "arraybuffer";
       this.socket.onmessage = (event) => this.receive(event.data);
-      this.socket.onerror = () => this.fail("Live-Erkennung nicht erreichbar; nach Stopp wird die lokale Aufnahme geprüft.");
+      this.socket.onerror = () => this.fail(t("stt.live_unreachable_check"));
       this.socket.onclose = () => {
-        if (!this.closed) this.fail("Live-Erkennung wurde getrennt; nach Stopp wird die lokale Aufnahme geprüft.");
+        if (!this.closed) this.fail(t("stt.live_dropped_check"));
       };
-      this.readyTimer = setTimeout(() => this.fail("Live-Erkennung startet nicht; nach Stopp wird die lokale Aufnahme geprüft."), 8_000);
+      this.readyTimer = setTimeout(() => this.fail(t("stt.live_no_start_check")), 8_000);
       await this.readyPromise;
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Live-Erkennung konnte nicht gestartet werden.";
+      const message = error instanceof Error ? error.message : t("stt.live_no_start");
       this.fail(message);
       throw error;
     }
@@ -77,7 +78,7 @@ export class LocalSttStream {
 
   async finish(): Promise<StreamTranscript> {
     await this.readyPromise;
-    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) throw new Error("Live-Erkennung wurde getrennt.");
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) throw new Error(t("stt.live_dropped"));
     this.flush(true);
     this.socket.send(JSON.stringify({ type: "finish" }));
     this.processor?.disconnect();
@@ -95,7 +96,7 @@ export class LocalSttStream {
     if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: "cancel" }));
     this.socket?.close();
     this.cleanupAudio();
-    const cancelled = new Error("Aufnahme abgebrochen.");
+    const cancelled = new Error(t("stt.rec_cancelled"));
     this.readyReject?.(cancelled);
     this.resultReject?.(cancelled);
   }
@@ -104,7 +105,7 @@ export class LocalSttStream {
     if (this.closed) return;
     for (const sample of pcm) this.samples.push(sample);
     if (this.samples.length * 2 > STT_STREAM_MAX_BUFFERED_BYTES) {
-      this.fail("Audio-Rückstau im Live-Diktat; die Aufnahme bleibt lokal bis zum Stopp.");
+      this.fail(t("stt.backpressure"));
       return;
     }
     this.flush(false);
@@ -115,7 +116,7 @@ export class LocalSttStream {
     if (!this.ready || !socket || socket.readyState !== WebSocket.OPEN) return;
     while (this.samples.length >= FRAME_SAMPLES || (includeRemainder && this.samples.length > 0)) {
       if (socket.bufferedAmount > STT_STREAM_MAX_BUFFERED_BYTES) {
-        this.fail("Live-Erkennung ist überlastet; die Aufnahme bleibt lokal bis zum Stopp.");
+        this.fail(t("stt.overloaded"));
         return;
       }
       const count = includeRemainder ? Math.min(FRAME_SAMPLES, this.samples.length) : FRAME_SAMPLES;
@@ -127,12 +128,12 @@ export class LocalSttStream {
   }
 
   private receive(raw: unknown): void {
-    if (typeof raw !== "string") return this.fail("Ungültige Antwort der lokalen Live-Erkennung.");
+    if (typeof raw !== "string") return this.fail(t("stt.bad_answer"));
     let event: SttStreamEvent;
     try {
       event = JSON.parse(raw) as SttStreamEvent;
     } catch {
-      return this.fail("Ungültige Antwort der lokalen Live-Erkennung.");
+      return this.fail(t("stt.bad_answer"));
     }
     if (event.type === "ready") {
       this.ready = true;

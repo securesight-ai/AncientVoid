@@ -1,6 +1,6 @@
 // Tier A. EPIC-P61 T61.2: t(), Plural, Fallback, Browsersprach-Match.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { t, resolveLanguage, matchBrowserLanguage, getLanguageSetting, setLanguageSetting, catalogKeys, resolveNotificationTitle, errorText } from "../../src/shared/i18n/index.ts";
+import { t, resolveLanguage, matchBrowserLanguage, getLanguageSetting, setLanguageSetting, catalogKeys, resolveNotificationTitle, errorText, sttLocale, matchForms } from "../../src/shared/i18n/index.ts";
 import { fmtDate, fmtDateTime, fmtNumber, fmtTime } from "../../src/shared/i18n/format.ts";
 import { en } from "../../src/shared/i18n/en.ts";
 
@@ -137,5 +137,27 @@ describe("EPIC-P61 T61.7: error.<code>-Mapping", () => {
     setLanguageSetting("en");
     expect(errorText("brandneuer_code", "Der Hub-Text bleibt, was er ist.")).toBe("Der Hub-Text bleibt, was er ist.");
     expect(errorText(undefined, "plain hub text")).toBe("plain hub text");
+  });
+});
+
+// EPIC-P61 T61.9: Browser-STT folgt der gewählten Sprache; matchForms liefert
+// beide Sprachformen eines Katalogschlüssels (Match über beide Sprachen).
+describe("EPIC-P61 T61.9: STT-Sprache und Match-Formen", () => {
+  it("sttLocale: de → de-DE, en → en-US", () => {
+    fakeStorage();
+    setLanguageSetting("de");
+    expect(sttLocale()).toBe("de-DE");
+    setLanguageSetting("en");
+    expect(sttLocale()).toBe("en-US");
+  });
+
+  it("matchForms liefert de- und en-Version eines Katalogschlüssels", () => {
+    fakeStorage();
+    const forms = matchForms("stt.browser_no_speech");
+    expect(forms).toContain("Dieser Browser bietet keine Spracherkennung.");
+    expect(forms).toContain("This browser offers no speech recognition.");
+    const dyn = matchForms("quick.search_files", { q: "log" });
+    expect(dyn).toContain("„log“ in den Dateien suchen");
+    expect(dyn.some((f) => f.includes("Search files"))).toBe(true);
   });
 });
