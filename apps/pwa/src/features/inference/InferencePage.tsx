@@ -206,6 +206,11 @@ function Hero({ wert, einheit, label, unterzeile }: { wert: string; einheit: str
   );
 }
 
+/** Zeilen ohne Messwert fallen weg — eine Karte aus lauter „—“ ist kein Befund. */
+function nurMesswerte(paare: Array<[string, string]>): Array<[string, string]> {
+  return paare.filter(([, wert]) => wert !== "—" && !wert.startsWith("— "));
+}
+
 function Werte({ paare, klassen, versteckeLeere }: { paare: Array<[string, string]>; klassen?: string; versteckeLeere?: boolean }) {
   // Nicht gemeldete Felder verschwinden ganz statt als "—"-Stapel zu stehen: eine
   // fehlende Zeile ist ehrlicher als eine Zeile, die Nachlosigkeit suggeriert (K9).
@@ -314,24 +319,24 @@ function EngineCard({ snap }: { snap: InferenceSnapshot }) {
 
 function TotalsCard({ snap }: { snap: InferenceSnapshot }) {
   const f = snap.totals?.window;
+  const zeilen = nurMesswerte([
+    [t("inference.totals.requests"), zahl(snap.totals?.requests)],
+    [t("inference.totals.prompt"), zahl(snap.totals?.prompt)],
+    [t("inference.totals.read"), zahl(snap.totals?.read)],
+    [t("inference.totals.reused"), zahl(snap.totals?.reused)],
+    [t("inference.totals.output"), zahl(snap.totals?.output)],
+    [t("inference.totals.reuse"), anteil(snap.totals?.reuseShare)],
+    [t("inference.totals.prefill"), `${tempo(snap.totals?.avgPrefillTokS)} tok/s`],
+    [t("inference.totals.decode"), `${tempo(snap.totals?.avgDecodeTokS)} tok/s`],
+    [t("inference.totals.draft"), anteil(snap.totals?.draftAcceptShare)],
+    [t("inference.totals.expert"), anteil(snap.totals?.expertHitRate)],
+  ]);
+  if (zeilen.length === 0 && !f) return null;
   return (
     <Card aria-label={t("inference.card.totals")}>
       <strong>{t("inference.card.totals")}</strong>
       <p class="inference-hinweis">{t("inference.card.totalsHint")}</p>
-      <Werte
-        paare={[
-          [t("inference.totals.requests"), zahl(snap.totals?.requests)],
-          [t("inference.totals.prompt"), zahl(snap.totals?.prompt)],
-          [t("inference.totals.read"), zahl(snap.totals?.read)],
-          [t("inference.totals.reused"), zahl(snap.totals?.reused)],
-          [t("inference.totals.output"), zahl(snap.totals?.output)],
-          [t("inference.totals.reuse"), anteil(snap.totals?.reuseShare)],
-          [t("inference.totals.prefill"), `${tempo(snap.totals?.avgPrefillTokS)} tok/s`],
-          [t("inference.totals.decode"), `${tempo(snap.totals?.avgDecodeTokS)} tok/s`],
-          [t("inference.totals.draft"), anteil(snap.totals?.draftAcceptShare)],
-          [t("inference.totals.expert"), anteil(snap.totals?.expertHitRate)],
-        ]}
-      />
+      <Werte paare={zeilen} />
       {f && (
         <p class="inference-hinweis">
           {t("inference.window.hint", {
@@ -443,26 +448,26 @@ function PerfCard({ snap }: { snap: InferenceSnapshot }) {
 
 function CacheCard({ snap }: { snap: InferenceSnapshot }) {
   const c = snap.cache!;
+  const zeilen = nurMesswerte([
+    [t("inference.cache.hitRate"), anteil(c.hitRate)],
+    [t("inference.cache.tokenHitRate"), anteil(c.tokenHitRate)],
+    [t("inference.cache.savedTokens"), zahl(c.savedTokens)],
+    [t("inference.cache.entries"), zahl(c.entries)],
+    [t("inference.cache.bytes"), byteGroesse(c.bytes)],
+    [t("inference.cache.evictions"), zahl(c.evictions)],
+    [t("inference.cache.budgetMib"), c.budgetMib == null ? "—" : `${zahl(c.budgetMib)} MiB`],
+    [t("inference.cache.parked"), zahl(c.parked)],
+    [t("inference.cache.restores"), zahl(c.restores)],
+    [t("inference.cache.refusedTotal"), zahl(c.refusedTotal)],
+    [t("inference.cache.longestWaitS"), dauer(c.longestWaitS)],
+    [t("inference.cache.poolBelegung"), anteil(c.poolBelegung)],
+  ]);
+  if (zeilen.length === 0) return null;
   return (
     <Card aria-label={t("inference.card.cache")}>
       <strong>{t("inference.card.cache")}</strong>
       <p class="inference-hinweis">{t("inference.card.cacheHint")}</p>
-      <Werte
-        paare={[
-          [t("inference.cache.hitRate"), anteil(c.hitRate)],
-          [t("inference.cache.tokenHitRate"), anteil(c.tokenHitRate)],
-          [t("inference.cache.savedTokens"), zahl(c.savedTokens)],
-          [t("inference.cache.entries"), zahl(c.entries)],
-          [t("inference.cache.bytes"), byteGroesse(c.bytes)],
-          [t("inference.cache.evictions"), zahl(c.evictions)],
-          [t("inference.cache.budgetMib"), c.budgetMib == null ? "—" : `${zahl(c.budgetMib)} MiB`],
-          [t("inference.cache.parked"), zahl(c.parked)],
-          [t("inference.cache.restores"), zahl(c.restores)],
-          [t("inference.cache.refusedTotal"), zahl(c.refusedTotal)],
-          [t("inference.cache.longestWaitS"), dauer(c.longestWaitS)],
-          [t("inference.cache.poolBelegung"), anteil(c.poolBelegung)],
-        ]}
-      />
+      <Werte paare={zeilen} />
     </Card>
   );
 }
@@ -480,44 +485,35 @@ function Balken({ anteilWert, klassen }: { anteilWert: number | null; klassen?: 
 function HardwareCard({ snap }: { snap: InferenceSnapshot }) {
   const h = snap.hardware!;
   const vramAnteil = h.vramTotalBytes ? (h.vramUsedBytes ?? 0) / h.vramTotalBytes : null;
+  const vram = byteGroesse(h.vramUsedBytes) === "—" && byteGroesse(h.vramTotalBytes) === "—" ? "—" : `${byteGroesse(h.vramUsedBytes)} / ${byteGroesse(h.vramTotalBytes)}`;
+  const ram = byteGroesse(h.ramUsedBytes) === "—" ? "—" : `${byteGroesse(h.ramUsedBytes)} / ${byteGroesse(h.ramTotalBytes)}`;
+  // „Maximum“ ist zweierlei: was der Slot hergibt und was die Karte könnte. Ist der
+  // Slot niedriger als die Karte, steckt der Engpass im Mainboard, nicht in der GPU.
+  const pcieAbweichung = [
+    h.pcieGenMax == null || (h.pcieGenMax === h.pcieGen && h.pcieWidthMax === h.pcieWidth) ? null : `Slot Gen ${h.pcieGenMax} × ${h.pcieWidthMax ?? "?"}`,
+    h.pcieOwnGen == null || h.pcieOwnGen === h.pcieGen ? null : `Karte Gen ${h.pcieOwnGen}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const zeilen = nurMesswerte([
+    [t("inference.hardware.gpu"), h.gpuName ?? "—"],
+    [t("inference.hardware.util"), anteil(h.gpuUtil)],
+    [t("inference.hardware.temp"), h.gpuTempC == null ? "—" : `${zahl(h.gpuTempC)} °C`],
+    [t("inference.hardware.vram"), vram],
+    [t("inference.hardware.power"), h.powerW == null ? "—" : `${zahl(h.powerW)} W${h.powerLimitW ? ` / ${zahl(h.powerLimitW)} W` : ""}`],
+    [t("inference.hardware.pcie"), h.pcieGen == null ? "—" : `Gen ${h.pcieGen} × ${h.pcieWidth ?? "?"}`],
+    [t("inference.hardware.pcieSlotKarte"), pcieAbweichung || (h.pciePath ? `Deckung ${h.pciePath}` : "—")],
+    [t("inference.hardware.cpu"), h.cpuName == null ? "—" : `${h.cpuName}${h.cpuCores ? ` · ${zahl(h.cpuCores)} Kerne` : ""}`],
+    [t("inference.hardware.cpuUtil"), anteil(h.cpuUtil)],
+    [t("inference.hardware.disk"), h.diskReadMbS == null && h.diskWriteMbS == null ? "—" : `${tempo(h.diskReadMbS)} / ${tempo(h.diskWriteMbS)} MiB/s`],
+    [t("inference.hardware.ram"), ram],
+  ]);
+  if (zeilen.length === 0) return null;
   return (
     <Card aria-label={t("inference.card.hardware")}>
       <strong>{t("inference.card.hardware")}</strong>
       <p class="inference-hinweis">{t("inference.card.hardwareHint")}</p>
-      <Werte
-        paare={[
-          [t("inference.hardware.gpu"), h.gpuName ?? "—"],
-          [t("inference.hardware.util"), anteil(h.gpuUtil)],
-          [t("inference.hardware.temp"), h.gpuTempC == null ? "—" : `${zahl(h.gpuTempC)} °C`],
-          [t("inference.hardware.vram"), `${byteGroesse(h.vramUsedBytes)} / ${byteGroesse(h.vramTotalBytes)}`],
-          [t("inference.hardware.power"), h.powerW == null ? "—" : `${zahl(h.powerW)} W${h.powerLimitW ? ` / ${zahl(h.powerLimitW)} W` : ""}`],
-          [t("inference.hardware.pcie"), h.pcieGen == null ? "—" : `Gen ${h.pcieGen} × ${h.pcieWidth ?? "?"}`],
-          // Ist gegen Maximum: eine zu schmale/zu langsame Strecke ist ein Befund,
-          // den nur der Vergleich mit dem machbaren zeigt.
-          [
-            t("inference.hardware.pcieSlotKarte"),
-            // „Maximum“ zweimal: Slot und Karte. Ist der Slot niedriger als die Karte,
-            // steckt der Engpass im Mainboard — das ist ein anderer Befund.
-            h.pcieGenMax == null && h.pcieOwnGen == null
-              ? "—"
-              : [
-                  h.pcieGenMax == null || (h.pcieGenMax === h.pcieGen && h.pcieWidthMax === h.pcieWidth)
-                    ? null
-                    : `Slot Gen ${h.pcieGenMax} × ${h.pcieWidthMax ?? "?"}`,
-                  h.pcieOwnGen == null || h.pcieOwnGen === h.pcieGen ? null : `Karte Gen ${h.pcieOwnGen}`,
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || (h.pciePath ? `Deckung ${h.pciePath}` : "—"),
-          ],
-          [t("inference.hardware.cpu"), h.cpuName == null ? "—" : `${h.cpuName}${h.cpuCores ? ` · ${zahl(h.cpuCores)} Kerne` : ""}`],
-          [t("inference.hardware.cpuUtil"), anteil(h.cpuUtil)],
-          [
-            t("inference.hardware.disk"),
-            h.diskReadMbS == null && h.diskWriteMbS == null ? "—" : `${tempo(h.diskReadMbS)} / ${tempo(h.diskWriteMbS)} MiB/s`,
-          ],
-          [t("inference.hardware.ram"), `${byteGroesse(h.ramUsedBytes)} / ${byteGroesse(h.ramTotalBytes)}`],
-        ]}
-      />
+      <Werte paare={zeilen} />
       <Balken anteilWert={h.gpuUtil} />
       <Balken anteilWert={vramAnteil} klassen={vramAnteil != null && vramAnteil >= 0.9 ? "inference-balken--warn" : undefined} />
       <Balken anteilWert={h.gpuTempC == null ? null : h.gpuTempC / 100} klassen={h.gpuTempC != null && h.gpuTempC >= 85 ? "inference-balken--err" : undefined} />

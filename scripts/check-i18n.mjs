@@ -7,7 +7,7 @@
 // steigen; am Epic-Ende leer. Ausnahmen per Kommentar
 // `// i18n-ignore: <Grund>` (Zeile direkt davor oder am Zeilenende).
 // Aufruf: node scripts/check-i18n.mjs [--write-baseline] [--json]
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -65,6 +65,50 @@ function listTsx(dir) {
   return out;
 }
 
+/**
+ * EPIC-P79: t("key") mit fehlendem Katalog-Schluessel zeigt zur Laufzeit den
+ * rohen Schluessel (sichtbar als „COMMON.INFERENCE“ im Pane-Titel). de/en-Paritaet
+ * allein faengt das nicht — ein loser Loeschcommit in einem anderen Zweig erwischt
+ * die Seite trotzdem. Jeder literal benutzte Schluessel muss im de-Katalog stehen.
+ */
+function katalogSchluessel() {
+  const keys = new Set();
+  const dateien = [...listTs(join(I18N_DIR, "de")), join(I18N_DIR, "de.ts")];
+  for (const file of dateien) {
+    if (!existsSync(file)) continue;
+    const sf = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.ESNext, true);
+    (function visit(n) {
+      if (ts.isPropertyAssignment(n) && ts.isStringLiteral(n.name)) keys.add(n.name.text);
+      ts.forEachChild(n, visit);
+    })(sf);
+  }
+  return keys;
+}
+
+function scanMissingKeys(source, path, keys) {
+  const sf = ts.createSourceFile(path, source, ts.ScriptTarget.ESNext, true);
+  const out = [];
+  (function visit(n) {
+    if (ts.isCallExpression(n) && n.expression.getText(sf) === "t" && n.arguments.length >= 1 && ts.isStringLiteral(n.arguments[0])) {
+      const key = n.arguments[0].text;
+      if (!keys.has(key)) out.push({ line: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, key });
+    }
+    ts.forEachChild(n, visit);
+  })(sf);
+  return out;
+}
+
+function listTs(dir) {
+  const out = [];
+  if (!existsSync(dir)) return out;
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) out.push(...listTs(p));
+    else if (name.endsWith(".ts")) out.push(p);
+  }
+  return out;
+}
+
 export async function checkI18n({ root = SRC, baselinePath = BASELINE_PATH } = {}) {
   let baseline = {};
   try {
@@ -73,6 +117,16 @@ export async function checkI18n({ root = SRC, baselinePath = BASELINE_PATH } = {
     /* ohne Baseline: alles über Null ist rot */
   }
   const findings = [];
+  const fehlendeKeys = [];
+  const katalog = katalogSchluessel();
+  // Schlüsselprüfung über .ts UND .tsx (Titles und Sidebar-Labels stehen in .ts);
+  // die harte Strings-Ratchet bleibt bei .tsx, damit ihre Baseline gültig bleibt.
+  for (const file of [...listTsx(root), ...listTs(root)]) {
+    if (file.startsWith(I18N_DIR + sep)) continue;
+    for (const m of scanMissingKeys(readFileSync(file, "utf8"), file, katalog)) {
+      fehlendeKeys.push({ file: relative(REPO, file).split(sep).join("/"), ...m });
+    }
+  }
   for (const file of listTsx(root)) {
     if (file.startsWith(I18N_DIR + sep)) continue;
     const found = scanFile(readFileSync(file, "utf8"), file);
@@ -81,13 +135,13 @@ export async function checkI18n({ root = SRC, baselinePath = BASELINE_PATH } = {
     if (found.length > allowed) findings.push({ file: rel, count: found.length, allowed, first: found.slice(0, 3) });
     else if (found.length < allowed) findings.push({ file: rel, ratchet: true, count: found.length, allowed });
   }
-  return findings;
+  return { findings, fehlendeKeys };
 }
 
 async function main() {
   const json = process.argv.includes("--json");
   const write = process.argv.includes("--write-baseline");
-  const findings = await checkI18n();
+  const { findings, fehlendeKeys } = await checkI18n();
   if (write) {
     const baseline = {};
     for (const file of listTsx(SRC)) {
@@ -105,9 +159,11 @@ async function main() {
   else {
     for (const v of violations) console.log(`  ${v.file}: ${v.count} Strings > Baseline ${v.allowed} — z. B. Zeile ${v.first?.[0]?.line} (${v.first?.[0]?.what})`);
     for (const c of couldSink) console.log(`  (ratchet) ${c.file}: ${c.count} < ${c.allowed} — Baseline darf sinken`);
-    console.log(`check-i18n: ${violations.length ? `${violations.length} Dateien über Baseline — ROT` : `OK (${couldSink.length}mal Baseline überholt)`}`);
+    for (const m of fehlendeKeys) console.log(`  fehlender Katalog-Schluessel: ${m.file}:${m.line} — t("${m.key}")`);
+    const rot = violations.length + fehlendeKeys.length;
+    console.log(`check-i18n: ${rot ? `${violations.length} Dateien über Baseline, ${fehlendeKeys.length} fehlende Schlüssel — ROT` : `OK (${couldSink.length}mal Baseline überholt)`}`);
   }
-  process.exit(violations.length ? 1 : 0);
+  process.exit(violations.length || fehlendeKeys.length ? 1 : 0);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

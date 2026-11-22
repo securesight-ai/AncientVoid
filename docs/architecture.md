@@ -202,7 +202,7 @@ WebAudio-Synthese, ohne Contract-Änderung und ohne Assets (P65),
 Mehrsprachigkeit nach ADR-0101: typisierte Textkataloge statt Framework —
 PWA in `apps/pwa/src/shared/i18n/`, serverseitiger Push-Katalog in
 `packages/core/src/modules/notifications/i18n/`, `de` als Einzelsprungmarke,
-`en` typgeprüft dagegen; `check:i18n` mit Baseline-Ratchet (P61).
+`en` typgeprüft dagegen; `check:i18n` mit Baseline-Ratchet (P61) prüft zusätzlich, dass jeder literal benutzte `t("…")`-Schlüssel im de-Katalog steht — Parität allein fängt keinen Löschcommit, der einer Seite ihren Titel nimmt (P79).
 
 ### Adapter-Flotte (P1/P3)
 
