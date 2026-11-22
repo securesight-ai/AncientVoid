@@ -247,3 +247,50 @@ Pass gezählt. Neue UI-Abläufe mit Spec in `e2e/specs/`
 (`tts.spec.ts`); Eintrag `docs/funktionsinventar.md`;
 `docs/onboarding.md` aktualisiert. K5 nachweislich unverletzt, K2 ohne
 neuen Render-Pfad im Tail. Kein TODO ohne Epic-Bezug.
+
+## 8. Retro (2026-11-22, PR #275)
+
+Zeitraum 20.11.–22.11.2026 (Auftrag → ADR → Umsetzung), 5 Commits
+(9342f7f, 2509f26, 669ceca, 6631b5c, dcb3b0a).
+
+### AK-Matrix
+
+- AC-P75-1: 🟢 — E2E `tts.spec.ts` „Vorlesen spielt …" (Spy, `data-phase`
+  playing, Hörprobe-POST mit `"German"`); Policy 403 in
+  `tts-routes.test.ts`.
+- AC-P75-2: 🟢 — `ApprovalCard` rendert SpeakButton mit `req.summary`
+  (`Approvals.tsx`, Frage-Karten); kein eigener E2E-Fall nötig, da derselbe
+  Baustein wie AC-P75-1 (Beleg: Unit + gemeinsame Komponente).
+- AC-P75-3: 🟢 — E2E Test 1 (disabled + Grund, Eintrag, Hörprobe, invalid →
+  400 sichtbar); `ttsBlockReason`-Test.
+- AC-P75-4: 🟢 — `tts-routes.test.ts` „Auskunft entsteht aus einer Probe"
+  (toter Port, `checkedMsAgo`, Cache je URL) + E2E Verfügbarkeitszeile.
+- AC-P75-5: 🟢 — `sessions.list()` leer + E2E „kein RIFF/audio-wav im
+  EventStore".
+- AC-P75-6: 🟢 — 413 Multi-Byte am Cap, FIFO-Reihenfolge, genau ein 429,
+  Timeout über `tts.timeoutMs` (Hub-Tests).
+- AC-P75-7: 🟢 — Agent+Display 403 auf GET/POST `/api/tts` und
+  PUT `/api/settings/tts`.
+- AC-P75-8: 🟢 — G80 im Funktionsinventar, Onboarding-Abschnitt grenzt ab.
+
+### Erkenntnisse
+
+1. BUG-0214-Lektion zahlte sich doppelt aus: Neben der echten Probe mussten
+   wir zusätzlich die Synthese-Evidenz einführen — eine gescheiterte
+   Synthese verwirft das Probe-Urteil (TTL-Cache allein hätte nach einem
+   Dienst-Tod noch Sekunden „verfügbar" gesagt). Beleg:
+   `tts.routes.ts` `probe.invalidate()` + Test „Status lügt danach nicht
+   weiter".
+2. Test-Detail: gleichzeitige `inject`-Requests laufen nicht in
+   Erzeugungsreihenfolge — Queue-Tests dürfen nur „genau ein 429"
+   behaupten, nicht „der fünfte". Beleg: Queue-Test mit `Promise.race`.
+3. Premortem 1/2/3 traten kontrolliert ein (Serialisierung, Cap, ehrliche
+   Probe — jeweils mit Test belegt); 4 (Autoplay) bleibt der P000-Abnahme
+   vorbehalten, 5 (Abkürzungsverleitung) trat nicht ein.
+
+### Action Items
+
+- AI-P75-1: Echte Voxtral-Langtext- und Lautsprecherprobe → T000.30 (P000).
+- AI-P75-2: Falls Auto-Vorlesen je gewünscht wird: eigener Auftrag mit
+  Opt-in-Toggle (Out-of-Scope-Vermerk §2) — kein Ticket, Absicherung über
+  ADR-0097 Alternativen.
