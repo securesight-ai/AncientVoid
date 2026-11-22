@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { NormalizedEvent } from "@ancientvoid/contracts";
 import { SNIPPET_MARK_OPEN } from "@ancientvoid/contracts";
-import { EventStore, HubDatabase, SessionTextIndex, buildFtsQuery, scanSnippet } from "../src/index.ts";
+import { EventStore, HubDatabase, SessionTextIndex, buildFtsQuery, eventText, scanSnippet } from "../src/index.ts";
 
 /**
  * Suche (Nachschärfe 2026-11-22): der Sessiontext-Index. Er ist der einzige
@@ -187,6 +187,66 @@ describe("SessionTextIndex — Fundus", () => {
     expect((await index.search({ q: "kühl" })).total).toBe(1);
   });
 
+  it("findet Begriffe in zusammengesetzten deutschen Wörtern und nennt die Stufe", async () => {
+    // „Sonderangebot“ ist EIN Token; das FTS5-Präfix ("angebot"*) findet es
+    // nicht. Ohne diese Stufe wäre die Frage „wo ging es um Angebote?“ im
+    // eigenen Fundus blind — der häufigste deutsche Suchfall.
+    addSessionRow("s6b", "/home/kaib/repos/AncientVoid", null);
+    await seed("s6b", [
+      { seq: 1, type: "user", payload: { kind: "session.prompt", text: "such das Sonderangebot für die Kuscheldecke" } },
+      { seq: 2, type: "assistant", payload: { text: "kein Großangebot unter 60 Euro" } },
+      { seq: 3, type: "assistant", payload: { text: "vom Reeperbahn-Besuch" } },
+    ]);
+    const index = idx();
+    await index.refresh();
+
+    const part = await index.search({ q: "Angebot" });
+    expect(part.mode).toBe("teil");
+    expect(part.hits.map((h) => h.seq)).toEqual([2, 1]);
+    // Ein Wortfund im selben Fundus bleibt ein Wortfund — die Stufe wird nicht
+    // nachträglich auf Teilwörter gezogen.
+    addSessionRow("s6d", "/home/kaib/repos/AncientVoid", null);
+    await seed("s6d", [{ seq: 1, type: "user", payload: { kind: "session.prompt", text: "das Angebot gilt noch" } }]);
+    await index.refresh();
+    const wordHit = await index.search({ q: "Angebot" });
+    expect(wordHit.mode).toBe("and");
+    expect(wordHit.hits[0]!.seq).toBe(1);
+    // Auch in der Teilwortstufe bleibt das Fundwort markiert.
+    for (const hit of part.hits) expect(hit.snippet).toContain("\u0002");
+
+    // Wortfund schlägt Teilwortfund: was als Wort trifft, wird nie eine
+    // Teilwortliste.
+    const word = await index.search({ q: "Kuscheldecke" });
+    expect(word.mode).toBe("and");
+    expect(word.hits).toHaveLength(1);
+
+    // In der Teilwortstufe gelten weiter alle Begriffe zusammen; erst wenn die
+    // leere bleibt, darf einzeln gesucht werden.
+    const together = await index.search({ q: "angebot reeperbahn" });
+    expect(together.mode).toBe("or");
+    // Die ODER-Stufe sucht wieder als Wort — die zusammengesetzten Zeilen der
+    // Teilwortstufe tauchen hier nicht nochmal auf, dafür die eine Zeile mit
+    // dem ganzen Wort und die mit der Reeperbahn.
+    expect(together.hits.map((h) => h.seq)).toEqual([1, 3]);
+  });
+
+  it("hält die Stufe über alle Seiten fest — Teilwortfunde mischen sich nicht", async () => {
+    addSessionRow("s6c", "/home/kaib/repos/AncientVoid", null);
+    await seed("s6c", [
+      { seq: 1, type: "user", payload: { kind: "session.prompt", text: "Sonderangebot Kuscheldecke" } },
+      { seq: 2, type: "user", payload: { kind: "session.prompt", text: "Großangebots Kuscheldecke" } },
+      { seq: 3, type: "assistant", payload: { text: "Billigangebot war weg" } },
+    ]);
+    const index = idx();
+    await index.refresh();
+    const first = await index.search({ q: "angebot", limit: 2 });
+    expect(first.mode).toBe("teil");
+    expect(first.hits).toHaveLength(2);
+    const second = await index.search({ q: "angebot", limit: 2, offset: 2 });
+    expect(second.mode).toBe("teil");
+    expect(second.hits).toHaveLength(1);
+  });
+
   it("says ehrlich, wenn es nur mit einem Teil der Begriffe trifft", async () => {
     addSessionRow("s7", "/home/kaib/repos/AncientVoid", null);
     await seed("s7", [
@@ -257,6 +317,16 @@ describe("SessionTextIndex — Fundus", () => {
 });
 
 describe("query-Bau und Snippet des Durchlaufs", () => {
+  it("indexiert eine Frage einmal, auch wenn die Kurzzeile sie wiederholt", () => {
+    const ev = { type: "user", summary: "Kurbelwellenträger bestellen" };
+    expect(eventText(ev as never, { kind: "session.prompt", text: "Kurbelwellenträger bestellen" })).toBe("Kurbelwellenträger bestellen");
+    // Eine Kurzzeile mit eigenem Wortlaut bleibt stehen — sie trägt Begriffe,
+    // die im Text fehlen (hier: „gesucht in Alternate“).
+    const note = eventText({ type: "assistant", summary: "gesucht in Alternate" } as never, { text: "Im Sortiment" });
+    expect(note).toContain("gesucht in Alternate");
+    expect(note).toContain("Im Sortiment");
+  });
+
   it("macht aus Begriffen Präfix-Phrasen und lässt Phrasen ganz", () => {
     expect(buildFtsQuery("Flowkey Jahres")).toEqual({ match: '"Flowkey"* "Jahres"*', terms: ["Flowkey", "Jahres"] });
     expect(buildFtsQuery('"exakte Phrase"')).toEqual({ match: '"exakte Phrase"', terms: ["exakte Phrase"] });

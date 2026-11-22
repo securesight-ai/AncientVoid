@@ -71,6 +71,7 @@ interface SearchBody {
   docStatus?: string;
   docEngine?: string;
   total?: number;
+  sessionTotal?: number;
   hits: { sessionId: string; role: string; seq: number; snippet: string; sessionTitle: string | null; project: string; sessionHits: number }[];
   sessions: { sessionId: string; role: string; sessionTitle: string | null }[];
   docs: unknown[];

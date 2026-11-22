@@ -4,6 +4,7 @@ import {
   TranscriptQueryLimits,
   type DocSearchHit,
   type SearchIndexState,
+  type SessionSearchMode,
   type SessionTextHit,
   type TranscriptRole,
   type UnifiedSearchResponse,
@@ -102,7 +103,10 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       return reply.code(422).send({ error: "project path is outside the configured projectRoots" });
     }
     if (!deps.search) return reply.code(501).send({ error: "session-text search is not wired on this hub" });
-    await deps.search.transcript.refreshIfStale(2_000);
+    // Der Nachlauf ist billig (er folgt nur dem JSONL-Schwanz) und bleibt
+    // knapp gehalten: ein Zug, der gerade fertig wurde, soll sofort findbar
+    // sein — nicht erst nach dem nächsten Warmhalte-Tick des Hubs.
+    await deps.search.transcript.refreshIfStale(250);
     const roles = parseRoles(p.roles);
     const res = await deps.search.transcript.search({
       q,
@@ -119,13 +123,18 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
   /** Ein Suchfeld, beide Körper in einer Antwort — die PWA muss nicht zweimal
    * warten und die Zahlen der beiden Bereiche passen zueinander. */
   app.get("/api/search/all", async (req, reply) => {
-    const p = req.query as { q?: string; project?: string; scope?: string; roles?: string; limit?: string; offset?: string; session?: string };
+    const p = req.query as { q?: string; project?: string; sessionProject?: string; scope?: string; roles?: string; limit?: string; offset?: string; session?: string };
     const q = p.q?.trim() ?? "";
     if (!q) return reply.code(400).send({ error: "q query param required" });
     if (q.length > TranscriptQueryLimits.maxChars) return reply.code(400).send({ error: `q is longer than ${TranscriptQueryLimits.maxChars} characters` });
     const scope = p.scope === "docs" || p.scope === "sessions" ? p.scope : "all";
-    if (p.project && !(await isProjectPathAllowed(p.project, projectRoots))) {
-      return reply.code(422).send({ error: "project path is outside the configured projectRoots" });
+    // `project` grenzt die Doku ein, `sessionProject` die Sitzungsseite — zwei
+    // verschiedene Wünsche, die die PWA unabhängig schaltet. Beide müssen
+    // natürlich innerhalb der projectRoots liegen.
+    for (const path of [p.project, p.sessionProject]) {
+      if (path && !(await isProjectPathAllowed(path, projectRoots))) {
+        return reply.code(422).send({ error: "project path is outside the configured projectRoots" });
+      }
     }
     const limit = clampInt(p.limit, TranscriptQueryLimits.defaultLimit, TranscriptQueryLimits.maxLimit);
     const offset = clampInt(p.offset, 0, 100_000);
@@ -134,17 +143,20 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
     let sessions: SessionTextHit[] = [];
     let sessionTotal = 0;
     let facets: { role: TranscriptRole; count: number }[] = [];
-    let mode: "and" | "or" = "and";
+    let mode: SessionSearchMode = "and";
     let sessionStatus: "ready" | "unavailable" = "unavailable";
     let index: SearchIndexState = { engine: "scan", sessions: 0, lines: 0, indexedAt: null };
     if (scope !== "docs" && deps.search) {
-      await deps.search.transcript.refreshIfStale(2_000);
+      // Der Nachlauf ist billig (er folgt nur dem JSONL-Schwanz) und bleibt
+    // knapp gehalten: ein Zug, der gerade fertig wurde, soll sofort findbar
+    // sein — nicht erst nach dem nächsten Warmhalte-Tick des Hubs.
+    await deps.search.transcript.refreshIfStale(250);
       const res = await deps.search.transcript.search({
         q,
         limit,
         offset,
         ...(roles ? { roles } : {}),
-        ...(p.project ? { project: p.project } : {}),
+        ...(p.sessionProject ? { project: p.sessionProject } : {}),
         ...(p.session ? { sessionId: p.session } : {}),
       });
       sessions = res.hits;

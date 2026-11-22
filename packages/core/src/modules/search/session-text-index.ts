@@ -6,6 +6,7 @@ import {
   SNIPPET_MARK_OPEN,
   TranscriptQueryLimits,
   type SearchIndexState,
+  type SessionSearchMode,
   type SessionTextHit,
   type TranscriptRole,
 } from "@ancientvoid/contracts";
@@ -110,7 +111,14 @@ export function eventText(ev: Record<string, unknown>, payload: Record<string, u
     const reason = str(payload.reason);
     if (reason) parts.push(reason);
   }
-  if (summary) parts.push(summary);
+  if (summary) {
+    // Die Kurzzeile wiederholt bei Fragen und Antworten oft genau den Wortlaut.
+    // Zweimal indexiert verdoppelt sie die Fundstelle derselben Nachricht und
+    // bläht das Snippet — genommen wird nur, was nicht schon drinsteht.
+    const already = parts.join(" ").toLowerCase();
+    const low = summary.trim().toLowerCase();
+    if (low && !already.includes(low)) parts.push(summary);
+  }
   const joined = parts.join("\n").trim();
   if (!joined) return null;
   return joined.length > MAX_TEXT_CHARS ? joined.slice(0, MAX_TEXT_CHARS) : joined;
@@ -231,7 +239,9 @@ export interface SessionTextSearchOptions {
 export interface SessionTextSearchResult {
   hits: SessionTextHit[];
   total: number;
-  mode: "and" | "or";
+  /** Auf welcher Stufe gefunden wurde (`and` / `teil` / `or`) — die Oberfläche
+   * sagt es dazu, sonst hält man eine Teilwort- oder ODER-Liste für Wortfunde. */
+  mode: SessionSearchMode;
   facets: { role: TranscriptRole; count: number }[];
   index: SearchIndexState;
 }
@@ -513,10 +523,16 @@ export class SessionTextIndex {
     return { sql: parts.length ? ` AND ${parts.join(" AND ")}` : "", params };
   }
 
-  /** Volltextsuche über die Sessiontexte. `and` zuerst; findet sie nichts und
-   * die Anfrage hat mehrere Begriffe, versucht sie `or` und sagt es sichtbar
-   * dazu — eine Liste, die „nur“ einen Begriff trifft, darf nicht wie ein
-   * exakter Fund aussehen. */
+  /** Volltextsuche über die Sessiontexte in drei Stufen, und die gewählte Stufe
+   * steht in der Antwort (`mode`):
+   *  1. `and`  — jeder Begriff als (Präfix-)Wort.
+   *  2. `teil` — jeder Begriff als Teilwort. Deutsch hängt Begriffe ans Ende von
+   *     Zusammensetzungen: „Angebot“ steckt in „Sonderangebot“, und ein
+   *     FTS5-Präfix (`"angebot"*`) findet das nicht. Diese Stufe ist kein
+   *     Nice-to-have, sie ist der häufigste deutsche Suchfall.
+   *  3. `or`   — Begriffe einzeln, nur wenn beides leer blieb.
+   * Eine Liste, die nur einen Begriff trifft oder nur Teilwörter zeigt, darf
+   * nicht wie ein Wortfund aussehen. */
   async search(opts: SessionTextSearchOptions): Promise<SessionTextSearchResult> {
     this.ensureSchema();
     const limit = Math.max(1, Math.min(opts.limit ?? TranscriptQueryLimits.defaultLimit, TranscriptQueryLimits.maxLimit));
@@ -528,15 +544,43 @@ export class SessionTextIndex {
     const built = this.useFts ? buildFtsQuery(opts.q) : null;
     if (!built) return this.searchScan(opts, limit, offset, roles, index);
 
-    const and = this.runFts(built.match, opts, limit, offset, roles);
-    if (and.hits.length || offset > 0) return { ...and, mode: "and", index };
-
+    // Die Stufen werden vor dem Ausliefern entschieden, nicht seitengeweise:
+    // dieselbe Anfrage muss auf Seite 1 und Seite 2 dieselbe Stufe benutzen,
+    // sonst vermischt „mehr laden“ Wortfunde mit Teilwortfunden.
+    const andMatch = built.terms.map((t) => `"${t.replace(/"/g, '""')}"*`).join(" ");
+    if (this.probeFts(andMatch, opts, roles)) {
+      return { ...this.runFts(andMatch, opts, limit, offset, roles), mode: "and", index };
+    }
+    const part = this.searchScan(opts, limit, offset, roles, index);
+    if (part.total > 0) return part;
     if (built.terms.length > 1) {
       const orMatch = built.terms.map((t) => `"${t.replace(/"/g, '""')}"*`).join(" OR ");
-      const or = this.runFts(orMatch, opts, limit, offset, roles);
-      if (or.hits.length) return { ...or, mode: "or", index };
+      if (this.probeFts(orMatch, opts, roles)) {
+        return { ...this.runFts(orMatch, opts, limit, offset, roles), mode: "or", index };
+      }
     }
     return { hits: [], total: 0, mode: "and", facets: [], index };
+  }
+
+  /** Kostet eine Zeile: gibt es überhaupt einen Treffer für diesen Ausdruck?
+   * Die Stufenentscheidung braucht keine Snippets und keine Rangliste. */
+  private probeFts(
+    match: string,
+    opts: SessionTextSearchOptions,
+    roles: readonly TranscriptRole[],
+  ): boolean {
+    const filter = this.where(opts, roles);
+    const row = this.db
+      .prepare(
+        `SELECT 1 AS hit
+         FROM transcript_fts
+         CROSS JOIN transcript_lines l ON l.id = transcript_fts.rowid
+         LEFT JOIN sessions s ON s.id = l.session_id
+         WHERE transcript_fts MATCH ?${filter.sql}
+         LIMIT 1`,
+      )
+      .get(match, ...filter.params) as unknown as { hit: number } | undefined;
+    return !!row;
   }
 
   /** Ein FTS5-Durchlauf: Trefferzeilen, Gesamtzahl, Rollen-Facetten.
@@ -601,9 +645,10 @@ export class SessionTextIndex {
     return { hits: rowsToHits(rows, perSession), total, facets };
   }
 
-  /** Rückfall ohne FTS5: alle Begriffe müssen vorkommen, Reihenfolge nach Zeit
-   * (neueste zuerst). Weniger klug als bm25, aber wahr — und der Zustand steht
-   * im Antwortfeld `engine: "scan"`. */
+  /** Teilwort-Stufe (und Rückfall ohne FTS5): alle Begriffe müssen als Teil des
+   * Textes vorkommen, Reihenfolge nach Zeit (neueste zuerst). Weniger klug als
+   * bm25, aber wahr — die Stufe heißt in der Antwort `teil`, der Indexzustand
+   * nennt die Engine (`scan`), wenn gar kein Volltextindex da ist. */
   private searchScan(
     opts: SessionTextSearchOptions,
     limit: number,
@@ -668,7 +713,7 @@ export class SessionTextIndex {
         sessionHits: r.session_hits,
       })),
       total,
-      mode: "and",
+      mode: "teil",
       facets: facetRows.map((r) => ({ role: r.role, count: r.c })),
       index,
     };

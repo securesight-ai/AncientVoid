@@ -75,12 +75,20 @@ export const SearchIndexState = z.object({
 });
 export type SearchIndexState = z.infer<typeof SearchIndexState>;
 
+/** Auf welcher Stufe die Sitzungssuche gefunden hat — die Oberfläche nennt sie.
+ * `and`  jeder Begriff als (Präfix-)Wort: „Angebot“ trifft „Angebots“.
+ * `teil` jeder Begriff als Teilwort: deutsch steckt „Angebot“ in
+ *        „Sonderangebot“, und ein Präfix-Ausdruck findet das nicht.
+ * `or`   nicht alle Begriffe zusammen, aber einzeln — nur wenn beides vorher
+ *        leer war; die Trefferliste ist dann keine Wortfund-Liste. */
+export const SessionSearchMode = z.enum(["and", "teil", "or"]);
+export type SessionSearchMode = z.infer<typeof SessionSearchMode>;
+
 export const SessionTextSearchResponse = z.object({
   status: z.literal("ready"),
   query: z.string(),
-  /** `and`: alle Begriffe nötig. `or` nur, wenn `and` nichts fand — die PWA
-   * sagt das sichtbar dazu, sonst hält man die Treffer für wörtlich. */
-  mode: z.enum(["and", "or"]),
+  /** Stufen siehe `SessionSearchMode` — die PWA sagt sie sichtbar dazu. */
+  mode: SessionSearchMode,
   index: SearchIndexState,
   hits: z.array(SessionTextHit).max(TranscriptQueryLimits.maxLimit),
   /** Fundstellen insgesamt (über `limit` hinaus) — „mehr laden“ ist ehrlich. */
@@ -118,7 +126,7 @@ export type DocSearchResponse = z.infer<typeof DocSearchResponse>;
 export const UnifiedSearchResponse = z.object({
   status: z.literal("ready"),
   query: z.string(),
-  mode: z.enum(["and", "or"]),
+  mode: SessionSearchMode,
   /** Was tatsächlich gelaufen ist — `all` antwortet mit beiden Teilen. */
   scope: z.enum(["all", "docs", "sessions"]),
   sessions: z.array(SessionTextHit).max(TranscriptQueryLimits.maxLimit),
