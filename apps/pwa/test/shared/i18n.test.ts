@@ -1,6 +1,6 @@
 // Tier A. EPIC-P61 T61.2: t(), Plural, Fallback, Browsersprach-Match.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { t, resolveLanguage, matchBrowserLanguage, getLanguageSetting, setLanguageSetting, catalogKeys, resolveNotificationTitle, errorText, sttLocale, matchForms } from "../../src/shared/i18n/index.ts";
+import { t, resolveLanguage, matchBrowserLanguage, getLanguageSetting, setLanguageSetting, catalogKeys, resolveNotificationTitle, errorText, sttLocale, matchForms, availableLanguages } from "../../src/shared/i18n/index.ts";
 import { fmtDate, fmtDateTime, fmtNumber, fmtTime } from "../../src/shared/i18n/format.ts";
 import { en } from "../../src/shared/i18n/en.ts";
 
@@ -159,5 +159,14 @@ describe("EPIC-P61 T61.9: STT-Sprache und Match-Formen", () => {
     const dyn = matchForms("quick.search_files", { q: "log" });
     expect(dyn).toContain("„log“ in den Dateien suchen");
     expect(dyn.some((f) => f.includes("Search files"))).toBe(true);
+  });
+});
+
+// EPIC-P61 abgeschlossen: Migration ist durch (check-i18n-Baseline 0) — English
+// ist damit ohne Dev-Flag wählbar (T61.2-Gate ist gefallen).
+describe("EPIC-P61 Abschluss: English ist fertig und wählbar", () => {
+  it("en ist complete — ohne Dev-Flag in der Sprachauswahl", () => {
+    const en = availableLanguages.find((l) => l.code === "en");
+    expect(en?.complete).toBe(true);
   });
 });
