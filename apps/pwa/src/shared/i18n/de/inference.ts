@@ -28,6 +28,7 @@ export const de = {
   "inference.card.liveHint": "Sekundentakt der Engine — kein Request-Mittel",
   "inference.live.phase": "Phase",
   "inference.live.state": "Zustand",
+  "inference.live.queued": "Warteschlange",
   "inference.settings.title": "Modell-Inferenz (manuelle Anbindung)",
   "inference.settings.model": "Modell",
   "inference.settings.keyfile": "Schlüsseldatei (Pfad, nie der Schlüssel selbst)",
