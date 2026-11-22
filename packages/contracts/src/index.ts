@@ -60,3 +60,4 @@ export * from "./statistics/statistics.ts";
 export * from "./terminal/terminal.ts";
 export * from "./prompts/prompts.ts";
 export * from "./release-notes/release-notes.ts";
+export * from "./search/search.ts";

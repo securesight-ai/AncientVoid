@@ -624,6 +624,36 @@ export const MIGRATIONS: Migration[] = [
       ALTER TABLE push_subscriptions ADD COLUMN locale TEXT;
     `,
   },
+  {
+    id: 40,
+    name: "transcript-index",
+    // Suche 2026-11-22: Volltext über Sessiontexte (Fragen, Antworten, Denk- und
+    // Werkzeitspuren). Der Bestand ist schon die JSONL + ihre Blobs (ADR-P0-2) —
+    // diese Tabellen sind ein **ableitbarer Index** (K7: mit `byte_offset` pro
+    // Session wiederherstellbar, löschbar, beim nächsten Refresh neu aufgebaut).
+    // Die FTS5-Tabelle selbst liegt NICHT hier: nicht jeder `node:sqlite`-Build
+    // hat FTS5 einkompiliert, und ein hub, der daran bootet, wäre schlimmer als
+    // eine Suche im LIKE-Durchlauf. Siehe SessionTextIndex.ensureSchema().
+    sql: `
+      CREATE TABLE IF NOT EXISTS transcript_lines (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT NOT NULL,
+        seq INTEGER NOT NULL,
+        ts TEXT NOT NULL,
+        role TEXT NOT NULL,
+        text TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS transcript_lines_session ON transcript_lines (session_id, seq);
+      CREATE TABLE IF NOT EXISTS transcript_state (
+        session_id TEXT PRIMARY KEY,
+        byte_offset INTEGER NOT NULL,
+        size INTEGER NOT NULL,
+        mtime_ms REAL NOT NULL,
+        events INTEGER NOT NULL DEFAULT 0,
+        indexed_at TEXT NOT NULL
+      );
+    `,
+  },
 ];
 
 export class HubDatabase {
