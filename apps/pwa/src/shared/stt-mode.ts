@@ -1,3 +1,4 @@
+import { t } from "./i18n/index.ts";
 /**
  * Spracheingabe: Quelle pro Geraet waehlen (ADR-0094).
  *
@@ -90,11 +91,11 @@ export function grund(modus: SttModus, f: SttFaehigkeiten): string {
   const lokalGeht = f.lokalVerfuegbar && f.aufnahmeMoeglich;
   if (modus === "lokal" && !lokalGeht) {
     return f.lokalVerfuegbar
-      ? "Lokale Erkennung ist am Hub, aber dieses Gerät kann gerade nicht aufnehmen (Mikrofon fehlt oder ist gesperrt)."
-      : "Lokale Erkennung ist gerade nicht erreichbar. Auf „Browser“ umschalten, wenn du es trotzdem versuchen willst.";
+      ? t("stt.device_cannot_record")
+      : t("stt.local_unreachable_switch");
   }
-  if (modus === "browser" && !f.browserFaehig) return "Dieser Browser hat keine Spracherkennung — auf „Lokal“ umschalten.";
-  if (!lokalGeht && !f.browserFaehig) return "Weder lokale Erkennung noch Browser-Erkennung ist hier verfügbar.";
+  if (modus === "browser" && !f.browserFaehig) return t("stt.browser_none_switch");
+  if (!lokalGeht && !f.browserFaehig) return t("stt.none_available");
   return "";
 }
 
@@ -104,15 +105,15 @@ export function grund(modus: SttModus, f: SttFaehigkeiten): string {
  * Knopf nennt die Quelle, die jetzt tatsächlich drankommt.
  */
 export function titelDesKnopfs(pfad: SttPfad, engine?: string): string {
-  if (pfad === "lokal") return `Spracheingabe lokal (${engine ?? "whisper"})`;
-  if (pfad === "browser") return "Spracheingabe (Browser, meist Cloud)";
-  return "Spracheingabe gerade nicht möglich";
+  if (pfad === "lokal") return t("stt.btn_local", { engine: engine ?? "whisper" });
+  if (pfad === "browser") return t("stt.btn_browser");
+  return t("stt.btn_none");
 }
 
 /** Kurzer, ehrlicher Hinweis unter der Eingabe: was gerade gilt. */
 export function modusHinweis(modus: SttModus, f: SttFaehigkeiten, engine?: string): string {
   const pfad = waehlePfad(modus, f);
-  if (pfad === "lokal") return `lokal am Hub${engine ? `: ${engine}` : ""}`;
-  if (pfad === "browser") return "Browser-Erkennung — dein Gesprochenes verlässt das Gerät";
-  return grund(modus, f) || "keine Erkennung verfügbar";
+  if (pfad === "lokal") return engine ? `${t("stt.hint_local")}: ${engine}` : t("stt.hint_local");
+  if (pfad === "browser") return t("stt.hint_browser");
+  return grund(modus, f) || t("stt.hint_none");
 }

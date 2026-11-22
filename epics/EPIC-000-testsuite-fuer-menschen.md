@@ -173,6 +173,10 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   nachweisen; beim nächsten Kur-Lauf die Pilotkosten head-n/sort vor/nach
   über `turn_metrics` messen. Der Erstlauf-Report
   (`docs/2026-11-21_skill-curation-erstlauf.md`) ist die Ausgangsmessung.
+- [ ] **T000.29 — K6-Messlauf mit `en`.** (Herkunft: EPIC-P61 T61.9)
+  Sprachwechsel-Messlatze (K6): Lastlauf `npm run loadtest` gegen einen
+  Hub mit eingestellter Sprache `en` auf gpubox; Durchsatz / p95 wie in
+  EPIC-P61 §3.1 festgelegt. Gerät war offline; Code und Tests sind grün.
 
 ## 5. Acceptance Criteria
 

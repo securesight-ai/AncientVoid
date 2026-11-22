@@ -12,31 +12,31 @@ import { registerShortcut } from "../../shared/shortcuts/registry.ts";
 import { useOverlayFocus } from "../../shared/overlay-focus.ts";
 import { Button, Chip } from "../../shared/ui/index.ts";
 
-const RISK_TEXT = { read: "liest", write: "ändert", destructive: "zerstörerisch" } as const;
-const TRANSFORM_TEXT: Record<string, string> = { correct: "korrigiert", shorten: "gekürzt", translate_en: "übersetzt (Englisch)", translate_de: "übersetzt (Deutsch)", improve: "verbessert" };
+const RISK_TEXT = { read: t("commands.read"), write: t("commands.change"), destructive: t("commands.destructive") } as const;
+const TRANSFORM_TEXT: Record<string, string> = { correct: t("commands.tr_correct"), shorten: t("commands.tr_shorten"), translate_en: t("commands.tr_en"), translate_de: t("commands.tr_de"), improve: t("commands.tr_improve") };
 
 /** A client step — navigation and fields live in the app, not on the hub. */
 function runClientStep(c: Record<string, string | number | boolean | null>): string {
   const op = String(c.op);
   if (op === "nav.open") {
     location.hash = pageHash(String(c.page ?? "dashboard") as ListPage);
-    return "geöffnet";
+    return t("commands.opened");
   }
   if (op === "sessions.show") {
     sessionStorage.setItem("ancientvoid.overviewFilter", String(c.filter ?? "all"));
     window.dispatchEvent(new CustomEvent("ancientvoid:overview-filter", { detail: c.filter }));
     location.hash = pageHash("dashboard");
-    return "gefiltert";
+    return t("commands.filtered");
   }
   if (op === "session.open") {
     location.hash = sessionHash(String(c.sessionId), remoteHost(String(c.hostId ?? "")));
-    return "geöffnet";
+    return t("commands.opened");
   }
   if (op === "code.search") {
     sessionStorage.setItem("ancientvoid.pendingCodeSearch", JSON.stringify({ sessionId: c.sessionId, text: c.text }));
     location.hash = sessionHash(String(c.sessionId), remoteHost(String(c.hostId ?? "")));
     window.dispatchEvent(new CustomEvent("ancientvoid:code-search"));
-    return "gesucht";
+    return t("commands.searched");
   }
   return "";
 }
@@ -155,19 +155,19 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
       if (first?.op === "field.fill") {
         const id = String(first.args.field) as FieldId;
         const f = field(id);
-        if (!f) throw new Error("Das Feld ist hier nicht offen.");
-        setEdit({ field: id, before: f.get(), after: String(first.args.text), label: "eingetragen", applied: true });
+        if (!f) throw new Error(t("commands.field_not_open"));
+        setEdit({ field: id, before: f.get(), after: String(first.args.text), label: t("commands.registered"), applied: true });
         f.set(String(first.args.text));
-        setResults([{ op: first.op, ok: true, detail: "eingetragen — nicht gesendet" }]);
+        setResults([{ op: first.op, ok: true, detail: t("commands.registered_not_sent") }]);
         return;
       }
       if (first?.op === "field.transform") {
         const id = String(first.args.field) as FieldId;
         const f = field(id);
-        if (!f) throw new Error("Das Feld ist hier nicht offen.");
+        if (!f) throw new Error(t("commands.field_not_open"));
         const before = f.get();
         const out = await hubApi.commandTransform(before, String(first.args.transform));
-        setEdit({ field: id, before, after: out.text, label: `${TRANSFORM_TEXT[String(first.args.transform)] ?? "bearbeitet"} · ${out.provider} ${out.model} · ${(out.latencyMs / 1000).toFixed(1)} s`, applied: false });
+        setEdit({ field: id, before, after: out.text, label: `${TRANSFORM_TEXT[String(first.args.transform)] ?? t("commands.tr_edit")} · ${out.provider} ${out.model} · ${(out.latencyMs / 1000).toFixed(1)} s`, applied: false });
         return;
       }
       const res = await hubApi.commandExecute(p.id, commandContext());
@@ -175,7 +175,7 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
       setResults(res.results);
       if (!embedded && res.results.every((r) => r.ok) && p.steps.every((s) => s.risk === "read")) setOpen(false);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "fehlgeschlagen");
+      setMessage(err instanceof Error ? err.message : t("commands.failed_fallback"));
     } finally {
       setBusy(false);
     }
@@ -193,7 +193,7 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
       // Premortem: harmless reading runs at once, without a modal step.
       if (!p.question && !p.refusal && p.steps.length > 0 && p.steps.every((s) => s.risk === "read" && !s.op.startsWith("field."))) await execute(p);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Planen fehlgeschlagen");
+      setMessage(err instanceof Error ? err.message : t("commands.plan_failed"));
     } finally {
       setBusy(false);
     }
@@ -204,7 +204,7 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
 
   const writes = plan && plan.steps.some((s) => s.risk !== "read");
   return (
-    <div class={`command-sheet${embedded ? " command-card" : ""}`} role={embedded ? "region" : "dialog"} aria-label={embedded ? "Suchen" : "Auftrag in Worten"} ref={sheet}>
+    <div class={`command-sheet${embedded ? " command-card" : ""}`} role={embedded ? "region" : "dialog"} aria-label={embedded ? t("knowledge.search") : t("commands.voice_order")} ref={sheet}>
       <form
         class="command-form"
         onSubmit={(e) => {
@@ -233,7 +233,7 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
           }}
         />
         <Button type="submit" disabled={busy || !text.trim()} variant="primary">
-          {busy ? "…" : "Planen"}
+          {busy ? "…" : t("commands.plan_btn")}
         </Button>
         <Button aria-label={t("common.close")} onClick={() => embedded ? onClose?.() : setOpen(false)}>
           ✕
@@ -251,7 +251,7 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
               class={`quick-jump${i === selected ? " selected" : ""}`}
               onClick={() => jump(j.target)}
             >
-              <span class="quick-kind">{QUICK_KIND_LABEL[j.kind]}</span>
+              <span class="quick-kind">{t(QUICK_KIND_LABEL[j.kind])}</span>
               <span class="quick-label">{j.label}</span>
               <span class="quick-detail dim">{j.detail}</span>
             </button>
@@ -261,11 +261,11 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
       {!plan && !message && !text.trim() && (
         <div class="command-examples dim">
           {EXAMPLES.map((ex) => (
-            <Chip key={ex} onClick={() => setText(ex.replace(/…/g, "").replace(/: $/, ": "))}>
-              {ex}
+            <Chip key={ex} onClick={() => setText(t(ex).replace(/…/g, "").replace(/: $/, ": "))}>
+              {t(ex)}
             </Chip>
           ))}
-          <div class="command-field">{t("commands.text_field")} {currentField() ?? "keins offen"}</div>
+          <div class="command-field">{t("commands.text_field")} {currentField() ?? t("commands.none_open")}</div>
         </div>
       )}
       {message && <div class="reply-error">{message}</div>}
@@ -297,10 +297,10 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
               <span>{s.summary}</span>
             </div>
           ))}
-          <div class="dim command-planner">{plan.planner === "model" ? "verstanden vom lokalen Modell" : "verstanden per Regel"} {t("commands.target_verified")}</div>
+          <div class="dim command-planner">{plan.planner === "model" ? t("commands.understood_model") : t("commands.understood_rule")} {t("commands.target_verified")}</div>
           {writes || plan.steps[0]?.op.startsWith("field.") ? (
             <Button disabled={busy} onClick={() => void execute(plan)} variant="primary">
-              {busy ? "…" : "Ausführen"}
+              {busy ? "…" : t("code.run")}
             </Button>
           ) : null}
         </div>
@@ -320,7 +320,7 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
           <div class="command-diff">
             <div>
               <div class="dim">{t("commands.before")}</div>
-              <div class="command-before">{edit.before || "(leer)"}</div>
+              <div class="command-before">{edit.before || t("session.empty_paren")}</div>
             </div>
             <div>
               <div class="dim">{t("commands.after")}</div>

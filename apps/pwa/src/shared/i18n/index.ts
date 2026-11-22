@@ -131,6 +131,24 @@ export function catalogKeys(): string[] {
 }
 
 /**
+ * EPIC-P61 T61.9: beide Sprachformen eines Katalogschlüssels — für die
+ * Schnellsuche, die Eingaben in beiden Sprachen erkennen soll (Muskelgedächtnis).
+ */
+export function matchForms(key: string, params?: Record<string, string | number | undefined>): string[] {
+  const out: string[] = [];
+  for (const code of ["de", "en"] as LanguageCode[]) {
+    const v = languageEntry(code).catalog[key];
+    if (v !== undefined) out.push(interpolate(v, params));
+  }
+  return out;
+}
+
+/** EPIC-P61 T61.9: Browserspracherkennung spricht die gewählte Oberfläche. */
+export function sttLocale(): "de-DE" | "en-US" {
+  return resolveLanguage() === "en" ? "en-US" : "de-DE";
+}
+
+/**
  * EPIC-P61 T61.7 / ADR-0101: Hub-Nachrichten rendern — Katalogschlüssel zuerst,
  * ein unbekannter Schlüssel zeigt den mitgelieferten Titel (fail-loud nur im
  * Dev-Konsolen-Warnpfad von t(), hier schlichter Fallback).

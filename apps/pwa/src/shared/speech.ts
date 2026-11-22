@@ -1,3 +1,4 @@
+import { t, sttLocale } from "./i18n/index.ts";
 /**
  * T1.5-7 — browser-native STT (Web Speech API), MVP per EPIC-P1.5 §3.3:
  * chosen over a Whisper.cpp server because it needs zero infrastructure.
@@ -34,7 +35,7 @@ export type SpeechResult =
  * always gets text back into an editable field, per §3.3's explicit
  * "Transkript ist immer editierbar vor dem Absenden" rule.
  */
-export function recognizeOnce(lang = "de-DE"): Promise<SpeechResult> {
+export function recognizeOnce(lang = sttLocale()): Promise<SpeechResult> {
   return new Promise((resolve) => {
     if (!speechRecognitionSupported()) {
       resolve({ ok: false, reason: "unsupported" });
@@ -163,10 +164,10 @@ function recognitionCtor(): (new () => SpeechRecognitionLike) | null {
   return null;
 }
 
-export function startContinuousStt(lang = "de-DE", cb: ContinuousSttCallbacks = {}): ContinuousSttHandle {
+export function startContinuousStt(lang = sttLocale(), cb: ContinuousSttCallbacks = {}): ContinuousSttHandle {
   const Ctor = recognitionCtor();
   if (!Ctor) {
-    cb.onEnd?.({ reason: "fatal", message: "Dieser Browser bietet keine Spracherkennung.", heard: false, text: "" });
+    cb.onEnd?.({ reason: "fatal", message: t("stt.browser_no_speech"), heard: false, text: "" });
     return { stop: () => undefined, abort: () => undefined };
   }
   const finals: string[] = [];
@@ -232,8 +233,8 @@ export function startContinuousStt(lang = "de-DE", cb: ContinuousSttCallbacks = 
     };
     rec.onerror = (event) => {
       const code = (event?.error ?? "").toLowerCase();
-      if (code === "not-allowed" || code === "service-not-allowed") finish("fatal", "Mikrofon-Zugriff verweigert.");
-      else if (code === "audio-capture") finish("fatal", "Kein Mikrofon gefunden.");
+      if (code === "not-allowed" || code === "service-not-allowed") finish("fatal", t("stt.mic_denied"));
+      else if (code === "audio-capture") finish("fatal", t("stt.mic_not_found"));
       // no-speech / network / aborted: Chrome macht daraus ein onend, und das
       // startet hier neu — kein Grund, die Diktat-Sitzung zu beenden.
     };
@@ -242,7 +243,7 @@ export function startContinuousStt(lang = "de-DE", cb: ContinuousSttCallbacks = 
       interim = "";
       if (stopped) { finish("stopped"); return; }
       if (restarts >= MAX_RESTARTS) {
-        finish("restarted-out", `Erkennung wurde ${restarts} Mal neu gestartet — bitte in kuerzeren Abschnitten diktieren.`);
+        finish("restarted-out", t("stt.restarted_out", { n: restarts }));
         return;
       }
       restarts++;

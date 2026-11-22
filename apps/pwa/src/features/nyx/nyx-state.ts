@@ -1,3 +1,4 @@
+import { t } from "../../shared/i18n/index.ts";
 import { displayState, type DisplayState } from "../../shared/display-state.ts";
 
 /**
@@ -52,17 +53,17 @@ export function nyxSummary({ online, sessions, pendingApprovals, questionSession
 export function nyxSentence({ state, count }: NyxSummary): string {
   switch (state) {
     case "offline":
-      return "Ich erreiche den Hub nicht.";
+      return t("nyx.offline");
     case "approval":
-      return count === 1 ? "Eine Freigabe wartet auf dich." : `${count} Freigaben warten auf dich.`;
+      return count === 1 ? t("nyx.approval.one") : t("nyx.approval.other", { "count": count });
     case "question":
-      return count === 1 ? "Ein Agent hat eine Frage." : `${count} Agenten haben Fragen.`;
+      return count === 1 ? t("nyx.question.one") : t("nyx.question.other", { "count": count });
     case "error":
-      return count === 1 ? "Eine Session braucht Hilfe." : `${count} Sessions brauchen Hilfe.`;
+      return count === 1 ? t("nyx.help.one") : t("nyx.help.other", { "count": count });
     case "working":
-      return count === 1 ? "Eine Session arbeitet." : `${count} Sessions arbeiten.`;
+      return count === 1 ? t("nyx.working.one") : t("nyx.working.other", { "count": count });
     default:
-      return "Alles ruhig.";
+      return t("nyx.quiet");
   }
 }
 

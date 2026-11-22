@@ -1,5 +1,22 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isYesNo, nyxSentence, nyxSummary, recommendedOption, type NyxInput } from "../../src/features/nyx/nyx-state.ts";
+import { setLanguageSetting } from "../../src/shared/i18n/index.ts";
+
+function fakeStorage() {
+  const store = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  });
+}
+
+// Bestands-Tests festigen Deutsch (EPIC-P61); der T61.9-Fall setzt en selbst.
+beforeEach(() => {
+  fakeStorage();
+  setLanguageSetting("de");
+});
+afterEach(() => vi.unstubAllGlobals());
 
 const base: NyxInput = { online: true, sessions: [], pendingApprovals: 0, questionSessions: [] };
 const s = (id: string, status: string, archived = false) => ({ id, status, archived });
@@ -34,6 +51,15 @@ describe("nyxSentence", () => {
     expect(nyxSentence({ state: "approval", count: 2 })).toBe("2 Freigaben warten auf dich.");
     expect(nyxSentence({ state: "question", count: 3 })).toBe("3 Agenten haben Fragen.");
     expect(nyxSentence({ state: "quiet", count: 0 })).toBe("Alles ruhig.");
+  });
+
+  it("EPIC-P61 T61.9: dieselben Vorlagen auf Englisch, mit Plural", () => {
+    setLanguageSetting("en");
+    expect(nyxSentence({ state: "approval", count: 1 })).toBe("One approval is waiting for you.");
+    expect(nyxSentence({ state: "approval", count: 2 })).toBe("2 approvals are waiting for you.");
+    expect(nyxSentence({ state: "question", count: 3 })).toBe("3 agents have questions.");
+    expect(nyxSentence({ state: "quiet", count: 0 })).toBe("All quiet.");
+    expect(nyxSentence({ state: "offline", count: 1 })).toBe("I cannot reach the hub.");
   });
 });
 
