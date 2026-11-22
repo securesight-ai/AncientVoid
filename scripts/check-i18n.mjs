@@ -117,16 +117,6 @@ export async function checkI18n({ root = SRC, baselinePath = BASELINE_PATH } = {
     /* ohne Baseline: alles über Null ist rot */
   }
   const findings = [];
-  const fehlendeKeys = [];
-  const katalog = katalogSchluessel();
-  // Schlüsselprüfung über .ts UND .tsx (Titles und Sidebar-Labels stehen in .ts);
-  // die harte Strings-Ratchet bleibt bei .tsx, damit ihre Baseline gültig bleibt.
-  for (const file of [...listTsx(root), ...listTs(root)]) {
-    if (file.startsWith(I18N_DIR + sep)) continue;
-    for (const m of scanMissingKeys(readFileSync(file, "utf8"), file, katalog)) {
-      fehlendeKeys.push({ file: relative(REPO, file).split(sep).join("/"), ...m });
-    }
-  }
   for (const file of listTsx(root)) {
     if (file.startsWith(I18N_DIR + sep)) continue;
     const found = scanFile(readFileSync(file, "utf8"), file);
@@ -135,13 +125,31 @@ export async function checkI18n({ root = SRC, baselinePath = BASELINE_PATH } = {
     if (found.length > allowed) findings.push({ file: rel, count: found.length, allowed, first: found.slice(0, 3) });
     else if (found.length < allowed) findings.push({ file: rel, ratchet: true, count: found.length, allowed });
   }
-  return { findings, fehlendeKeys };
+  return findings;
+}
+
+/**
+ * Eigener Ausgang, damit `checkI18n` sein Array behält (der P61-Test und allenfalls
+ * andere Aufrufer verlassen sich darauf).
+ */
+export async function checkMissingKeys({ root = SRC } = {}) {
+  const katalog = katalogSchluessel();
+  const out = [];
+  // .ts UND .tsx: Seiten-Titel und Sidebar-Labels stehen in .ts-Dateien.
+  for (const file of [...listTsx(root), ...listTs(root)]) {
+    if (file.startsWith(I18N_DIR + sep)) continue;
+    for (const m of scanMissingKeys(readFileSync(file, "utf8"), file, katalog)) {
+      out.push({ file: relative(REPO, file).split(sep).join("/"), ...m });
+    }
+  }
+  return out;
 }
 
 async function main() {
   const json = process.argv.includes("--json");
   const write = process.argv.includes("--write-baseline");
-  const { findings, fehlendeKeys } = await checkI18n();
+  const findings = await checkI18n();
+  const fehlendeKeys = await checkMissingKeys();
   if (write) {
     const baseline = {};
     for (const file of listTsx(SRC)) {
