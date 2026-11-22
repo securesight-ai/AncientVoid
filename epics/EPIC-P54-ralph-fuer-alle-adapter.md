@@ -1,8 +1,6 @@
 # EPIC-P54 — Ralph-Loop für alle Adapter und LLMs (hub-getrieben)
 
-**Status:** in Umsetzung (Neu-Beauftragung 22.11.2026: „Ralph-Loop nicht nur mit Hermes, sondern mit allem anderen auch"; ersetzt den gesperrten Entwurf „Hermes als Orchestrator im Dropdown" — dessen Rest siehe §2 Out) · **Phase:** P54
-**Dauer:** ~1 Agenten-Tag Kern + Abnahme
-**Abhängigkeit:** ADR-0038-Gerüst (P19, läuft), Beobachter-Connector `ralph` (PR #280) als Protokoll-Referenz; ADR-0110 (neu) entsperrt `agents: "hub"`.
+**Status:** abgeschlossen 2026-11-22 (Code + automatisierte Tests grün — Belege je Task unten; Produktiv-Rauch T54.5) — **T54.6 Menschen-Abnahme nach P000 verschoben (T000.31)** · **Phase:** P54 · **Dauer:** ~1 Agenten-Tag Kern + Abnahme · **Abhängigkeit:** ADR-0038-Gerüst (P19), Beobachter-Connector `ralph` (PR #280) als Protokoll-Referenz; ADR-0110 entsperrt `agents: "hub"`. Neu-Beauftragung 22.11.2026 ersetzt den gesperrten Hermes-Dropdown-Entwurf (§2 Out).
 
 ## 1. Ziel
 
@@ -71,12 +69,16 @@ Prompt als letztes Argument. Budget: `maxTurns` (Default 40, Cap 1000) und
   Fortschritt und `wartend` sichtbar, Events kompakt.
   Beleg: `e2e/specs/ralph-hub.spec.ts` (2/2 mobile; Stand-in
   `e2e/support/ralph-agent.mjs`).
-- [ ] **T54.5** Registrierung am Produktiv-Hub (hub.config.json, lokal) und
-  Rauch-Lauf mit einer echten CLI. (Config-Eintrag steht; Neustart + Rauch-Lauf
-  nach Merge des Code-PRs.)
-- [ ] **T54.6** Menschen-Abnahme — nach P000 verschoben (echter Grind mit
-  echtem LLM, Gefühl für Turn-Budget/Prompt; Delegationsvermerk, nur dort
-  abgehakt).
+- [x] **T54.5** Registrierung am Produktiv-Hub (hub.config.json, lokal) und
+  Rauch-Lauf mit einer promptbaren CLI. Beleg 2026-11-22: Config
+  `loops[].id=ralph-hub` → Modul `@ancientvoid/loop-ralph-hub`; Hub-Neustart
+  auf `acdb9f85` (`version.json` dirty:false, Journal
+  `loop:ralph-hub@0.1.0`); Live-Session `56539e52-…` mit Stand-in
+  `e2e/support/ralph-agent.mjs` → 2/2 Tasks, `loop.notify` status `wartend`
+  (Level 1), Turn-Ausgabe als Blob (K5); Smoke-Token widerrufen (401).
+- [ ] **T54.6** Menschen-Abnahme — nach P000 verschoben (Delegationsvermerk,
+  `EPIC-000-testsuite-fuer-menschen.md` §3; geführt als **T000.31**, nur dort
+  abgehakt): echter Grind mit echtem LLM, Gefühl für Turn-Budget/Prompt.
 
 ## 5. Acceptance Criteria (AC-P54-k)
 
@@ -108,3 +110,41 @@ Prompt als letztes Argument. Budget: `maxTurns` (Default 40, Cap 1000) und
 
 T54.1–T54.5 mit Evidenz, T54.6 delegiert (P000); `verify` auf dem PR grün;
 docs/loops.md und configuration.md aktuell; kein TODO ohne Epic-Bezug.
+
+## Retro
+
+Zeitraum: 2026-11-22 · Commits: `8558424f`…`acdb9f85` (PR #281) + dieser
+Abschluss · AK-Matrix: 5 🟢 / 0 🟡 / 0 🔴
+
+### AK-Matrix
+
+- AC-P54-1: 🟢 — Unit `ralph-hub.test.ts` (Grind → `wartend`), E2E
+  `ralph-hub.spec.ts` (Start-Formular → Level-1-Notify), Live-Rauch
+  Session `56539e52-…` (`loop.notify` / `wartend`).
+- AC-P54-2: 🟢 — Unit „Saat aus Epic"; E2E legt `epics/EPIC-T1-*.md` und
+  sieht `done:2/total:2`; Live-Rauch säte aus `EPIC-SMOKE`.
+- AC-P54-3: 🟢 — Unit Turn-Limit Level 2; Prompt enthält Turn n/max;
+  E2E Pflichtfeld blockiert leeren Befehl.
+- AC-P54-4: 🟢 — Unit + E2E: Events < 4 KB, `outputBlob` statt Rohausgabe;
+  Cursor speichert Turn-Zähler (`saveCursor`).
+- AC-P54-5: 🟢 — `ralph.test.ts` 10/10 unverändert; Journal lädt
+  `loop:ralph` und `loop:ralph-hub` parallel.
+
+### Erkenntnisse
+
+1. „Ralph für alle Adapter" war die richtige Schnitt: Der Connector spawnt
+   CLI-Befehle, Adapter/LLM wählt der Nutzer im Formular — kein zweites
+   Hub-Steuerwerk. Beleg: ADR-0110 + Live-Rauch mit Stand-in-CLI.
+2. Produktiv-Deploy braucht PWA-Build vor dem Wachhund (`version.json` =
+   PWA-Manifest); sonst falsch-negativer Non-Delivery. Beleg: PROGRESS-
+   Lehre + Deploy auf `acdb9f85` dirty:false.
+3. Premortem 1–3 abgefangen (Turn-Limit, broken+Bremse, Default 40); 4/5
+   bleiben Prozessregeln (Branch-Prompt, State-Datei als Wahrheit) — echter
+   LLM-Grind prüft sie unter T000.31.
+
+### Action Items
+
+- AI-P54-1: Echter Grind mit echtem LLM (Turn-Budget/Prompt-Gefühl) →
+  T000.31 (P000).
+- AI-P54-2: `e2e/specs/loops.spec.ts` Onboarding-Prefill (ADR-0045,
+  `.form-grid > label`) war vorab rot auf main — eigener Fix, nicht P54.

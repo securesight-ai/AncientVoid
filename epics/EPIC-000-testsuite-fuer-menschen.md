@@ -187,6 +187,16 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   (Serialisierung/429) fühlen. Messlatten: K2 (kein Lag beim Auslösen), K5
   bleibt. Beleg: Checklisten-Zeile mit Datum.
 
+### Übernommen aus EPIC-P54 (2026-11-22)
+
+- [ ] **T000.31 — Ralph-hub mit echtem LLM grinden.** (Herkunft: EPIC-P54 T54.6)
+  Loop `ralph-hub` am Produktiv-Hub mit einer echten Agenten-CLI
+  (`claude -p {prompt}`, `codex exec {prompt}`, `pi {prompt}`, …) über
+  mehrere Turns: Turn-Budget und Prompt-Regeln fühlen, State-Datei und
+  Menschen-Gate `wartend` prüfen, Branch-Disziplin (`ralph/<target>`) und
+  dass Events kompakt bleiben (K5). Stand-in-Rauch (T54.5) zählt nicht als
+  Abnahme. Beleg: Checklisten-Zeile mit Datum.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine
