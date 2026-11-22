@@ -4,8 +4,9 @@
 Die Suche des Hubs war zu billig (nur Markdown, nur ein Projekt). Sie sucht
 jetzt den ganzen Fundus: **Sessiontexte — Fragen und Antworten** — plus Doku,
 in einem Feld. Implementierung, Tests und E2E sind fertig und am laufenden
-Interface verifiziert (Branch `feat/suche-sessiontexte`, 5 Commits). Offen ist
-nur der PR: es gibt auf diesem Rechner keine GitHub-Zugangsdaten (unten).
+Interface verifiziert (Branch `feat/suche-sessiontexte`, 5 Commits). Der PR läuft:
+**#276** (https://github.com/securesight-ai/AncientVoid/pull/276), Gate `verify`
+**pass 3m46s**, `mergeable=true`. Mergen steht aus (Entscheidung Kai).
 
 ## Erledigt (verifiziert)
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
@@ -101,14 +102,22 @@ nur der PR: es gibt auf diesem Rechner keine GitHub-Zugangsdaten (unten).
   die PWA zeigt eine Grenzen-Karte mit den Gründen der Quelle.
 
 ## In Arbeit
-- **PR für die Suche**: Branch `feat/suche-sessiontexte` ist fertig (5 Commits,
-  alle unten belegten Prüfläufe grün). Es fehlt nur der Push — siehe nächster
-  Punkt. Nach dem Merge: Hub neu starten und die Suche am echten Bestand ansehen
-  (`/api/search/all?q=…&scope=all`).
-- **Push/PR ist blockiert**: keine GitHub-Zugangsdaten auf dem Rechner (kein
-  `gh`-Login, kein `GH_TOKEN`, kein nutzbarer SSH-Key — gegen
-  `github.com` geprüft: `Permission denied (publickey)`). Branch und Commits
-  liegen lokal bereit; `git fetch` funktioniert anonym, Push nicht.
+- **PR #276 mergen** (Merge-Commit, PR-Titel behält die Stufe). Danach: Hub
+  neu starten und die Suche am echten Bestand prüfen
+  (`/api/search/all?q=…&scope=all`, Rolle `teil` mit einem zusammengesetzten
+  Begriff testen).
+- **Lehre fürs Gate** (gemessen, 22.11.): ein PR mit **Merge-Konflikt** zum
+  Base-Zweig bekommt **keinen** Workflow-Lauf — GitHub kann den Merge-Commit
+  nicht bilden. Da main inzwischen P75 (Sprachausgabe) enthält, stritten sich
+  beide Zweige in `apps/pwa/src/shared/api.ts` (Importzeile). Deshalb: nie
+  zuerst Actions verdächtigen, erst `pulls/<nr>.mergeable` und Rebase prüfen.
+  Nach Rebase + Force-Push lief das Gate sofort.
+- **Zugang**: `gh`-Login im GNOME-Keyring (Konto KaiFelixBennett). Fein-granulare
+  Token mit Resource owner = persönliches Konto können Org-Repos **nie**
+  schreiben (`securesight-ai/AncientVoid` gehört der Organisation) — das war der
+  erste Fehlversuch. funktionierend: klassischer Token. Achtung: der aktuelle hat
+  alle Scopes; nach Erledigten auf einen feingranularen mit owner
+  `securesight-ai` (Contents + Pull requests + Issues) umstellen und rotieren.
 
 ## Bekannte Probleme / Risiken
 - **Zwei parallele Agenten-Turns derselben Session** haben zeitgleich am Repo
