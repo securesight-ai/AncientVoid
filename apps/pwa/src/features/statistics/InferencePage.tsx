@@ -3,7 +3,7 @@ import type { InferencePerfRow, InferenceSnapshot, InferenceSourceList } from "@
 import { hubApi } from "../../shared/api.ts";
 import { Card, Chip, EmptyState } from "../../shared/ui/index.ts";
 import { t } from "../../shared/i18n/index.ts";
-import { alter, anteil, byteGroesse, dauer, tempo, uhrzeit, verlauf, zahl } from "./format.ts";
+import { alter, anteil, byteGroesse, dauer, tempo, uhrzeit, verlauf, zahl } from "./inference-format.ts";
 
 /**
  * EPIC-P79 T79.4 (ADR-0102): Token-Tempo der Inferenz-Engines.

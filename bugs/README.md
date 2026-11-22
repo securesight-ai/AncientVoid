@@ -288,8 +288,9 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 | [BUG-0252](bug-0252-sw-js-kommentarzeile-ohne-kommentarzeichen.md) | sw.js-Kommentarzeile ohne `//` — ServiceWorker-Eval schlägt fehl | fixed | S3 | pwa | — |
 | [BUG-0253](bug-0253-toter-fleet-hub-heisst-inkompatibel.md) | Abgeschalteter Hub wird als „inkompatibel“ gemeldet | done | S2 | core | — |
 | [BUG-0254](bug-0254-tts-upstream-json-statt-multipart.md) | TTS-Upstream-Aufruf spricht JSON, der echte Dienst (pocket-tts) will Multipart | open | S2 | hub | [#279](https://github.com/securesight-ai/AncientVoid/issues/279) |
+| [BUG-0257](bug-0257-analyse-ansichten-drei-icons-eine-seite.md) | Statistik/Metriken/Inferenz: drei Ansichten teilen sich ein Icon und stehen als drei Routen nebeneinander | open | S3 | pwa | — |
 
-Die nächste freie Nummer ist **0255** (gemerged, 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
+Die nächste freie Nummer ist **0258** (gemerged, 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
 0183 mit PR #50, 0184 mit PR #48 und 0185 mit dem Nightly-Fix aus den Issues #54–#57 gemerged,
 0180 mit PR #40; 0186 ist das eingemauerte Manifest auf dem Handy; 0187 sind die Geister-Tokens
 aus der P63-Planung; 0188 ist **doppelt belegt** (Hermes-Stumm/#133 done + host-ignorierendes Projekt-Anlegen in der Neuanlage);
