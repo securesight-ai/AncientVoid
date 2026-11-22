@@ -1,7 +1,8 @@
 # ADR-0038 — Loop / Dark Factory als Auswahldimension (Loop-Connector-Contract)
 
-**Status:** **vorgeschlagen; das Gerüst (Katalog, Route, Policy, Auswahl) ist seit 2026-10-28 auf Wunsch von Jan gebaut,
-die Connectors sind es nicht.** Die Entscheidungen unten gelten, solange Jan nicht widerspricht. · **Betrifft:** EPIC-P19, `@ancientvoid/contracts` (neu `loops/`,
+**Status:** akzeptiert (Nachtrag 2026-11-22: Gerüst und Connectors stehen — `securesight-factory`, `aSPARK-Factory` und `ralph` als
+Beobachter des Hermes-Ralph-Goal-Gate-Runners; `agents: "hub"` bleibt reserviert, Entsperrung nur über eigenen ADR). Die
+Entscheidungen unten gelten, solange Jan nicht widerspricht. · **Betrifft:** EPIC-P19, `@ancientvoid/contracts` (neu `loops/`,
 additiv `SessionSpec`), `packages/core` (Modul `loops`), Hub-Routen, PWA
 (Start-Formular, Session-Kopf), neue Pakete `packages/loops/*` ·
 **Grundlage:** [Analyse 2026-10-27](../loop-analyse-2026-10-27.md)
