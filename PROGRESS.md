@@ -87,6 +87,19 @@ Handy-Zugang zum Agenten) wegbleibt.
   Formel (≈59 GiB) sind verschiedene Rechnungen — `Mlocked` ≈ 26,6 GiB und
   Shmem werden doppelt gezählt. Werkzeug: Skill `linux-ram-attribution`.
 
+## Titel als roher Schlüssel — Gate-Lücke geschlossen (22.11., verifiziert)
+- Live zeigte der Pane-Titel `COMMON.INFERENCE`: P61-Commit `338a82e9` hat
+  `common.inference`/`common.inference_title` aus den Katalogen gelöscht. de/en-Parität
+  (`check:i18n`) konnte das nicht sehen — beide Kataloge verloren den Schlüssel zugleich.
+- Neu im Gate: jeder literal benutzte `t("…")`-Schlüssel muss im de-Katalog stehen
+  (Prüfung über `.ts` **und** `.tsx`; die Strings-Ratchet bleibt bei `.tsx`, damit ihre
+  Baseline gültig bleibt). Rot-dann-grün belegt: ohne Schlüssel meldet der Gate
+  „4 fehlende Schlüssel — ROT“ und die E2E fällt; mit Schlüssel beides grün.
+- Außerdem: Prompt-Cache/Gerät/Summen-Kacheln zeigen nicht gemeldete Zeilen nicht mehr
+  (kein `—`-Stapel), und eine Karte ganz ohne Messwert wird gar nicht gerendert.
+- Belege: `check:i18n` OK, Playwright `inference-tempo` 5/5 (neu: kein roher Schlüssel,
+  keine Halogen-Cache-Zeilen bei Strata), Vitest 60/60, Typecheck/Lint/arch/context grün.
+
 ## Nachzug P79 — zweite Runde (22.11., verifiziert)
 Vier Defekte, die erst der Blick auf die **live gerenderte Seite** gezeigt hat:
 - **Auslastung 10.000 %** und **CPU 860 %**: die Engines sind uneinheitlich — Strata

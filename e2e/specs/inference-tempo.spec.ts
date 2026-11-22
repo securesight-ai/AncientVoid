@@ -146,7 +146,13 @@ test.describe("Token-Tempo-Seite (EPIC-P79)", () => {
     await expect(karte(app, "Engine & Bauart")).toContainText(/15 %/);
     await expect(karte(app, "Engine & Bauart")).toContainText(/32\.768/);
     await expect(karte(app, "Im Moment")).toContainText(/128\.000/); // größter Slot-Halt
-    await expect(karte(app, "Letzte Anfragen")).toContainText(/\d{2}:\d{2}:\d{2}/); // abgeschlossene Requests sind datiert (ohne \b: Tabellenzellen kleben im Text)
+    await expect(karte(app, "Letzte Anfragen")).toContainText(/\d{2}:\d{2}:\d{2}/);
+    // Titel darf nie als roher Schlüssel erscheinen (P61-Löschcommit hatte genau das).
+    await expect(app.getByText("COMMON.INFERENCE")).toHaveCount(0);
+    await expect(app.getByText("common.inference")).toHaveCount(0);
+    // Nicht gemeldete Cache-Felder verschwinden — Strata meldet keine Trefferquoten.
+    await expect(karte(app, "Prompt-Cache")).not.toContainText("Token-Treffer");
+    await expect(karte(app, "Prompt-Cache")).not.toContainText("KV-Pool"); // abgeschlossene Requests sind datiert (ohne \b: Tabellenzellen kleben im Text)
     await expect(karte(app, "Seit Engine-Start")).toContainText("144");
   });
 

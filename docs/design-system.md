@@ -186,7 +186,7 @@ Unit-Tests: `apps/pwa/test/ui/*.test.tsx`. Fokusfalle/Esc: `e2e/specs/fokus.spec
 ## 4. Rezept für eine neue Ansicht
 
 0. Nutzer sichtbarer Text kommt aus dem i18n Katalog (`shared/i18n/`,
-   ADR-0101); neue Views migriert man mit (`check:i18n` Ratchet).
+   ADR-0101); neue Views migriert man mit (`check:i18n` Ratchet; der Gate meldet auch `t()`-Schlüssel, die im de-Katalog fehlen).
 1. Feature-Datei unter `apps/pwa/src/features/<name>/` (ADR-0020).
 2. CSS-Datei mit eindeutigem Präfix, Import nur über `styles/index.css`.
 3. Nur semantische Tokens und Leitern — kein neuer Hex, kein freier `z-index`.
