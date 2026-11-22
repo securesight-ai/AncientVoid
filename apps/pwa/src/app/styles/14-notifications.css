@@ -79,7 +79,10 @@
 .notif-count {
   position: absolute;
   top: -4px;
-  right: -4px;
+  /* BUG-0256: am linken Rand der Glocke — rechts hängt die Glocke an der
+   * Spalten-/Fensterecke, dort wird die Zahl eingeklemmt; links ist Platz. */
+  left: -4px;
+  right: auto;
   background: var(--err);
   color: var(--err-ink);
   border-radius: 999px;
@@ -289,7 +292,10 @@
  * nichts wird verdeckt. 44 px: größer als die umliegenden Icons/Chips
  * (zuvor 36 px), damit sie heraussticht. */
 .notif-bell.flow {
-  position: static;
+  /* BUG-0256: relativ statt static — sonst verankert die absolut positionierte
+   * `.notif-count` am nächsten positionierten Vorfahren (sticky Topbar) und
+   * hängt sichtbar über der Glocke bis über den Viewport-Rand. */
+  position: relative;
   width: 44px;
   height: 44px;
   font-size: var(--text-lg);
