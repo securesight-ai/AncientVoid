@@ -6,7 +6,7 @@ severity: S2
 area: hub
 instance: prod
 commit: "8c26bd02"
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/issues/279"
 epic: "EPIC-P75"
 created: 2026-11-22
 reporter: Nutzermeldung 2026-11-22 („Sprachausgabe klappt nicht. Es passiert nichts wenn ich den Button klicke")
