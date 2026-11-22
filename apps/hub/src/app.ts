@@ -5,7 +5,7 @@ import fastifyWebsocket from "@fastify/websocket";
 import fastifyStatic from "@fastify/static";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import type { ClaudeLive, DesktopService, AttachmentStore, PlannerModelConfig, PushService, SettingsStore, SessionManager, TokenService, AdapterRegistry, LoopRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, KnowledgeService, MainSyncSettingsService } from "@ancientvoid/core";
+import type { ClaudeLive, DesktopService, AttachmentStore, PlannerModelConfig, PushService, SettingsStore, SessionManager, SessionTextIndex, TokenService, AdapterRegistry, LoopRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, KnowledgeService, MainSyncSettingsService } from "@ancientvoid/core";
 import type { ForgeService } from "./modules/forge/forge-service.ts";
 import type { StatisticsService } from "./modules/statistics/statistics.service.ts";
 import type { ExternalJobsService } from "./modules/automations/external-jobs.ts";
@@ -113,6 +113,10 @@ export interface HubAppDeps {
   fleet?: FleetStore;
   /** EPIC-P56 T56.3: Statistik-Rollup der Statistik-Seite (ohne Angabe 501). */
   statistics?: StatisticsService;
+  /** Suche (Nachschärfe 2026-11-22): Volltextindex über die Sessiontexte.
+   * Ohne Angabe antwortet die Session-Suche 501 statt so zu tun, als gäbe es
+   * nichts zu finden. */
+  search?: { transcript: SessionTextIndex };
   /** Tests only: where the request log goes (default stdout). */
   logStream?: { write(message: string): void };
 }

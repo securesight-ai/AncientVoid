@@ -2,7 +2,7 @@ import type { HubTeam } from "./modules/team/index.ts";
 import { resolve, sep } from "node:path";
 import type { FastifyRequest } from "fastify";
 import type { ClaudeLive, PlannerModelConfig, SettingsStore, AttachmentStore, SessionManager, TokenService, AdapterRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, AiMetricsSampler, InferenceTracker, FleetStore, MainSyncSettingsService } from "@ancientvoid/core";
-import { KnowledgeService, nativeOpenCommand, scanProjectSkills, ensureBaseSkills, LoopRegistry } from "@ancientvoid/core";
+import { KnowledgeService, nativeOpenCommand, scanProjectSkills, ensureBaseSkills, LoopRegistry, type SessionTextIndex } from "@ancientvoid/core";
 import type { ForgeService } from "./modules/forge/forge-service.ts";
 import type { StatisticsService } from "./modules/statistics/statistics.service.ts";
 import type { ExternalJobsService } from "./modules/automations/external-jobs.ts";
@@ -85,6 +85,10 @@ export interface RouteDeps {
   aimetrics?: AiMetricsSampler;
   /** EPIC-P79 (ADR-0102): Tracker für die Token-Tempo-Seite. */
   inference?: InferenceTracker;
+  /** Suche (Nachschärfe 2026-11-22): Volltextindex über die Sessiontexte.
+   * Ohne Angabe antworten die Session-Routen 501 — wie bei approvals, die
+   * ein Hub ohne Konfiguration ebenfalls nicht anbietet. */
+  search?: { transcript: SessionTextIndex };
   /** EPIC-P56 T56.3: Statistik-Rollup für die Statistik-Seite; ohne Angabe ehrlich 501. */
   statistics?: StatisticsService;
   /** EPIC-P59 Nachtrag: Peer-Liste für Merge in GET /api/aimetrics. */
