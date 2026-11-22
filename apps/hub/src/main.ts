@@ -28,6 +28,7 @@ import {
   HubDatabase,
   acquireHubPidLock,
   SessionManager,
+  SessionTextIndex,
   TokenService,
   WebAuthnStore,
   WorktreeManager,
@@ -468,6 +469,23 @@ async function main(): Promise<void> {
     logger.info(`inference: ${engines.length} Engine-Quellen (${engines.map((e) => e.kind).join(", ")})`);
   }
 
+  // Suche (Nachschärfe 2026-11-22): Volltext über die Sessiontexte — Fragen,
+  // Antworten, Denk- und Werkzeugspuren. Der Index ist ableitbar (K7: er folgt
+  // dem JSONL-Schwanz über `byte_offset` pro Session) und braucht kein qmd.
+  // Das Intervall hält ihn warm, damit eine Suche nie auf den ersten Nachlauf
+  // warten muss; `unref()` hält ihn beim Testen und beim Shutdown offen.
+  const transcript = new SessionTextIndex(db, dataDir);
+  const transcriptRefresh = setInterval(() => {
+    void transcript.refresh().catch((err) =>
+      logger.warn("search: transcript-Nachlauf fehlgeschlagen", { err: err instanceof Error ? err.message : String(err) }),
+    );
+  }, 5_000);
+  transcriptRefresh.unref();
+  void transcript
+    .refresh()
+    .then((r) => logger.info(`search: Sessiontext-Index ${r.lines} Zeilen (${transcript.engine()})`))
+    .catch((err) => logger.warn("search: Erstindex fehlgeschlagen", { err: err instanceof Error ? err.message : String(err) }));
+
   const app = await createHubApp({
     sessions,
     browser,
@@ -526,6 +544,7 @@ async function main(): Promise<void> {
     team,
     ...(aimetrics ? { aimetrics, aimetricsMergePeers: config.aiMetrics?.mergePeers !== false } : {}),
     ...(inference ? { inference } : {}),
+    search: { transcript },
     // EPIC-P56 T56.3: Statistik-Rollup — hält die Fakten-Caches frisch und
     // liest sie für die Statistik-Seite (Journal bleibt Wahrheit, K7).
     statistics: new StatisticsService(db, sessions, team),
@@ -609,6 +628,7 @@ async function main(): Promise<void> {
   }
 
   const shutdown = async (sig: string) => {
+    clearInterval(transcriptRefresh);
     automations.stop();
     issueBridge?.stop();
     aimetrics?.stop();

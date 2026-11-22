@@ -40,3 +40,4 @@ export * from "./modules/team/index.ts";
 export * from "./modules/aimetrics/index.ts";
 export * from "./modules/inference/index.ts";
 export * from "./modules/release-notes/index.ts";
+export * from "./modules/search/index.ts";

@@ -1,11 +1,61 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
 ## Ziel
-EPIC-P79 (Token-Tempo lokaler Inferenz in der PWA) fertigstellen und danach den
-laufenden Hub auf den neuesten Stand bringen — ohne dass der Hub (und damit Kais
-Handy-Zugang zum Agenten) wegbleibt.
+Die Suche des Hubs war zu billig (nur Markdown, nur ein Projekt). Sie sucht
+jetzt den ganzen Fundus: **Sessiontexte — Fragen und Antworten** — plus Doku,
+in einem Feld. Implementierung, Tests und E2E sind fertig und am laufenden
+Interface verifiziert (Branch `feat/suche-sessiontexte`, 5 Commits). Der PR läuft:
+**#276** (https://github.com/securesight-ai/AncientVoid/pull/276), Gate `verify`
+**pass 3m46s**, `mergeable=true`. Mergen steht aus (Entscheidung Kai).
 
 ## Erledigt (verifiziert)
+- **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
+  plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die
+  echten `events.jsonl` **inkl. Blob-Payloads** (K5-Offload — ohne Blob-Read
+  wären lange Antworten unauffindbar), rollengetrennt (user/assistant/thinking/
+  tool/system), rollengewichtet, Snippet mit Markerzeichen, Präfix + Umlaut-
+  Faltung, AND→OR-Rückfall sichtbar als `mode`, Projekt-/Projektbaum-Filter,
+  Rückfall `engine:"scan"` ohne FTS5, `CROSS JOIN`-Zwang (sonst: „unable to use
+  function snippet“).
+- **Drei Suchstufen** (`SessionSearchMode` in den Verträgen): `and` (Begriff als
+  Präfixwort) → `teil` (Begriff als Teilwort, alle zusammen) → `or` (Begriffe
+  einzeln). Ohne `teil` war „Angebot" in „Sonderangebot" unauffindbar — FTS5-
+  Präfixe greifen nur am Wortanfang, und deutsch stellt Begriffe ans Wortende.
+  Die Stufe wird per Sonde vor dem Ausliefern entschieden, also bleibt sie über
+  alle Seiten gleich; die PWA nennt sie sichtbar. Nebenbefund aus dem Fixture-
+  Hub: `eventText` indexierte Frage + Kurzzeile doppelt, wenn die Kurzzeile den
+  Wortlaut wiederholte — jetzt nur, was nicht schon drinsteht.
+- Tests `packages/core/test/transcript-search.test.ts` **17/17** und
+  `apps/hub/test/modules/search/search-sessions.routes.test.ts` **8/8**,
+  `docs-local.test.ts` **5/5**. Am **echten Bestand** gemessen (Kopie von
+  `data/`, 5 Sessions): 15 329 Zeilen in 1,2 s, Abfragen 1–3 ms, inkrementeller
+  Nachlauf nach einer neuen Zeile in < 1 s, Fragen und Antworten zuerst.
+- **Verträge** `packages/contracts/src/search/search.ts` (SessionTextHit,
+  SearchIndexState, UnifiedSearchResponse, DocSearchHit/Engine, Snippet-Marker).
+- **Routen**: `GET /api/search/transcript` und `GET /api/search/all`
+  (Doku + Sessions in einer Antwort, `scope`, Rollen-Chips, Facetten, Paging),
+  `/api/search` antwortet ohne qmd mit lokalem Markdown-Durchlauf
+  (`engine:"local"`) statt 501. Hub verdrahtet den Index in `main.ts`
+  (Nachlauf alle 5 s, `unref`, Shutdown räumt auf) und an der Route mit
+  250 ms Frische — ein Zug, der gerade fertig wurde, ist sofort findbar.
+- **PWA-Suche** (`apps/pwa/src/features/search/`): ein Feld für den ganzen
+  Fundus, Bereichsumschalter Alles / Sitzungen / Doku, Rollen-Chips mit
+  Facettenzahl (Standard: Frage + Antwort; Denken/Werkzeug opt-in), „nur dieses
+  Projekt“, Fundwort als `<mark>` (Markerzeichen → Preact-Knoten, nie
+  innerHTML), Sitzungsblöcke mit Titel/Projekt/seq, „mehr laden“, Stufen-Hinweis
+  (`teil`/`or`) und Indexzeile („15 329 Texte aus 5 Sitzungen im Index“).
+  Fundstelle in der **eigenen** Sitzung springt im Chat zur Nachricht und holt
+  vorher die älteren Seiten nach.
+- **E2E**: `e2e/specs/search-sessions.spec.ts` **4/4** (tablet + desktop) —
+  Frage und Antwort derselben Sitzung, Markierung, Sprung in den Chat,
+  Bereichsumschalter, „nur dieses Projekt“, Dock-Abstand als Zahl. dazu
+  `apps/pwa/test/features/search-hits.test.ts` **9/9** und CSS-Ratchet **14/14**.
+- **Am laufenden Interface verifiziert** (Krater-Hub auf einer Kopie von `data/`
+  mit echtem Bestand, Port 7399, Chromium): Sprung auf seq 19 einer 54 000-
+  Ereignisse-Sitzung — ältere Seiten nachgeladen (`minSeq` 5), Fundstelle im
+  Viewport (`top` 234, `inViewport` true); „Kurbelwelle Träger“ traf die
+  Teilwortstufe und markierte beide Fragmente; Suchfeld ohne UA-✕, letzte Karte
+  75 px über der Dock-Leiste (gemessen 496 vs. 571). Screenshots gesehen.
 - **P79 im Live-Hub deployed** (`systemctl --user restart ancientvoid-hub`, health 200
   nach 2 s, kein Rückfall): Konfiguration `inference.engines` mit Strata
   (`http://127.0.0.1:8080/metrics`, Schlüssel nur als Dateireferenz), Hub-Log:
@@ -52,10 +102,22 @@ Handy-Zugang zum Agenten) wegbleibt.
   die PWA zeigt eine Grenzen-Karte mit den Gründen der Quelle.
 
 ## In Arbeit
-- GitHub-Abgleich: `git fetch` + `origin/main` in den Branch mergen, damit der
-  deployte Stand „neueste Version + P79“ ist. Push/PR ist blockiert: keine
-  GitHub-Zugangsdaten auf dem Rechner (kein `gh`-Login, kein Token, kein
-  SSH-Key hinterlegt).
+- **PR #276 mergen** (Merge-Commit, PR-Titel behält die Stufe). Danach: Hub
+  neu starten und die Suche am echten Bestand prüfen
+  (`/api/search/all?q=…&scope=all`, Rolle `teil` mit einem zusammengesetzten
+  Begriff testen).
+- **Lehre fürs Gate** (gemessen, 22.11.): ein PR mit **Merge-Konflikt** zum
+  Base-Zweig bekommt **keinen** Workflow-Lauf — GitHub kann den Merge-Commit
+  nicht bilden. Da main inzwischen P75 (Sprachausgabe) enthält, stritten sich
+  beide Zweige in `apps/pwa/src/shared/api.ts` (Importzeile). Deshalb: nie
+  zuerst Actions verdächtigen, erst `pulls/<nr>.mergeable` und Rebase prüfen.
+  Nach Rebase + Force-Push lief das Gate sofort.
+- **Zugang**: `gh`-Login im GNOME-Keyring (Konto KaiFelixBennett). Fein-granulare
+  Token mit Resource owner = persönliches Konto können Org-Repos **nie**
+  schreiben (`securesight-ai/AncientVoid` gehört der Organisation) — das war der
+  erste Fehlversuch. funktionierend: klassischer Token. Achtung: der aktuelle hat
+  alle Scopes; nach Erledigten auf einen feingranularen mit owner
+  `securesight-ai` (Contents + Pull requests + Issues) umstellen und rotieren.
 
 ## Bekannte Probleme / Risiken
 - **Zwei parallele Agenten-Turns derselben Session** haben zeitgleich am Repo

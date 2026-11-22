@@ -3,6 +3,10 @@
 .search-pane {
   display: grid;
   gap: 10px;
+  /* In einer Sitzung schwebt die Dock-Leiste über dem Rollenbereich. Ohne
+     Abstand läuft die letzte Karte (und die Leerzeile „keine Treffer“) unter
+     ihr weg — gemessen am laufenden Interface: 34 px Leiste, dazu Rand. */
+  padding-bottom: 76px;
 }
 
 .search-form {
@@ -12,6 +16,8 @@
 
 .search-input {
   flex: 1;
+  /* Das UA-eigene ✕ eines `type=search`-Feldes erscheint als kastenumrandetes
+     Symbol neben dem Fokusrahmen — zwei sich überscheidendeSteuerung. */
   background: var(--bg);
   border: 1px solid var(--fg-dim);
   color: var(--fg);
@@ -19,6 +25,14 @@
   padding: 10px;
   font: inherit;
   min-height: 44px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.search-input::-webkit-search-cancel-button,
+.search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .search-status {
@@ -164,4 +178,175 @@
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   outline: 1px solid var(--accent);
   border-radius: var(--radius);
+}
+
+/* Suche (Nachschärfe 2026-11-22): ein Feld für den ganzen Fundus —
+   Scope-Umschalter, Rollen-Chips, Fundstellen aus den Sitzungstexten. */
+
+.search-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.search-here {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}
+
+.hit-facet {
+  margin-left: 6px;
+  font-size: var(--text-xs);
+  color: var(--fg-dim);
+}
+
+.search-index,
+.search-note {
+  font-size: var(--text-xs);
+}
+
+.search-block {
+  display: grid;
+  gap: 8px;
+}
+
+.search-block-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  border-bottom: 1px solid var(--bg-chip);
+  padding-bottom: 4px;
+}
+
+.hit-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.hit-group {
+  display: grid;
+  gap: 6px;
+}
+
+.hit-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.hit-group-title {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.hit-group-title:disabled {
+  cursor: default;
+}
+
+.hit-title {
+  font-weight: 600;
+}
+
+.hit-group-meta {
+  font-size: var(--text-xs);
+  word-break: break-all;
+}
+
+.hit-group-count {
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.hit-card {
+  display: grid;
+  gap: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--bg-chip);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.hit-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+}
+
+.hit-role {
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: var(--bg-chip);
+  color: var(--fg);
+  font-size: var(--text-xs);
+}
+
+.hit-role--user {
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg-chip));
+}
+
+.hit-role--thinking,
+.hit-role--tool,
+.hit-role--system {
+  color: var(--fg-dim);
+}
+
+.hit-seq,
+.hit-when {
+  color: var(--fg-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.hit-jump {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--fg-dim);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--text-xs);
+  padding: 4px 8px;
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.hit-snippet {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.hit-snippet mark,
+.search-result-card mark {
+  background: color-mix(in srgb, var(--accent) 35%, var(--bg-elev));
+  color: var(--fg);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.search-more {
+  justify-self: start;
 }

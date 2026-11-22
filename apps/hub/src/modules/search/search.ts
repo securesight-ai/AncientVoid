@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import { createHash } from "node:crypto";
 import { realpath, readFile, readdir, stat, open } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { SNIPPET_MARK_CLOSE, SNIPPET_MARK_OPEN } from "@ancientvoid/contracts";
 
 /**
  * T3.8 (EPIC-P3 §3 "Sprachsuche") — Projekt-Index-Service.
@@ -350,4 +351,136 @@ async function docTitle(absPath: string): Promise<string | null> {
   } finally {
     await handle.close();
   }
+}
+
+/**
+ * Suche ohne qmd: lokaler Markdown-Durchlauf.
+ *
+ * T3.8 hängt an der `qmd`-CLI — und auf einem Rechner ohne sie war die
+ * Suchansicht bisher tot (501). Das ist ein Zustand, kein Suchraum: die
+ * Dokumente liegen lesbar im Projekt. Der Durchlauf ist bewusst einfacher als
+ * qmd (Worthäufigkeit statt Hybrid-Ranking, kein Vektor), aber er liefert
+ * echte Fundstellen — und die Antwort sagt mit `engine:"local"`, dass er
+ * gemeint ist.
+ */
+const LOCAL_DOC_MAX_BYTES = 512_000;
+const LOCAL_DOC_MAX_HITS = 200;
+
+/** Wörter einer Anfrage, wie die Session-Suche sie schneidet: Kleinbuchstaben,
+ * keine FTS-Syntax, keine Ein-Zeichen-Restchen. */
+export function queryTerms(q: string): string[] {
+  return q
+    .toLowerCase()
+    .split(/[\s,;]+/)
+    .map((t) => t.replace(/[^\p{L}\p{N}'_-]/gu, ""))
+    .filter((t) => t.length > 1);
+}
+
+/** Fenster um den ersten Fund, jeder Fund markiert — dasselbe Markerpaar wie
+ * die Session-Suche, die PWA unterscheidet nicht zwischen qmd und Lokal. */
+function docSnippet(content: string, at: number, terms: string[]): string {
+  const start = Math.max(0, at - 160);
+  const end = Math.min(content.length, at + 380);
+  const window = content.slice(start, end);
+  const lower = window.toLowerCase();
+  let out = "";
+  let cursor = 0;
+  const found: { at: number; len: number }[] = [];
+  for (const term of terms) {
+    for (let at = lower.indexOf(term); at >= 0; at = lower.indexOf(term, at + term.length)) found.push({ at, len: term.length });
+  }
+  found.sort((a, b) => a.at - b.at);
+  for (const f of found) {
+    if (f.at < cursor) continue;
+    out += window.slice(cursor, f.at) + SNIPPET_MARK_OPEN + window.slice(f.at, f.at + f.len) + SNIPPET_MARK_CLOSE;
+    cursor = f.at + f.len;
+  }
+  out += window.slice(cursor);
+  const prefix = start > 0 ? "…" : "";
+  const suffix = end < content.length ? "…" : "";
+  return (prefix + out.replace(/\s+/g, " ").trim() + suffix).slice(0, 700);
+}
+
+/** Zählfunktion ohne Regex-Magie: wie oft ein Begriff vorkommt (Kappung gegen
+ * ein Dokument, das den Suchbegriff tausendfach wiederholt). */
+function countOccurrences(lowerText: string, term: string): number {
+  let n = 0;
+  for (let at = lowerText.indexOf(term); at >= 0; at = lowerText.indexOf(term, at + term.length)) {
+    n += 1;
+    if (n >= 25) break;
+  }
+  return n;
+}
+
+/** Markdown-Durchlauf für Projekte ohne qmd. Reihenfolge: Dokumente, in denen
+ * alle Begriffe stecken, dann Häufigkeit, dann Kürze — „volltreffer vor
+ * streifschüssen“, weil eine Liste mit einem Treffer pro Datei niemandem hilft. */
+export async function searchProjectLocal(
+  projectPath: string,
+  query: string,
+  limit = 8,
+  excludeRelDirs: readonly string[] = [],
+): Promise<SearchResult[]> {
+  const terms = queryTerms(query);
+  if (!terms.length) return [];
+  const real = await realpath(projectPath).catch(() => null);
+  if (!real) return [];
+  const excluded = new Set(excludeRelDirs);
+  const scored: SearchResult[] = [];
+
+  const walk = async (absDir: string, relDir: string): Promise<void> => {
+    const entries = await readdir(absDir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const rel = relDir ? `${relDir}/${entry.name}` : entry.name;
+      const abs = join(absDir, entry.name);
+      if (entry.isDirectory()) {
+        if (DOC_SKIP_DIRS.has(entry.name) || excluded.has(entry.name)) continue;
+        await walk(abs, rel);
+      } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".md")) {
+        await examine(abs, rel);
+      }
+    }
+  };
+
+  const examine = async (abs: string, rel: string): Promise<void> => {
+    if (scored.length >= LOCAL_DOC_MAX_HITS) return;
+    const info = await stat(abs).catch(() => null);
+    if (!info || info.size > LOCAL_DOC_MAX_BYTES) return;
+    const content = await readFile(abs, "utf8").catch(() => null);
+    if (!content) return;
+    const lower = content.toLowerCase();
+    let score = 0;
+    let first = -1;
+    for (const term of terms) {
+      const at = lower.indexOf(term);
+      if (at < 0) {
+        score = 0;
+        break;
+      }
+      const n = countOccurrences(lower, term);
+      score += n;
+      if (first < 0 || at < first) first = at;
+    }
+    if (score <= 0) return;
+    // Ein Dokument, in dem alle Begriffe dicht beieinander stehen, ist ein
+    // Volltreffer: ein Bonus für den kleinsten Abstand zwischen den Begriffen.
+    const head = content.slice(0, 4000).toLowerCase();
+    for (const term of terms) if (head.includes(term)) score += 2;
+    scored.push({
+      file: rel,
+      line: content.slice(0, first).split("\n").length,
+      title: docTitleOf(content) ?? rel,
+      snippet: docSnippet(content, first, terms),
+      score,
+    });
+  };
+
+  await walk(real, "");
+  scored.sort((a, b) => b.score - a.score || a.file.localeCompare(b.file));
+  return scored.slice(0, limit);
+}
+
+function docTitleOf(content: string): string | null {
+  const heading = /^#\s+(.+?)\s*$/m.exec(content);
+  return heading ? heading[1]! : null;
 }
