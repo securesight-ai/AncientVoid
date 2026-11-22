@@ -38,9 +38,9 @@ describe("Inference-Modell-Routen (BUG-0258)", () => {
     tokens = new TokenService(db);
     sessions = new SessionManager(db, new EventStore(join(dir, ".data")), registry, new ProcessRunner());
     calls.length = 0;
-    upstream = { status: 200, json: chatJson("angebunden") };
     const inferenceFetch = (async (url: string | URL, init: RequestInit = {}) => {
-      calls.push({ method: init.method ?? "GET", url: String(url), auth: init.headers ? (init.headers as Record<string, string>)["authorization"] : undefined, body: init.body ? JSON.parse(String(init.body)) : undefined });
+      const headers = init.headers as Record<string, string> | undefined;
+      calls.push({ method: init.method ?? "GET", url: String(url), ...(headers?.authorization ? { auth: headers.authorization } : {}), ...(init.body ? { body: JSON.parse(String(init.body)) } : {}) });
       return new Response(upstream.status === 200 ? JSON.stringify(upstream.json) : "{}", { status: upstream.status, headers: { "content-type": "application/json" } });
     }) as typeof fetch;
     app = await createHubApp({ sessions, tokens, registry, approvals: new ApprovalService(db), auth: { tokens, enforceTailnetIdentity: false }, projectRoots: [], settings, inferenceFetch });

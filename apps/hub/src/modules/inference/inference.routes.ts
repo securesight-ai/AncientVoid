@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { readFile as readFileFs } from "node:fs/promises";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
@@ -15,8 +16,7 @@ import type { RouteContext } from "../../route-context.ts";
 
 /** Wie tts.routes: Key nur aus der Datei, nie im State oder Log. */
 async function bearerFromFile(file: string | null, readFile: (p: string) => Promise<string | null>): Promise<string | null> {
-  if (!file) return null;
-  const key = (await readFile(file))?.trim();
+  const key = file ? (await readFile(file.replace(/^~(?=\/)/, homedir())))?.trim() : null;
   return key ? key : null;
 }
 
