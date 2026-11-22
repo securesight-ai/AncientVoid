@@ -24,7 +24,7 @@ export interface LanguageEntry {
 // für jede neue Sprache.
 export const availableLanguages: LanguageEntry[] = [
   { code: "de", label: "Deutsch", aliases: ["de"], catalog: de, complete: true },
-  { code: "en", label: "English", aliases: ["en"], catalog: en, complete: false },
+  { code: "en", label: "English", aliases: ["en"], catalog: en, complete: true },
 ];
 
 export const LANGUAGE_SETTING_KEY = "ancientvoid.language";
