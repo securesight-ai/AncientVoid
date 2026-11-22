@@ -1,7 +1,7 @@
 ---
 id: BUG-0254
 slug: tts-upstream-json-statt-multipart
-status: open
+status: done
 severity: S2
 area: hub
 instance: prod
@@ -84,8 +84,16 @@ Felder statt JSON.parse).
 Primäre Ursache des gemeldeten Symptoms ist zusätzlich der fehlende
 Konfig-Eintrag (`tts.url=null` — Bedienung, kein Code-Defekt).
 
-## Handoff
+## Fix (verifiziert 2026-11-23)
 
-- [ ] Datei im Index [`README.md`](README.md)
-- [ ] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`)
-- [ ] `bugfix` oder offen lassen
+- Multipart-Umstellung gemerged: PR #278 (`0e0e6b39`); Live-Hub seit
+  19:55 Uhr mit dem Fix gestartet (Prozessstart nach Merge 18:52).
+- Verifikation (23.11.2026): `tts.url=http://127.0.0.1:8000/tts` am Live-Hub
+  gesetzt (config-Tabelle); Direktprobe `POST /tts` (multipart, Feld `text`)
+  → HTTP 200, `audio/wav`, 105 644 Bytes, RIFF/PCM 24 kHz mono — Wiedergabe
+  über `aplay` erfolgreich. VoidWarden-Referenz geprüft: deren Client spricht
+  JSON gegen Kokoro `:8797` (anderer Dienst/Dialekt) — Architektur-Teile
+  (1-concurrent-Queue, Fail-loud, Hub-Proxy statt Direktaufruf) entsprechen
+  der VoidWarden-Umsetzung (ADR-0097). PWA-Kette (Knopf-Gating, Hörprobe,
+  Wiedergabe, 502-Sichtbarkeit) gedeckt durch `e2e/specs/tts.spec.ts`.
+- Issue #279 damit geschlossen; Handoff-Häkchen oben erledigt.
