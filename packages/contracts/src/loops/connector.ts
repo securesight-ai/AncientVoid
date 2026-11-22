@@ -41,7 +41,7 @@ export interface LoopOnboarding {
 }
 
 export interface LoopCapabilities {
-  /** Wer die Agenten ausführt: "external" = das Loop-System selbst (beide ersten Loops). "hub" ist reserviert. */
+  /** Wer die Agenten ausführt: "external" = das Loop-System selbst, "hub" = der Connector treibt Agenten über ctx.spawnWorker seiner eigenen Session (ADR-0110). */
   agents: "external" | "hub";
   /** Woher die Arbeit kommt. */
   intake: readonly ("prompt" | "issues" | "backlog")[];
