@@ -6,7 +6,7 @@ severity: S3
 area: pwa
 instance: dev
 commit: "2a7eab27"
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/issues/284"
 epic: ""
 created: 2026-11-22
 reporter: Nutzermeldung 22.11.2026 (Tablet: Tooltips der Seitenleiste ragen aus dem Bildschirm und sind unlesbar)
