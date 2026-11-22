@@ -150,6 +150,16 @@ LLM-Chat. Kokoro muss separat bereitstehen; die Beispiel-Tailnet-Adresse gehört
 zur Entwicklerinstallation. Ein lokales Coding-Modell im Hub aktiviert weder
 Sprachausgabe noch Spracherkennung auf dem Kiosk.
 
+Die Hub-eigene Sprachausgabe (EPIC-P75,
+[ADR-0097](adr/0097-sprachausgabe-tts-hub-proxy.md)) ist davon getrennt: Sie
+trägt in den PWA-Einstellungen unter „Sprachausgabe" die URL desselben lokalen
+TTS-Dienstes ein (Hivemind `POST /tts`), mit Hörprobe — der Hub probed die
+Verfügbarkeit echt und serialisiert Synthesen, damit die geteilte Box nicht
+gestampet wird. Vorlesen passiert nur auf Knopfdruck an Assistant-Antworten und
+offenen Fragen; ein automatisches Vorlesen neuer Nachrichten gibt es
+bewusst nicht (P65-Sounds und VoidWardens Nyx-Ansagen decken „dass sich etwas
+getan hat" ab).
+
 `agent:` liest, `display:` entscheidet zulässige Freigaben. Optionsfragen
 brauchen zusätzlich bewusst ausgestellte `--answer-questions`-Berechtigung
 (ADR-0066); normale Display-Tokens enthalten sie nicht. `--voidwarden` nicht

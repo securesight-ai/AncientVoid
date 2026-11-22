@@ -76,6 +76,10 @@ export const POLICY_OPERATIONS = [
   "drafts.write",
   "push.subscribe",
   "voice.transcribe",
+  /** EPIC-P75 (ADR-0097): Sprachausgabe — der TTS-Dienst ist der Kanal eines
+   * Menschen; Agenten, Flotte und Displays beschallen ihn nicht. */
+  "voice.speak",
+  /** EPIC-P10.5: the hub fetches and analyses a video — a person's request. */
   "media.analyze",
   /** BUG-0110 (T1.5/T3.9/T5.10): enhance/recommendation/feedback cost real
    * money (one-shot CLI runs) and write learning data — not a read. */
@@ -161,6 +165,9 @@ export const POLICY: Readonly<Record<PolicyOperation, Readonly<Record<ActorKind,
   "push.subscribe": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** T10.2: a person's own voice — not something an agent sends in. */
   "voice.transcribe": { human: HUMAN, fleet: "allow", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
+  /** EPIC-P75 (ADR-0097): read-aloud goes to a person's ears — not an agent
+   * output channel, not fleet/display speakers. */
+  "voice.speak": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** EPIC-P10.5: the hub fetches and analyses a video — a person's request. */
   "media.analyze": { human: HUMAN, fleet: "allow", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** BUG-0110: paid CLI runs and the learning log — not a read operation.

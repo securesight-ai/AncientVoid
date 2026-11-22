@@ -2,7 +2,7 @@
 
 **Art:** referenz
 
-**Stand:** 2026-11-22 (P43-Basis, P43.5-Abschluss integriert; S27/S29 nach Nutzerentscheidung vom 21.11.2026 entfallen — „nehmen zu viel Platz weg und lenken ab“; S79 kehrt am selben Tag als Ablage-Sprachnachricht zurück; G79 ergänzt (EPIC-P61 T61.10)) · **Zweck:** Leitplanke E10 — beim Umbau der Oberfläche
+**Stand:** 2026-11-22 (P43-Basis, P43.5-Abschluss integriert; S27/S29 nach Nutzerentscheidung vom 21.11.2026 entfallen — „nehmen zu viel Platz weg und lenken ab“; S79 kehrt am selben Tag als Ablage-Sprachnachricht zurück; G79 ergänzt (EPIC-P61 T61.10); G80 ergänzt (EPIC-P75)) · **Zweck:** Leitplanke E10 — beim Umbau der Oberfläche
 geht keine Funktion verloren. · **Gate:** [`e2e/specs/funktionsinventar.spec.ts`](../e2e/specs/funktionsinventar.spec.ts)
 
 Jede Zeile ist eine Funktion, die ein Mensch in der PWA erreichen kann. Die letzte Spalte
@@ -111,6 +111,7 @@ Werkzeugseiten füllen die Detailspalte.
 | G77 | Wissensquellen: MCP-Wissensserver (z. B. Librarian) anbinden — Adresse, Anmeldung Bearer/eigener Header/keine, Token write-only; Prüfen mit sichtbarem Status je Quelle; durchsuchen und Treffer lesen (fremder Text, keine Anweisung) | Einstellungen → Wissensquellen | EPIC-P74 / ADR-0096 | spec:knowledge-sources.spec.ts |
 | G78 | Token-Tempo der Inferenz-Engines: Decode/Vorbehandlung/Zeit-bis-1.-Token, Verteilungen nur bei Engines mit Einzel-Requests, Gegenwert-Engines erklären sich, Ausfall bleibt sichtbar | Dock „Mehr“ → „Inferenz“ | EPIC-P79 / ADR-0102 | spec:inference-tempo.spec.ts |
 | G79 | Oberflächensprache umschalten (Deutsch/English); Sprache bleibt über Reload und Offline erhalten | Einstellungen → Sprache | EPIC-P61 / ADR-0101 | spec:i18n-language.spec.ts |
+| G80 | Sprachausgabe: Assistant-Antworten und offene Fragen per Knopf vorlesen (Hub-Proxy zum lokalen TTS-Dienst, Sprache/Tempo/Timeout in den Einstellungen, Hörprobe, sichtbare Kürzung am Text-Cap, ohne Dienst aus mit Grund) | Session → Vorlesen-Knopf · Einstellungen → Sprachausgabe | EPIC-P75 / ADR-0097 | spec:tts.spec.ts |
 
 ## Session
 

@@ -36,6 +36,9 @@ export function operationOf(method: string, url: string, body: unknown): PolicyO
   // EPIC-P40/EPIC-P60 (ADR-0064 §4, ADR-0077): Teams steuern nur Menschen;
   // Lesen ist eine eigene Operation mit dem Allow-Set des bisherigen generischen `read`.
   if (path.startsWith("/api/teams")) return method === "GET" || method === "HEAD" ? "team.read" : "team.manage";
+  // EPIC-P75 (ADR-0097): Sprachausgabe — Status wie Synthese sind die Fläche
+  // eines Menschen; Agenten/Flotte/Displays beschallen den Dienst nicht.
+  if (path === "/api/tts") return "voice.speak";
   if (method === "GET" || method === "HEAD") return "read";
   if ((path === "/api/stt" || path === "/api/stt/stream-ticket") && method === "POST") return "voice.transcribe";
   if (path.startsWith("/api/media/")) return "media.analyze";

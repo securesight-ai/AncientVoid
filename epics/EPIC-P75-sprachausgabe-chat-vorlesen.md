@@ -1,6 +1,6 @@
 # EPIC-P75 — Sprachausgabe: Chat-Nachrichten und Fragen vorlesen (TTS)
 
-**Status:** Planungsentwurf (Nutzerauftrag 20.11.2026) · **Phase:** P75 · **Dauer:** ~2–3 Agenten-Tage · **Abhängigkeit:** keine blockierende — Quer-Epic wie P58–P74; baut auf P65-Audio-Erkenntnissen, dem STT-Proxy-Muster ([ADR-0028](../docs/adr/0028-local-stt.md)) und dem SettingsStore-Muster ([ADR-0063](../docs/adr/0063-knowledge-vault.md) §4) auf; Backend-Referenz ist VoidWarden ADR-0013 (Hivemind-TTS, Schwesterrepo). Contract-/Policy-Neuzugang über [ADR-0097](../docs/adr/0097-sprachausgabe-tts-hub-proxy.md) — liegt vor.
+**Status:** abgeschlossen 2026-11-22 (Code + automatisierte Tests grün — Belege je Task unten; E2E `tts.spec.ts` mobile+tablet) — **T75.8 Menschen-Abnahme nach P000 verschoben (T000.30)** · **Phase:** P75 · **Dauer:** ~2–3 Agenten-Tage · **Abhängigkeit:** keine blockierende — Quer-Epic wie P58–P74; baut auf P65-Audio-Erkenntnissen, dem STT-Proxy-Muster ([ADR-0028](../docs/adr/0028-local-stt.md)) und dem SettingsStore-Muster ([ADR-0063](../docs/adr/0063-knowledge-vault.md) §4) auf; Backend-Referenz ist VoidWarden ADR-0013 (Hivemind-TTS, Schwesterrepo). Contract-/Policy-Neuzugang über [ADR-0097](../docs/adr/0097-sprachausgabe-tts-hub-proxy.md) — liegt vor.
 
 Quelle: Nutzerauftrag vom 20.11.2026 — „Bei den Nachrichten, die im Chat an
 den User gerichtet sind, kriegen wir, wenn zum Beispiel Läufe fertig sind
@@ -144,36 +144,57 @@ fehl, nie mit Stimmwechsel-Ausfall.
 
 ## 4. Aufgaben (Checkliste T75.m)
 
-- [ ] **T75.1** Contracts + Policy: `packages/contracts/src/voice/tts.ts`
+- [x] **T75.1** Contracts + Policy: `packages/contracts/src/voice/tts.ts`
   (Konstanten, `/tts`-Request-Form-Doku) und `voice.speak` in
   `apps/hub/src/platform/policy.ts` (Menschen only) nach
   [ADR-0097](../docs/adr/0097-sprachausgabe-tts-hub-proxy.md); Export in
   `packages/contracts/src/index.ts`.
-- [ ] **T75.2** Hub-Routen `apps/hub/src/modules/voice/tts.routes.ts`:
+  Beleg: `packages/contracts/test/approvals/policy.test.ts` grün,
+  `apps/hub/test/platform/policy-prompt-cost.test.ts` grün.
+- [x] **T75.2** Hub-Routen `apps/hub/src/modules/voice/tts.routes.ts`:
   `GET /api/tts` (Probe, TTL-Cache), `POST /api/tts` (WAV-Passthrough,
   501/400/413/429/502, FIFO-Queue max 1/3) + Unit-Tests mit gemocktem
   fetch: Fehlercodes, Serialisierung, Probe-Caching, nichts landet im
   EventStore. Messlatten: K5.
-- [ ] **T75.3** Settings: SettingsStore-Keys + `GET/PUT /api/settings/tts`
+  Beleg: `apps/hub/test/modules/voice/tts-routes.test.ts` (9 Tests: 501/400/413/
+  429/502, FIFO-Reihenfolge, Probe-Cache je URL, Synthese-Fehler verwirft das
+  Probe-Urteil, EventStore unbeteiligt, Agent/Display 403).
+- [x] **T75.3** Settings: SettingsStore-Keys + `GET/PUT /api/settings/tts`
   (zod, `settings.manage`) + Tests: Validierung (400), Roundtrip, ohne
   Konfiguration `available:false` statt Behauptung.
-- [ ] **T75.4** PWA-Client `apps/pwa/src/shared/tts.ts`: Statusabfrage
+  Beleg: derselbe Test (Roundtrip inkl. null-Räumung, 400-Fälle,
+  `SettingsStore.ttsView()`).
+- [x] **T75.4** PWA-Client `apps/pwa/src/shared/tts.ts`: Statusabfrage
   gecacht, Synthese-Fetch, Playback (Blob-URL, Stop), kleiner LRU-Cache,
   sichtbare Fehler + Unit-Tests (Mock-fetch/Audio-Spy).
-- [ ] **T75.5** Play-Buttons: `EventRow.tsx` (assistant, neben Copy-Button)
+  Beleg: `apps/pwa/test/shared/tts.test.ts` (7 Tests: Status-Cache/Refresh,
+  Cap-Kürzung Multi-Byte, Ende/Stop, LRU ohne Doppel-Synthese,
+  URL-Freigabe, Knopf-Grund, checkedAgo).
+- [x] **T75.5** Play-Buttons: `EventRow.tsx` (assistant, neben Copy-Button)
   und `SessionApprovals.tsx`/`ApprovalCard` (Fragetext); Zustände
   laden/spielt/Fehler, Cap-Kürzung mit Hinweis, disabled mit Grund ohne
   Dienst. Messlatten: K2 (kein Lag beim Auslösen).
-- [ ] **T75.6** Settings-UI: Abschnitt „Sprachausgabe" in
+  Beleg: `apps/pwa/src/shared/SpeakButton.tsx` (Zustände, gekapselter Run-Zähler
+  gegen Race); E2E `tts.spec.ts` Test 2+3 (Phase laden→spielt→idle, Stop,
+  gekürzt-Kennzeichen über Clip). `SessionApprovals` erbt über die gemeinsame
+  `ApprovalCard` (`features/approvals/Approvals.tsx`), Fragetext `req.summary`.
+- [x] **T75.6** Settings-UI: Abschnitt „Sprachausgabe" in
   `VoiceSettings.tsx` (Felder, Hörprobe-Knopf als Verifikation + Geste,
   Verfügbarkeitsanzeige mit `checkedMsAgo`) + Unit-Tests.
-- [ ] **T75.7** E2E `e2e/specs/tts.spec.ts` (gemockter TTS-Endpunkt am
+  Beleg: `ttsBlockReason`/`checkedAgo`-Tests in `apps/pwa/test/shared/tts.test.ts`;
+  E2E `tts.spec.ts` Test 1 (Eintrag, Hörprobe, Verfügbarkeitsanzeige,
+  invalid → 400 sichtbar); check:i18n grün (de+en).
+- [x] **T75.7** E2E `e2e/specs/tts.spec.ts` (gemockter TTS-Endpunkt am
   Test-Hub, Audio-Spy): Play spielt, Stop stoppt, ohne Konfiguration
   sichtbar deaktiviert, Settings-Eintrag + Hörprobe, Fehlerpfad 502;
   Eintrag `docs/funktionsinventar.md`, Update `docs/onboarding.md`.
-- [ ] **T75.8** Menschen-Abnahme (echte Stimme am Gerät, Handy-Lautsprecher,
-  Voxtral-Langtext-Fühlprobe) — **nach P000 verschoben** (Delegationsvermerk,
-  `EPIC-000-testsuite-fuer-menschen.md` §3).
+  Beleg: 3 Tests grün auf mobile+tablet (Stand 2026-11-22); G80-Zeile im
+  Funktionsinventar, Onboarding-Abschnitt „VoidWarden und lokale Sprache"
+  grenzt die Hub-eigene Sprachausgabe ab.
+- [ ] **T75.8** Menschen-Abnahme — nach P000 verschoben (Delegationsvermerk,
+  `EPIC-000-testsuite-fuer-menschen.md` §3; geführt als **T000.30**, nur dort
+  abgehakt): echte Stimme am Gerät, Handy-Lautsprecher,
+  Voxtral-Langtext-Fühlprobe.
 
 ## 5. Acceptance Criteria (AC-P75-k)
 
@@ -226,3 +247,50 @@ Pass gezählt. Neue UI-Abläufe mit Spec in `e2e/specs/`
 (`tts.spec.ts`); Eintrag `docs/funktionsinventar.md`;
 `docs/onboarding.md` aktualisiert. K5 nachweislich unverletzt, K2 ohne
 neuen Render-Pfad im Tail. Kein TODO ohne Epic-Bezug.
+
+## 8. Retro (2026-11-22, PR #275)
+
+Zeitraum 20.11.–22.11.2026 (Auftrag → ADR → Umsetzung), 5 Commits
+(9342f7f, 2509f26, 669ceca, 6631b5c, dcb3b0a).
+
+### AK-Matrix
+
+- AC-P75-1: 🟢 — E2E `tts.spec.ts` „Vorlesen spielt …" (Spy, `data-phase`
+  playing, Hörprobe-POST mit `"German"`); Policy 403 in
+  `tts-routes.test.ts`.
+- AC-P75-2: 🟢 — `ApprovalCard` rendert SpeakButton mit `req.summary`
+  (`Approvals.tsx`, Frage-Karten); kein eigener E2E-Fall nötig, da derselbe
+  Baustein wie AC-P75-1 (Beleg: Unit + gemeinsame Komponente).
+- AC-P75-3: 🟢 — E2E Test 1 (disabled + Grund, Eintrag, Hörprobe, invalid →
+  400 sichtbar); `ttsBlockReason`-Test.
+- AC-P75-4: 🟢 — `tts-routes.test.ts` „Auskunft entsteht aus einer Probe"
+  (toter Port, `checkedMsAgo`, Cache je URL) + E2E Verfügbarkeitszeile.
+- AC-P75-5: 🟢 — `sessions.list()` leer + E2E „kein RIFF/audio-wav im
+  EventStore".
+- AC-P75-6: 🟢 — 413 Multi-Byte am Cap, FIFO-Reihenfolge, genau ein 429,
+  Timeout über `tts.timeoutMs` (Hub-Tests).
+- AC-P75-7: 🟢 — Agent+Display 403 auf GET/POST `/api/tts` und
+  PUT `/api/settings/tts`.
+- AC-P75-8: 🟢 — G80 im Funktionsinventar, Onboarding-Abschnitt grenzt ab.
+
+### Erkenntnisse
+
+1. BUG-0214-Lektion zahlte sich doppelt aus: Neben der echten Probe mussten
+   wir zusätzlich die Synthese-Evidenz einführen — eine gescheiterte
+   Synthese verwirft das Probe-Urteil (TTL-Cache allein hätte nach einem
+   Dienst-Tod noch Sekunden „verfügbar" gesagt). Beleg:
+   `tts.routes.ts` `probe.invalidate()` + Test „Status lügt danach nicht
+   weiter".
+2. Test-Detail: gleichzeitige `inject`-Requests laufen nicht in
+   Erzeugungsreihenfolge — Queue-Tests dürfen nur „genau ein 429"
+   behaupten, nicht „der fünfte". Beleg: Queue-Test mit `Promise.race`.
+3. Premortem 1/2/3 traten kontrolliert ein (Serialisierung, Cap, ehrliche
+   Probe — jeweils mit Test belegt); 4 (Autoplay) bleibt der P000-Abnahme
+   vorbehalten, 5 (Abkürzungsverleitung) trat nicht ein.
+
+### Action Items
+
+- AI-P75-1: Echte Voxtral-Langtext- und Lautsprecherprobe → T000.30 (P000).
+- AI-P75-2: Falls Auto-Vorlesen je gewünscht wird: eigener Auftrag mit
+  Opt-in-Toggle (Out-of-Scope-Vermerk §2) — kein Ticket, Absicherung über
+  ADR-0097 Alternativen.

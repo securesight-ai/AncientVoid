@@ -90,6 +90,24 @@
   font-size: var(--text-sm);
 }
 
+/* EPIC-P75 (T75.5): read an answer aloud — next to the copy button. */
+.event .tts-btn {
+  display: block;
+  margin: 2px 0 0 auto;
+  font-size: var(--text-sm);
+}
+.event .tts-cut {
+  display: block;
+  margin: 2px 0 0 auto;
+  font-size: var(--text-xs);
+}
+.event .tts-err {
+  display: block;
+  margin: 2px 0 0 auto;
+  font-size: var(--text-xs);
+  color: var(--err);
+}
+
 /* T8.6: new since the last visit on this device. */
 .new-divider {
   margin: 10px 0;

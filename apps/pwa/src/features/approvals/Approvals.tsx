@@ -5,6 +5,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 import { isYesNo, recommendedOption } from "../nyx/nyx-state.ts";
 import { Button, EmptyState, Card } from "../../shared/ui/index.ts";
+import { SpeakButton } from "../../shared/SpeakButton.tsx";
 
 /** T7.3: what happened after the decision, in words. */
 const OPERATION_LABEL: Partial<Record<NonNullable<ApprovalRequest["operation"]>["state"], string>> = {
@@ -314,6 +315,12 @@ export function ApprovalCard({ req, onDecided, api = hubApi }: { req: ApprovalRe
         </>
       ) : (
         <div class="approval-summary">{req.summary}</div>
+      )}
+      {/* EPIC-P75 (AC-P75-2): die Frage vorlesen — Fragetext, nie die UUID. */}
+      {isQuestion && (
+        <p class="approval-speak" data-testid="approval-speak">
+          <SpeakButton text={req.summary} />
+        </p>
       )}
       <div class="dim" style="font-size: calc(11px * var(--font-scale, 1))">
         {t("common.session_cap")} {req.sessionId.slice(0, 8)} · {req.action}

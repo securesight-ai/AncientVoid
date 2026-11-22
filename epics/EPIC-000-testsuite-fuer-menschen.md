@@ -178,6 +178,15 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   Hub mit eingestellter Sprache `en` auf gpubox; Durchsatz / p95 wie in
   EPIC-P61 §3.1 festgelegt. Gerät war offline; Code und Tests sind grün.
 
+### Übernommen aus EPIC-P75 (2026-11-22)
+
+- [ ] **T000.30 — Sprachausgabe am Gerät hören.** (Herkunft: EPIC-P75 T75.8)
+  Echte Stimme am Handy-Lautsprecher und am PC: Assistant-Antwort und offene
+  Frage vorlesen, Voxtral-Langtext-Fühlprobe (Synthesezeit gegen das Timeout),
+  Hörprobe direkt nach dem Settings-Eintrag, Verhalten bei Doppelklicks
+  (Serialisierung/429) fühlen. Messlatten: K2 (kein Lag beim Auslösen), K5
+  bleibt. Beleg: Checklisten-Zeile mit Datum.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine

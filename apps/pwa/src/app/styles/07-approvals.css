@@ -50,6 +50,21 @@
   color: var(--info);
 }
 
+/* EPIC-P75 (AC-P75-2): die Frage vorlesen — Fragetext, nie die UUID. */
+.approval-speak {
+  margin: 4px 0 0;
+}
+.approval-speak .tts-btn,
+.approval-speak .tts-cut,
+.approval-speak .tts-err {
+  display: block;
+  margin: 2px 0 0 auto;
+  font-size: var(--text-xs);
+}
+.approval-speak .tts-err {
+  color: var(--err);
+}
+
 .badge.risk-destructive {
   background: color-mix(in srgb, var(--err) 22%, transparent);
   color: var(--err);
