@@ -232,6 +232,7 @@ export function SearchPane({
 
       {status === "error" && <div class="reply-error">{errorMsg}</div>}
       {res && <div class="search-index dim mono">{indexLine}</div>}
+      {res && res.mode === "teil" && <div class="dim search-note">{t("search.mode_part")}</div>}
       {res && res.mode === "or" && <div class="dim search-note">{t("search.mode_or")}</div>}
 
       {res && scope !== "docs" && (
@@ -294,24 +295,29 @@ export function SearchPane({
         <div class="ui-empty">{t("search.no_hits_any")}</div>
       )}
 
-      <div class="doc-overview">
-        <div class="doc-overview-head dim">
-          {t("search.documents")} {docs === null ? "…" : `${docs.length}`}
-        </div>
+      {/* Die Projektdateien sind der Einstieg, solange nichts gesucht ist.
+          Ab einem Ergebnis wäre eine zweite „Dokumente“-Liste unter den
+          Fundstellen nur Rauschen — die Trefferliste ist die Doku-Antwort. */}
+      {!res && (
+        <div class="doc-overview">
+          <div class="doc-overview-head dim">
+            {t("search.head_project_files")} {docs === null ? "…" : `${docs.length}`}
+          </div>
         {docs !== null && docs.length === 0 && <div class="ui-empty">{t("search.no_md")}</div>}
-        {docs !== null &&
-          groupDocs(docs).map((group) => (
-            <div key={group.dir} class="doc-group">
-              <div class="doc-group-dir mono dim">{dirLabel(group.dir)}</div>
-              {group.items.map((doc) => (
-                <button key={doc.path} type="button" class="doc-item" onClick={() => setViewing({ path: doc.path })}>
-                  <span class="doc-item-name">{doc.title ?? docName(doc)}</span>
-                  <span class="doc-item-path mono dim">{doc.path}</span>
-                </button>
-              ))}
-            </div>
-          ))}
-      </div>
+          {docs !== null &&
+            groupDocs(docs).map((group) => (
+              <div key={group.dir} class="doc-group">
+                <div class="doc-group-dir mono dim">{dirLabel(group.dir)}</div>
+                {group.items.map((doc) => (
+                  <button key={doc.path} type="button" class="doc-item" onClick={() => setViewing({ path: doc.path })}>
+                    <span class="doc-item-name">{doc.title ?? docName(doc)}</span>
+                    <span class="doc-item-path mono dim">{doc.path}</span>
+                  </button>
+                ))}
+              </div>
+            ))}
+        </div>
+      )}
 
       {viewing && <DocViewer project={project} path={viewing.path} snippet={viewing.snippet} onClose={() => setViewing(null)} />}
     </div>

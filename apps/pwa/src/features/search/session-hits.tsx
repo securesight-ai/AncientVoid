@@ -134,7 +134,12 @@ export function SessionHits({ groups, currentSessionId, onOpenSession, onJumpToS
                   {group.archived ? ` · ${t("search.archived")}` : ""}
                 </span>
               </button>
-              <span class="hit-group-count dim">{hitsLabel(group.total)}</span>
+              {/* Die Zahl pro Sitzung gibt es nur, wo sie etwasagt: bei
+                  mehreren Sitzungen oder wenn unter der Liste weitere Funde
+                  warten. Sonst wiederholt sie nur die Zahl des Überschrift. */}
+              {(groups.length > 1 || group.total > group.hits.length) && (
+                <span class="hit-group-count dim">{hitsLabel(group.total)}</span>
+              )}
             </header>
             {group.hits.map((hit) => (
               <article key={`${hit.sessionId}:${hit.seq}`} class="hit-card">

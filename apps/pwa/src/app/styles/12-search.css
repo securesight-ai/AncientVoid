@@ -3,6 +3,10 @@
 .search-pane {
   display: grid;
   gap: 10px;
+  /* In einer Sitzung schwebt die Dock-Leiste über dem Rollenbereich. Ohne
+     Abstand läuft die letzte Karte (und die Leerzeile „keine Treffer“) unter
+     ihr weg — gemessen am laufenden Interface: 34 px Leiste, dazu Rand. */
+  padding-bottom: 76px;
 }
 
 .search-form {
@@ -12,6 +16,8 @@
 
 .search-input {
   flex: 1;
+  /* Das UA-eigene ✕ eines `type=search`-Feldes erscheint als kastenumrandetes
+     Symbol neben dem Fokusrahmen — zwei sich überscheidendeSteuerung. */
   background: var(--bg);
   border: 1px solid var(--fg-dim);
   color: var(--fg);
@@ -19,6 +25,14 @@
   padding: 10px;
   font: inherit;
   min-height: 44px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.search-input::-webkit-search-cancel-button,
+.search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .search-status {
@@ -298,8 +312,10 @@
   color: var(--fg-dim);
 }
 
-.hit-seq {
+.hit-seq,
+.hit-when {
   color: var(--fg-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 .hit-jump {
