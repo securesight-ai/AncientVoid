@@ -1,0 +1,21 @@
+{
+  "name": "@ancientvoid/loop-ralph",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Loop connector for the Ralph goal-gate loop (ADR-0038): observes ~/.hermes/ralph state files, creates the target state if missing, reports progress until the goal-gate turns green; pause/resume via a paused flag.",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ../../.. --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ancientvoid/contracts": "0.1.0"
+  },
+  "devDependencies": {
+    "@ancientvoid/adapter-testkit": "0.1.0"
+  }
+}
