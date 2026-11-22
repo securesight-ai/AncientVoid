@@ -6,7 +6,6 @@ import {
   TTS_MAX_TEXT_BYTES,
   TTS_TIMEOUT_MS,
   type TtsStatusResponse,
-  type TtsUpstreamRequest,
 } from "@ancientvoid/contracts";
 import type { SettingsStore } from "@ancientvoid/core";
 
@@ -116,10 +115,16 @@ export function registerTtsRoutes(app: FastifyInstance, deps: { settings: Settin
     let wav: Buffer;
     try {
       wav = await queue.run(async () => {
+        // BUG-0254: der reale TTS-Dienst (pocket-tts, `POST /tts`) spricht
+        // multipart/form-data und antwortet mit WAV-Bytes — ein JSON-Body
+        // wird mit 422 abgewiesen. fetch setzt den Content-Type mit Boundary.
+        const form = new FormData();
+        form.set("text", body.data.text);
+        form.set("speed", String(cfg.speed));
+        form.set("language", ttsUpstreamLanguage(cfg.language));
         const res = await doFetch(cfg.url as string, {
           method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ text: body.data.text, speed: cfg.speed, language: ttsUpstreamLanguage(cfg.language) } satisfies TtsUpstreamRequest),
+          body: form,
           signal: AbortSignal.timeout(cfg.timeoutMs > 0 ? cfg.timeoutMs : TTS_TIMEOUT_MS),
         });
         if (!res.ok) throw new Error(`TTS ${res.status}`);

@@ -16,6 +16,8 @@ interface UpstreamCall {
   method: string;
   url: string;
   body: string;
+  /** Multipart-Felder, wenn der Body FormData ist (sonst leer). */
+  fields: Record<string, string>;
 }
 
 /** Poll a real condition instead of sleeping a guessed duration. */
@@ -57,7 +59,11 @@ describe("TTS proxy routes (T75.2/T75.3)", () => {
     sessions = new SessionManager(db, new EventStore(join(dir, ".data")), registry, new ProcessRunner());
     const ttsFetch = (async (url: string, init: RequestInit = {}) => {
       const target = String(url);
-      calls.push({ method: init.method ?? "GET", url: target, body: init.body === undefined ? "" : String(init.body) });
+      const fields: Record<string, string> = {};
+      if (typeof FormData !== "undefined" && init.body instanceof FormData) {
+        for (const [key, value] of init.body.entries()) fields[key] = String(value);
+      }
+      calls.push({ method: init.method ?? "GET", url: target, body: init.body === undefined ? "" : String(init.body), fields });
       // Probe (GET) answers immediately — a living service, any status counts (405 incl.).
       if ((init.method ?? "GET") === "GET") {
         if (probeDead) throw new TypeError("fetch failed");
@@ -147,8 +153,17 @@ describe("TTS proxy routes (T75.2/T75.3)", () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-type"]).toContain("audio/wav");
     expect(Buffer.from(res.rawPayload).equals(WAV)).toBe(true);
-    expect(JSON.parse(calls.find((c) => c.method === "POST")!.body)).toEqual({ text: "Lauf fertig. Noch eine Frage?", speed: 1, language: "German" });
+    expect(calls.find((c) => c.method === "POST")!.fields).toEqual({ text: "Lauf fertig. Noch eine Frage?", speed: "1", language: "German" });
     expect(sessions.list()).toHaveLength(0);
+  });
+
+  it("der Upstream-Aufruf spricht Multipart, nicht JSON — der echte Dienst (pocket-tts) weist JSON mit 422 ab (BUG-0254)", async () => {
+    await putSettings(human, { url: "http://tts.box:8080/tts" });
+    await speak(human, "Dialekt-Probe");
+    const call = calls.find((c) => c.method === "POST")!;
+    // Der Hub muss FormData senden: ein JSON-String-Body wäre am echten Dienst 422.
+    expect(call.body.startsWith("{")).toBe(false);
+    expect(call.fields).toEqual({ text: "Dialekt-Probe", speed: "1", language: "German" });
   });
 
   it("leerer Text ist 400, über das Cap ist 413 — Multi-Byte mitgerechnet (AC-P75-6)", async () => {
@@ -167,12 +182,12 @@ describe("TTS proxy routes (T75.2/T75.3)", () => {
     const first = speak(human, "eins");
     await until(() => calls.filter((c) => c.method === "POST").length === 1, "erster Auftrag beim Dienst");
     const second = speak(human, "zwei");
-    expect(calls.filter((c) => c.method === "POST").map((c) => JSON.parse(c.body).text)).toEqual(["eins"]);
+    expect(calls.filter((c) => c.method === "POST").map((c) => c.fields.text)).toEqual(["eins"]);
     resolve();
     expect((await first).statusCode).toBe(200);
     expect((await second).statusCode).toBe(200);
     expect(maxActive).toBe(1);
-    expect(calls.filter((c) => c.method === "POST").map((c) => JSON.parse(c.body).text)).toEqual(["eins", "zwei"]);
+    expect(calls.filter((c) => c.method === "POST").map((c) => c.fields.text)).toEqual(["eins", "zwei"]);
   });
 
   it("über den Wartebereich hinaus fliegt sofort genau einer raus — 429 statt heimlicher Warteschlange (AC-P75-6)", async () => {

@@ -14,10 +14,12 @@ export const TTS_MAX_CONCURRENT = 1;
 export const TTS_MAX_QUEUE_WAITING = 3;
 
 /**
- * The Hivemind-compatible `/tts` form the hub proxies: JSON body
- * `{text, speed?, language?}` with `language` as `"German"|"English"`
- * (mapped from settings `de`/`en`); the answer is WAV bytes, passed
- * through as `audio/wav`. The engine/voice stays server-side.
+ * The Hivemind-compatible `/tts` form the hub proxies: `multipart/form-data`
+ * fields `{text, speed?, language?}` with `language` as `"German"|"English"`
+ * (mapped from settings `de`/`en`); the answer is WAV bytes, passed through
+ * as `audio/wav`. The engine/voice stays server-side. (BUG-0254: the real
+ * pocket-tts service rejects a JSON body with 422 — form-data is the wire
+ * format, `speed`/`language` are optional hints a service may ignore.)
  */
 export interface TtsUpstreamRequest {
   text: string;

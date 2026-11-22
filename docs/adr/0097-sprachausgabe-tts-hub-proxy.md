@@ -83,3 +83,15 @@ Browser, Prompt-Injection-Grenze (PRD §8.5).
   Hörprobe Teil der Abnahme (EPIC-P75 → P000).
 - `docs/onboarding.md` muss die Hub-eigene Sprachausgabe von VoidWardens
   Kiosk-Ansagen abgrenzen, sobald P75 umgesetzt ist.
+
+## Nachtrag 2026-11-22 — der echte `/tts` spricht Multipart (BUG-0254)
+
+Die Live-Abnahme fand den realen Upstream-Dialekt: Der TTS-Dienst
+(pocket-tts, `POST /tts`, von HiveOS-Referenzclient `voice.py` genutzt)
+nimmt `multipart/form-data` mit Feld `text` an und antwortet mit Raw-WAV-
+Bytes; ein JSON-Body wird mit 422 abgewiesen. §1 bleibt im Übrigen
+unverändert — der Hub sendet jetzt die Felder `{text, speed, language}`
+als Form-Felder (fetch setzt Content-Type samt Boundary; `speed`/
+`language` sind Hinweise, die ein Dienst ignorieren darf) und reicht die
+Antwort weiter als `audio/wav`. `TtsUpstreamRequest` dokumentiert den
+Dialekt; Route- und E2E-Tests pinnen die Form statt des JSON-Bodies.
