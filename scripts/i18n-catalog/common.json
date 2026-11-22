@@ -608,7 +608,7 @@
       "match": "`${project} — ohne Auftrag`",
       "key": "common.no_order",
       "de": "{project} — ohne Auftrag",
-      "en": "{project} — no order",
+      "en": "{project} — no prompt",
       "params": {
         "project": "project"
       }
@@ -641,7 +641,7 @@
       "match": "Auftrag in Worten (Strg+K)",
       "key": "common.voice_order",
       "de": "Auftrag in Worten (Strg+K)",
-      "en": "Order in words (Ctrl+K)"
+      "en": "Voice command (Ctrl+K)"
     },
     {
       "match": "Anmeldung bei AncientVoid",
@@ -1049,6 +1049,16 @@
       "params": {
         "new Date(lastContact).toLocaleString(\"de-DE\")": "time"
       }
+    },
+    {
+      "key": "common.inference",
+      "de": "Inferenz",
+      "en": "Inference"
+    },
+    {
+      "key": "common.inference_title",
+      "de": "Token-Tempo der Inferenz-Engines: Decode, Vorbehandlung, KV-Reuse",
+      "en": "Token tempo of the inference engines: decode, prefill, KV reuse"
     }
   ]
 }

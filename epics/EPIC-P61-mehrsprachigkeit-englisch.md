@@ -237,9 +237,12 @@ hart verdrahtet. Für „praktisch alle Sprachen" gilt:
   `i18n-language.spec.ts`; Eintrag in `docs/funktionsinventar.md`.
   (2026-11-22: Fixture pinnt `de` (Set-default, das Sprach-Spec schreibt
   selbst um); `i18n-language.spec.ts` grünt; Inventar-Zeile G79 ergänzt.)
-- [ ] **T61.11** Englisches Korrekturlesen aller Kataloge (ein Durchgang,
+- [x] **T61.11** Englisches Korrekturlesen aller Kataloge (ein Durchgang,
   konsistente Terminologie: Session, Hub, Harness, Approval, Fleet …),
   Glossar als Kopf von `en.ts`.
+  (2026-11-22: Glossar als Kopf in beiden en-Katalogen; Term SCAN — Session/Hub/
+  Harness/Adapter/Provider/Freigabe/Flotte/Zug/Ablage/Gerät/Geräte... konsistent;
+  5 Abweichungen im Auftrag-Feld berichtigt (command/prompt nach Bedeutung).)
 
 ## 5. Acceptance Criteria (AC-P61-k)
 
