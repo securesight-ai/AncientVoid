@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import type { InferencePerfRow, InferenceSnapshot, InferenceSourceList } from "@ancientvoid/contracts";
+import type { InferenceAskResult, InferenceModelStatus, InferencePerfRow, InferenceSnapshot, InferenceSourceList } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
 import { Card, Chip, EmptyState } from "../../shared/ui/index.ts";
 import { t } from "../../shared/i18n/index.ts";
@@ -97,8 +97,18 @@ export function InferencePage() {
     };
   }, [auswahl, fensterH]);
 
-  if (!quellen) return <EmptyState text={t("inference.empty.loading")} />;
-  if (quellen.quellen.length === 0) return <EmptyState text={t("inference.empty.noEngines")} />;
+  if (!quellen) return (
+    <div class="inference status-page">
+      <ModellFrage />
+      <EmptyState text={t("inference.empty.loading")} />
+    </div>
+  );
+  if (quellen.quellen.length === 0) return (
+    <div class="inference status-page">
+      <ModellFrage />
+      <EmptyState text={t("inference.empty.noEngines")} />
+    </div>
+  );
 
   const alt = alter(snap?.sampledAt ?? null);
   return (
@@ -138,6 +148,7 @@ export function InferencePage() {
           ))}
         </div>
       </div>
+      <ModellFrage />
 
       {stale && <p role="status" class="inference-fehler">{t("inference.stale")}</p>}
       {!snap && <EmptyState text={t("inference.empty.noSnapshot")} />}
@@ -573,6 +584,64 @@ function ProtocolCard({ snap }: { snap: InferenceSnapshot }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/**
+ * BUG-0258: das gebundene Modell direkt im Inferenz-Tab befragen — die
+ * manuelle Anbindung (Settings) wird hier sichtbar und liefert Antworten.
+ * Ohne Anbindung nennt der Kasten den Weg zu den Einstellungen (fail loud).
+ */
+function ModellFrage() {
+  const [status, setStatus] = useState<InferenceModelStatus | null>(null);
+  const [frage, setFrage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [antwort, setAntwort] = useState<InferenceAskResult | null>(null);
+  const [fehler, setFehler] = useState<string | null>(null);
+
+  useEffect(() => {
+    void hubApi.inferenceModelStatus().then(setStatus).catch(() => setStatus(null));
+  }, [antwort]);
+
+  const stellen = async () => {
+    const text = frage.trim();
+    if (!text || busy) return;
+    setBusy(true);
+    setFehler(null);
+    try {
+      setAntwort(await hubApi.inferenceAsk(text));
+    } catch (err) {
+      setFehler(err instanceof Error ? err.message : "Fragen fehlgeschlagen");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card aria-label={t("inference.ask.title")} class="inference-ask">
+      <strong>{t("inference.ask.title")}</strong>
+      {status?.bound ? (
+        <p class="inference-hinweis">
+          {status.model}
+          {status.probe && !status.probe.ok ? ` · ${status.probe.detail ?? ""}` : ""}
+        </p>
+      ) : (
+        <p class="inference-hinweis">{t("inference.settings.unbound")} — {t("inference.settings.title")}</p>
+      )}
+      <div class="inference-ask-form">
+        <textarea data-testid="inference-ask-text" rows={2} placeholder={t("inference.ask.placeholder")} value={frage} onInput={(e) => setFrage((e.target as HTMLTextAreaElement).value)} />
+        <button type="button" data-testid="inference-ask-send" disabled={busy || !frage.trim() || !status?.bound} onClick={() => void stellen()}>
+          {busy ? "…" : t("inference.ask.button")}
+        </button>
+      </div>
+      {fehler && <p role="status" class="inference-fehler">{fehler}</p>}
+      {antwort && (
+        <div data-testid="inference-ask-answer">
+          <p class="inference-hinweis">{t("inference.ask.model", { model: antwort.model, ms: String(antwort.ms) })}</p>
+          <p class="inference-ask-text">{antwort.answer}</p>
         </div>
       )}
     </Card>
