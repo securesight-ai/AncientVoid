@@ -1,10 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createServer } from "node:http";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir, hostname } from "node:os";
 import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
 import { AdapterRegistry, EventStore, HubDatabase, SessionManager, TokenService } from "@ancientvoid/core";
 import { ProcessRunner } from "@ancientvoid/workers";
+import { FLEET_PROTOCOL_VERSION } from "@ancientvoid/contracts";
 import { createAdapter as createDummy } from "@ancientvoid/adapter-dummy";
 import { createHubApp } from "../../../src/app.ts";
 
@@ -42,7 +44,7 @@ async function call<T>(h: Hub, path: string, body?: unknown): Promise<{ status: 
 
 interface Fleet {
   self: string;
-  hosts: { hostId: string; label?: string; self: boolean; state: string; lastSyncAt: string | null; sessions: number }[];
+  hosts: { hostId: string; label?: string; self: boolean; state: string; lastSyncAt: string | null; detail: string | null; sessions: number }[];
   sessions: { id: string; hostId: string; project: string }[];
 }
 
@@ -98,6 +100,45 @@ describe("fleet overview (T6.3, AC-P6-1/AC-P6-3)", () => {
     expect(host.lastSyncAt).toBe(before.lastSyncAt);
     expect(after.sessions.filter((s) => s.hostId === "home-server")).toHaveLength(2);
     expect(after.hosts.find((h) => h.self)?.state).toBe("reachable");
+  });
+
+  it("names a stopped host offline, not incompatible (tailscale serve answers 502 with no body)", async () => {
+    // Der Fall vom 21.11.2026: kaisgamingdesk hatte `tailscale serve` laufen, aber
+    // keinen Hub-Prozess mehr — jede Antwort war 502 ohne JSON. Vorher las die
+    // Flotte das als „Protokoll undefined statt 1“ (inkompatibel) und schob die
+    // Schuld auf eine angebliche Versionsdifferenz.
+    let alive = true;
+    const server = createServer((req, res) => {
+      if (!alive) {
+        res.writeHead(502, { "content-type": "text/html" });
+        res.end("Hub nicht erreichbar");
+        return;
+      }
+      if (req.url === "/api/fleet/hello") {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ hostId: "gamingdesk", protocolVersion: FLEET_PROTOCOL_VERSION, hubVersion: "0.1.0", serverTime: new Date().toISOString() }));
+      } else if (req.url === "/api/fleet/pair") {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ token: "avt_stubtoken" }));
+      } else if (req.url === "/api/sessions") {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end("[]");
+      } else {
+        res.writeHead(404, { "content-type": "application/json" });
+        res.end("{}");
+      }
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    try {
+      const url = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+      expect((await call(home, "/api/fleet/peers", { url, code: "STUBCODE" })).status).toBe(201);
+      alive = false;
+      const host = (await call<Fleet>(home, "/api/fleet")).body.hosts.find((h) => h.hostId === "gamingdesk")!;
+      expect(host.state).toBe("offline");
+      expect(host.detail).toContain("Antwort 502");
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
   });
 
   it("names a revoked pairing instead of pretending the host is fine", async () => {

@@ -112,8 +112,15 @@ export function registerFleetRoutes(app: FastifyInstance, deps: { fleet: FleetSt
             httpJson<FleetHello>(`${peer.url}/api/fleet/hello`, { timeoutMs: SYNC_TIMEOUT_MS }),
             httpJson<SessionRecord[]>(`${peer.url}/api/sessions`, { token: peer.token, timeoutMs: SYNC_TIMEOUT_MS }),
           ]);
-          if (hello.body?.protocolVersion !== FLEET_PROTOCOL_VERSION) {
-            return away("incompatible", `Protokoll ${String(hello.body?.protocolVersion)} statt ${FLEET_PROTOCOL_VERSION}`);
+          // 2026-11-21 (kaisgamingdesk): `tailscale serve` answers 502 with an empty
+          // body when the hub behind it is stopped. That is a dead host, not a
+          // protocol mismatch — only a hub that identifies itself may be called
+          // "incompatible", otherwise the fleet page blames the wrong thing.
+          if (hello.status !== 200 || typeof hello.body?.hostId !== "string") {
+            return away("offline", `kein Hub auf ${new URL(peer.url).host} (Antwort ${hello.status})`);
+          }
+          if (hello.body.protocolVersion !== FLEET_PROTOCOL_VERSION) {
+            return away("incompatible", `Protokoll ${String(hello.body.protocolVersion)} statt ${FLEET_PROTOCOL_VERSION}`);
           }
           if (list.status === 401 || list.status === 403) return away("unauthorized", "Kopplung auf dem Host widerrufen");
           if (list.status !== 200 || !Array.isArray(list.body)) return away("offline", `Antwort ${list.status}`);

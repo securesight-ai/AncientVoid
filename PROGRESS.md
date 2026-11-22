@@ -87,6 +87,16 @@ Handy-Zugang zum Agenten) wegbleibt.
   Formel (≈59 GiB) sind verschiedene Rechnungen — `Mlocked` ≈ 26,6 GiB und
   Shmem werden doppelt gezählt. Werkzeug: Skill `linux-ram-attribution`.
 
+## Nachzug P79 (22.11., verifiziert)
+- Inferenz-Seite war gegen tokdeck unvollständig. Nachgezogen und im Live-JSON des
+  echten Strata geprüft: Engine-Bauart (Kontext, KV `int8`, Experten 10 116/24 576,
+  Arena 47 962 MiB, Batch-Slots, Drafting `mtp`, Spec 6, Vorbehandlungskappe,
+  Pool-Worker, PCIe-Anteil), Slot-Halt (größter Slot), CPU 56 % + Disk, RAM live statt
+  Verlaufsrest, Sekunden-Reihen als eigene Karte, PCIe getrennt nach **Slot-Max Gen 4
+  × 16 bei Karte Gen 5** — der Engpass sitzt im Mainboard, nicht in der GPU.
+- Messlatte: Kern 15/15, PWA-Format 9/9, E2E `inference-tempo` 5/5 (neue Assertions),
+  Typecheck/Lint/i18n/arch/context grün.
+
 ## Einsatzstand (21.11., verifiziert)
 - PR #264 ist gemerged (`11aeb4fe`), Quellzweig gelöscht. Der Hub läuft auf `main`
   (`4fa1f921`), ausgelieferte `version.json` == HEAD, `dirty:false`, health 200 nach 2 s.

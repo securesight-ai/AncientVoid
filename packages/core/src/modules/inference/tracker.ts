@@ -215,7 +215,13 @@ export function createInferenceTracker(
         status: q.status,
         sampledAt: q.sampledAt,
         fensterH,
-        engine: lese?.engine ?? { model: null, version: null, context: null, kvTokens: null, kvResident: null, expertCacheMib: null },
+        engine:
+          lese?.engine ?? {
+            model: null, version: null, context: null, kvTokens: null, kvResident: null, expertCacheMib: null,
+            maxContext: null, kvQuant: null, expertSlots: null, expertsTotal: null, arenaMib: null,
+            batchSlots: null, drafting: null, spec: null,
+            pcieFrac: null, poolWorkers: null, prefillCap: null, conversationCacheMib: null,
+          },
         features: lese?.features ?? { perRequest: false, hardware: false, history: false, totals: false },
         live: lese?.live ?? null,
         totals: lese?.totals ?? null,

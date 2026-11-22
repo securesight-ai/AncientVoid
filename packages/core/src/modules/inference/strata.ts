@@ -41,6 +41,15 @@ function request(r: Roh, at: string): RequestRecord {
   };
 }
 
+/** Größte über die Slots gehaltene Token-Menge; null, wenn die Engine keine Slots meldet. */
+function heldTokens(slots: unknown): number | null {
+  if (!Array.isArray(slots)) return null;
+  const halte = slots
+    .map((slot) => (typeof slot === "object" && slot !== null ? num((slot as Roh).held_tokens) : null))
+    .filter((v): v is number => v != null);
+  return halte.length ? Math.max(...halte) : null;
+}
+
 export function strataReading(body: Roh, sampledAt: string): EngineReading {
   const live = feld(body, "live");
   const totals = feld(body, "totals");
@@ -71,6 +80,20 @@ export function strataReading(body: Roh, sampledAt: string): EngineReading {
       kvTokens: null,
       kvResident: bool(engine.kv_resident),
       expertCacheMib: num(engine.expert_cache_mib),
+      // EPIC-P79 Nachzug: die Bauart erklärt die Temp. Ohne diese Felder ist die
+      // Seite ratlos, warum Vorbehandlung so läuft wie sie läuft.
+      maxContext: num(engine.max_context),
+      kvQuant: text(engine.kv),
+      expertSlots: num(engine.expert_slots),
+      expertsTotal: num(engine.experts),
+      arenaMib: num(engine.arena_mib),
+      batchSlots: num(engine.batch_slots),
+      drafting: text(engine.drafting),
+      spec: num(engine.spec),
+      pcieFrac: num(engine.pcie_frac),
+      poolWorkers: num(engine.pool_workers),
+      prefillCap: num(engine.prefill_cap),
+      conversationCacheMib: num(engine.conversation_cache_mib),
     },
     features: { perRequest: true, hardware: true, history: true, totals: true },
     live: {
@@ -85,6 +108,10 @@ export function strataReading(body: Roh, sampledAt: string): EngineReading {
       read: num(live.prompt_read),
       reused: num(live.reused),
       elapsedS: num(live.elapsed_s),
+      parallel: num(live.parallel),
+      waiting: num(live.waiting),
+      admitting: num(live.admitting),
+      heldTokens: heldTokens(live.slots),
     },
     totals: {
       requests: num(totals.requests),
@@ -123,8 +150,18 @@ export function strataReading(body: Roh, sampledAt: string): EngineReading {
       powerLimitW: num(hardware.gpu_power_limit),
       pcieGen: num(hardware.gpu_pcie_gen),
       pcieWidth: num(hardware.gpu_pcie_width),
-      ramUsedBytes: werte(history, "ram_used").at(-1) ?? null,
-      ramTotalBytes: num(hwStatic.ram_total_bytes),
+      // Live-Messwert vor Verlaufs-Nachzug: hardware.ram_used ist die aktuelle Zahl.
+      ramUsedBytes: num(hardware.ram_used) ?? werte(history, "ram_used").at(-1) ?? null,
+      ramTotalBytes: num(hardware.ram_total),
+      cpuName: text(hwStatic.cpu_name),
+      cpuCores: num(hwStatic.cores),
+      cpuUtil: num(hardware.cpu),
+      diskReadMbS: num(hardware.disk_read_mb),
+      diskWriteMbS: num(hardware.disk_write_mb),
+      pcieGenMax: num(hardware.gpu_pcie_gen_max),
+      pcieWidthMax: num(hardware.gpu_pcie_width_max),
+      pcieOwnGen: num(hardware.gpu_pcie_own_gen),
+      pciePath: text(hardware.gpu_pcie_path),
     },
     history: {
       decodeTokS: werte(history, "tok_s"),

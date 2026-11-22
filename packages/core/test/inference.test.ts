@@ -13,11 +13,11 @@ import { assertPromShape } from "../src/modules/inference/prom-engines.ts";
 // --- Strata: JSON-Snapshot der gesprächigsten Quelle -----------------------
 
 const strataBody = {
-  engine: { model: "Qwen3.8-Flash", version: "0.9", max_context: 262144, kv_resident: true, expert_cache_mib: 1200 },
-  live: { state: "generating", phase: "writing", tok_s: 49.6, prefill_tok_s_mean: 78.7, queued: 1, generated: 414, prompt_total: 71000, prompt_read: 102, reused: 70898, elapsed_s: 8.3 },
+  engine: { model: "Qwen3.8-Flash", version: "0.9", max_context: 262144, kv_resident: true, expert_cache_mib: 1200, kv: "int8", expert_slots: 10116, experts: 24576, arena_mib: 47962, batch_slots: 2, drafting: "mtp", spec: 6, pcie_frac: 0.15, pool_workers: 15, prefill_cap: 32768, conversation_cache_mib: 8192 },
+  live: { state: "generating", phase: "writing", tok_s: 49.6, prefill_tok_s_mean: 78.7, queued: 1, generated: 414, prompt_total: 71000, prompt_read: 102, reused: 70898, elapsed_s: 8.3, parallel: 2, waiting: 1, admitting: 0, slots: [{ slot: 0, held_tokens: 171339 }, { slot: 1, held_tokens: 175806 }] },
   totals: { requests: 120, prompt_tokens: 900000, reused: 810000, output_tokens: 150000, prompt_ms: 500000, decode_ms: 3000000, drafts_offered: 90000, drafts_accepted: 54000 },
-  hardware: { gpu_util: 0.87, gpu_temp: 68, gpu_mem_used: 30_000_000_000, gpu_mem_total: 34_000_000_000, gpu_power: 250, gpu_power_limit: 300, gpu_pcie_gen: 4, gpu_pcie_width: 16 },
-  hardware_static: { gpu_name: "RX 7900 XTX" },
+  hardware: { gpu_util: 0.87, gpu_temp: 68, gpu_mem_used: 30_000_000_000, gpu_mem_total: 34_000_000_000, gpu_power: 250, gpu_power_limit: 300, gpu_pcie_gen: 4, gpu_pcie_width: 16, gpu_pcie_gen_max: 5, gpu_pcie_width_max: 16, gpu_pcie_own_gen: 4, gpu_pcie_path: "4/5", cpu: 55.7, disk_read_mb: 0, disk_write_mb: 0.99 },
+  hardware_static: { gpu_name: "RX 7900 XTX", cpu_name: "Threadripper PRO 5955WX", cores: 16 },
   conversation_cache: { bytes: 1000, evictions: 3, budget_mib: 8000, parked: 4, restores: 2, refused_total: 1 },
   history: { tok_s: [40, 42, 44], prefill_tok_s_mean: [70, 74], ram_used: [60_000_000_000, 61_000_000_000] },
   requests: [
@@ -48,6 +48,45 @@ it("Strata: Summen, Wiederverwendungs-Anteil und Hardware-Felder", () => {
   assert.equal(r.hardware?.vramUsedBytes, 30_000_000_000);
   assert.equal(r.hardware?.ramUsedBytes, 61_000_000_000);
   assert.equal(r.engine.kvResident, true);
+});
+
+it("Strata: Bauart, Slot-Halt, CPU/Disk und PCIe-Gegenprüfung", () => {
+  const r = strataReading(strataBody, "2026-11-21T12:00:00.000Z");
+  assert.equal(r.engine.maxContext, 262144);
+  assert.equal(r.engine.kvQuant, "int8");
+  assert.equal(r.engine.expertSlots, 10116);
+  assert.equal(r.engine.expertsTotal, 24576);
+  assert.equal(r.engine.arenaMib, 47962);
+  assert.equal(r.engine.batchSlots, 2);
+  assert.equal(r.engine.drafting, "mtp");
+  assert.equal(r.engine.spec, 6);
+  assert.equal(r.live?.parallel, 2);
+  assert.equal(r.live?.waiting, 1);
+  assert.equal(r.live?.heldTokens, 175806, "größter Slot-Halt, nicht Summe");
+  assert.equal(r.hardware?.cpuName, "Threadripper PRO 5955WX");
+  assert.equal(r.hardware?.cpuCores, 16);
+  assert.equal(r.hardware?.cpuUtil, 55.7);
+  assert.equal(r.hardware?.diskWriteMbS, 0.99);
+  // Ist gegen Maximum: 4 von 5 Generationen ist ein Befund, keine Selbstverständlichkeit.
+  assert.equal(r.hardware?.pcieGen, 4);
+  assert.equal(r.hardware?.pcieGenMax, 5);
+  assert.equal(r.hardware?.pcieWidthMax, 16);
+  assert.equal(r.hardware?.pcieOwnGen, 4);
+  assert.equal(r.hardware?.pciePath, "4/5");
+  assert.equal(r.engine.pcieFrac, 0.15);
+  assert.equal(r.engine.poolWorkers, 15);
+  assert.equal(r.engine.prefillCap, 32768);
+  assert.equal(r.engine.conversationCacheMib, 8192);
+
+  // aktuelle Messwert vor Verlaufs-Nachzug, und fehlende Slots bleiben null
+  const voll = structuredClone(strataBody) as Record<string, unknown>;
+  (voll.hardware as Record<string, unknown>).ram_used = 116_175_974_400;
+  (voll.hardware as Record<string, unknown>).ram_total = 134_935_179_264;
+  delete (voll.live as Record<string, unknown>).slots;
+  const v = strataReading(voll, "2026-11-21T12:00:00.000Z");
+  assert.equal(v.hardware?.ramUsedBytes, 116_175_974_400);
+  assert.equal(v.hardware?.ramTotalBytes, 134_935_179_264);
+  assert.equal(v.live?.heldTokens, null);
 });
 
 it("Strata: unpassendes Antwort-Schema wirft, statt halbe Zahlen zu zeigen", () => {

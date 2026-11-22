@@ -178,10 +178,12 @@ export function InferencePage() {
 
           <div class="inference-kacheln">
             <LiveCard snap={snap} />
+            <HistoryCard snap={snap} />
             <TotalsCard snap={snap} />
             <PerfCard snap={snap} />
             {snap.cache && <CacheCard snap={snap} />}
             {snap.hardware && <HardwareCard snap={snap} />}
+            <EngineCard snap={snap} />
             <ProtocolCard snap={snap} />
             {snap.hinweise.length > 0 && <HinweiseCard hinweise={snap.hinweise} />}
           </div>
@@ -204,7 +206,10 @@ function Hero({ wert, einheit, label, unterzeile }: { wert: string; einheit: str
   );
 }
 
-function Werte({ paare }: { paare: Array<[string, string]> }) {
+function Werte({ paare, versteckeLeere }: { paare: Array<[string, string]>; versteckeLeere?: boolean }) {
+  // Nicht gemeldete Felder verschwinden ganz statt als "—"-Stapel zu stehen: eine
+  // fehlende Zeile ist ehrlicher als eine Zeile, die Nachlosigkeit suggeriert (K9).
+  if (versteckeLeere) paare = paare.filter(([, wert]) => wert !== "—" && !wert.startsWith("— "));
   return (
     <dl class="inference-werte">
       {paare.map(([name, wert]) => (
@@ -218,26 +223,90 @@ function Werte({ paare }: { paare: Array<[string, string]> }) {
 }
 
 function LiveCard({ snap }: { snap: InferenceSnapshot }) {
-  const linie = verlauf(snap.history.decodeTokS);
   return (
     <Card aria-label={t("inference.card.live")}>
       <strong>{t("inference.card.live")}</strong>
       <p class="inference-hinweis">{t("inference.card.liveHint")}</p>
       <Werte
+        versteckeLeere
         paare={[
           [t("inference.live.state"), snap.live?.state ?? "—"],
           [t("inference.live.phase"), snap.live?.phase ?? "—"],
           [t("inference.live.queued"), zahl(snap.live?.queued)],
+          [t("inference.live.parallel"), zahl(snap.live?.parallel)],
+          [t("inference.live.waiting"), zahl(snap.live?.waiting)],
+          [t("inference.live.admitting"), zahl(snap.live?.admitting)],
+          // Der größte Slot-Halt ist die Zahl, die erklärt, warum ein Prompt trotz
+          // Nachbarschaft trotzdem Vorbehandlung kostet.
+          [t("inference.live.held"), zahl(snap.live?.heldTokens)],
           [t("inference.live.elapsed"), dauer(snap.live?.elapsedS)],
           [t("inference.live.read"), zahl(snap.live?.read)],
           [t("inference.live.prompt"), zahl(snap.live?.prompt)],
         ]}
       />
-      {linie && (
-        <svg viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label={t("inference.hero.decode")}>
-          <polyline points={linie} fill="none" stroke="currentColor" stroke-width="1.5" />
-        </svg>
-      )}
+    </Card>
+  );
+}
+
+/**
+ * Sekunden-Reihe der Engine. Bewusst getrennt von den Request-Perzentilen:
+ * Engine-Mittelwerte über eine Sekunde und pro-Request-Tempo sind verschiedene
+ * Messreihen und dürfen nicht vermischt werden.
+ */
+function HistoryCard({ snap }: { snap: InferenceSnapshot }) {
+  const zeilen = [
+    { label: t("inference.history.decode"), linie: verlauf(snap.history.decodeTokS) },
+    { label: t("inference.history.prefill"), linie: verlauf(snap.history.prefillTokS) },
+    {
+      label: t("inference.history.ram"),
+      linie: verlauf(snap.history.ramUsedBytes.map((b) => Math.round(b / (1024 * 1024)))),
+    },
+  ].filter((z) => z.linie != null);
+  if (zeilen.length === 0) return null;
+  return (
+    <Card aria-label={t("inference.card.history")}>
+      <strong>{t("inference.card.history")}</strong>
+      <p class="inference-hinweis">{t("inference.card.historyHint")}</p>
+      {zeilen.map((z) => (
+        <div class="inference-verlauf" key={z.label}>
+          <span>{z.label}</span>
+          <svg viewBox="0 0 100 26" preserveAspectRatio="none" role="img" aria-label={z.label}>
+            <polyline points={z.linie!} fill="none" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+/**
+ * Die Bauart der Engine: Kontext, KV-Format, Experten-Halt. Ohne diese Zeilen ist
+ * ein Tempo-Befund nicht interpretierbar (warum Vorbehandlung so läuft wie sie läuft).
+ */
+function EngineCard({ snap }: { snap: InferenceSnapshot }) {
+  const e = snap.engine;
+  return (
+    <Card aria-label={t("inference.card.engine")}>
+      <strong>{t("inference.card.engine")}</strong>
+      <p class="inference-hinweis">{t("inference.card.engineHint")}</p>
+      <Werte
+        versteckeLeere
+        paare={[
+          [t("inference.engine.context"), `${zahl(e.context)} / ${zahl(e.maxContext)}`],
+          [t("inference.engine.kvQuant"), e.kvQuant ?? "—"],
+          [t("inference.engine.kvResident"), e.kvResident == null ? "—" : e.kvResident ? t("inference.engine.kvJa") : t("inference.engine.kvNein")],
+          [t("inference.engine.experts"), e.expertSlots == null ? "—" : `${zahl(e.expertSlots)} / ${zahl(e.expertsTotal)}`],
+          [t("inference.engine.expertCache"), e.expertCacheMib == null ? "—" : `${zahl(e.expertCacheMib)} MiB`],
+          [t("inference.engine.arena"), e.arenaMib == null ? "—" : `${zahl(e.arenaMib)} MiB`],
+          [t("inference.engine.batch"), zahl(e.batchSlots)],
+          [t("inference.engine.drafting"), e.drafting ?? "—"],
+          [t("inference.engine.spec"), zahl(e.spec)],
+          [t("inference.engine.prefillCap"), zahl(e.prefillCap)],
+          [t("inference.engine.pool"), zahl(e.poolWorkers)],
+          [t("inference.engine.pcieFrac"), anteil(e.pcieFrac)],
+          [t("inference.engine.convCache"), e.conversationCacheMib == null ? "—" : `${zahl(e.conversationCacheMib)} MiB`],
+        ]}
+      />
     </Card>
   );
 }
@@ -422,6 +491,27 @@ function HardwareCard({ snap }: { snap: InferenceSnapshot }) {
           [t("inference.hardware.vram"), `${byteGroesse(h.vramUsedBytes)} / ${byteGroesse(h.vramTotalBytes)}`],
           [t("inference.hardware.power"), h.powerW == null ? "—" : `${zahl(h.powerW)} W${h.powerLimitW ? ` / ${zahl(h.powerLimitW)} W` : ""}`],
           [t("inference.hardware.pcie"), h.pcieGen == null ? "—" : `Gen ${h.pcieGen} × ${h.pcieWidth ?? "?"}`],
+          // Ist gegen Maximum: eine zu schmale/zu langsame Strecke ist ein Befund,
+          // den nur der Vergleich mit dem machbaren zeigt.
+          [
+            t("inference.hardware.pcieSlotKarte"),
+            // „Maximum“ zweimal: Slot und Karte. Ist der Slot niedriger als die Karte,
+            // steckt der Engpass im Mainboard — das ist ein anderer Befund.
+            h.pcieGenMax == null && h.pcieOwnGen == null
+              ? "—"
+              : [
+                  h.pcieGenMax == null ? null : `Slot Gen ${h.pcieGenMax} × ${h.pcieWidthMax ?? "?"}`,
+                  h.pcieOwnGen == null || h.pcieOwnGen === h.pcieGenMax ? null : `Karte Gen ${h.pcieOwnGen}`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || (h.pciePath ? `Deckung ${h.pciePath}` : "—"),
+          ],
+          [t("inference.hardware.cpu"), h.cpuName == null ? "—" : `${h.cpuName}${h.cpuCores ? ` · ${zahl(h.cpuCores)} Kerne` : ""}`],
+          [t("inference.hardware.cpuUtil"), anteil(h.cpuUtil)],
+          [
+            t("inference.hardware.disk"),
+            h.diskReadMbS == null && h.diskWriteMbS == null ? "—" : `${zahl(h.diskReadMbS)} / ${zahl(h.diskWriteMbS)} MiB/s`,
+          ],
           [t("inference.hardware.ram"), `${byteGroesse(h.ramUsedBytes)} / ${byteGroesse(h.ramTotalBytes)}`],
         ]}
       />

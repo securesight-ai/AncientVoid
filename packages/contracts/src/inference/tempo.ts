@@ -37,6 +37,20 @@ export const InferenceEngine = z.object({
   kvTokens: z.number().nullable(),
   kvResident: z.boolean().nullable(),
   expertCacheMib: z.number().nullable(),
+  // EPIC-P79 Nachzug: die statische Bauart der Engine, weil tokdeck sie gezeigt
+  // hat und ohne sie nicht erkennbar ist, WARUM Temp so oder so ausfallen.
+  maxContext: z.number().nullable(),
+  kvQuant: z.string().nullable(),
+  expertSlots: z.number().nullable(),
+  expertsTotal: z.number().nullable(),
+  arenaMib: z.number().nullable(),
+  batchSlots: z.number().nullable(),
+  drafting: z.string().nullable(),
+  spec: z.number().nullable(),
+  pcieFrac: z.number().nullable(),
+  poolWorkers: z.number().nullable(),
+  prefillCap: z.number().nullable(),
+  conversationCacheMib: z.number().nullable(),
 });
 export type InferenceEngine = z.infer<typeof InferenceEngine>;
 
@@ -55,6 +69,12 @@ export const InferenceLive = z.object({
   read: z.number().nullable(),
   reused: z.number().nullable(),
   elapsedS: z.number().nullable(),
+  // EPIC-P79 Nachzug: Parallelität und Wartende entscheiden, ob Tempo an der
+  // Engine oder an der Zulassung liegt.
+  parallel: z.number().nullable(),
+  waiting: z.number().nullable(),
+  admitting: z.number().nullable(),
+  heldTokens: z.number().nullable(),
 });
 export type InferenceLive = z.infer<typeof InferenceLive>;
 
@@ -112,7 +132,21 @@ export const InferenceHardware = z.object({
   pcieWidth: z.number().nullable(),
   ramUsedBytes: z.number().nullable(),
   ramTotalBytes: z.number().nullable(),
+  // EPIC-P79 Nachzug: CPU und Platte gehören zur Frage „woran hängt es?“, und der
+  // PCIe-Pfad ist erst mit Gegenprüfung (Ist gegen Maximum) ein Befund.
+  cpuName: z.string().nullable(),
+  cpuCores: z.number().nullable(),
+  cpuUtil: z.number().nullable(),
+  diskReadMbS: z.number().nullable(),
+  diskWriteMbS: z.number().nullable(),
+  pcieGenMax: z.number().nullable(),
+  pcieWidthMax: z.number().nullable(),
+  // „Maximum“ ist zweierlei: was der Slot hergibt und was die Karte könnte. Ist der
+  // Slot niedriger als die Karte, steckt der Engpass im Mainboard, nicht in der GPU.
+  pcieOwnGen: z.number().nullable(),
+  pciePath: z.string().nullable(),
 });
+void 0;
 export type InferenceHardware = z.infer<typeof InferenceHardware>;
 
 /**
