@@ -60,7 +60,7 @@ const port = await freePort();
 
 test.describe("Sprachausgabe: Chat vorlesen (EPIC-P75)", () => {
   let server: Server;
-  const received: Array<{ method: string; body: string }> = [];
+  const received: Array<{ method: string; contentType: string; body: string }> = [];
   let kaputt = false;
 
   test.beforeAll(async () => {
@@ -68,7 +68,7 @@ test.describe("Sprachausgabe: Chat vorlesen (EPIC-P75)", () => {
       const chunks: Buffer[] = [];
       req.on("data", (c: Buffer) => chunks.push(c));
       req.on("end", () => {
-        received.push({ method: req.method ?? "GET", body: Buffer.concat(chunks).toString("utf8") });
+        received.push({ method: req.method ?? "GET", contentType: String(req.headers["content-type"] ?? ""), body: Buffer.concat(chunks).toString("utf8") });
         if (req.method === "GET") {
           if (kaputt) {
             // Dienst weg heißt: keine Antwort, auch nicht für die Probe.
@@ -97,6 +97,17 @@ test.describe("Sprachausgabe: Chat vorlesen (EPIC-P75)", () => {
 
   const ttsUrl = `http://127.0.0.1:${port}/tts`;
 
+  /** Multipart-Felder aus einem rohen Form-Body ziehen (BUG-0254: kein JSON mehr). */
+  function formFields(body: string): Record<string, string> {
+    const fields: Record<string, string> = {};
+    for (const match of body.matchAll(/name="([^"]+)"\r\n\r\n([^\r]*)/g)) {
+      const key = match.at(1);
+      const value = match.at(2);
+      if (key !== undefined && value !== undefined) fields[key] = value;
+    }
+    return fields;
+  }
+
   async function konfigurieren(hub: TestHub, url: string): Promise<void> {
     const res = await hub.api("/api/settings/tts", { method: "PUT", body: { url } });
     expect(res.status).toBe(200);
@@ -120,8 +131,12 @@ test.describe("Sprachausgabe: Chat vorlesen (EPIC-P75)", () => {
     await expect(app.getByTestId("tts-availability")).toContainText(/verfügbar/);
     await app.getByTestId("tts-probe").click();
     await expect.poll(async () => (await spy(app)).plays.length).toBeGreaterThan(0);
-    // Die Probe lief über den Hub zum Attrappendienst — Sprache „German", wie eingestellt.
-    expect(received.some((r) => r.method === "POST" && r.body.includes("Hörprobe") && r.body.includes('"German"'))).toBe(true);
+    // Die Probe lief über den Hub zum Attrappendienst — Multipart-Dialekt (BUG-0254),
+    // Sprache „German", wie eingestellt.
+    const post = received.find((r) => r.method === "POST" && r.contentType.startsWith("multipart/form-data"));
+    expect(post, "Upstream-Call muss multipart/form-data sein").toBeDefined();
+    expect(formFields(post!.body)).toMatchObject({ language: "German" });
+    expect(formFields(post!.body).text).toContain("Hörprobe");
     // PUT validiert: eine kaputte URL wird sichtbar abgewiesen, nicht still korrigiert.
     await app.getByTestId("tts-url-input").fill("keine-url");
     await app.getByTestId("tts-save").click();
@@ -171,7 +186,7 @@ test.describe("Sprachausgabe: Chat vorlesen (EPIC-P75)", () => {
 
     // Was der Dienst bekam, ist der volle Antworttext aus dem Event, nicht die UUID.
     const antworten = (await hub.events(id)).filter((e) => e.type === "assistant").map((e) => (typeof e.payload.text === "string" && e.payload.text ? e.payload.text : e.summary));
-    const gesendet = received.filter((r) => r.method === "POST").map((r) => (JSON.parse(r.body) as { text: string }).text);
+    const gesendet = received.filter((r) => r.method === "POST").map((r) => formFields(r.body).text);
     expect(antworten.some((text) => text.length > 0 && gesendet.includes(text))).toBe(true);
 
     // Fehlerpfad: der Dienst stirbt — die Hörprobe (neuer Text, kein Cache) nennt den Grund.
