@@ -80,9 +80,18 @@ Freitextfeld für den Projektpfad zurück, kein Endpunkt lehnt dann etwas ab.
         "zai": ["glm-5.3", "glm-5.3-flash"]
       }
     }
+  },
+  {
+    "id": "ralph-hub",                   // EPIC-P54 / ADR-0110: Ralph über jede promptbare CLI
+    "module": "@ancientvoid/loop-ralph-hub",
+    "config": { "turnTimeoutMs": 3600000, "maxTurns": 40 }
   }
 ]
 ```
+
+Details und Start-Optionen der Ralph-Loops (hub-getrieben und
+Hermes-Beobachter): [loops.md](loops.md).
+
 
 Die Modellwahl steht im Anbindungs-Formular („Factory-Projekt einrichten“)
 direkt bereit — Wert `anbieter/modell`, Vorgabe „Standard-Routing der
