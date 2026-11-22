@@ -11,7 +11,7 @@ import { sttModuleConfig } from "./modules/voice/stt-wiring.ts";
 import { chmodSync, mkdirSync, existsSync } from "node:fs";
 import { appendFile, readFile, readdir } from "node:fs/promises";
 import { homedir, hostname, loadavg, cpus, totalmem, freemem } from "node:os";
-import { toHostId, sessionMainSyncPath } from "@ancientvoid/contracts";
+import { LOOP_ARG, toHostId, sessionMainSyncPath } from "@ancientvoid/contracts";
 import { projectName } from "@ancientvoid/core";
 import { resolve } from "node:path";
 import type { WorkerRunner, DiscoverySource } from "@ancientvoid/contracts";
@@ -175,7 +175,24 @@ async function main(): Promise<void> {
   }
   for (const info of loops.list()) {
     const connector = loops.connector(info.id);
-    if (connector) registry.register(`loop:${connector.id}`, () => loopAsAdapter(connector, { stateDir: resolve(dataDir, "loops") }), undefined, `loop:${connector.id}`);
+    if (connector)
+      registry.register(
+        `loop:${connector.id}`,
+        () =>
+          loopAsAdapter(connector, {
+            stateDir: resolve(dataDir, "loops"),
+            // ADR-0113: Review-Sessions des eigenen Connectors — interne
+            // Session über den SessionManager (sichtbar in der PWA), Actor
+            // loop-review; loops.start bleibt für HTTP Menschen-only.
+            startSession: (spec) =>
+              sessions
+                .create({ adapter: `loop:${connector.id}`, project: spec.project, ...(spec.goal ? { prompt: spec.goal } : {}), args: { [LOOP_ARG]: spec } }, "loop-review")
+                .then((record) => ({ sessionId: record.id }))
+                .catch((err: unknown) => ({ error: err instanceof Error ? err.message : "Review-Session nicht startbar" })),
+          }),
+        undefined,
+        `loop:${connector.id}`,
+      );
   }
   logger.info("adapters loaded", {
     adapters: registry.list().map((a) => `${a.id}@${a.adapter.version}`).join(", ") || "(none)",
