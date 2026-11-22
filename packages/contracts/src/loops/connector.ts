@@ -87,9 +87,18 @@ export type LoopControlInput =
 export interface LoopIo {
   /** Letzte gespeicherte Position oder null beim ersten Start. */
   resume: unknown;
-  /** Position sichern; der Aufrufer schreibt sie in den Snapshot der Session. */
   saveCursor(cursor: unknown): void;
+  /** ADR-0113: weitere Loop-Session dieses Connectors starten (optional, hub-seitig implementiert). */
+  startSession?: LoopSessionStarter;
 }
+
+/**
+ * ADR-0113: eine weitere Loop-Session **dieses** Connectors anfordern (z. B.
+ * Ralph-Agent-Review). Nur von der Hub-Seite implementiert — fehlt die
+ * Funktion, fällt der Connector auf Inline-Verhalten zurück. Die Session ist
+ * eine normale, in der PWA sichtbare Loop-Session.
+ */
+export type LoopSessionStarter = (spec: LoopStartSpec) => Promise<{ sessionId: string } | { error: string }>;
 
 /**
  * Ein Connector verbindet den Hub mit EINEM Loop-System (ADR-0038). Er sieht nur den
