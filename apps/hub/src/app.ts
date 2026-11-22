@@ -18,6 +18,7 @@ import { registerRoutes } from "./routes.ts";
 import { registerAttachmentRoutes } from "./modules/attachments/attachments.routes.ts";
 import { registerPushRoutes } from "./modules/push/push.routes.ts";
 import { registerSttRoutes, type SttConfig } from "./modules/voice/stt.routes.ts";
+import { registerTtsRoutes } from "./modules/voice/tts.routes.ts";
 import { registerTerminalRoutes, type TerminalConfigEntry } from "./modules/terminal/terminal.routes.ts";
 import { registerMediaRoutes, type MediaRouteDeps } from "./modules/media/media.routes.ts";
 import { registerDesktopRoutes } from "./modules/desktop/desktop.routes.ts";
@@ -53,6 +54,8 @@ export interface HubAppDeps {
   push?: PushService;
   /** T10.2: local speech-to-text (ADR-0028). */
   stt?: SttConfig;
+  /** EPIC-P75: fetch für die TTS-Routen — Tests injizieren hier einen Attrappen-Dienst. */
+  ttsFetch?: typeof fetch;
   /** ADR-0087: Allowlist für den PWA-Terminal-Tab. */
   terminals?: readonly TerminalConfigEntry[];
   /** EPIC-P11: desktop companion (ADR-0031). */
@@ -175,6 +178,7 @@ export async function createHubApp(deps: HubAppDeps): Promise<FastifyInstance> {
   if (deps.desktop) registerDesktopRoutes(app, { desktop: deps.desktop, tokens: deps.tokens });
   if (deps.media) registerMediaRoutes(app, { ...deps.media, settings: deps.settings });
   registerSttRoutes(app, deps.stt, async () => (await discoverProjects(projectRoots)).projects.map((p) => p.path));
+  if (deps.settings) registerTtsRoutes(app, { settings: deps.settings, ...(deps.ttsFetch ? { fetch: deps.ttsFetch } : {}) });
   registerTerminalRoutes(app, deps.terminals ?? []);
   registerFleetRoutes(app, { fleet, tokens: deps.tokens, hostId, ...(deps.hostLabel ? { hostLabel: deps.hostLabel } : {}) });
   registerFleetProxy(app, { fleet, hostId, sessions: deps.sessions, tokens: deps.tokens, ...(deps.metrics ? { metrics: deps.metrics } : {}) });

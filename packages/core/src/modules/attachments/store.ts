@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import { join } from "node:path";
-import { attachmentKind, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_TEXT_CHARS, type AttachmentExtraction, type AttachmentKind, type AttachmentRecord, type PromptAttachment } from "@ancientvoid/contracts";
+import { attachmentKind, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_TEXT_CHARS, TTS_TIMEOUT_MS, type AttachmentExtraction, type AttachmentKind, type AttachmentRecord, type PromptAttachment, type TtsSettingsView } from "@ancientvoid/contracts";
 import type { HubDatabase } from "../../platform/index.ts";
 import { extractText, type ExtractOptions } from "./extract.ts";
 
@@ -167,6 +167,25 @@ export class SettingsStore {
     const apiKey = this.get("gemini.apiKey");
     return apiKey ? { apiKey, model: this.get("gemini.model") ?? DEFAULT_GEMINI_MODEL } : undefined;
   }
+
+  /** EPIC-P75 (ADR-0097): TTS-Ziel fürs Chat-Vorlesen — runtime änderbar im
+   *  SettingsStore (eine Wahrheit, kein hub.config.json-Block). */
+  ttsView(): TtsSettingsView {
+    return {
+      url: this.get("tts.url"),
+      engine: this.get("tts.engine"),
+      language: this.get("tts.language") === "en" ? "en" : "de",
+      speed: storedNumber(this.get("tts.speed"), 1),
+      timeoutMs: storedNumber(this.get("tts.timeoutMs"), TTS_TIMEOUT_MS),
+    };
+  }
+}
+
+
+/** Numbers live as text in the config table — anything unparsable falls back. */
+function storedNumber(raw: string | null, fallback: number): number {
+  const n = raw === null ? NaN : Number(raw);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 export const DEFAULT_GEMINI_MODEL = "gemini-flash-latest";
