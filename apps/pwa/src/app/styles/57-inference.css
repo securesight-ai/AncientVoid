@@ -143,22 +143,28 @@
   font-size: var(--text-sm);
 }
 
+/* Containerbreite entscheidet, nicht das Fenster: die Seite steckt im Seitenpane,
+ * das auch auf dem Z-Fold-Innenbild (Viewport 710) nur gut 600 px misst. Zwei
+ * Karten nebeneinander passen schon ab 560 px — einspaltig bis 700 war toter Raum.
+ * Drei Werte-Spalten erst ab 1024 px, sonst zerfallen lange Beschriftungen. */
+@container inferenz (min-width: 560px) {
+  .inference-kacheln {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @container inferenz (min-width: 700px) {
   .inference-hero {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
 
+@container inferenz (min-width: 1024px) {
   .inference-kacheln {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .inference-werte {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@container inferenz (min-width: 1280px) {
-  .inference-kacheln {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -237,6 +243,13 @@
 
 .inference-verlauf svg {
   width: 100%;
-  height: 26px;
+  height: 32px; /* passt zur Höhe, die verlauf() zeichnet — sonst läuft die Linie aus der Box */
+  overflow: hidden;
   color: var(--accent);
+}
+
+/* EPIC-P79: die Live-Kachel hält Textwerte (Zustand, Phase) — drei enge Spalten
+ * lassen lange Phrasen zerfasern und die Nachbarwerte davor kleben. */
+.inference-werte.inference-werte--zwei {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }

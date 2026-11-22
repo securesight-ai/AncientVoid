@@ -59,6 +59,14 @@ export function alter(iso: string | null, jetztMs: number = Date.now()): number 
  * Leere/konstante Serien geben null — die Karte zeichnet dann nichts, statt
  * eine flache Linie als „stabil“ vorzutäuschen.
  */
+/** Uhrzeit eines ISO-Zeitstempels, kurz — abgeschlossene Requests sonst anonym sind. */
+export function uhrzeit(iso: string): string {
+  const datum = new Date(iso);
+  if (Number.isNaN(datum.getTime())) return "—";
+  // hour12:false fest: sonst steht in en-US „7:51:05 AM“ und die Spalte wird unleserlich.
+  return datum.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+}
+
 export function verlauf(werte: number[], breite = 100, hohe = 32): string | null {
   const sauber = werte.filter((v) => Number.isFinite(v));
   if (sauber.length < 2) return null;

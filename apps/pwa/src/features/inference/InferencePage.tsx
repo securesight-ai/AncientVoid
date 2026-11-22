@@ -3,7 +3,7 @@ import type { InferencePerfRow, InferenceSnapshot, InferenceSourceList } from "@
 import { hubApi } from "../../shared/api.ts";
 import { Card, Chip, EmptyState } from "../../shared/ui/index.ts";
 import { t } from "../../shared/i18n/index.ts";
-import { alter, anteil, byteGroesse, dauer, tempo, verlauf, zahl } from "./format.ts";
+import { alter, anteil, byteGroesse, dauer, tempo, uhrzeit, verlauf, zahl } from "./format.ts";
 
 /**
  * EPIC-P79 T79.4 (ADR-0102): Token-Tempo der Inferenz-Engines.
@@ -206,12 +206,12 @@ function Hero({ wert, einheit, label, unterzeile }: { wert: string; einheit: str
   );
 }
 
-function Werte({ paare, versteckeLeere }: { paare: Array<[string, string]>; versteckeLeere?: boolean }) {
+function Werte({ paare, klassen, versteckeLeere }: { paare: Array<[string, string]>; klassen?: string; versteckeLeere?: boolean }) {
   // Nicht gemeldete Felder verschwinden ganz statt als "—"-Stapel zu stehen: eine
   // fehlende Zeile ist ehrlicher als eine Zeile, die Nachlosigkeit suggeriert (K9).
   if (versteckeLeere) paare = paare.filter(([, wert]) => wert !== "—" && !wert.startsWith("— "));
   return (
-    <dl class="inference-werte">
+    <dl className={"inference-werte" + (klassen ? ` ${klassen}` : "")}>
       {paare.map(([name, wert]) => (
         <div>
           <dt>{name}</dt>
@@ -229,6 +229,7 @@ function LiveCard({ snap }: { snap: InferenceSnapshot }) {
       <p class="inference-hinweis">{t("inference.card.liveHint")}</p>
       <Werte
         versteckeLeere
+        klassen="inference-werte--zwei"
         paare={[
           [t("inference.live.state"), snap.live?.state ?? "—"],
           [t("inference.live.phase"), snap.live?.phase ?? "—"],
@@ -270,7 +271,7 @@ function HistoryCard({ snap }: { snap: InferenceSnapshot }) {
       {zeilen.map((z) => (
         <div class="inference-verlauf" key={z.label}>
           <span>{z.label}</span>
-          <svg viewBox="0 0 100 26" preserveAspectRatio="none" role="img" aria-label={z.label}>
+          <svg viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label={z.label}>
             <polyline points={z.linie!} fill="none" stroke="currentColor" stroke-width="1.5" />
           </svg>
         </div>
@@ -500,8 +501,10 @@ function HardwareCard({ snap }: { snap: InferenceSnapshot }) {
             h.pcieGenMax == null && h.pcieOwnGen == null
               ? "—"
               : [
-                  h.pcieGenMax == null ? null : `Slot Gen ${h.pcieGenMax} × ${h.pcieWidthMax ?? "?"}`,
-                  h.pcieOwnGen == null || h.pcieOwnGen === h.pcieGenMax ? null : `Karte Gen ${h.pcieOwnGen}`,
+                  h.pcieGenMax == null || (h.pcieGenMax === h.pcieGen && h.pcieWidthMax === h.pcieWidth)
+                    ? null
+                    : `Slot Gen ${h.pcieGenMax} × ${h.pcieWidthMax ?? "?"}`,
+                  h.pcieOwnGen == null || h.pcieOwnGen === h.pcieGen ? null : `Karte Gen ${h.pcieOwnGen}`,
                 ]
                   .filter(Boolean)
                   .join(" · ") || (h.pciePath ? `Deckung ${h.pciePath}` : "—"),
@@ -510,7 +513,7 @@ function HardwareCard({ snap }: { snap: InferenceSnapshot }) {
           [t("inference.hardware.cpuUtil"), anteil(h.cpuUtil)],
           [
             t("inference.hardware.disk"),
-            h.diskReadMbS == null && h.diskWriteMbS == null ? "—" : `${zahl(h.diskReadMbS)} / ${zahl(h.diskWriteMbS)} MiB/s`,
+            h.diskReadMbS == null && h.diskWriteMbS == null ? "—" : `${tempo(h.diskReadMbS)} / ${tempo(h.diskWriteMbS)} MiB/s`,
           ],
           [t("inference.hardware.ram"), `${byteGroesse(h.ramUsedBytes)} / ${byteGroesse(h.ramTotalBytes)}`],
         ]}
@@ -551,6 +554,7 @@ function ProtocolCard({ snap }: { snap: InferenceSnapshot }) {
           <table class="inference-tabelle">
             <thead>
               <tr>
+                <th>{t("inference.protocol.zeit")}</th>
                 <th>{t("inference.protocol.read")}</th>
                 <th class="inference-spalt--zusatz">{t("inference.protocol.prompt")}</th>
                 <th>{t("inference.protocol.output")}</th>
@@ -562,6 +566,7 @@ function ProtocolCard({ snap }: { snap: InferenceSnapshot }) {
             <tbody>
               {reihen.map((r) => (
                 <tr key={r.id}>
+                  <td>{uhrzeit(r.at)}</td>
                   <td>{zahl(r.read)}</td>
                   <td class="inference-spalt--zusatz">{zahl(r.prompt)}</td>
                   <td>{zahl(r.output)}</td>

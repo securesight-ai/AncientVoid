@@ -1,4 +1,4 @@
-import { anteil, bool, num, text } from "./engine.ts";
+import { anteil, anteilNormalisieren, bool, num, text } from "./engine.ts";
 import type { EngineReading, RequestRecord } from "./engine.ts";
 
 /**
@@ -90,7 +90,7 @@ export function strataReading(body: Roh, sampledAt: string): EngineReading {
       batchSlots: num(engine.batch_slots),
       drafting: text(engine.drafting),
       spec: num(engine.spec),
-      pcieFrac: num(engine.pcie_frac),
+      pcieFrac: anteilNormalisieren(engine.pcie_frac),
       poolWorkers: num(engine.pool_workers),
       prefillCap: num(engine.prefill_cap),
       conversationCacheMib: num(engine.conversation_cache_mib),
@@ -142,7 +142,7 @@ export function strataReading(body: Roh, sampledAt: string): EngineReading {
     },
     hardware: {
       gpuName: text(hwStatic.gpu_name),
-      gpuUtil: num(hardware.gpu_util),
+      gpuUtil: anteilNormalisieren(hardware.gpu_util),
       gpuTempC: num(hardware.gpu_temp),
       vramUsedBytes: num(hardware.gpu_mem_used),
       vramTotalBytes: num(hardware.gpu_mem_total),
@@ -155,7 +155,7 @@ export function strataReading(body: Roh, sampledAt: string): EngineReading {
       ramTotalBytes: num(hardware.ram_total),
       cpuName: text(hwStatic.cpu_name),
       cpuCores: num(hwStatic.cores),
-      cpuUtil: num(hardware.cpu),
+      cpuUtil: anteilNormalisieren(hardware.cpu, num(hwStatic.cores)),
       diskReadMbS: num(hardware.disk_read_mb),
       diskWriteMbS: num(hardware.disk_write_mb),
       pcieGenMax: num(hardware.gpu_pcie_gen_max),

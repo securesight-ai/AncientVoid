@@ -4,6 +4,7 @@ import { it } from "vitest";
 import { InferenceSnapshot as SnapshotSchema, InferenceSourceList as SourceListSchema } from "@ancientvoid/contracts";
 
 import { createInferenceTracker } from "../src/modules/inference/index.ts";
+import { anteilNormalisieren, num } from "../src/modules/inference/engine.ts";
 import { perfOf, percentile, summarize } from "../src/modules/inference/perf.ts";
 import { promReading } from "../src/modules/inference/prom-engines.ts";
 import { createRequestStore } from "../src/modules/inference/store.ts";
@@ -13,7 +14,7 @@ import { assertPromShape } from "../src/modules/inference/prom-engines.ts";
 // --- Strata: JSON-Snapshot der gesprächigsten Quelle -----------------------
 
 const strataBody = {
-  engine: { model: "Qwen3.8-Flash", version: "0.9", max_context: 262144, kv_resident: true, expert_cache_mib: 1200, kv: "int8", expert_slots: 10116, experts: 24576, arena_mib: 47962, batch_slots: 2, drafting: "mtp", spec: 6, pcie_frac: 0.15, pool_workers: 15, prefill_cap: 32768, conversation_cache_mib: 8192 },
+  engine: { model: "Qwen3.8-Flash", version: "0.9", max_context: 262144, kv_resident: true, expert_cache_mib: 1200, kv: "int8", expert_slots: 10116, experts: 24576, arena_mib: 47962, batch_slots: 2, drafting: "mtp", spec: 6, pcie_frac: "0.15", pool_workers: 15, prefill_cap: 32768, conversation_cache_mib: 8192 }, // pcie_frac real als Text gemeldet
   live: { state: "generating", phase: "writing", tok_s: 49.6, prefill_tok_s_mean: 78.7, queued: 1, generated: 414, prompt_total: 71000, prompt_read: 102, reused: 70898, elapsed_s: 8.3, parallel: 2, waiting: 1, admitting: 0, slots: [{ slot: 0, held_tokens: 171339 }, { slot: 1, held_tokens: 175806 }] },
   totals: { requests: 120, prompt_tokens: 900000, reused: 810000, output_tokens: 150000, prompt_ms: 500000, decode_ms: 3000000, drafts_offered: 90000, drafts_accepted: 54000 },
   hardware: { gpu_util: 0.87, gpu_temp: 68, gpu_mem_used: 30_000_000_000, gpu_mem_total: 34_000_000_000, gpu_power: 250, gpu_power_limit: 300, gpu_pcie_gen: 4, gpu_pcie_width: 16, gpu_pcie_gen_max: 5, gpu_pcie_width_max: 16, gpu_pcie_own_gen: 4, gpu_pcie_path: "4/5", cpu: 55.7, disk_read_mb: 0, disk_write_mb: 0.99 },
@@ -65,7 +66,7 @@ it("Strata: Bauart, Slot-Halt, CPU/Disk und PCIe-Gegenprüfung", () => {
   assert.equal(r.live?.heldTokens, 175806, "größter Slot-Halt, nicht Summe");
   assert.equal(r.hardware?.cpuName, "Threadripper PRO 5955WX");
   assert.equal(r.hardware?.cpuCores, 16);
-  assert.equal(r.hardware?.cpuUtil, 55.7);
+  assert.ok(Math.abs((r.hardware?.cpuUtil ?? 0) - 0.557) < 1e-9, "56 % auf 16 Kernen = 0,557");
   assert.equal(r.hardware?.diskWriteMbS, 0.99);
   // Ist gegen Maximum: 4 von 5 Generationen ist ein Befund, keine Selbstverständlichkeit.
   assert.equal(r.hardware?.pcieGen, 4);
@@ -87,6 +88,27 @@ it("Strata: Bauart, Slot-Halt, CPU/Disk und PCIe-Gegenprüfung", () => {
   assert.equal(v.hardware?.ramUsedBytes, 116_175_974_400);
   assert.equal(v.hardware?.ramTotalBytes, 134_935_179_264);
   assert.equal(v.live?.heldTokens, null);
+});
+
+it("Anteile: Einheit der Engine wird normalisiert, Unsinn bleibt null", () => {
+  // real beobachtet: gpu_util mal 0,87 mal 100; cpu mal 56 mal 860 (Summe über Kerne)
+  assert.equal(anteilNormalisieren(0.87), 0.87);
+  assert.equal(anteilNormalisieren(100), 1);
+  assert.equal(anteilNormalisieren(56.3, 16), 0.563);
+  assert.ok(Math.abs((anteilNormalisieren(860, 16) ?? 0) - 0.5375) < 1e-9);
+  assert.equal(anteilNormalisieren(860), null, "ohne Kernzahl nicht erfinden");
+  assert.equal(anteilNormalisieren(1600, 16), 1, "16 Kerne zu je 100 % ist plausibel");
+  assert.equal(anteilNormalisieren(1601, 16), null, "über alle Kerne hinaus = unplausibel");
+  assert.equal(anteilNormalisieren(-5), null);
+});
+
+it("num(): Zahlen als Text zählen, Unsinn bleibt null (Strata: pcie_frac \"0.15\")", () => {
+  assert.equal(num("0.15"), 0.15);
+  assert.equal(num(" 32768 "), 32768);
+  assert.equal(num("3 Stück"), null, "kein Zahltext → lieber null als geraten");
+  assert.equal(num(""), null);
+  assert.equal(num(true), null);
+  assert.equal(num(Number.POSITIVE_INFINITY), null);
 });
 
 it("Strata: unpassendes Antwort-Schema wirft, statt halbe Zahlen zu zeigen", () => {
