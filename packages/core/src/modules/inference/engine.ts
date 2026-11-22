@@ -53,7 +53,32 @@ export const NO_FEATURES: InferenceFeatures = { perRequest: false, hardware: fal
 
 /** Zahl oder null — „nicht gemeldet“ ist nie 0 (ADR-0023). */
 export function num(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  // Manche Engines zahlen Zahlen als Text aus (Strata meldet pcie_frac als "0.15").
+  // Genommen wird nur, was verlustfrei eine Zahl ist — sonst bleibt es null, nicht 0.
+  if (typeof value === "string") {
+    const rand = value.trim();
+    if (rand === "") return null;
+    const wert = Number(rand);
+    return Number.isFinite(wert) ? wert : null;
+  }
+  return null;
+}
+
+/**
+ * Anteile auf 0..1 bringen. Die Engines sind uneinheitlich: Strata meldete
+ * `gpu_util` schon als 0,87 und als 100, `cpu` als 56 und als 860 (Summe über alle
+ * Kerne). Geraten wird nicht — unplausibles bleibt null, statt einen Fantasiewert
+ * in Prozent zu kleben.
+ */
+export function anteilNormalisieren(value: unknown, kerne?: number | null): number | null {
+  const wert = num(value);
+  if (wert == null || wert < 0) return null;
+  if (wert <= 1) return wert;
+  if (wert <= 100) return wert / 100;
+  // > 100: nur plausibel als Summe über alle Kerne — dann pro Kern mitteln.
+  if (kerne != null && kerne > 0 && wert <= 100 * kerne) return wert / (100 * kerne);
+  return null;
 }
 
 export function text(value: unknown): string | null {

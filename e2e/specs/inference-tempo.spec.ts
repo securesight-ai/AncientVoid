@@ -139,10 +139,14 @@ test.describe("Token-Tempo-Seite (EPIC-P79)", () => {
     await expect(karte(app, "Engine & Bauart")).toContainText(/4\.096\/24\.576|4.096 \/ 24.576/);
     await expect(karte(app, "Gerät")).toContainText(/E2E-CPU 16K/);
     // Slot-Maximum und Kartenfähigkeit sind verschiedene Befunde (real: Karte Gen 5, Slot Gen 4).
-    await expect(karte(app, "Gerät")).toContainText(/Slot Gen 4 × 16 · Karte Gen 5/);
+    // Slot = Ist wird nicht doppelt gezeigt; die Abweichung der Karte bleibt sichtbar.
+    await expect(karte(app, "Gerät")).toContainText(/Karte Gen 5/);
+    await expect(karte(app, "Gerät")).not.toContainText(/Slot Gen 4 × 16 · Karte/);
+    await expect(karte(app, "Gerät")).toContainText(/42 %/); // cpu 42 bei 16 Kernen bleibt 42 %, nicht 4200 %
     await expect(karte(app, "Engine & Bauart")).toContainText(/15 %/);
     await expect(karte(app, "Engine & Bauart")).toContainText(/32\.768/);
     await expect(karte(app, "Im Moment")).toContainText(/128\.000/); // größter Slot-Halt
+    await expect(karte(app, "Letzte Anfragen")).toContainText(/\d{2}:\d{2}:\d{2}/); // abgeschlossene Requests sind datiert (ohne \b: Tabellenzellen kleben im Text)
     await expect(karte(app, "Seit Engine-Start")).toContainText("144");
   });
 

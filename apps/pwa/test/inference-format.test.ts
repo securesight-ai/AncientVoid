@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { anteil, byteGroesse, dauer, tempo, verlauf, zahl } from "../src/features/inference/format.ts";
+import { anteil, byteGroesse, dauer, tempo, uhrzeit, verlauf, zahl } from "../src/features/inference/format.ts";
 
 /**
  * EPIC-P79 T79.4: die Zahlformate der Token-Tempo-Seite sind die Grenzlinie
  * zwischen „nicht gemeldet“ und „null“. Ein null, das als 0 erscheint, ist hier
  * ein Messfehler — deshalb steht der Gedankengang als Test, nicht nur im Code.
  */
+describe("uhrzeit", () => {
+  it("zeigt HH:MM:SS und bleibt bei Unsinn leer", () => {
+    expect(uhrzeit("2026-11-22T07:51:05.188Z")).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+    expect(uhrzeit("kein Zeitstempel")).toBe("—");
+  });
+});
+
 describe("inference-Format (P79)", () => {
   it("null und undefined bleiben Gedankenstrich, 0 bleibt 0", () => {
     expect(zahl(null)).toBe("—");

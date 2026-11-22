@@ -87,6 +87,26 @@ Handy-Zugang zum Agenten) wegbleibt.
   Formel (≈59 GiB) sind verschiedene Rechnungen — `Mlocked` ≈ 26,6 GiB und
   Shmem werden doppelt gezählt. Werkzeug: Skill `linux-ram-attribution`.
 
+## Nachzug P79 — zweite Runde (22.11., verifiziert)
+Vier Defekte, die erst der Blick auf die **live gerenderte Seite** gezeigt hat:
+- **Auslastung 10.000 %** und **CPU 860 %**: die Engines sind uneinheitlich — Strata
+  meldete `gpu_util` schon als 0,87 und als 100, `cpu` als 56 und als 860 (Summe über
+  alle Kerne). Neu: `anteilNormalisieren()` im Kern (0..1, 0..100, Kern-Summe),
+  unplausibel bleibt null. Live jetzt 6 % / 1,8 %.
+- **Verlaufs-Linien liefen aus ihrer Box**: `verlauf()` zeichnet in 32 Höhe, der
+  `viewBox` der neuen Karte hatte 26 → LinienMal überlappen die Beschriftung. Gemessen:
+  SVG-Höhe jetzt 32, Reihen ohne Überlappung.
+- **`pcie_frac` kam als String** (`"0.15"`) → Feld verschwand still. `num()` nimmt jetzt
+  zahlenreiner Text, sonst null.
+- **„Letzte Anfragen" ohne Zeit**: die Requests standen anonym da, obwohl `at` im Vertrag
+  liegt und der i18n-Schlüssel existierte. Jetzt erste Spalte `Zeit` (HH:MM:SS, hour12:false).
+- Layout: Container-Breakpoints auf 560/700/1024 (Seitenpane ist schmaler als der Viewport —
+  bei Viewport 710 misst das Pane nur 362 px, dort ist einspaltig richtig), drei Werte-Spalten
+  erst ab 1024 px, Live-Kachel hält zwei breite Spalten für Textwerte (Phase).
+Belege: Kern 17/17, PWA-Format 10/10, Playwright `inference-tempo` 5/5 (Desktop + Mobile,
+inkl. Zeitspalte), Typecheck/Lint/i18n/arch/context grün, Screenshots 1280/710/390 ohne
+Überlauf und ohne geklemmte Zellen.
+
 ## Nachzug P79 (22.11., verifiziert)
 - Inferenz-Seite war gegen tokdeck unvollständig. Nachgezogen und im Live-JSON des
   echten Strata geprüft: Engine-Bauart (Kontext, KV `int8`, Experten 10 116/24 576,
