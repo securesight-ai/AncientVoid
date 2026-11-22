@@ -9,6 +9,7 @@ import { isOffloaded, visibleEventText, withBlobPayload } from "./event-text.ts"
 import { isEmptyThinking, toolIdOf } from "./event-filter.ts";
 import { Markdown } from "../../shared/Markdown.tsx";
 import { AttachmentChips, type AttachmentRef } from "../attachments/Attachments.tsx";
+import { SpeakButton } from "../../shared/SpeakButton.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 
 function toolAnchor(toolId: string, side: "use" | "result"): string {
@@ -218,6 +219,8 @@ function EventRowView({
       )}
       {typeof errorDetail === "string" && <div class="dim">{errorDetail}</div>}
       {(event.type === "assistant" || prompt) && <CopyButton text={visibleEventText(event)} />}
+      {/* EPIC-P75: Antworten am Lauf-Ende sind hörbar — voller sichtbarer Text, am Cap sichtbar gekürzt. */}
+      {event.type === "assistant" && <SpeakButton text={visible} />}
       {expanded && <EventDetail event={rowEvent} />}
     </div>
   );

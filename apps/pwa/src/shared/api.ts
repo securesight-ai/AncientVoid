@@ -4,6 +4,7 @@ import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, Kno
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
 import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
 export type { TerminalTarget };
+import type { TtsSettingsPatch, TtsSettingsView, TtsStatusResponse } from "@ancientvoid/contracts";
 import { noteApprovalDecided } from "./first-run.ts";
 export interface SessionRecord {
   id: string;
@@ -1488,6 +1489,18 @@ function createHubApi(P: (path: string) => string) {
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
     return url.href;
   },
+  /** EPIC-P75 (ADR-0097): Sprachausgabe am Hub — Status aus echter Probe, Synthese als WAV-Blob. */
+  ttsStatus: () => api<TtsStatusResponse>(P("/api/tts")),
+  ttsSpeak: async (text: string): Promise<Blob> => {
+    const res = await fetch(P("/api/tts"), { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${getToken()}` }, body: JSON.stringify({ text }) });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(body.error ?? `${res.status} ${res.statusText}`);
+    }
+    return res.blob();
+  },
+  ttsSettings: () => api<{ tts: TtsSettingsView }>(P("/api/settings/tts")),
+  setTtsSettings: (patch: TtsSettingsPatch) => api<{ tts: TtsSettingsView }>(P("/api/settings/tts"), { method: "PUT", body: JSON.stringify(patch) }),
   transcribe: async (audio: Blob): Promise<{ text: string; engine: string; audioMs: number; latencyMs: number }> => {
     const res = await fetch(P("/api/stt"), { method: "POST", headers: { "content-type": audio.type || "audio/webm", authorization: `Bearer ${getToken()}` }, body: audio });
     const body = (await res.json().catch(() => ({}))) as { text?: string; engine?: string; audioMs?: number; latencyMs?: number; error?: string };
