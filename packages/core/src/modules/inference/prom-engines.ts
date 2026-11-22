@@ -134,6 +134,11 @@ export function promReading(
     read: null,
     reused: null,
     elapsedS: hole(families, "halogen:busy_for_seconds"),
+    // Diese Engines melden keine Slot-Zulassung — null, nicht 0.
+    parallel: null,
+    waiting: null,
+    admitting: null,
+    heldTokens: null,
   };
 
   const engine: InferenceEngine = {
@@ -143,6 +148,18 @@ export function promReading(
     kvTokens: hole(families, "llamacpp:kv_cache_tokens"),
     kvResident: null,
     expertCacheMib: null,
+    maxContext: null,
+    kvQuant: null,
+    expertSlots: null,
+    expertsTotal: null,
+    arenaMib: null,
+    batchSlots: null,
+    drafting: null,
+    spec: null,
+    pcieFrac: null,
+    poolWorkers: null,
+    prefillCap: null,
+    conversationCacheMib: null,
   };
 
   if (d == null) hinweise.push("Erster Abruf — Raten erscheinen ab dem zweiten Poll");

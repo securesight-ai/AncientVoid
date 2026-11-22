@@ -44,11 +44,11 @@ function strataText(): string {
     };
   });
   return JSON.stringify({
-    engine: { model: "E2E-Modell", version: "1.2.3", max_context: 131072, kv_resident: true, expert_cache_mib: 900 },
-    live: { state: "generating", phase: "writing", tok_s: 47.5, prefill_tok_s_mean: 910, queued: 0, generated: 320, prompt_total: 71000, prompt_read: 2400, reused: 68600, elapsed_s: 6.5 },
+    engine: { model: "E2E-Modell", version: "1.2.3", max_context: 131072, context: 131072, kv_resident: true, expert_cache_mib: 900, kv: "int8", expert_slots: 4096, experts: 24576, arena_mib: 24000, batch_slots: 2, drafting: "mtp", spec: 4, pcie_frac: 0.15, pool_workers: 15, prefill_cap: 32768, conversation_cache_mib: 8192 },
+    live: { state: "generating", phase: "writing", tok_s: 47.5, prefill_tok_s_mean: 910, queued: 0, generated: 320, prompt_total: 71000, prompt_read: 2400, reused: 68600, elapsed_s: 6.5, parallel: 2, waiting: 1, admitting: 0, slots: [{ slot: 0, held_tokens: 96000 }, { slot: 1, held_tokens: 128000 }] },
     totals: { requests: 144, prompt_tokens: 900000, reused: 810000, output_tokens: 150000, prompt_ms: 520000, decode_ms: 3100000, drafts_offered: 90000, drafts_accepted: 61000 },
-    hardware: { gpu_util: 0.83, gpu_temp: 66, gpu_mem_used: 30_000_000_000, gpu_mem_total: 34_000_000_000, gpu_power: 240, gpu_power_limit: 300, gpu_pcie_gen: 4, gpu_pcie_width: 16 },
-    hardware_static: { gpu_name: "E2E-GPU" },
+    hardware: { gpu_util: 0.83, gpu_temp: 66, gpu_mem_used: 30_000_000_000, gpu_mem_total: 34_000_000_000, gpu_power: 240, gpu_power_limit: 300, gpu_pcie_gen: 4, gpu_pcie_width: 16, gpu_pcie_gen_max: 4, gpu_pcie_width_max: 16, gpu_pcie_own_gen: 5, gpu_pcie_path: "4/4", ram_used: 96_000_000_000, ram_total: 128_000_000_000, cpu: 42, disk_read_mb: 1.5, disk_write_mb: 0.5 },
+    hardware_static: { gpu_name: "E2E-GPU", cpu_name: "E2E-CPU 16K", cores: 16 },
     conversation_cache: { bytes: 4000, evictions: 2, budget_mib: 6000, parked: 3, restores: 1, refused_total: 0 },
     history: { tok_s: [40, 42, 44, 47], prefill_tok_s_mean: [820, 880, 900], ram_used: [60_000_000_000, 61_000_000_000] },
     requests: anfragen,
@@ -132,6 +132,17 @@ test.describe("Token-Tempo-Seite (EPIC-P79)", () => {
     await openInferenz(app);
     await expect(karte(app, "Im Moment")).toBeVisible();
     await expect(app.getByText(/E2E-Modell/)).toBeVisible();
+    // EPIC-P79 Nachzug: Bauart und Gerät müssen stehen, sonst ist kein Befund deutbar.
+    await expect(karte(app, "Engine & Bauart")).toBeVisible();
+    await expect(karte(app, "Engine & Bauart")).toContainText(/131\.072/);
+    await expect(karte(app, "Engine & Bauart")).toContainText(/int8/);
+    await expect(karte(app, "Engine & Bauart")).toContainText(/4\.096\/24\.576|4.096 \/ 24.576/);
+    await expect(karte(app, "Gerät")).toContainText(/E2E-CPU 16K/);
+    // Slot-Maximum und Kartenfähigkeit sind verschiedene Befunde (real: Karte Gen 5, Slot Gen 4).
+    await expect(karte(app, "Gerät")).toContainText(/Slot Gen 4 × 16 · Karte Gen 5/);
+    await expect(karte(app, "Engine & Bauart")).toContainText(/15 %/);
+    await expect(karte(app, "Engine & Bauart")).toContainText(/32\.768/);
+    await expect(karte(app, "Im Moment")).toContainText(/128\.000/); // größter Slot-Halt
     await expect(karte(app, "Seit Engine-Start")).toContainText("144");
   });
 
