@@ -2,7 +2,7 @@
   "$config": {
     "minRuns": 2,
     "maxLessons": 2,
-    "descriptionBudgetTotal": 4316,
+    "descriptionBudgetTotal": 4560,
     "npmRunExemptBySkill": {
       "factory": [
         "e2e"

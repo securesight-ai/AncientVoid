@@ -162,6 +162,17 @@ Der Deploy bringt auch **P75 Sprachausgabe** auf den Hub (main enthielt es seit
   Formel (≈59 GiB) sind verschiedene Rechnungen — `Mlocked` ≈ 26,6 GiB und
   Shmem werden doppelt gezählt. Werkzeug: Skill `linux-ram-attribution`.
 
+## Live genommen + Skill für den Neustart (22.11., verifiziert)
+- PR #270 gemerged (`5701180b`), Hub live auf genau diesem Stand: `version.json` == HEAD,
+  `dirty:false`, Health 200 nach 2 s, Inference-Route antwortet (401 ohne Token).
+- Live im Browser belegt: Pane-Titel **„Inferenz“** (kein roher Schlüssel mehr), Prompt-Cache
+  zeigt nur noch gemeldete Zeilen (6 statt 12), **0** „—“-Werte in den Kacheln, kein
+  Overflow; „Im Moment“ zeigt während eines laufenden Requests gehaltene Token 97.316.
+- Review-Token widerrufen, Datei geshreddert, ohne Token wieder 401; Browser geschlossen.
+- Neuer Skill `hub-neustart-live` (Wachhund, version.json gegen HEAD, K7-Rekonstruktion,
+  PWA-Cache beim Blick, Token-Widerruf) + README-Zeile; `check:skills`-Budget 4316 → 4560
+  (243 Zeichen neue Beschreibung). `check:skills` OK (19 Skills).
+
 ## Titel als roher Schlüssel — Gate-Lücke geschlossen (22.11., verifiziert)
 - Live zeigte der Pane-Titel `COMMON.INFERENCE`: P61-Commit `338a82e9` hat
   `common.inference`/`common.inference_title` aus den Katalogen gelöscht. de/en-Parität

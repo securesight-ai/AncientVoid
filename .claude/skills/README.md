@@ -29,6 +29,7 @@
 | [`concept-phase`](concept-phase/SKILL.md) | Aufgabe in vertikale Slices (6 Dimensionen) | Aufgabe slicen, Scoping, Edges | `epic-creation` für neue Phasen |
 | [`epic-creation`](epic-creation/SKILL.md) | Neue `EPIC-Pn`-Datei nach 7-Abschnitt-Schema | „neues Epic", „P5 planen" | Phasen-Ebene; Feinschnitt → `concept-phase` |
 | [`messlauf`](messlauf/SKILL.md) | Messlauf gegen K1–K10 fahren und ablegen | Benchmark, Durchsatz, Latenz, Messzahl zitieren | Ablage unter `docs/messlauf/` |
+| [`hub-neustart-live`](hub-neustart-live/SKILL.md) | Live-Hub gefahrlos heben: Wachhund mit Rueckfall, version.json gegen HEAD, K7-Rekonstruktion, PWA-Cache beim Blick | „neuen Stand live nehmen“, Hub-Neustart, Seite zeigt alten Stand | ohne Wachhund niemals裸 neu starten |
 | [`layout-beweis`](layout-beweis/SKILL.md) | Uberlappung, Flaechenhaushalt und Mitrollen am Handy messen (elementFromPoint, Geometriezahlen) | „fuehlt sich ueberdeckt/gedrungen an“, FAB/Dock/Composer, Scrollverhalten | Wegwerf-Spec `_scratch-*.spec.ts` vor Commit loeschen |
 | [`retro`](retro/SKILL.md) | Evidence-basierte Retro gegen Epic-AC | „Retro", Phasen-Abschluss | bewertet Vergangenheit; planen → `epic-creation` |
 | [`setup-wizard`](setup-wizard/SKILL.md) | Setup-Hilfe für `./setup.sh` (Provider zuerst, Exit-Code-Diagnose) | „Installation", „Setup", „läuft nicht", Provider anbinden | Wizard-Fehlersuche; Defekte → `bugfix` |
