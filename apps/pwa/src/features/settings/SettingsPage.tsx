@@ -4,6 +4,7 @@ import { KnowledgeSettings } from "../knowledge/KnowledgeSettings.tsx";
 import { PresetSettings } from "./PresetSettings.tsx";
 import { AppearanceSettings } from "./AppearanceSettings.tsx";
 import { ConnectionsSettings } from "./ConnectionsSettings.tsx";
+import { InferenceSettings } from "./InferenceSettings.tsx";
 import { DevicesSettings } from "./DevicesSettings.tsx";
 import { FontSettings } from "./FontSettings.tsx";
 import { GeminiSettings } from "./GeminiSettings.tsx";
@@ -41,6 +42,7 @@ export function SettingsPage({ onSwitchToken }: { onSwitchToken: () => void }) {
           <KnowledgeSettings />
           <MainSyncSettings />
           <GeminiSettings />
+          <InferenceSettings />
           <SecuritySettings onSwitchToken={onSwitchToken} />
         </div>
       </div>

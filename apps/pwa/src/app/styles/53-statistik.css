@@ -62,3 +62,26 @@
   flex-wrap: wrap;
 }
 
+/* BUG-0257: Reiterleiste der einen Analyse-Seite (Statistik · Metriken · Inferenz).
+ * Unterstrich-Markierung wie .tile-tabs, damit die Auswahl auch ohne Farbe lesbar bleibt. */
+.stat-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--bg-chip);
+  margin-bottom: 12px;
+}
+
+.stat-tabs button {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 8px 12px;
+  font: inherit;
+  color: var(--fg-dim);
+  cursor: pointer;
+}
+
+.stat-tabs button.active {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}

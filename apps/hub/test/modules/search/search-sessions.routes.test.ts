@@ -68,6 +68,7 @@ interface SearchBody {
   status?: string;
   scope?: string;
   mode?: string;
+  corrected?: string[];
   sessionStatus?: string;
   docStatus?: string;
   docEngine?: string;
@@ -300,6 +301,17 @@ describe("GET /api/search/all", () => {
     expect(scoped.body.hubs?.every((h) => h.state === "skipped")).toBe(true);
     await app.close();
     await new Promise<void>((r) => peer.close(() => r()));
+  });
+
+  it("berichtigt einen Tippfehler bis in die Route hinein", async () => {
+    addSessionRow("s1", projectDir, "Token-Widget");
+    await seedEvent("s1", "assistant", "tokdeck läuft auf 127.0.0.1:7474");
+    const app = await buildApp({ transcript: new SessionTextIndex(db, dataDir) });
+    const res = await get(app, `/api/search/all?q=${encodeURIComponent("tokdek")}&scope=sessions`);
+    expect(res.body.mode).toBe("typo");
+    expect(res.body.sessionTotal).toBe(1);
+    expect(res.body.corrected).toContain("tokdeck");
+    await app.close();
   });
 
   it(" findet die Doku eines anderen Projekts und nennt das Projekt dazu", async () => {

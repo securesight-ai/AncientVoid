@@ -13,8 +13,6 @@ import { StatusPage } from "../status/StatusPage.tsx";
 import { VaultTabs } from "../vault/VaultTabs.tsx";
 import { TeamsPane } from "../team/TeamsPane.tsx";
 import { AutomationsPane } from "../automations/AutomationsPane.tsx";
-import { AiMetricsPage } from "../aimetrics/AiMetricsPage.tsx";
-import { InferencePage } from "../inference/InferencePage.tsx";
 import { TerminalPage } from "../terminal/TerminalPage.tsx";
 import { ReleaseNotesPage } from "../release-notes/ReleaseNotesPage.tsx";
 import { useHubStatus } from "./hub-status.ts";
@@ -30,8 +28,6 @@ const TITLES: Partial<Record<ListPage, string>> = {
   vault: "Notizen",
   teams: "Agenten-Teams",
   automationen: "Automationen",
-  aimetrics: t("common.metrics"),
-  inference: t("common.inference"),
   terminal: t("common.terminal"),
   releasenotes: t("common.release_notes"),
 };
@@ -47,6 +43,7 @@ export function ToolPane({
   onSwitchToken,
   vaultFile = null,
   vaultTab = "notizen",
+  statTab = null,
   onPopout,
   closeLabel = t("common.close"),
   escCloses = true,
@@ -58,6 +55,8 @@ export function ToolPane({
   onSwitchToken: () => void;
   /** EPIC-P49: Datei-Deep-Link für die Vault-Seite. */
   vaultFile?: string | null;
+  /** BUG-0257: Reiter der Analyse-Seite (#/statistik/metriken). */
+  statTab?: "metriken" | "inferenz" | null;
   /** EPIC-P74 T74.6: Reiter im Notizen-Bereich (#/notizen/wissen). */
   vaultTab?: "notizen" | "wissen";
   onPopout?: () => void;
@@ -105,7 +104,7 @@ export function ToolPane({
       <div class="tool-pane-body">
         {page === "new" && <CreateSession adapters={hub.adapters} hosts={hub.hosts} onCreated={(session) => { location.hash = sessionHash(session.id, session.hostId); }} />}
         {page === "approvals" && <ApprovalQueuePane />}
-        {page === "statistics" && <StatisticsPage />}
+        {page === "statistics" && <StatisticsPage {...(statTab ? { tab: statTab } : {})} />}
         {page === "settings" && <SettingsPage onSwitchToken={onSwitchToken} />}
         {page === "media" && <MediaPage sessions={hub.sessions} />}
         {page === "pc" && <DesktopPage />}
@@ -113,8 +112,6 @@ export function ToolPane({
         {page === "vault" && <VaultTabs {...(vaultFile ? { initialFile: vaultFile } : {})} initialTab={vaultTab} />}
         {page === "teams" && <TeamsPane initialHash={initialHash} />}
         {page === "automationen" && <AutomationsPane />}
-        {page === "aimetrics" && <AiMetricsPage />}
-        {page === "inference" && <InferencePage />}
         {page === "terminal" && <TerminalPage />}
         {page === "releasenotes" && <ReleaseNotesPage />}
       </div>

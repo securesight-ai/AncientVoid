@@ -869,6 +869,7 @@ export const en = {
   "search.load_more": "load more matches",
   "search.head_project_files": "Project files",
   "search.mode_or": "no single text held every term — matched on parts",
+  "search.mode_typo": "no text held the searched word — matched a similar word: {terms}",
   "search.mode_part": "no text held the terms as whole words — matched inside longer words (e.g. “offer” inside “special offer”)",
   "search.no_hits_any": "nothing found — not in questions and answers, not in the docs",
   "search.only_this_project": "this project only",

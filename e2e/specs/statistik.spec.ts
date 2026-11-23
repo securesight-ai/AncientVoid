@@ -57,6 +57,22 @@ async function openSection(page: Page, title: string) {
 }
 
 test.describe("Statistik-Zentrale (EPIC-P56/P66)", () => {
+  test("BUG-0257: eine Seite, drei Reiter — Metriken/Inferenz über denselben Menüpunkt, Altlinks leiten um", async ({ app }) => {
+    await openStatistics(app);
+    await expect(app.getByRole("tab")).toHaveCount(3);
+    await expect(app.getByRole("tab", { name: "Statistik" })).toHaveAttribute("aria-selected", "true");
+    await app.getByRole("tab", { name: "Metrik" }).click();
+    await expect(app).toHaveURL(/#\/statistik\/metriken$/);
+    await expect(app.getByRole("tab", { name: "Metrik" })).toHaveAttribute("aria-selected", "true");
+    await expect(app.getByRole("region", { name: "Metrik-Quelle E2E KI-Server" })).toBeVisible();
+    await app.getByRole("tab", { name: "Inferenz" }).click();
+    await expect(app).toHaveURL(/#\/statistik\/inferenz$/);
+    await expect(app.getByText(/Keine Engines konfiguriert/)).toBeVisible();
+    // Altlinks leiten permanent um (route.ts, redirectLegacyStatHash).
+    await app.goto(`${app.url().split("#")[0]}#/metriken`);
+    await expect(app).toHaveURL(/#\/statistik\/metriken$/);
+  });
+
   test("Dock „Mehr“ → „Statistik“ zeigt Sessions mit Verteilung und n", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "Statistik-Erste" });
     await hub.until(async () => (await hub.api<{ status: string }>(`/api/sessions/${id}`)).body.status === "idle", "idle");

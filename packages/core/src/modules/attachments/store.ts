@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import { join } from "node:path";
-import { attachmentKind, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_TEXT_CHARS, TTS_TIMEOUT_MS, type AttachmentExtraction, type AttachmentKind, type AttachmentRecord, type PromptAttachment, type TtsSettingsView } from "@ancientvoid/contracts";
+import { attachmentKind, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENT_TEXT_CHARS, TTS_TIMEOUT_MS, type AttachmentExtraction, type AttachmentKind, type AttachmentRecord, type InferenceModelView, type PromptAttachment, type TtsSettingsView } from "@ancientvoid/contracts";
 import type { HubDatabase } from "../../platform/index.ts";
 import { extractText, type ExtractOptions } from "./extract.ts";
 
@@ -177,6 +177,16 @@ export class SettingsStore {
       language: this.get("tts.language") === "en" ? "en" : "de",
       speed: storedNumber(this.get("tts.speed"), 1),
       timeoutMs: storedNumber(this.get("tts.timeoutMs"), TTS_TIMEOUT_MS),
+    };
+  }
+
+  /** BUG-0258: manuell gebundenes Inferenz-Modell (OpenAI-kompatibel) —
+   *  runtime änderbar, Schlüssel nur als Dateireferenz (ADR-0011). */
+  inferenceModelView(): InferenceModelView {
+    return {
+      url: this.get("inference.model.url"),
+      model: this.get("inference.model.id"),
+      apiKeyFile: this.get("inference.model.keyFile"),
     };
   }
 }
