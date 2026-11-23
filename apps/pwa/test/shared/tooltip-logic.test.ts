@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CLICK_SUPPRESS_MS, LONG_PRESS_MS, MOVE_TOLERANCE_PX, createLongPress, tipText } from "../../src/shared/tooltip-logic.ts";
+import { CLICK_SUPPRESS_MS, LONG_PRESS_MS, MOVE_TOLERANCE_PX, createLongPress, placeTip, tipText } from "../../src/shared/tooltip-logic.ts";
 
 describe("Long-Press (Touch-Tooltip)", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -102,5 +102,45 @@ describe("tipText", () => {
   it("leer bleibt leer, Langes wird gekürzt", () => {
     expect(tipText({})).toBe("");
     expect(tipText({ text: "x".repeat(300) }).length).toBe(118);
+  });
+});
+
+describe("placeTip (BUG-0255: Tooltip-Geometrie ohne DOM)", () => {
+  // Tablet 800×1280, split: Icon-Leiste links, Icon 0..55, Mitte 27,5 px
+  const vp = { width: 800, height: 1280 };
+  const railIcon = { x: 27.5, top: 600, bottom: 644, right: 55 };
+
+  it("Icon am linken Rand: Tooltip rechts daneben, vollständig im Viewport", () => {
+    const p = placeTip(railIcon, vp, { width: 97, height: 24 }); // „Automationen“ (gemessen)
+    expect(p.mode).toBe("side");
+    expect(p.left).toBe(63); // Icon-Kante 55 + 8px Rand
+    expect(p.left + 97).toBeLessThanOrEqual(792);
+    expect(p.top).toBeGreaterThanOrEqual(20); // vertikal eingeklemmt, nicht über den Rand
+    expect(p.top).toBeLessThanOrEqual(1260);
+  });
+
+  it("langer Tooltip am Umschalter (129 px) bleibt ebenfalls rechts und sichtbar", () => {
+    const p = placeTip({ x: 27.5, top: 6, bottom: 50, right: 55 }, vp, { width: 129, height: 24 });
+    expect(p.mode).toBe("side");
+    expect(p.left).toBe(63);
+  });
+
+  it("Ziel mittig im Bild: weiterhin über dem Ziel zentriert", () => {
+    const p = placeTip({ x: 400, top: 300, bottom: 340, right: 420 }, vp, { width: 120, height: 24 });
+    expect(p.mode).toBe("above");
+    expect(p.left).toBe(340);
+    expect(p.top).toBe(300);
+  });
+
+  it("kein Platz rechts vom Rand-Icon: Box wird in den Viewport geklemmt, ragt nicht raus", () => {
+    const p = placeTip(railIcon, { width: 120, height: 800 }, { width: 90, height: 24 });
+    expect(p.left).toBeGreaterThanOrEqual(8);
+    expect(p.left + 90).toBeLessThanOrEqual(112);
+  });
+
+  it("Ziel ganz oben (top < 40): Tooltip unter dem Ziel", () => {
+    const p = placeTip({ x: 400, top: 10, bottom: 46, right: 420 }, vp, { width: 60, height: 24 });
+    expect(p.mode).toBe("below");
+    expect(p.top).toBe(46);
   });
 });
