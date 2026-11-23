@@ -733,8 +733,22 @@ export class SessionTextIndex {
       }
     }
     if (!found.length) return {};
-    found.sort((x, y) => y.count - x.count || (x.term < y.term ? -1 : 1));
-    return { suggest: found.slice(0, 3) };
+    // Tippfehler-Familien auflösen: „tokde“ und „tokdec“ stecken in „tokdeck“ und
+    // haben fast dieselbe Fundstellenzahl — das enthaltende Wort ist das bessere
+    // Ziel, nicht das häufigste Rauschen. Der Abstand ist absolut (zwei), weil
+    // Präfixzählung kürzere Kandidaten aufbläht: „tokde“ zählt „tokdeck“ mit.
+    const keep = found.filter(
+      (a) =>
+        !found.some(
+          (b) =>
+            b.term !== a.term &&
+            b.count >= a.count - 2 &&
+            a.term.length < b.term.length &&
+            isSubsequence(a.term, b.term),
+        ),
+    );
+    keep.sort((x, y) => y.count - x.count || (x.term < y.term ? -1 : 1));
+    return { suggest: keep.slice(0, 3) };
   }
 
   /** Verschriebener Begriff → vorhandenes Wort → Suchausdruck. Leer, wenn einer
