@@ -10,8 +10,10 @@ import {
   type InferenceModelStatus,
   type InferenceSnapshot,
   type InferenceSourceList,
+  type InferenceGateSnapshot,
 } from "@ancientvoid/contracts";
 import type { SettingsStore } from "@ancientvoid/core";
+import type { Pforte } from "@ancientvoid/core";
 import type { RouteContext } from "../../route-context.ts";
 
 /** Wie tts.routes: Key nur aus der Datei, nie im State oder Log. */
@@ -61,10 +63,23 @@ export function registerInferenceRoutes(app: FastifyInstance, ctx: RouteContext)
  * SettingsStore (runtime änderbar), der Schlüssel nur als Dateireferenz
  * (ADR-0011). Fragen sind kurze REST-Antworten, keine Events (K5).
  */
-export function registerInferenceModelRoutes(app: FastifyInstance, deps: { settings: SettingsStore; fetch?: typeof fetch; readFile?: (p: string) => Promise<string | null> }): void {
+export function registerInferenceModelRoutes(app: FastifyInstance, deps: { settings: SettingsStore; fetch?: typeof fetch; readFile?: (p: string) => Promise<string | null>; pforte?: Pforte }): void {
   const doFetch = deps.fetch ?? fetch;
   const readFile = deps.readFile ?? (async (p) => await readFileFs(p, "utf8").catch(() => null));
   const view = () => deps.settings.inferenceModelView();
+
+  // BUG-0272 (ADR-0116): die Pfortenlage — wer hält einen Modell-Endpoint, wer
+  // wartet, und wie lange schon. Ohne konfigurierte Pforte: 501 mit Ansage.
+  app.get("/api/inference/gate", async (_req, reply): Promise<InferenceGateSnapshot | { error: string }> => {
+    if (!deps.pforte) {
+      reply.code(501);
+      return { error: "keine Pforte konfiguriert — setze inference.gate in hub.config.json" };
+    }
+    return {
+      erzeugt: new Date().toISOString(),
+      endpunkte: deps.pforte.abgedeckte().map((e) => deps.pforte!.zustand(e)).filter((z): z is NonNullable<typeof z> => z !== null),
+    };
+  });
 
   app.get("/api/settings/inference", async (): Promise<InferenceModelStatus> => {
     const v = view();

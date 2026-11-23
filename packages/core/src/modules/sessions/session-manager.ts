@@ -9,6 +9,7 @@ import { readdir, rm } from "node:fs/promises";
 import type { PromptAttachment, ToolPermissionAnswer, ToolPermissionPoll, ToolPermissionRequest, Adapter, SessionMetricsState, AdapterContext, BlobRef, EmittedEvent, EmittedStreamFrame, WsStreamFrames, HubLogger, HubMetrics, NormalizedEvent, SessionRecord, SessionSnapshot, SessionSpec, SessionStatus, SteerInput, Ack, WorkerProcess, WorkerRunner, UsageQuota, ReportingSink, DiscoverySource, DiscoveredSession, HubNotification, NotificationAction, PendingOperation, RunEstimate, TurnMetric, WorkspaceManifest, WorkspaceServiceStatus, WorkspaceSetupApproval, WorkspaceStatus, MainSyncSettings, MainSyncApplyResult, MainSyncCheckResult } from "@ancientvoid/contracts";
 import { isCompactionCommand, actorKind, blobRefToString, classifyProviderError, countMetrics, currentProviderFailureFromEvents, emptyMetricCounters, metricsState, promptWithAttachments, providerErrorEvent, DEFAULT_HOST_ID, MAIN_SYNC_DEFAULTS, RESUME_SCHEMA_VERSION, SessionSpec as SessionSpecSchema, isLoopAdapter, unsupportedResume, EmittedStreamFrame as StreamFrameSchema } from "@ancientvoid/contracts";
 import type { EventStore } from "../../platform/index.ts";
+import type { Pforte } from "../inference/index.ts";
 import type { AdapterRegistry } from "../harness/index.ts";
 import type { HubDatabase } from "../../platform/index.ts";
 import type { WorktreeBaseChoice, WorktreeManager } from "../workspace/index.ts";
@@ -149,6 +150,7 @@ export class SessionManager {
   /** EPIC-P67 Stufe 1: liefert effektive Main-Sync-Einstellungen je Projekt — undefined = altes Verhalten. */
   private readonly mainSyncSettings: ((projectPath: string) => MainSyncSettings) | undefined;
   private readonly queue: SessionQueue;
+  private readonly pforte: Pforte | undefined;
   private readonly turnMetricStore: TurnMetricStore;
   private titleModel: PlannerModelConfig | undefined;
   private readonly draining = new Set<string>();
@@ -191,6 +193,10 @@ export class SessionManager {
      * ein Projekt (global + Projekt-Override, vom Aufrufer aufgelöst).
      * Weglassen = exakt das Vor-P67-Verhalten: Basis ist der lokale HEAD. */
     mainSyncSettings?: (projectPath: string) => MainSyncSettings,
+    /** BUG-0272 (ADR-0116): Pforte für Einzelslot-Modell-Endpoints. Weht der Hub
+     * sie ein, bleiben Züge in der Warteschlange, solange der Endpoint belegt ist —
+     * statt dass sich zwei Sitzungen im gemeinsamen KV-Kontext verdrängen. */
+    pforte?: Pforte,
   ) {
     this.autoResumeInterrupted = observability.autoResumeInterrupted ?? true;
     this.activityTracker = new SessionActivities({
@@ -224,6 +230,16 @@ export class SessionManager {
     this.defaultPermissionMode = defaultPermissionMode;
     this.mainSyncSettings = mainSyncSettings;
     this.queue = new SessionQueue(db);
+    this.pforte = pforte;
+    // Wird ein Platz frei, dürfen die wartenden Sitzungen dieses Endpoints wieder
+    // an die Reihe — sonst bliebe die Warteschlange liegen, bis jemand zufällig
+    // eine neue Eingabe schickt.
+    this.pforte?.setzeWeckruf((schluessel) => {
+      for (const s of this.live.values()) {
+        const modell = this.inferenzEndpoint(s);
+        if (modell !== null && this.pforte?.schluessel(modell) === schluessel) this.scheduleDrain(s.record.id);
+      }
+    });
     this.turnMetricStore = new TurnMetricStore(db);
     this.mirrorDataDir = mirrorDataDir;
     this.db = db;
@@ -1921,9 +1937,24 @@ export class SessionManager {
     // ADR-0085: "jetzt nicht vormerken" ist eine ausdrueckliche Wahl des Nutzers. Sie ist
     // nur dort erlaubt, wo der Adapter Eingaben mitten im laufenden Zug zusichert.
     const wantsNow = !compact && meta?.queue === false && caps?.midTurnInput === true;
-    if (input.kind === "prompt" && !wantsNow && (meta?.queue || nextTurn) && !meta?.fromQueue && session.handle && ["starting", "working", "waiting_approval"].includes(session.record.status)) {
+    // BUG-0272 (ADR-0116): auch ein belegter Einzelslot-Endpoint vormerken — die
+    // Meldung wartet im Hub, statt dass zwei Sitzungen sich im KV verdrängen.
+    const endpointBelegt = input.kind === "prompt" && !wantsNow && !meta?.fromQueue && this.inferenzVoll(session);
+    if (
+      input.kind === "prompt" && !wantsNow && (meta?.queue || nextTurn || endpointBelegt) &&
+      !meta?.fromQueue && session.handle &&
+      (["starting", "working", "waiting_approval"].includes(session.record.status) || endpointBelegt)
+    ) {
       const item = this.queue.add(sessionId, input.text, input.attachments, actor ?? null);
       await this.emitSystem(session, "session.queued", { queueId: item.id, position: this.queue.count(sessionId), actor: actor ?? null });
+      if (endpointBelegt) {
+        // Der Grund steht in der Akte: Wartende sehen "Modell besetzt", nicht "nichts passiert".
+        await this.emitSystem(session, "inference.slot_wait", {
+          endpoint: this.inferenzEndpoint(session),
+          inhaber: session.record.id,
+          grund: "modell_besetzt",
+        });
+      }
       await this.commitSteer(session, meta, foreignWriter, actor);
       if (this.canDrain(session)) this.scheduleDrain(sessionId);
       return { ok: true, detail: "queued" };
@@ -1951,6 +1982,7 @@ export class SessionManager {
       // BUG-0016: the reopen is a steer like any other — without the
       // commit, a retried input id started the provider a second time.
       // T17.4: same hard wait as every submission (see submitAndWait).
+      this.reserviereInferenz(session);
       const reopened = await this.submitAndWait(
         session,
         meta,
@@ -1959,6 +1991,7 @@ export class SessionManager {
         "prompt",
         () => this.continueStopped(session, delivered, actor),
       );
+      if (!reopened.ok) this.gebeInferenzFrei(session);
       if (reopened.ok) await this.commitSteer(session, meta, foreignWriter, actor);
       return reopened;
     }
@@ -1967,6 +2000,7 @@ export class SessionManager {
       if (occupied) return { ok: false, detail: occupied };
       await this.ensureWorkdir(session);
     }
+    if (delivered.kind === "prompt") this.reserviereInferenz(session);
     const ack = await this.submitAndWait(
       session,
       meta,
@@ -1975,6 +2009,7 @@ export class SessionManager {
       input.kind,
       () => session.adapter.steer(session.handle!, delivered, this.makeContext(session)),
     );
+    if (!ack.ok && delivered.kind === "prompt") this.gebeInferenzFrei(session);
     // EPIC-P15 T15.3: a prompt after a manual Pause starts the next turn — the status follows.
     // (Budget and daily-cap parks keep their own rules.)
     if (ack.ok && delivered.kind === "prompt" && session.record.status === "parked" && session.record.parkReason === "manual") {
@@ -3452,6 +3487,11 @@ export class SessionManager {
         `illegal session transition ${session.record.status} → ${status} (${session.record.id})`,
       );
     }
+    // BUG-0272 (ADR-0116): der Zug hält den Modell-Endpoint. Sobald die Session
+    // nicht mehr arbeitet, gibt sie ihn zurück — der Lease der Pforte hält ihren
+    // KV-Cache trotzdem warm, damit der nächste Zug derselben Sitzung nicht von
+    // vorn vorbehandeln muss.
+    if (status !== "working" && status !== "starting") this.gebeInferenzFrei(session);
     session.record.status = status;
     session.record.updatedAt = new Date().toISOString();
     this.persist(session.record);
@@ -3499,7 +3539,47 @@ export class SessionManager {
     return this.chainWork(sessionId, () => this.drainSlot(sessionId));
   }
 
+  /** BUG-0272 (ADR-0116): welches Modell diese Session nutzt — der Endpoint, dessen
+   * Pforte gilt. Ohne Pforten-Eintrag (Cloud) ist der Endpoint ungedeckelt. */
+  private inferenzEndpoint(session: LiveSession): string | null {
+    const ausKonfig = this.registry.get(session.record.adapter)?.config?.["model"];
+    const modell = session.record.model ?? (typeof ausKonfig === "string" ? ausKonfig : null);
+    return modell ?? null;
+  }
+
+  /** Ist der Modell-Endpoint dieser Session gerade belegt (oder ihr Lease weg)? */
+  private inferenzVoll(session: LiveSession): boolean {
+    const endpoint = this.inferenzEndpoint(session);
+    if (!endpoint || !this.pforte) return false;
+    return !this.pforte.frei(endpoint, session.record.id);
+  }
+
+  /** Zug begins: hold the endpoint for the whole turn, not just the steer call. */
+  private reserviereInferenz(session: LiveSession): void {
+    const endpoint = this.inferenzEndpoint(session);
+    if (!endpoint || !this.pforte) return;
+    this.pforte.reservieren({
+      endpoint,
+      inhaber: session.record.id,
+      priorität: "interaktiv",
+      warum: "Zug",
+      promptToken: null,
+      maxToken: null,
+    });
+  }
+
+  /** Turn ends (any direction): give the endpoint back, keep the KV lease. */
+  private gebeInferenzFrei(session: LiveSession): void {
+    const endpoint = this.inferenzEndpoint(session);
+    if (!endpoint || !this.pforte) return;
+    this.pforte.freigeben(endpoint, session.record.id);
+  }
+
   private canDrain(session: LiveSession): boolean {
+    // BUG-0272: ein gedeckelter Endpoint, der gerade einer anderen Sitzung gehört,
+    // ist für diese Session geschlossen — die Meldung bleibt in der Warteschlange
+    // und kommt, sobald der Weckruf der Pforte diese Session weckt.
+    if (this.inferenzVoll(session)) return false;
     return session.record.status === "idle" ||
       (session.record.status === "working" && session.mainTurnIdle === true && !session.turnFailed &&
         this.registry.get(session.record.adapter)?.capabilities.midTurnInput === true);

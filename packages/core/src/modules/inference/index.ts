@@ -8,3 +8,6 @@ export { strataReading, assertStrataShape } from "./strata.ts";
 export { promReading, assertPromShape } from "./prom-engines.ts";
 export { parseProm, counter, gauge, histQuantil, deltas } from "./prom.ts";
 export type { EngineReading, RequestRecord } from "./engine.ts";
+
+export { createPforte } from "./pforte.ts";
+export type { Pforte, PforteGesuch, PforteEreignis, PforteOptionen } from "./pforte.ts";

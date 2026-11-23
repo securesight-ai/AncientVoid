@@ -1,4 +1,4 @@
-import { ActionDefinition } from "@ancientvoid/contracts";
+import { ActionDefinition, InferenceGateConfig } from "@ancientvoid/contracts";
 import { z } from "zod";
 import type { AdapterFactory, ReportingSink } from "@ancientvoid/contracts";
 
@@ -332,6 +332,14 @@ export const HubConfig = z.object({
         )
         .max(16)
         .default([]),
+      /**
+       * BUG-0272 (ADR-0116): Pforte pro Modell-Endpoint. Ein Einzelslot-Dienst wie
+       * Strata teilt sich EINEN Kontext (hier 262 144 Token) mit allen Sitzungen;
+       * ohne Pforte verdrängen sie sich gegenseitig im KV und melden
+       * Kontextüberlauf. Nur gelistete Endpoints werden gedeckelt — Cloud-Provider
+       * haben das Problem nicht und bleiben ungedeckelt.
+       */
+      gate: InferenceGateConfig.optional(),
     })
     .optional(),
   /**
