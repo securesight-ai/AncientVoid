@@ -161,6 +161,24 @@ Stufe `critical`. Der Hub schreibt Stufenwechsel (`hub heap ok → warn`) ins Lo
 dauerhaft steigender Wert ist ein Leck: Hub neu starten (Worker überleben, `KillMode=process`) und den
 Verlauf in der Bug-Datei festhalten.
 
+### Provider-Fehler im Chat lesen (ADR-0015, ADR-0115)
+
+Ein `provider.error` ist keine rohe CLI-Zeile, sondern zentral klassifiziert
+(`packages/contracts/src/harness/provider-error.ts`); der Rohtext bleibt im
+EventStore unter `payload.raw`. Nach Kategorie handeln:
+
+- `quota` / `rate_limit`: Kontingent oder Zeitfenster erschöpft — warten oder
+  übergeben; ab der Freigabezeit darf der Hub automatisch fortsetzen.
+- `context` (BUG-0265): der Verlauf passt nicht mehr ins Modell
+  („exceeds the context window", „maximum context length"). Neuanmelden hilft
+  hier nicht — Sitzung übergeben oder ein Modell mit größerem Kontext wählen.
+- `auth`: Anmeldung oder Schlüssel sind wirklich kaputt — am PC neu anmelden.
+- `network` / `server`: Hub-Netzwerk bzw. gestörter Provider.
+
+Titel und Rohtext passen nicht zusammen? Befund mit `payload.raw` in einer
+Bug-Datei melden — eine falsch klassifizierte Pleite schickt Menschen auf die
+falsche Fährte (genau das war BUG-0265).
+
 ## Session-Worktrees aufräumen (EPIC-P14)
 
 Jede isolierte Session hat einen Git-Worktree unter `data/worktrees/<id>`.
