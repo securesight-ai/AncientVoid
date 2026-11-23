@@ -101,6 +101,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
     }
     let assistant = "";
     let reasoning = "";
+    let invalidLine = false;
     const decoder = new TextDecoder();
     let buffer = "";
     for await (const chunk of res.body) {
@@ -120,7 +121,12 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
           parsed = JSON.parse(data) as typeof parsed;
         } catch {
           // Die Zeile ist vollständig (am \n getrennt) — unlesbar heißt unbekanntes Format, nicht „unvollständig“.
-          ctx.emit({ type: "error", summary: "unlesbare Antwortzeile vom Endpoint", payload: { line: data.slice(0, 200) } });
+          invalidLine = true;
+          ctx.emit({
+            type: "system",
+            summary: "unlesbare Antwortzeile vom Endpoint",
+            payload: { kind: "endpoint.invalid_sse_line", line: data.slice(0, 200) },
+          });
           continue;
         }
         if (parsed.error !== undefined) {
@@ -142,6 +148,10 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
           });
         }
       }
+    }
+    if (invalidLine && !assistant && !reasoning) {
+      ctx.emit({ type: "error", summary: "Endpoint-Stream ohne verwertbare Antwort", payload: { kind: "endpoint.invalid_sse_stream" } });
+      return;
     }
     // Reasoning lands fully in a blob; the stream stays small (K5 pattern).
     if (reasoning.length > 0) {
