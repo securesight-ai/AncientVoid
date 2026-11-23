@@ -461,7 +461,7 @@ function Main() {
     if (result === "opened") latest.current.changeWorkspace(detachTile(latest.current.ws, index));
   };
   // Opening a session adds a card; already detached sessions retain their explicit window.
-  const openFromList = (session: SessionRecord, opts?: { newTile?: boolean; seq?: number }) => {
+  const openFromList = (session: SessionRecord, opts?: { newTile?: boolean; seq?: number; seqAt?: number }) => {
     // Mit Fundstelle: über die Adresse öffnen, damit die Sitzung **an der
     // Fundstelle** aufgeht (der Anker steckt in der Adresse, nicht in der Kachel).
     if (opts?.seq !== undefined) {
@@ -486,7 +486,7 @@ function Main() {
     let ref: TileRef;
     if (route.view === "tail") {
       const deep = !!(route.tab || route.code || route.seq !== undefined);
-      ref = { ...tileRefOf(route.session), ...(deep ? { content: { kind: "session" as const, tab: route.code ? "code" as const : route.tab ?? "chat", ...(route.file ? { file: route.file } : {}), ...(route.code ? { code: route.code } : {}), ...(route.seq !== undefined ? { seq: route.seq } : {}) } } : {}) };
+      ref = { ...tileRefOf(route.session), ...(deep ? { content: { kind: "session" as const, tab: route.code ? "code" as const : route.tab ?? "chat", ...(route.file ? { file: route.file } : {}), ...(route.code ? { code: route.code } : {}), ...(route.seq !== undefined ? { seq: route.seq, seqAt: Date.now() } : {}) } } : {}) };
       // Listen-/Session-Wechsel: schon offene Karte fokussieren, statt Tab-Default als neue Kachel.
       if (!deep) {
         const focused = focusOpenSession(current, ref);

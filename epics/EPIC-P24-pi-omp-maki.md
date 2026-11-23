@@ -1,6 +1,6 @@
 # EPIC-P24 — pi, oh-my-pi und maki: Sessions erkennen und übernehmen
 
-**Status:** Code abgeschlossen 2026-10-28; Live-Abnahme am Handy → [EPIC-P35 (Endabnahme-Block) T35.16](EPIC-P35-harness-paritaet-fortsetzen-provider.md) · **Phase:** P24 · **Abhängigkeit:** P5 (Discovery), P22 (Titel, Kopie), ADR-0039
+**Status:** abgeschlossen 2026-10-28 — Live-Abnahme nach P000 verschoben (T000.7, zuvor T35.16) · **Phase:** P24 · **Abhängigkeit:** P5 (Discovery), P22 (Titel, Kopie), ADR-0039
 
 Auslöser: Wunsch von Jan vom 2026-10-28 („PI, oh my pi und maki.sh mit Session-Übertragung und Session-Erkennung“). Entscheidung: ADR-0041.
 Messlatten: K7 (Zustand aus Dateien rekonstruierbar), K9 (Format-Bruch sichtbar).

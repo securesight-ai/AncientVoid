@@ -1,6 +1,6 @@
 # EPIC-P34 — Arbeitsfläche: klare Navigation, schöne Einstellungen, bessere Session-Erkennung, eigene Fenster
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · umgesetzt 07.11.2026 — T34.1–T34.12 abgeschlossen, Gate grün, Retro angehängt; Live-Abnahme AC-P34-13 (Jan) offen, nicht als grün zu zählen — läuft als T35.16 in [EPIC-P35 Endabnahme-Block](EPIC-P35-harness-paritaet-fortsetzen-provider.md) · **Phase:** P34 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** P29-Exit-Kriterien grün. Fachlich baut es auf P18 (Kacheln), P20 (Zoom, Einstellungen), P22/P24 (Erkennung) und P23 (Desktop-Navigation) auf.
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P34 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** P29-Exit-Kriterien grün. Fachlich baut es auf P18 (Kacheln), P20 (Zoom, Einstellungen), P22/P24 (Erkennung) und P23 (Desktop-Navigation) auf.
 
 **Einordnung (Entscheidung Jan, 07.11.2026):** P34 wird zwischen P29 und P30 geschoben, die Kette lautet P29 → P34 → P30 → P31 → P32 → P33. P34 startet, sobald P29 abgeschlossen ist; P30 wartet auf P34. Die Nummer bleibt P34, damit bestehende Verweise stabil bleiben.
 

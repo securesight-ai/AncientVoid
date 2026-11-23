@@ -1,7 +1,7 @@
 ---
 id: BUG-0258
 slug: inferenz-modell-nicht-anbindbar
-status: open
+status: done
 severity: S2
 area: hub
 instance: prod

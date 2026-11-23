@@ -1,6 +1,6 @@
 # EPIC-P60 — Agenten-Teams: Run→Team umbenennen, Kartenübersicht, echte Parallelität, Modellwahl
 
-**Status:** umgesetzt 14.11.2026 (Retro unten) · **Phase:** P60 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** keine fachliche offene (P40 umgesetzt, Gate grün; Live-Lauf-Block P39-Endabnahme bleibt unberührt — Parallelität/Modellwahl ist mit Testkit-Adaptern belegbar)
+**Status:** abgeschlossen 14.11.2026 (Retro unten) · **Phase:** P60 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** keine fachliche offene (P40 umgesetzt, Gate grün; Live-Lauf-Block P39-Endabnahme bleibt unberührt — Parallelität/Modellwahl ist mit Testkit-Adaptern belegbar)
 
 **Nummernkorrektur 14.11.2026:** Dieses Epic wurde parallel zum
 Vier-Punkte-Auftrag auf veraltetem main-Stand als „P58" geplant; P58 war

@@ -1,6 +1,6 @@
 # EPIC-P74 — Knowledge-Anbindung: MCP-Backends, modulare Quellen, teamübergreifender Brain
 
-**Status:** Planungsentwurf (Nutzerauftrag 19.11.2026) · **Phase:** P74 · **Dauer:** ~2–3 Agenten-Tage (AV-Seite) + ~1–2 (Librarian-Seite, Hivemind-Server) · **Abhängigkeit:** keine blockierende — Quer-Epic wie P58–P73; baut auf `gateway-mcp` (Meta-Tool-Muster, Write-Gate), `LoopConnector`-Fabrikmuster (`packages/contracts`) und P49 (Vault-Tab, reiner Local-Store ohne Index) auf. ADR-0096 erforderlich (neuer Contract `KnowledgeSource`).
+**Status:** Code steht (AncientVoid), Exit offen (technische HiveMind-Arbeit und Interop, §10) · **Phase:** P74 · **Dauer:** ~2–3 Agenten-Tage (AV-Seite) + ~1–2 (Librarian-Seite, Hivemind-Server) · **Abhängigkeit:** keine blockierende — Quer-Epic wie P58–P73; baut auf `gateway-mcp` (Meta-Tool-Muster, Write-Gate), `LoopConnector`-Fabrikmuster (`packages/contracts`) und P49 (Vault-Tab, reiner Local-Store ohne Index) auf. ADR-0096 erforderlich (neuer Contract `KnowledgeSource`).
 
 ## 1. Ziel
 

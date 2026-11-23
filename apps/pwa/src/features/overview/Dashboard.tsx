@@ -427,7 +427,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
                   ? t("search.content_loading")
                   : contentTotal === 0
                     ? t("search.content_none")
-                    : t(contentTotal === 1 ? "search.content_note_one" : "search.content_note", { total: contentTotal, sessions: contentHits.size })}
+                    : `${t(contentTotal === 1 ? "search.content_hits_one" : "search.content_hits", { n: contentTotal })} ${t(contentHits.size === 1 ? "search.content_in_one" : "search.content_in", { n: contentHits.size })} ${t("search.content_tail")}`}
               </div>
             )}
             </>
@@ -643,7 +643,7 @@ function SessionRow({
   moved: boolean;
   session: SessionRecord;
   hosts: FleetHost[];
-  onOpen: (s: SessionRecord, opts?: { newTile?: boolean; seq?: number }) => void;
+  onOpen: (s: SessionRecord, opts?: { newTile?: boolean; seq?: number; seqAt?: number }) => void;
   hit?: ContentHit;
   isLast: boolean;
   onArchive: (s: SessionRecord) => void;
@@ -719,7 +719,7 @@ function SessionRow({
       <button
         class="session-open"
         type="button"
-        onClick={(ev) => onOpen(session, { newTile: ev.ctrlKey || ev.metaKey, ...(hit ? { seq: hit.seq } : {}) })}
+        onClick={(ev) => onOpen(session, { newTile: ev.ctrlKey || ev.metaKey, ...(hit ? { seq: hit.seq, seqAt: Date.now() } : {}) })}
       >
         <div class="row">
           <strong class={`session-title${session.title ? "" : " dim"}`}>{session.title ?? (session.adapter === "loop:securesight-factory" ? t("common.factory_observer", { "project": project }) : t("common.no_order", { "project": project }))}</strong>

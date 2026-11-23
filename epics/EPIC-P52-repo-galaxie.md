@@ -1,6 +1,6 @@
 # EPIC-P52 — Repo-Galaxie: der Graph als navigierbare Galaxie
 
-**Status:** offen · **Phase:** P52 · **Dauer:** 1,5–2,5 Agenten-Wochen (grobe Schätzung)
+**Status:** Code steht, Exit offen (Frame-Abstand unter Interaktion und vollständiger Gate-Nachweis) · **Phase:** P52 · **Dauer:** 1,5–2,5 Agenten-Wochen (grobe Schätzung)
 **Abhängigkeit:** keine fachliche offene — baut auf P48 (Repo-Graph, umgesetzt), ADR-0062 und dem
 Fensterprotokoll (ADR-0053) auf. Nutzerauftrag vom 12.11.2026, läuft quer zur Kette (Präzedenz
 P47–P51). Berührungspunkt mit P43 §3.5 (Reiter der Session): wer zuerst merged, zieht den anderen nach.

@@ -1,6 +1,6 @@
 # EPIC-P4.5 — Testing, Logging und Monitoring
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · grün, 24-h-Dauerlauf offen (T35.15) — Rückstufung 2026-11-09 (Abnahme-Retro); vormals „grün“ · (T4.5-1–T4.5-6 umgesetzt, AC-P4.5-1–5 belegt). Der einzige Verweis aus der Retro — der 24-h-Dauerlauf, der den FileTailer-Fix (§8) endgültig bestätigt — läuft als T35.15 in [EPIC-P35 Endabnahme-Block](EPIC-P35-harness-paritaet-fortsetzen-provider.md). · **Phase:** P4.5 · **Dauer:** 0,5–1 Agenten-Wochen · **Abhängigkeit:** P4 soweit autonom grün (T4.1/T4.2/T4.6/T4.7/T4.9/T4.10). P4s externe Restpunkte (T4.3/T4.4/T4.5/T4.8/T4.11) sind bewusst offen und laufen in EPIC-P35 (Endabnahme-Block) T35.13/T35.14.
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P4.5 · **Dauer:** 0,5–1 Agenten-Wochen · **Abhängigkeit:** P4 soweit autonom grün (T4.1/T4.2/T4.6/T4.7/T4.9/T4.10). P4s externe Restpunkte (T4.3/T4.4/T4.5/T4.8/T4.11) sind bewusst offen und laufen in EPIC-P35 (Endabnahme-Block) T35.13/T35.14.
 
 **Vorbemerkung (2026-09-21) — bewusste Umpriorisierung, kein umgangenes Gate:**
 P5–P12 sind Planungsentwürfe und laut Index erst nach vollständig grünem P4/G0

@@ -1,6 +1,6 @@
 # EPIC-P22 — Session-Entdeckung: erkennen, suchen, sicher aufgreifen
 
-**Status:** Code abgeschlossen 2026-10-28; Live-Abnahme am Handy → [EPIC-P35 (Endabnahme-Block) T35.16](EPIC-P35-harness-paritaet-fortsetzen-provider.md) · **Phase:** P22 · **Abhängigkeit:** P5 (Entdeckung, Übernahme, ADR-0011), P21 (Übergabe)
+**Status:** abgeschlossen 2026-10-28 — Live-Abnahme nach P000 verschoben (T000.7, zuvor T35.16) · **Phase:** P22 · **Abhängigkeit:** P5 (Entdeckung, Übernahme, ADR-0011), P21 (Übergabe)
 
 Auslöser: Wunsch von Jan vom 2026-10-28. „Gefunden“ zeigt nur IDs; die laufende AncientVoid-Session mit Claude ließ sich nicht erkennen und nicht sauber aufgreifen.
 

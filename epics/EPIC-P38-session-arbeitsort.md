@@ -1,6 +1,6 @@
 # EPIC-P38 — Session-Arbeitsort: eigener Worktree oder Projekt direkt
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · in Umsetzung seit 2026-11-09 (P37 umgesetzt, Code/Gate-Stand siehe T38.1–T38.6; offen: echte Scratch-Repo-Abnahme mit echtem Harness) · **Phase:** P38
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P38
 **Dauer:** 1–2 Agenten-Wochen (grobe Schätzung, ohne Vorgänger-Restarbeit)
 **Abhängigkeit:** P37 mit nachweislich grünen Exit-Kriterien; wirksame Vorgänger-Abnahmen bleiben bindend.
 

@@ -1,6 +1,6 @@
 # EPIC-P41 — Automationen mit Zeitplan, Precheck und Laufhistorie
 
-**Status:** Code und Unit-/Integrations-/E2E-Nachweise für die Übergabe-Lücken geschlossen (11.11.2026), **Exit weiterhin offen** — Live-Reste siehe §8 · **Umsetzung:** laufend · **Phase:** P41
+**Status:** Code steht, Exit offen (Abschluss-Gate T41.6, §8) · **Umsetzung:** laufend · **Phase:** P41
 **Dauer:** 2–3 Agenten-Wochen (grobe Schätzung, ohne Vorgänger-Restarbeit)
 **Abhängigkeit:** P40 mit nachweislich grünen Exit-Kriterien; wirksame Vorgänger-Abnahmen bleiben bindend.
 

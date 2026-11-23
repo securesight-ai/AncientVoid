@@ -1,6 +1,6 @@
 # EPIC-P61 — Mehrsprachigkeit: Oberfläche auf Englisch oder per Spracheinstellung
 
-**Status:** in Arbeit — beauftragt und umgesetzt ab 21.11.2026 (ADR-0101 ✓) · **Issue:** [#6](https://github.com/securesight-ai/AncientVoid/issues/6) · **Phase:** P61 · **Dauer:** 4–6 Agenten-Wochen (gemessen, s. §3.1)
+**Status:** Code steht, Exit offen (AC-Nachweise siehe §8) · **Issue:** [#6](https://github.com/securesight-ai/AncientVoid/issues/6) · **Phase:** P61 · **Dauer:** 4–6 Agenten-Wochen (gemessen, s. §3.1)
 **Abhängigkeit:** keine fachliche offene (Quer-Epic, Präzedenz P50–P53/P58–P60; Vorgänger P60 umgesetzt 14.11.2026). Berührt P33 (englische Einstiegsdoku, „vertagt") nur an der Grenze: P33 = Doku, P61 = Produktoberfläche.
 
 Quelle: Nutzerauftrag vom 15.11.2026 im Zuge der Veröffentlichung
@@ -299,3 +299,26 @@ Neue Abläufe mit Spec in `e2e/specs/` und Eintrag in `docs/funktionsinventar.md
 Sprachwahl in den Einstellungen erreichbar und in `docs/` (Bedienung)
 erwähnt. ADR gemerged vor der Contract-Änderung. K2/K5/K6/K7/K10
 nachweisbar unverändert bzw. erfüllt; kein TODO ohne Epic-Bezug.
+
+## 8. Stand der Exit-Nachweise (23.11.2026)
+
+Die Sprachwahl ist seit PR #274 ohne Dev-Flag verfügbar. T61.1–T61.11 sind
+dokumentiert, einschließlich leerer i18n-Baseline und Sprachwechsel-Spec.
+Der Mobil-Spec prüft den Kaltstart aus dem Service-Worker-Cache und den
+Sprachwechsel mit echtem Reload bei abgeschaltetem Netz (AC-P61-3, 2/2 grün
+am 23.11.). Für AC-P61-2 meldete TypeScript TS2740, nachdem das Segment
+`common` des englischen Katalogs im Speicher aus dem Compiler-Input
+entfernt wurde. Der reguläre Typecheck mit vollständigem Katalog bestand.
+Der [Notifications-Test](../packages/core/test/modules/notifications/notifications.test.ts)
+öffnet nach einem Neustart denselben SQLite-Bestand und vergleicht
+Einträge mit und ohne Katalogschlüssel (AC-P61-4). Der PWA-Unit-Test
+`i18n.test.ts` prüft Übersetzung bzw. den originalen Text ohne Schlüssel.
+Der [Push-Test](../packages/core/test/modules/push/push.test.ts) belegt
+zwei Sprachen für dieselbe Meldung mit Test-Sender (AC-P61-5).
+AC-P61-7 ist durch den [CLI-Test](../apps/hubctl/test/cli.test.ts) mit
+lokalem HTTP-Fixture belegt. `hubctl status` lokalisiert den Text und
+`status --json` gibt in beiden Sprachen identische Bytes aus.
+Eine [aktuelle K2-Stichprobe](../docs/messlauf/2026-11-23-p61-session-tail-k2.md)
+mit 30 Events/s ist grün. Der K2-Vorher-/Nachher-Vergleich für AC-P61-6
+und der vollständige Abschluss-Gate-Nachweis bleiben ausstehend. Der englische K6-Gerätetermin (AC-P61-8) ist in
+[P000 T000.29](EPIC-000-testsuite-fuer-menschen.md) erfasst.

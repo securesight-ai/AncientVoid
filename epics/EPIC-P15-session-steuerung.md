@@ -1,6 +1,6 @@
 # EPIC-P15 — Session-Steuerung: Modus, Modell, Pause, Queue, Sync, Titel
 
-**Status:** abgeschlossen — Entscheidung steht aus (nach P000 verschoben; ADR-0034) · **Phase:** P15 · **Dauer:** 1–2 Agenten-Wochen · **Abhängigkeit:** fachlich keine offene (P7 Tool-Parität, P8 Mobiler Arbeitsplatz abgeschlossen); P12-Abnahmen laufen parallel und blockieren hier nichts.
+**Status:** abgeschlossen — Entscheidung ADR-0034 nach P000 verschoben (T000.27) · **Phase:** P15 · **Dauer:** 1–2 Agenten-Wochen · **Abhängigkeit:** fachlich keine offene (P7 Tool-Parität, P8 Mobiler Arbeitsplatz abgeschlossen); P12-Abnahmen laufen parallel und blockieren hier nichts.
 
 Auslöser: Rückmeldungen von Jan aus dem Betrieb am 2026-10-08/09 — Auto Mode soll überall
 Standard sein, Modell und Modus sollen pro Session in der App wählbar sein, Nachrichten

@@ -1,6 +1,6 @@
 # EPIC-P0 — Hub-Kern: Sessions, EventStore, tmux-Worker, Tailscale-serve, PWA-Gerüst
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · Code abgeschlossen, Geräteabnahme offen (T35.10) — Rückstufung 2026-11-09 (Abnahme-Retro); vormals „abgeschlossen“ · (2026-11-07, Nachtrag zur Retro) — AC-P0-3 ist seit P6 durch echten Tailnet-Betrieb belegt (Messlauf `2026-09-23-p6-fleet`, Hub nur auf Tailnet-IP, K1 15 ms Remote-Median); AC-P0-4s Geräte-Offline-Abnahme (Flugmodus) ist an [EPIC-P35 (Endabnahme-Block) T35.10](EPIC-P35-harness-paritaet-fortsetzen-provider.md) verwiesen, der Code-Teil (BUG-0015, `53c6ea7`/`df445e9`, P8 T8.2) ist gefixt · **Phase:** P0 · **Dauer:** 1 Agenten-Woche · **Priorität:** P0 (Blocker für alles)
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P0 · **Dauer:** 1 Agenten-Woche · **Priorität:** P0 (Blocker für alles)
 **Ziel-Machine:** Omarchy (Entwicklung), home-server (Staging) · **Gpubox:** explizit out of scope
 
 ---
