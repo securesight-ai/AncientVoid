@@ -57,6 +57,17 @@ Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile
 Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
 
 ## Erledigt (verifiziert)
+- **Der Chat nennt jetzt den Tag, nicht nur die Uhrzeit (Nutzerfund 23.11.).**
+  Tages-Anker als eigene Zeile im Verlauf: „Heute“, „Gestern“, im selben Jahr
+  „Fr., 21.11.“, aeltere mit Jahr. Helfer `apps/pwa/src/shared/i18n/day-label.ts` —
+  `dayKey` rechnet **lokal**, der Trenner wechselt an der lokalen Mitternacht und
+  nicht um 00:00 UTC. Verdrahtet in den Chat-Zuegen (`ChatTurns`) und der
+  Verlaufsspalte (`SessionTail`); die Uhrzeiten bleiben daneben stehen. CSS
+  `.day-sep` nutzt nur Design-Token. Tests: `apps/pwa/test/shared/day-label.test.ts`
+  **8 passed** (Mitternacht, Monats-/Jahresgrenze, erster Eintrag, Sammelzeile ohne
+  Zeit), E2E `chat-zuege.spec.ts` **1 passed** (Anker genau einmal, Text „Heute“,
+  Uhrzeit bleibt als `HH:MM:SS` stehen).
+
 
 - **Bilder im Chat: einfügen, ansehen, verlinken (S82, 23.11.)** — Einfügen oder Ablegen im
   Eingabefeld haengt Screenshots an die Nachricht (`shared/paste-images.ts`,
