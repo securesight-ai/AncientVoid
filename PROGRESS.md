@@ -78,6 +78,17 @@ heute bleibt die nackte Uhrzeit (#331). Nachweis: 430 px am echten Hub, Stempel
 `#1 · system Gestern · 09:16:59`, haftende Linie exakt an der Behälterkante,
 keine Überlappung zweier Linien; chat- specs + Suche 9/9.
 
+**Bild in fremder Sitzung einfügen** (Nutzerfund 23.11.): der Chip zeigte
+„Unsupported Media Type“. Der Fleet-Catch-all `app.route("/api/hosts/:hostId/*")`
+kann nur JSON (`forward()` serialisiert, Parser ist JSON) — ein Rohbild hat dort
+keinen Parser, Fastify antwortet 415 **vor** der Weiterleitung. Neue Route
+`/api/hosts/<id>/attachments` mit Roh-Parser + `forwardRaw()` (Bytes,
+`content-type`, `x-filename`, 60 s, gleiches Kopplungs-Token, keine neuen Rechte).
+Nachweis: 4 neue Fleet-Tests (zwei echte Hubs, echtes PNG, Peer hat die Bytes
+byte-identisch), live `POST /api/hosts/kaisgamingdesk/attachments` → 201 und
+`GET …/attachments/<id>` → 200 beim Peer; im Browser zeigt die fremde Sitzung
+dasselbe Chip-Bild wie die eigene (vorher 415).
+
 ## Erledigt (verifiziert)
 - **Eingefügte Bilder erreichen den Agenten jetzt als Bild, nicht als Vermerk
   (BUG-0267).** Der Adapter `pi` sagt `images:false`, der Hub legte ihm deshalb
