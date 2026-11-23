@@ -44,5 +44,12 @@ export const RunEstimate = z.object({
   p80Ms: z.number().nullable(),
   /** Median tokens per second over comparable turns that reported tokens. */
   tokensPerSec: z.number().nullable(),
+  /** BUG-0167: Median der eigenen, erfolgreichen Züge dieser Session —
+   * unabhängig von MIN_TURNS_FOR_ESTIMATE (Client-Regel: ab 2). Nur mit
+   * Session-ID gesetzt; der Client zeigt daraus „Zug hier meist“, auch wenn
+   * sein Reload das Ereignisfenster gekappt hat. */
+  sessionMedianMs: z.number().nullable().optional(),
+  /** BUG-0167: Zahl der eigenen, erfolgreichen Züge dieser Session. */
+  sessionTurns: z.number().int().nonnegative().optional(),
 });
 export type RunEstimate = z.infer<typeof RunEstimate>;

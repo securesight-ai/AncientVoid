@@ -1,5 +1,4 @@
 # Hält die per SHA gepinnten Actions und die npm-Abhängigkeiten aktuell.
-# fastify bleibt bis BUG-0167 gepinnt (package.json overrides).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -19,5 +18,5 @@ updates:
     commit-message:
       prefix: "^ a deps"
       prefix-development: "^ a deps"
-    ignore:
-      - dependency-name: fastify
+    # BUG-0167 ist root-caused und gefixt (Server-Median statt Client-Fenster)
+    # — kein fastify-Ignore mehr; der Pin ist mit PR (BUG-0167) entfernt.

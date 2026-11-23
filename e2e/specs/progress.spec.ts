@@ -40,6 +40,12 @@ test.describe("Fortschritt und Kontingent im Lauf", () => {
     await expect(app.locator(".run-progress")).toContainText(/Zug hier meist .+ \(2 gelaufen\)/);
     await expect(app.locator(".run-progress")).not.toContainText("ohne Plan kein Fortschritt messbar");
     await expect(app.locator(".run-bar")).toHaveCount(0);
+
+    // BUG-0167: Reload mitten im dritten Zug — die Historie der
+    // abgeschlossenen Züge muss aus der Event-Historie zurückkommen, sonst
+    // fällt die Anzeige auf „Schätzung ab 5 Läufen (bisher 2)“ zurück.
+    await app.reload();
+    await expect(app.locator(".run-progress")).toContainText(/Zug hier meist .+ \(2 gelaufen\)/);
   });
 
   test("Lauf-Messwerte: nach 5 Zügen schätzt der Hub die Restzeit, davor ehrlich „ab 5 Läufen“ (T21.3)", async ({ app, hub }) => {

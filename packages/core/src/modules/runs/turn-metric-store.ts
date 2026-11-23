@@ -67,19 +67,26 @@ export class TurnMetricStore {
    * then same adapter+model, else the adapter alone. Each step needs enough turns of its own (R9.7).
    */
   estimate(adapter: string, model: string | null, sessionId?: string): RunEstimate {
+    // BUG-0167: Median/Zahl der eigenen Züge immer mitgeben — der Client
+    // rechnete sie aus seinem gekappten Ereignisfenster und verlor sie beim Reload.
+    const own = sessionId
+      ? this.listBySession(sessionId).filter((t) => t.outcome === "ok" && t.durationMs > 0).map((t) => t.durationMs).sort((a, b) => a - b)
+      : null;
+    const ownMedian = own && own.length >= 2 ? Math.round((own[Math.floor((own.length - 1) / 2)]! + own[Math.floor(own.length / 2)]!) / 2) : null;
+    const ownFields = own ? { sessionTurns: own.length, sessionMedianMs: ownMedian } : {};
     if (sessionId) {
-      const own = estimateRun(this.listBySession(sessionId), "session");
-      if (own.state === "ok") return own;
+      const sessionEstimate = estimateRun(this.listBySession(sessionId), "session");
+      if (sessionEstimate.state === "ok") return { ...sessionEstimate, ...ownFields };
     }
     if (model) {
       const rows = this.db
         .prepare("SELECT * FROM turn_metrics WHERE adapter = ? AND model = ? ORDER BY ended_at DESC LIMIT 200")
         .all(adapter, model) as unknown as Row[];
       const byModel = estimateRun(rows.map(toMetric), "model");
-      if (byModel.state === "ok") return byModel;
+      if (byModel.state === "ok") return { ...byModel, ...ownFields };
     }
     const rows = this.db.prepare("SELECT * FROM turn_metrics WHERE adapter = ? ORDER BY ended_at DESC LIMIT 200").all(adapter) as unknown as Row[];
-    return estimateRun(rows.map(toMetric), "adapter");
+    return { ...estimateRun(rows.map(toMetric), "adapter"), ...ownFields };
   }
 
   /** Per adapter+model: counts and typical duration, for the status/report views. */
