@@ -36,6 +36,13 @@ Denken, Werkzeug“, nach einem Klick 208 Fundstellen. Gate: #302 `pass 3m0s`,
 lokal 13/13 — einmal neu angestoßen). Diagnose-Rezept liegt als Skill
 `.agents/skills/ancientvoid-hub-suche`.
 
+**Cross-Hub-Suche** (dieser Zweig/PR): `hubs=1` fragt die gekoppelten Hub-Rechner über
+die bestehende Fleet-Tür (`/api/search` ist fleet-routable, kein neues Recht),
+funde tragen `hub`/`hubUrl`, und pro Rechner steht in `hubs`, wie er mitgemacht
+hat (ok / offline / abgelehnt / zu alter Hub / übersprungen). Die PWA zeigt den
+Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile pro
+Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
+
 ## Erledigt (verifiziert)
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
   plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die
