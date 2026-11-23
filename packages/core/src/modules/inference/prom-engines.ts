@@ -46,6 +46,10 @@ function zaehler(text_: string): Record<string, number> {
   return out;
 }
 
+function rate(menge: number | null, sekunden: number | undefined): number | null {
+  return menge != null && sekunden != null && sekunden >= MIN_SECONDS && menge > 0 ? menge / sekunden : null;
+}
+
 function hole(families: Map<string, MetricFamily>, name: string): number | null {
   return gauge(families, name);
 }
@@ -106,8 +110,10 @@ export function promReading(
         read: gelesenGesamt,
         output,
         reuseShare: anteil(cached, prompt),
-        avgPrefillTokS: fenster?.prefillTokS ?? null,
-        avgDecodeTokS: fenster?.decodeTokS ?? hole(families, "llamacpp:predicted_tokens_seconds"),
+        // Ø seit Engine-Start, wenn das Poll-Fenster leer ist (Leerlauf): der Momentwert-Gauge
+        // steht dann auf 0 und würde „0,0 tok/s“ als Durchschnitt vortäuschen.
+        avgPrefillTokS: fenster?.prefillTokS ?? rate(gelesenGesamt, now.values["llamacpp:prompt_seconds_total"]),
+        avgDecodeTokS: fenster?.decodeTokS ?? rate(output, now.values["llamacpp:tokens_predicted_seconds_total"]) ?? hole(families, "llamacpp:predicted_tokens_seconds"),
         draftAcceptShare: anteil(draftAcc, draftOff),
         expertHitRate: null,
         window: fenster,

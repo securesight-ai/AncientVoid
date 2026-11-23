@@ -191,6 +191,8 @@ it("Halogen: wiederverwendete Token kommen zum frisch gelesenen Prompt hinzu (Li
     "# TYPE halogen:prompt_tokens_cached_total counter", "halogen:prompt_tokens_cached_total 3335890",
     "# TYPE llamacpp:prompt_seconds_total counter", "llamacpp:prompt_seconds_total 99.1725",
     "# TYPE llamacpp:tokens_predicted_total counter", "llamacpp:tokens_predicted_total 15278",
+    "# TYPE llamacpp:tokens_predicted_seconds_total counter", "llamacpp:tokens_predicted_seconds_total 251.4754",
+    "# TYPE llamacpp:predicted_tokens_seconds gauge", "llamacpp:predicted_tokens_seconds 0",
     "",
   ].join("\n");
   const { reading } = promReading("halogen", text, {
@@ -200,6 +202,8 @@ it("Halogen: wiederverwendete Token kommen zum frisch gelesenen Prompt hinzu (Li
     cache: { hit_rate: 0.9339, token_hit_rate: 0.9714 },
   });
   assert.equal(reading.totals?.read, 98187);
+  assert.ok(Math.abs((reading.totals?.avgPrefillTokS ?? 0) - 990) < 1, "Ø Prefill seit Start statt leer");
+  assert.ok(Math.abs((reading.totals?.avgDecodeTokS ?? 0) - 60.75) < 0.1, "Ø Decode seit Start statt 0,0 im Leerlauf");
   assert.equal(reading.totals?.prompt, 98187 + 3335890);
   assert.equal(reading.totals?.reused, 3335890);
   assert.ok(Math.abs((reading.totals?.reuseShare ?? 0) - 0.9714) < 0.001, "Anteil deckt sich mit token_hit_rate der Engine");
