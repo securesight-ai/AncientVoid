@@ -235,6 +235,7 @@ export function SessionTail({
   onArchived,
   initialCode,
   initialSeq,
+  seqAt,
   initialTab,
   initialFile,
   workspaceTab,
@@ -250,6 +251,8 @@ export function SessionTail({
   /** Fundstelle aus der Hash-Route (`…/seq/474`): die Sitzung öffnet sich und der
    * Chat läuft zu der Nachricht, die den Fund trägt. */
   initialSeq?: number;
+  /** Marke derselben Bitte: ein zweiter Tipp auf dieselbe Karte ist eine neue Bitte. */
+  seqAt?: number;
   /** EPIC-P48 / ADR-0071: Graph-, Git- oder Datei-Tab (Hash-Routen). */
   initialTab?: "graph" | "git" | "datei";
   initialFile?: string | null;
@@ -1231,7 +1234,7 @@ export function SessionTail({
    * Adresse gelesen — über Props gereicht wird er nicht, weil dieselbe Sitzung in
    * einer Arbeitsflächen-Kachel oder in einem eigenen Fenster leben kann und dort
    * niemand den Anker weitergeben würde. */
-  const jumpedSeqRef = useRef<number | null>(null);
+  const jumpedSeqRef = useRef<number | string | null>(null);
   const seqFromHash = (): number | null => {
     // Die Sitzung ist an ihrer Id erkannt — host-qualifiziert (`hosts/<rechner>/…`)
     // oder nicht; dazwischen kann noch ein Tab stehen (graph/git/datei).
@@ -1291,12 +1294,17 @@ export function SessionTail({
     return () => window.removeEventListener("hashchange", on);
   }, []);
   useEffect(() => {
+    const neuAusAdresse = pendingSeqRef.current !== null;
     const seq = pendingSeqRef.current ?? initialSeq ?? seqFromHash();
-    if (seq === null || seq === undefined || !events.length || jumpedSeqRef.current === seq) return;
-    jumpedSeqRef.current = seq;
+    if (seq === null || seq === undefined || !events.length) return;
+    // Eine Bitte ist an ihre Marke gebunden, nicht an die Zahl: derselbe Tipp auf
+    // dieselbe Karte ist eine neue Bitte und muss wieder springen.
+    const marker = seqAt ?? (neuAusAdresse ? `bitte:${hashTick}:${seq}` : `seq:${seq}`);
+    if (jumpedSeqRef.current === marker) return;
+    jumpedSeqRef.current = marker;
     pendingSeqRef.current = null;
     runJump(seq);
-  }, [initialSeq, events.length, session.id, hashTick]);
+  }, [initialSeq, seqAt, events.length, session.id, hashTick]);
 
   // Vorgelagerte Eintraege verschieben den Inhalt — die Lesestelle haelt an ihrem Abstand.
   useLayoutEffect(() => {
