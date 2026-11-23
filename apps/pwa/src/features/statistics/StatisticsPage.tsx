@@ -173,14 +173,27 @@ function StatistikTab() {
 
   const since = useMemo(() => sinceOf(period), [period]);
 
-  // Zustand persistieren (T66.1/T66.3): ein versionierter Schlüssel.
+  // Zustand persistieren (T66.1/T66.3): ein versionierter Schlüssel. Der passive Effect
+  // gleicht ab, darf aber nicht der einzige Schreiber sein — BUG-0263: gewinnt ein
+  // sofortiges Reload die Race gegen den Effect, war die letzte Auswahl nie gespeichert.
   useEffect(() => {
     writeState({ collapsed, filter: { period, project, host, harness } });
   }, [collapsed, period, project, host, harness]);
 
+  /** BUG-0263: synchron mit der Änderung festschreiben — ein Reload im selben Tick findet den Schnitt. */
+  const changeFilter = (patch: Partial<StatistikState["filter"]>) => {
+    if (patch.period !== undefined) setPeriod(patch.period);
+    if (patch.project !== undefined) setProject(patch.project);
+    if (patch.host !== undefined) setHost(patch.host);
+    if (patch.harness !== undefined) setHarness(patch.harness);
+    writeState({ collapsed, filter: { period: patch.period ?? period, project: patch.project ?? project, host: patch.host ?? host, harness: patch.harness ?? harness } });
+  };
+
   useEffect(() => {
     let alive = true;
-    setReport(null);
+    // BUG-0263: den vorigen Report halten — `setReport(null)` nahm bei jedem Schnittwechsel
+    // die ganze Seite vom Baum (Loading-Flackern), und im Remount-Rennen ging soeben
+    // getroffene Auswahl verloren. Laden ohne Netz bleibt beim Fehler-EmptyState.
     hubApi
       .statistics({
         ...(project ? { project } : {}),
@@ -232,12 +245,7 @@ function StatistikTab() {
     setCollapsed(next);
   };
   const allCollapsed = sectionIds.every(id => collapsed[id] ?? !DEFAULT_OPEN.includes(id));
-  const resetFilter = () => {
-    setPeriod("all");
-    setProject("");
-    setHost("");
-    setHarness("");
-  };
+  const resetFilter = () => changeFilter({ period: "all", project: "", host: "", harness: "" });
 
   if (error) return <EmptyState text={`Statistik nicht erreichbar — ${error}`} />;
   if (!report) return <EmptyState text={t("common.loading")} />;
@@ -257,26 +265,26 @@ function StatistikTab() {
       </div>
 
       <Section id="schnitt" title={t("statistics.cut")} note="Zeitraum · Projekt · Host · Harness" collapsed={collapsed.schnitt ?? false} onToggle={() => toggle("schnitt")}>
-        <Segmented label={t("statistics.period")} value={period} options={PERIOD_OPTIONS} onChange={setPeriod} />
+        <Segmented label={t("statistics.period")} value={period} options={PERIOD_OPTIONS} onChange={(p) => changeFilter({ period: p })} />
         <div class="stat-filters">
           <Select
             label={t("newsession.project")}
             value={project}
-            onChange={setProject}
+            onChange={(v) => changeFilter({ project: v })}
             disabled={report.slices.projects.length === 0}
             options={[{ value: "", label: "alle Projekte" }, ...report.slices.projects.map(p => ({ value: p, label: p.split("/").filter(Boolean).pop() ?? p }))]}
           />
           <Select
             label={t("common.host")}
             value={host}
-            onChange={setHost}
+            onChange={(v) => changeFilter({ host: v })}
             disabled={report.slices.hosts.length === 0}
             options={[{ value: "", label: "alle Hosts" }, ...report.slices.hosts.map(h => ({ value: h, label: h }))]}
           />
           <Select
             label={t("status.harness")}
             value={harness}
-            onChange={setHarness}
+            onChange={(v) => changeFilter({ harness: v })}
             disabled={report.slices.harnesses.length === 0}
             options={[{ value: "", label: "alle Harness" }, ...report.slices.harnesses.map(h => ({ value: h, label: h }))]}
           />
