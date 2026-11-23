@@ -56,6 +56,18 @@ hat (ok / offline / abgelehnt / zu alter Hub / übersprungen). Die PWA zeigt den
 Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile pro
 Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
 
+**Sitzungsfilter findet Inhalt, Sprung zur Fundstelle** (dieser PR): das
+Suchfeld der Übersicht war ein Titel-Filter — Kai sucht aber nach dem, was in
+einer Sitzung gesagt wurde. Ab zwei Zeichen sucht das Übersichtsfeld jetzt im
+Sessiontext-Index (`/api/search/all`, scope=sessions): Karten tragen eine
+Fundstellen-Marke, eine Zeile sagt, was gefunden wurde, und ein Tipp öffnet die
+Sitzung **an der Fundstelle** — Adressform `#/sessions/<id>/seq/<n>` (auch
+host-qualifiziert). Fundstelle ist die früheste Trefferstelle der Sitzung; liegt
+sie mitten in einem Zug, wird der Zug angesprungen (nur er liegt im DOM) und
+leuchtet 2,2 s nach. Im Probelauf auf dem echten Hub: Filter „Kurbelwelle“ →
+Treffer in der 4 800-Ereignisse-Sitzung, angesprungen bei seq 1639, dort
+sichtbar (`inView: true`, `hit-target` nachgewiesen).
+
 ## Erledigt (verifiziert)
 - **Bild-Anhang: ehrlicher Auslese-Befund + Vorschau schon VOR dem Senden
   (BUG-0266).** Der Hub meldete bei Bildern pauschal „Kein Text gefunden. Mit
