@@ -931,7 +931,7 @@ export function announceDataFreshness(res: Response): void {
   }
 }
 
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
+async function apiResponse(path: string, init?: RequestInit): Promise<Response> {
   const res = await fetch(path, {
     ...init,
     headers: {
@@ -948,6 +948,11 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     // unbekannter Code zeigt den Hub-Text unverändert.
     throw Object.assign(new Error(errorText(body.code, body.error ?? body.detail ?? `${res.status} ${res.statusText}`)), { status: res.status, code: body.code });
   }
+  return res;
+}
+
+async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await apiResponse(path, init);
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
@@ -1134,7 +1139,12 @@ function createHubApi(P: (path: string) => string) {
     api<{ ok: boolean }>(P(`/api/fleet/peers/${encodeURIComponent(hostId)}`), { method: "DELETE", body: "{}" }),
   // BUG-0222: limit=200 (Route-Kappgrenze) — nach Hintergrund-Drossel des
   // Browsers darf ein Rückstand nicht am 50er-Fenster vorbeilaufen.
-  notifications: (after = 0) => api<{ items: HubNotification[]; lastId: number }>(P(`/api/notifications?after=${after}&limit=200`)),
+  // BUG-0226: cachedAt (X-AncientVoid-Cached-At) markiert den offline vom
+  // Service Worker nachgespielten Bestand — kein erfolgreicher Poll.
+  notifications: async (after = 0): Promise<{ items: HubNotification[]; lastId: number; cachedAt: string | null }> => {
+    const res = await apiResponse(P(`/api/notifications?after=${after}&limit=200`));
+    return { ...((await res.json()) as { items: HubNotification[]; lastId: number }), cachedAt: res.headers.get("X-AncientVoid-Cached-At") };
+  },
   /** EPIC-P67 T67.6: Aktionsknopf einer Benachrichtigung — ruft genau den
    * mitgelieferten Hub-Pfad (gleicher Endpunkt wie das Session-Menü). */
   runNotificationAction: (path: string) =>

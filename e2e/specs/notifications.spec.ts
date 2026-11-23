@@ -170,6 +170,21 @@ test.describe("Fehler und Benachrichtigungen (ADR-0015)", () => {
     await expect(app.locator(".toast.success").filter({ hasText: "Verbindung zum Hub wieder da" })).toBeVisible({ timeout: 15_000 });
   });
 
+  test("offline nachgespielter Bestand ist kein Poll — Liste bleibt, Hub-down sichtbar (BUG-0226)", async ({ app, hub }) => {
+    test.setTimeout(60_000);
+    const alt = "Uralt-Meldung aus dem Cache (BUG-0226)";
+    const cached = { items: [{ id: 1, sessionId: null, level: "info", title: alt, detail: null, kind: "test", createdAt: new Date().toISOString() }], lastId: 1 };
+    // Der Service Worker serviert offline die gespeicherte Antwort mit
+    // X-AncientVoid-Cached-At als normale 200 — hier nachgebaut.
+    await app.route("**/api/notifications*", (route) =>
+      route.fulfill({ json: cached, headers: { "X-AncientVoid-Cached-At": new Date().toISOString() } }),
+    );
+    await app.goto(`${hub.origin}/#/`);
+    await expect(app.locator(".toast.warning").filter({ hasText: "Hub nicht erreichbar" })).toBeVisible({ timeout: 20_000 });
+    await app.getByRole("button", { name: /Benachrichtigungen/ }).click();
+    await expect(app.locator(".notif-item").filter({ hasText: alt })).toHaveCount(0);
+  });
+
   test("überlappende Polls spielen dieselbe Meldung nicht doppelt (BUG-0222)", async ({ app, hub }) => {
     test.setTimeout(75_000);
     const titel = "Race-Meldung (BUG-0222)";

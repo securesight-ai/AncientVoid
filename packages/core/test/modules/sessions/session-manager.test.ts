@@ -285,6 +285,30 @@ describe("SessionManager", () => {
     }
   });
 
+  it("BUG-0226: notifications() liefert nichts jenseits des Horizonts und kappt Altzeilen", async () => {
+    const { manager, db } = makeManager(dir, { eventsPerSecond: 10 });
+    try {
+      const record = await manager.create({ adapter: "dummy", project: dir });
+      await manager.stop(record.id);
+      const alt = new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString();
+      const frisch = new Date().toISOString();
+      db.prepare("INSERT INTO notifications (session_id, level, title, detail, kind, created_at) VALUES (?, 'info', 'uralt', null, 'test', ?)").run(record.id, alt);
+      db.prepare("INSERT INTO notifications (session_id, level, title, detail, kind, created_at) VALUES (?, 'info', 'frisch', null, 'test', ?)").run(record.id, frisch);
+
+      // Erste Frage der Glocke: nur Zeilen im Horizont, nie der Tabellenanfang.
+      const page = manager.notifications(0);
+      expect(page.items.map((n) => n.title)).toEqual(["frisch"]);
+
+      // Retention: das Lesen kappt Zeilen jenseits des Horizonts.
+      const uralt = db.prepare("SELECT count(*) AS n FROM notifications WHERE title = 'uralt'").get() as { n: number };
+      const nochDa = db.prepare("SELECT count(*) AS n FROM notifications WHERE title = 'frisch'").get() as { n: number };
+      expect(uralt.n).toBe(0);
+      expect(nochDa.n).toBe(1);
+    } finally {
+      await manager.shutdown();
+    }
+  });
+
   it("BUG-0033: a refused steer says why in its session.steer event — the chat can show it", async () => {
     const db = new HubDatabase(":memory:");
     const store = new EventStore(dir);

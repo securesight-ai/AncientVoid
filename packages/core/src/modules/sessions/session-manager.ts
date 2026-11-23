@@ -26,7 +26,7 @@ import { buildSessionSummary } from "../reporting/index.ts";
 import { createConsoleLogger } from "../../platform/index.ts";
 import { dedupeDiscovered, filterDiscovered, pageDiscovered } from "../discovery/index.ts";
 import { resolveSkillChain, withSkillChain } from "../skills/index.ts";
-import { notificationFor, projectName, type NotificationDraft } from "../notifications/index.ts";
+import { notificationHorizonCutoff, notificationFor, projectName, type NotificationDraft } from "../notifications/index.ts";
 import { parseNotificationAction, parseNotificationParams } from "../notifications/index.ts";
 import { deriveTurnMetrics, TurnMetricStore } from "../runs/index.ts";
 import { buildHandoverPrompt, HANDOVER_PROMPT_MAX } from "../handover/index.ts";
@@ -2077,6 +2077,8 @@ export class SessionManager {
   }
 
   private readonly notificationListeners: ((n: HubNotification) => unknown)[] = [];
+  /** BUG-0226: letzter Retention-Kapp-Lauf über `notifications` (Wall-Clock, nur Drossel). */
+  private notificationsPrunedAt = 0;
 
   /** T8.3: hear about every stored notification (e.g. Web Push). */
   onNotification(listener: (n: HubNotification) => unknown): void {
@@ -2189,11 +2191,19 @@ export class SessionManager {
     return result;
   }
 
-  /** Newest first. With `afterId`, only newer ones (polling). */
+  /** Newest first. With `afterId`, only newer ones (polling). BUG-0226: nur
+   * Zeilen im Horizont (14 Tage) — Uralt-Bestand wird weder beim ersten Poll
+   * (`after=0`) ausgeliefert noch aufbewahrt; das Lesen kappt zusätzlich
+   * gedrosselt (max. einmal pro Stunde), damit die Tabelle nicht wächst. */
   notifications(afterId = 0, limit = 50): { items: HubNotification[]; lastId: number } {
+    const horizon = notificationHorizonCutoff();
+    if (Date.now() - this.notificationsPrunedAt > 3600_000) {
+      this.notificationsPrunedAt = Date.now();
+      this.db.prepare("DELETE FROM notifications WHERE created_at < ?").run(horizon);
+    }
     const rows = this.db
-      .prepare("SELECT * FROM notifications WHERE id > ? ORDER BY id DESC LIMIT ?")
-      .all(afterId, Math.min(Math.max(limit, 1), 200)) as unknown as {
+      .prepare("SELECT * FROM notifications WHERE id > ? AND created_at >= ? ORDER BY id DESC LIMIT ?")
+      .all(afterId, horizon, Math.min(Math.max(limit, 1), 200)) as unknown as {
       id: number;
       session_id: string;
       level: HubNotification["level"];
