@@ -223,6 +223,29 @@ body:has(.search-pane) .nyx-fab {
   display: none;
 }
 
+/* Cross-Hub: jeder gekoppelte Rechner nennt seinen Zustand. Ein Rechner, der
+   nicht antwortet, ist ein Ergebnis — nicht „nichts gefunden“. */
+.search-hubs {
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-xs);
+}
+
+.search-hub {
+  line-height: 1.45;
+}
+
+.search-hub--ok {
+  color: var(--fg-dim);
+}
+
+.search-hub--offline,
+.search-hub--denied,
+.search-hub--unsupported,
+.search-hub--error {
+  color: var(--warn);
+}
+
 /* Die Fundorte oben: auf dem Handy landet die Doku sonst hinter hunderten
    Sitzungskarten, und die Frage „wo wohnt dieser Name?“ ist damit nicht beantwortet. */
 .search-where {

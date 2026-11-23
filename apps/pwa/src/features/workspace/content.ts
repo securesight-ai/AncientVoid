@@ -3,7 +3,7 @@ import { codeHash, fileHash, sessionHash, pageHash, PAGE_SLUG, type CodeTarget, 
 export const SESSION_TABS = ["chat", "verlauf", "bericht", "diff", "graph", "git", "datei", "forge", "suche", "code", "umgebung"] as const;
 export type SessionTab = (typeof SESSION_TABS)[number];
 export type WorkspaceContent =
-  | { kind: "page"; page: Exclude<ListPage, "dashboard">; vaultFile?: string; vaultTab?: "wissen"; hash?: string }
+  | { kind: "page"; page: Exclude<ListPage, "dashboard">; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz"; hash?: string }
   | { kind: "session"; tab: SessionTab; file?: string; code?: CodeTarget }
   | { kind: "file"; target: string; path: string; sha?: string }
   | { kind: "search" }

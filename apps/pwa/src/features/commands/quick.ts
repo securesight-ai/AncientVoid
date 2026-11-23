@@ -55,7 +55,7 @@ const TOOLS: readonly { page: ListPage; key: string; hash?: string }[] = [
   { page: "settings", key: "common.settings" },
   { page: "status", key: "common.provider_status" },
   { page: "pc", key: "desktop.pc" },
-  { page: "aimetrics", key: "common.metrics" },
+  { page: "statistics", key: "common.metrics" },
   { page: "terminal", key: "common.terminal" },
 ];
 

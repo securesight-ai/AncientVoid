@@ -12,7 +12,7 @@ import { SessionTail } from "../features/session/SessionTail.tsx";
 import { getToken, isAuthError, setToken, hubApi, hostApi, remoteHost, setSelfHostId, type SessionRecord } from "../shared/api.ts";
 import { resyncPush } from "../shared/push.ts";
 import { CommandBar } from "../features/commands/CommandBar.tsx";
-import { pageHash, parseAppHash, redirectLegacyRunHash, sessionHash, type CodeTarget, type TailTab } from "./route.ts";
+import { pageHash, parseAppHash, redirectLegacyRunHash, redirectLegacyStatHash, sessionHash, type CodeTarget, type TailTab } from "./route.ts";
 import { registerShortcut } from "../shared/shortcuts/registry.ts";
 import { CheatSheet } from "../shared/shortcuts/CheatSheet.tsx";
 import { installShortcutHints } from "../shared/shortcut-hint.ts";
@@ -185,7 +185,7 @@ function Main() {
       .catch(() => setSelfHostId(null));
   };
   const [route, setRoute] = useState<
-    { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string }
+    { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string }
   >({ view: "list", page: "dashboard" });
 
   useEffect(() => {
@@ -253,7 +253,7 @@ function Main() {
     const openFromHash = () => {
       // EPIC-P60 (AC-P60-1): alte `#/runs…`-Links permanent auf `#/teams…`
       // umleiten — der Hash-Replace löst einen neuen hashchange aus.
-      const redirected = redirectLegacyRunHash(location.hash);
+      const redirected = redirectLegacyRunHash(location.hash) ?? redirectLegacyStatHash(location.hash);
       if (redirected !== null && redirected !== location.hash) {
         location.hash = redirected;
         return;
@@ -271,7 +271,7 @@ function Main() {
         return;
       }
       if (parsed.view !== "tail") {
-        setRoute({ view: "list", page: parsed.page, ...(parsed.vaultFile ? { vaultFile: parsed.vaultFile } : {}), ...(parsed.vaultTab ? { vaultTab: parsed.vaultTab } : {}) });
+        setRoute({ view: "list", page: parsed.page, ...(parsed.vaultFile ? { vaultFile: parsed.vaultFile } : {}), ...(parsed.vaultTab ? { vaultTab: parsed.vaultTab } : {}), ...(parsed.statTab ? { statTab: parsed.statTab } : {}) });
         return;
       }
       hostApi(parsed.hostId)
@@ -404,7 +404,7 @@ function Main() {
       }
     } else {
       if (route.page === "dashboard") return;
-      ref = { sessionId: "", content: { kind: "page", page: route.page, ...(route.vaultFile ? { vaultFile: route.vaultFile } : {}), ...(route.vaultTab ? { vaultTab: route.vaultTab } : {}), hash: location.hash } };
+      ref = { sessionId: "", content: { kind: "page", page: route.page, ...(route.vaultFile ? { vaultFile: route.vaultFile } : {}), ...(route.vaultTab ? { vaultTab: route.vaultTab } : {}), ...(route.statTab ? { statTab: route.statTab } : {}), hash: location.hash } };
       // BUG-0244: Neue Session immer in Kachel 1.
       if (route.page === "new") {
         latest.current.changeWorkspace(openInTile(current, ref, 0));
@@ -552,6 +552,7 @@ function Main() {
           page={route.page}
           {...(route.vaultFile ? { vaultFile: route.vaultFile } : {})}
           vaultTab={route.view === "list" ? route.vaultTab ?? "notizen" : "notizen"}
+          statTab={route.view === "list" ? route.statTab ?? null : null}
         />
       ) : (
         // T1.6-3: one callback back into the list, optionally landing on a

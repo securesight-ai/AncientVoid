@@ -4,7 +4,10 @@ import type { ComponentChildren } from "preact";
 import type { AiMetricsReport, StatisticsDistribution, StatisticsReport, TurnStatistics, SessionStatistics, SessionAnomaly } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
 import { formatMetricAge, formatMetricValue } from "../../shared/metrics.ts";
+import { pageHash, statTabHash } from "../../app/route.ts";
 import { Button, Card, EmptyState, Segmented, Select } from "../../shared/ui/index.ts";
+import { AiMetricsPage } from "./AiMetricsPage.tsx";
+import { InferencePage } from "./InferencePage.tsx";
 
 /**
  * EPIC-P56 T56.3/T56.4 + EPIC-P66: die eine Metrik-Zentrale — konsolidierte
@@ -125,7 +128,39 @@ function Section({ id, title, note, collapsed, onToggle, children }: { id: strin
   );
 }
 
-export function StatisticsPage() {
+/** BUG-0257: Reiter der einen Analyse-Seite — URL ist der Zustand (route.ts). */
+export type StatTab = "statistik" | "metriken" | "inferenz";
+
+const STAT_TABS: readonly { id: StatTab; label: string; hash: string }[] = [
+  { id: "statistik", label: t("dock.statistics"), hash: pageHash("statistics") },
+  { id: "metriken", label: t("dock.aimetrics"), hash: statTabHash("metriken") },
+  { id: "inferenz", label: t("common.inference"), hash: statTabHash("inferenz") },
+];
+
+/**
+ * BUG-0257: die eine Analyse-Seite. Statistik (EPIC-P56/P66), Metriken
+ * (EPIC-P59) und Inferenz/Token-Tempo (EPIC-P79) sind Reiter einer Seite —
+ * ein Navigations-Eintrag, ein Icon. Der aktive Reiter steht in der URL
+ * (`#/statistik/<tab>`), Altlinks leitet route.ts um.
+ */
+export function StatisticsPage({ tab = "statistik" }: { tab?: StatTab }) {
+  return (
+    <>
+      <div class="stat-tabs" role="tablist" aria-label={t("dock.statisticsTitle")}>
+        {STAT_TABS.map((x) => (
+          <button key={x.id} type="button" role="tab" aria-selected={x.id === tab} class={x.id === tab ? "active" : ""} onClick={() => {
+            if (x.id !== tab) location.hash = x.hash;
+          }}>
+            {x.label}
+          </button>
+        ))}
+      </div>
+      {tab === "metriken" ? <AiMetricsPage /> : tab === "inferenz" ? <InferencePage /> : <StatistikTab />}
+    </>
+  );
+}
+
+function StatistikTab() {
   const initial = useMemo(readState, []);
   const [period, setPeriod] = useState<Period>(initial.filter.period);
   const [project, setProject] = useState(initial.filter.project);
@@ -623,3 +658,4 @@ function CompareBody({ report, project, host, harness, periodA }: { report: Stat
     </div>
   );
 }
+

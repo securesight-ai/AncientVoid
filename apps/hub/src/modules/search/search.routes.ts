@@ -3,6 +3,7 @@ import { isProjectPathAllowed, discoverProjects } from "@ancientvoid/core";
 import {
   TranscriptQueryLimits,
   type DocSearchHit,
+  type HubSearchStatus,
   type SearchIndexState,
   type SessionSearchMode,
   type SessionTextHit,
@@ -19,6 +20,7 @@ import {
   searchProject,
   searchProjectLocal,
 } from "./search.ts";
+import { searchPeers } from "./hub-fanout.ts";
 import type { RouteContext } from "../../route-context.ts";
 
 const ALL_ROLES: readonly TranscriptRole[] = ["user", "assistant", "thinking", "tool", "system"];
@@ -124,13 +126,13 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       ...(p.projectUnder ? { projectRoot: p.projectUnder } : {}),
       ...(p.session ? { sessionId: p.session } : {}),
     });
-    return { status: "ready", query: q, mode: res.mode, index: res.index, hits: res.hits, total: res.total, facets: res.facets };
+    return { status: "ready", query: q, mode: res.mode, ...(res.corrected ? { corrected: res.corrected } : {}), index: res.index, hits: res.hits, total: res.total, facets: res.facets };
   });
 
   /** Ein Suchfeld, beide Körper in einer Antwort — die PWA muss nicht zweimal
    * warten und die Zahlen der beiden Bereiche passen zueinander. */
   app.get("/api/search/all", async (req, reply) => {
-    const p = req.query as { q?: string; project?: string; sessionProject?: string; scope?: string; roles?: string; limit?: string; offset?: string; session?: string; allProjects?: string };
+    const p = req.query as { q?: string; project?: string; sessionProject?: string; scope?: string; roles?: string; limit?: string; offset?: string; session?: string; allProjects?: string; hubs?: string };
     const q = p.q?.trim() ?? "";
     if (!q) return reply.code(400).send({ error: "q query param required" });
     if (q.length > TranscriptQueryLimits.maxChars) return reply.code(400).send({ error: `q is longer than ${TranscriptQueryLimits.maxChars} characters` });
@@ -151,6 +153,7 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
     let sessionTotal = 0;
     let facets: { role: TranscriptRole; count: number }[] = [];
     let mode: SessionSearchMode = "and";
+    let corrected: string[] | undefined;
     let sessionStatus: "ready" | "unavailable" = "unavailable";
     let index: SearchIndexState = { engine: "scan", sessions: 0, lines: 0, indexedAt: null };
     if (scope !== "docs" && deps.search) {
@@ -170,6 +173,7 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       sessionTotal = res.total;
       facets = res.facets;
       mode = res.mode;
+      corrected = res.corrected;
       sessionStatus = "ready";
       index = res.index;
     }
@@ -179,6 +183,7 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
     let docEngine: "qmd" | "local" | "none" = "none";
     let docProjects: string[] | undefined;
     let docTruncated: boolean | undefined;
+    const fleetPeers = deps.fleet?.peers() ?? [];
     if (scope !== "sessions") {
       const project = p.project;
       if (!project && p.allProjects === "1") {
@@ -234,10 +239,30 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       }
     }
 
+    // Cross-Hub (2026-11-23): die Frage „wir haben doch ein Tool gebaut“ endet an
+    // der dataDir-Grenze dieses Hubs — die Sitzung liegt auf dem anderen Rechner.
+    // Gekoppelte Rechner werden parallel gefragt (acht Sekunden pro Peer); was
+    // nicht antwortet, steht als Zeile in `hubs` statt als stiller Null-Treffer.
+    let hubStatuses: HubSearchStatus[] | undefined;
+    if (p.hubs === "1" && fleetPeers.length) {
+      const fan = await searchPeers(fleetPeers, {
+        q,
+        scope,
+        limit,
+        ...(p.roles ? { roles: p.roles } : {}),
+        projectScoped: !!p.sessionProject,
+      });
+      sessions = [...sessions, ...fan.sessions];
+      docs = [...docs, ...fan.docs];
+      sessionTotal += fan.hubs.reduce((sum, h) => sum + h.sessions, 0);
+      hubStatuses = fan.hubs;
+    }
+
     return {
       status: "ready",
       query: q,
       mode,
+      ...(corrected ? { corrected } : {}),
       scope,
       sessions,
       sessionTotal,
@@ -250,6 +275,8 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       docStatus,
       ...(docProjects ? { docProjects } : {}),
       ...(docTruncated === undefined ? {} : { docTruncated }),
+      peers: fleetPeers.length,
+      ...(hubStatuses ? { hubs: hubStatuses } : {}),
     } satisfies UnifiedSearchResponse;
   });
 

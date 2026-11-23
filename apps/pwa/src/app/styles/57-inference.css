@@ -253,3 +253,25 @@
 .inference-werte.inference-werte--zwei {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+
+/* BUG-0258: Frage-Kasten des gebundenen Modells im Inferenz-Tab. */
+.inference-ask {
+  display: grid;
+  gap: 8px;
+}
+
+.inference-ask-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.inference-ask-form textarea {
+  resize: vertical;
+}
+
+.inference-ask-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

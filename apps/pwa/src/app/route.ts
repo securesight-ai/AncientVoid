@@ -39,10 +39,16 @@ export function vaultFileHash(path: string): string {
   return `#/notizen/datei/${path.split("/").map(encodeURIComponent).join("/")}`;
 }
 
+/** BUG-0257: der Metrik-/Inferenz-Reiter der Analyse-Seite — `#/statistik/<tab>`. */
+export function statTabHash(tab: "metriken" | "inferenz"): string {
+  return `#/statistik/${tab}`;
+}
+
 /** EPIC-P74 T74.6: der Wissen-Tab im Notizen-Bereich — `#/notizen/wissen`. */
 export function vaultKnowledgeHash(): string {
   return "#/notizen/wissen";
 }
+
 
 export interface CodeTarget {
   path: string;
@@ -56,14 +62,14 @@ export type TailTab = "graph" | "git" | "datei";
  * EPIC-P47 §3.4: `discovery` ist kein Page mehr — `#/gefunden` bleibt als Alias auf die
  * Übersicht (die schaltet dort auf den Discovery-Zustand); Dashboards `FOUND_HASH_ALIAS`.
  * EPIC-P60 (ADR-0077): `orchestrierung` heißt `teams`, Slug `#/teams` (ehemals `#/runs`). */
-export type ListPage = "dashboard" | "new" | "settings" | "approvals" | "status" | "media" | "pc" | "vault" | "teams" | "automationen" | "aimetrics" | "inference" | "statistics" | "terminal" | "releasenotes";
+export type ListPage = "dashboard" | "new" | "settings" | "approvals" | "status" | "media" | "pc" | "vault" | "teams" | "automationen" | "statistics" | "terminal" | "releasenotes";
 export const FOUND_HASH_ALIAS = "#/gefunden";
 // EPIC-P62 T62.1: exportiert — der Guide-Inventar-Test (AC-P62-1) macht
 // jede neue Seite ohne docs/guide/inventory.md-Zeile rot.
-export const PAGE_SLUG: Record<ListPage, string> = { dashboard: "", new: "neu", settings: "einstellungen", approvals: "freigaben", status: "status", media: "medien", pc: "pc", vault: "notizen", teams: "teams", automationen: "automationen", aimetrics: "metriken", inference: "inferenz", statistics: "statistik", terminal: "terminal", releasenotes: "releasenotes" };
+export const PAGE_SLUG: Record<ListPage, string> = { dashboard: "", new: "neu", settings: "einstellungen", approvals: "freigaben", status: "status", media: "medien", pc: "pc", vault: "notizen", teams: "teams", automationen: "automationen", statistics: "statistik", terminal: "terminal", releasenotes: "releasenotes" };
 
 /** EPIC-P34 T34.2: Seiten, die am Desktop die Detailspalte füllen. Übersicht, Neu und Freigaben bleiben in der Liste (K1-Weg). */
-export const TOOL_PAGE_IDS = ["settings", "media", "pc", "status", "vault", "teams", "automationen", "aimetrics", "inference", "statistics", "terminal", "releasenotes"] as const;
+export const TOOL_PAGE_IDS = ["settings", "media", "pc", "status", "vault", "teams", "automationen", "statistics", "terminal", "releasenotes"] as const;
 export type ToolPageId = (typeof TOOL_PAGE_IDS)[number];
 const TOOL_PAGES: ReadonlySet<ListPage> = new Set<ListPage>(TOOL_PAGE_IDS);
 
@@ -83,8 +89,16 @@ export function redirectLegacyRunHash(hash: string): string | null {
   return hash.replace(/^#\/runs/, "#/teams").replace(/([?&])run=/, "$1team=");
 }
 
+/** BUG-0257: alte Links der drei Einzelseiten leiten permanent auf die
+ * Tabs der einen Analyse-Seite um (`#/metriken…` → `#/statistik/metriken`,
+ * `#/inferenz…` → `#/statistik/inferenz`). null = kein Altlink. */
+export function redirectLegacyStatHash(hash: string): string | null {
+  const hit = /^#\/(metriken|inferenz)\/?/.exec(hash);
+  return hit ? `#/statistik/${hit[1]}` : null;
+}
+
 export type AppRoute =
-  | { view: "list"; page: ListPage; vaultFile?: string; vaultTab?: "wissen" }
+  | { view: "list"; page: ListPage; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" }
   | { view: "tail"; sessionId: string; hostId?: string; code?: CodeTarget; tab?: TailTab; file?: string; browser?: true }
   | { view: "devices" }
   | { view: "filetree" };
@@ -107,8 +121,11 @@ export function parseAppHash(hash: string): AppRoute {
   if (/^#\/geraete\/?$/.test(hash)) return { view: "devices" };
   // BUG-0128: Fenster-Route der Datei-Seitenleiste — vor dem Slug-Match prüfen.
   if (/^#\/dateibaum\/?$/.test(hash)) return { view: "filetree" };
-  // EPIC-P74 T74.6: Wissen-Tab vor den Datei- und Slug-Matches prüfen.
-  if (/^#\/notizen\/wissen\/?$/.test(hash)) return { view: "list", page: "vault", vaultTab: "wissen" };
+  // BUG-0257: Reiter der Analyse-Seite vor dem Slug-Match prüfen (Pfad-Segmente!).
+  const statTab = /^#\/statistik\/(metriken|inferenz)\/?$/.exec(hash);
+  if (statTab?.[1]) return { view: "list", page: "statistics", statTab: statTab[1] as "metriken" | "inferenz" };
+  // BUG-0257: unbekannter Reiter unter #/statistik/… fällt auf die Seite selbst zurück.
+  if (/^#\/statistik(\/|$)/.test(hash)) return { view: "list", page: "statistics" };
   // EPIC-P49: Vault-Datei-Deep-Link vor dem Slug-Match prüfen (Pfad-Segmente!).
   const vaultFile = /^#\/notizen\/datei\/(.+)$/.exec(hash);
   if (vaultFile?.[1]) return { view: "list", page: "vault", vaultFile: vaultFile[1].split("/").map(decodeURIComponent).join("/") };

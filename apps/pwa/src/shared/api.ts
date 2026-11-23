@@ -3,7 +3,7 @@ import { errorText } from "./i18n/index.ts";
 import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity } from "@ancientvoid/contracts";
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
-import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
+import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, InferenceAskResult, InferenceModelStatus, InferenceModelView, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
 export type { TerminalTarget };
 import type { TtsSettingsPatch, TtsSettingsView, TtsStatusResponse } from "@ancientvoid/contracts";
 import type { SessionTextSearchResponse, TranscriptRole, UnifiedSearchResponse } from "@ancientvoid/contracts";
@@ -152,6 +152,8 @@ export interface SearchInput {
   /** Doku über alle Projekte des Hubs statt nur das aktuelle. Zusammen mit
    * `project` senden wäre widersprüchlich — die Hub-Route ignoriert dann `project`. */
   allProjects?: boolean;
+  /** Auch die gekoppelten Hub-Rechner durchsuchen (Cross-Hub). */
+  hubs?: boolean;
   scope?: "all" | "docs" | "sessions";
   roles?: TranscriptRole[];
   limit?: number;
@@ -165,6 +167,7 @@ function searchQuery(input: SearchInput): string {
   if (input.sessionProject) p.set("sessionProject", input.sessionProject);
   if (input.projectUnder) p.set("projectUnder", input.projectUnder);
   if (input.allProjects) p.set("allProjects", "1");
+  if (input.hubs) p.set("hubs", "1");
   if (input.session) p.set("session", input.session);
   if (input.scope && input.scope !== "all") p.set("scope", input.scope);
   if (input.roles && input.roles.length) p.set("roles", input.roles.join(","));
@@ -972,6 +975,11 @@ function createHubApi(P: (path: string) => string) {
   inferenceSources: () => api<InferenceSourceList>(P("/api/inference/sources")),
   inferenceSnapshot: (id: string, fensterH?: number) =>
     api<InferenceSnapshot>(P(`/api/inference/snapshot?id=${encodeURIComponent(id)}${fensterH ? `&fenster=${fensterH}` : ""}`)),
+  /** BUG-0258: manuell gebundenes Inferenz-Modell — Status, Anbindung, Frage (REST, gekappt). */
+  inferenceModelStatus: () => api<InferenceModelStatus>(P("/api/settings/inference")),
+  inferenceModelSet: (patch: { url?: string | null; model?: string | null; apiKeyFile?: string | null }) =>
+    api<{ inference: InferenceModelView }>(P("/api/settings/inference"), { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(patch) }),
+  inferenceAsk: (text: string) => api<InferenceAskResult>(P("/api/inference/ask"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) }),
   /** EPIC-P56 T56.3: Statistik-Report mit Schnitt-Query (leere Objekte-teile bleiben weg). */
   statistics: (query: { project?: string; host?: string; harness?: string; since?: string; until?: string } = {}) => {
     const qs = Object.entries(query).filter(([, v]) => v !== undefined).map(([k, v]) => `${k}=${encodeURIComponent(v!)}`).join("&");

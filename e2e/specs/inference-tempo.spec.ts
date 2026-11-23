@@ -120,9 +120,10 @@ test.use({
 async function openInferenz(page: Page): Promise<void> {
   await page.setViewportSize({ width: 412, height: 850 });
   await page.reload();
-  await page.getByRole("button", { name: /Mehr/ }).first().click();
-  await page.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "Inferenz" }).click();
-  await expect(page).toHaveURL(/#\/inferenz$/);
+  // BUG-0257: Inferenz ist ein Reiter der Analyse-Seite — ein Menüpunkt, dann der Reiter.
+  await page.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "Statistik" }).click();
+  await page.getByRole("tab", { name: "Inferenz" }).click();
+  await expect(page).toHaveURL(/#\/statistik\/inferenz$/);
 }
 
 const karte = (page: Page, name: string) => page.getByRole("region", { name });

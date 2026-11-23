@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { browserHash, codeHash, filetreeHash, isToolPage, pageHash, parseAppHash, sessionHash, type ListPage } from "../../src/app/route.ts";
+import { browserHash, codeHash, filetreeHash, isToolPage, pageHash, PAGE_SLUG, parseAppHash, redirectLegacyStatHash, sessionHash, type ListPage } from "../../src/app/route.ts";
 
 describe("Browser-Route (EPIC-P39 T39.3)", () => {
   it("round-trips lokal und auf einem anderen Host; die Session-Route bleibt unberührt", () => {
@@ -39,7 +39,7 @@ describe("session hash route (AC-P5-5)", () => {
 
 describe("Werkzeugseiten (EPIC-P34 T34.2)", () => {
   it("Einstellungen, Medien, PC und Status füllen die Detailspalte; Übersicht, Neu und Freigaben bleiben in der Liste (Entdeckt ist seit EPIC-P47 ein Übersichtszustand)", () => {
-    const tools: ListPage[] = ["settings", "media", "pc", "status", "aimetrics"];
+    const tools: ListPage[] = ["settings", "media", "pc", "status", "statistics"];
     const listed: ListPage[] = ["dashboard", "new", "approvals"];
     for (const page of tools) expect(isToolPage(page), page).toBe(true);
     for (const page of listed) expect(isToolPage(page), page).toBe(false);
@@ -48,8 +48,31 @@ describe("Werkzeugseiten (EPIC-P34 T34.2)", () => {
   it("die Direktlinks #/pc und #/medien bleiben gültig (AC-P34-1)", () => {
     expect(parseAppHash("#/pc")).toEqual({ view: "list", page: "pc" });
     expect(parseAppHash("#/medien")).toEqual({ view: "list", page: "media" });
-    // EPIC-P59: die Metrik-Seite ist über das Mehr-Sheet erreichbar — der Direktlink bleibt erhalten.
-    expect(parseAppHash("#/metriken")).toEqual({ view: "list", page: "aimetrics" });
+    expect(parseAppHash("#/statistik")).toEqual({ view: "list", page: "statistics" });
+  });
+});
+
+describe("Analyse-Seite mit Tabs (BUG-0257)", () => {
+  it("die drei Ansichten sind ein Reiter-Hash auf einer Seite", () => {
+    expect(parseAppHash("#/statistik")).toEqual({ view: "list", page: "statistics" });
+    expect(parseAppHash("#/statistik/metriken")).toEqual({ view: "list", page: "statistics", statTab: "metriken" });
+    expect(parseAppHash("#/statistik/inferenz")).toEqual({ view: "list", page: "statistics", statTab: "inferenz" });
+    expect(parseAppHash("#/statistik/statistik/")).toEqual({ view: "list", page: "statistics" });
+  });
+
+  it("Altlinks #/metriken und #/inferenz leiten permanent auf die Tabs um", () => {
+    expect(redirectLegacyStatHash("#/metriken")).toBe("#/statistik/metriken");
+    expect(redirectLegacyStatHash("#/metriken/")).toBe("#/statistik/metriken");
+    expect(redirectLegacyStatHash("#/inferenz")).toBe("#/statistik/inferenz");
+    expect(redirectLegacyStatHash("#/statistik")).toBeNull();
+    expect(redirectLegacyStatHash("#/sessions/s1")).toBeNull();
+  });
+
+  it("es gibt genau einen Analyse-Navigations-Eintrag: statistics ist Tool-Seite, aimetrics/inference existieren nicht mehr", () => {
+    expect(isToolPage("statistics")).toBe(true);
+    expect(PAGE_SLUG.statistics).toBe("statistik");
+    expect("aimetrics" in PAGE_SLUG).toBe(false);
+    expect("inference" in PAGE_SLUG).toBe(false);
   });
 });
 

@@ -123,29 +123,32 @@ run history, recovery on failure.
 
 Spec: [automations.spec.ts](../../e2e/specs/automations.spec.ts)
 
-### page:aimetrics — AI server metrics
+### page:statistics — Analyse: Statistiken, Metriken, Inferenz
+
+`#/statistik` (BUG-0257: one page, three tabs — deep links `#/statistik/metriken`
+and `#/statistik/inferenz`; the old page links redirect permanently).
 
 ![AI server metrics page](assets/aimetrics-01.png)
 
-`#/metriken`. Direct samples from your local AI server: CPU/GPU, tokens/s,
-prefill/decode, KV cache. The aggregation home is the statistics page.
+**Tab Statistik** (EPIC-P56/P66): the one metrics hub — system and AI server
+sections from the unchanged aimetrics report, consolidated session,
+turn/token, gate, tool and team numbers from the rollup cache — p50/p90/p95
+with n, small-sample marks, end-reason distribution, sliced by period,
+project, host and harness. Sections collapse; the state and the slice
+survive reloads. Describing, not ranking.
 
-### page:inference — Inference token tempo
-
-`#/inferenz`. Per engine: decode/prefill tokens/s, time to first token, KV reuse and the request distribution (p10/median/p90/peak, outliers called out). Counter-only engines (llama.cpp, Halogen) refuse a distribution and say why; a failed probe stays visible. Spec: [inference-tempo.spec.ts](../../e2e/specs/inference-tempo.spec.ts)
-
+**Tab Metriken** (EPIC-P59): direct samples from your local AI server:
+CPU/GPU, tokens/s, prefill/decode, KV cache.
 Spec: [ki-server-metriken.spec.ts](../../e2e/specs/ki-server-metriken.spec.ts)
 
-### page:statistics — Statistiken
-
-`#/statistik`. The one metrics hub (EPIC-P56/P66): system and AI server
-sections from the unchanged aimetrics report, consolidated session,
-turn/token, gate, tool and team numbers from the rollup cache —
-p50/p90/p95 with n, small-sample marks, end-reason distribution, sliced
-by period, project, host and harness. Sections collapse; the state and the
-slice survive reloads. Describing, not ranking.
+**Tab Inferenz** (EPIC-P79): per engine decode/prefill tokens/s, time to
+first token, KV reuse and the request distribution (p10/median/p90/peak,
+outliers called out). Counter-only engines (llama.cpp, Halogen) refuse a
+distribution and say why; a failed probe stays visible.
+Spec: [inference-tempo.spec.ts](../../e2e/specs/inference-tempo.spec.ts)
 
 Spec: [statistik.spec.ts](../../e2e/specs/statistik.spec.ts)
+
 
 ### page:terminal — Terminal
 
@@ -227,13 +230,6 @@ Spec: [auth.spec.ts](../../e2e/specs/auth.spec.ts)
 
 ## Features
 
-### feature:aimetrics
-
-AI server sampling and display — see [page:aimetrics](#pageaimetrics--ai-server-metrics). Spec: [ki-server-metriken.spec.ts](../../e2e/specs/ki-server-metriken.spec.ts)
-
-### feature:inference
-
-Engine adapters (Strata, Halogen, llama.cpp), per-source JSONL request history and the percentile math — see [page:inference](#pageinference--inference-token-tempo). Spec: [inference-tempo.spec.ts](../../e2e/specs/inference-tempo.spec.ts)
 
 ### feature:approvals
 

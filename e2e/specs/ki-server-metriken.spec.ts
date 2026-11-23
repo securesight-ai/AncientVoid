@@ -100,8 +100,10 @@ async function openMetrics(page: Page) {
   await page.setViewportSize({ width: 412, height: 850 });
   await page.reload();
   await page.getByRole("button", { name: /Mehr/ }).first().click();
-  await page.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "Metrik" }).click();
-  await expect(page).toHaveURL(/#\/metriken$/);
+  // BUG-0257: Metriken ist ein Reiter der Analyse-Seite — ein Menüpunkt, dann der Reiter.
+  await page.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "Statistik" }).click();
+  await page.getByRole("tab", { name: "Metrik" }).click();
+  await expect(page).toHaveURL(/#\/statistik\/metriken$/);
 }
 
 const card = (page: Page, label: string) => page.getByRole("region", { name: `Metrik-Quelle ${label}` });
