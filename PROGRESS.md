@@ -57,6 +57,15 @@ Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile
 Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
 
 ## Erledigt (verifiziert)
+- **Eingefügte Bilder erreichen den Agenten jetzt als Bild, nicht als Vermerk
+  (BUG-0267).** Der Adapter `pi` sagt `images:false`, der Hub legte ihm deshalb
+  nur den ausgelesenen Text vor — und ohne OCR stand dort nur „(kein Text
+  auslesbar)" — der Pfad zur Bilddatei stand im Prompt, der Hinweis, sie zu
+  oeffnen, nicht. `promptWithAttachments` kuendigt Bilder ohne OCR-Text jetzt
+  als Bild mit Pfad und der Aufforderung, es mit dem Datei-/Bild-Werkzeug zu
+  ansehen; Nicht-Bilder bleiben kurz. Adapter mit Bild-Zusage (claude,
+  opencode, codex app-server) bekommen das Bild weiterhin nativ.
+  `prompt-with-attachments.test.ts` 5 passed (zuerst 2 failed, BUG-0267).
 - **Bild-Anhang: ehrlicher Auslese-Befund + Vorschau schon VOR dem Senden
   (BUG-0266).** Der Hub meldete bei Bildern pauschal „Kein Text gefunden. Mit
   einem Gemini-Schluessel …", obwohl auf dem Hub-Rechner **gar kein**
