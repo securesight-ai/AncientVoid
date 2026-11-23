@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { test, expect } from "../support/fixtures.ts";
+import type { Page } from "@playwright/test";
 
 const beispiel = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
@@ -86,7 +87,7 @@ test.describe("Bild einfügen, Bild öffnen, Bild-Link", () => {
   });
 
 /** Screenshot in die Zwischenablage des Eingabefelds legen (kein echter Paste-Dialog). */
-async function bildEinfuegen(app: import("@playwright/test").Page) {
+async function bildEinfuegen(app: Page) {
   return app.evaluate(async () => {
     const feld = document.querySelector(".composer-input");
     if (!(feld instanceof HTMLTextAreaElement)) return { fehler: "kein Eingabefeld" as const };
