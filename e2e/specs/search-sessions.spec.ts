@@ -26,6 +26,28 @@ test.describe("Suche über Sessiontexte", () => {
     await expect(app.locator(".hit-card")).toHaveCount(2);
   });
 
+  test("trifft der Vertipper nur die eigene Frage, kommt der Vorschlag @tablet @desktop", async ({ app, hub }) => {
+    // Der häufigere Fall: der falsch geschriebene Begriff steckt im Bestand — in
+    // der Frage selbst. Die Liste ist dann technically richtig und nutzlos.
+    const typo = await hub.createSession({ adapter: "opencode", prompt: "warum finde ich kurbelwellentrger nicht" });
+    await hub.createSession({ adapter: "opencode", prompt: "Bestell den Kurbelwellenträger nach Maß" });
+    await hub.createSession({ adapter: "opencode", prompt: "Der Kurbelwellenträger passt nicht ins Gehäuse" });
+    await hub.until(async () => (await hub.sessions()).every((s) => s.status === "idle"), "Zug fertig");
+
+    await app.goto(`${hub.origin}/#/sessions/${typo}`);
+    await sessionTab(app, "Suche");
+    await app.locator(".search-input").fill("kurbelwellentrger");
+
+    await expect(app.locator(".hit-card")).toHaveCount(2);
+    const chip = app.locator(".search-suggest-chip").first();
+    await expect(chip).toContainText("meintest du kurbelwellentrager?");
+
+    // Ein Tipp, und die echte Liste erscheint — nicht heimlich gemischt: jetzt
+    // die beiden Sitzungen mit dem richtigen Wort (je Frage und Antwort).
+    await chip.click();
+    await expect(app.locator(".hit-card")).toHaveCount(4);
+  });
+
   test("Fundstellen aus Frage und Antwort, markiertes Fundwort, Sprung zur Nachricht @tablet @desktop", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "Bestell den Kurbelwellenträger nach Maß" });
     await hub.until(async () => (await hub.sessions()).every((s) => s.status === "idle"), "Zug fertig");
