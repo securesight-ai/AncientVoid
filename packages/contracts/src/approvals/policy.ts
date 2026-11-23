@@ -45,6 +45,12 @@ export const POLICY_OPERATIONS = [
   "factory.start",
   "factory.control",
   "sessions.prompt",
+  /** Nutzerfund 23.11.2026: die Warteschlange einer Sitzung — Text ändern,
+   * umhängen, streichen, sofort senden. Ohne diese Operation fielen alle
+   * /queue-Routen unter den Fallback (nur token.verwalten-Dürfen) und waren
+   * damit für die Flotte verboten: Vorgabenemerkt ließ sich auf einem anderen
+   * Rechner weder ändern noch streichen. */
+  "sessions.queue",
   "sessions.park",
   "sessions.stop",
   "sessions.resume",
@@ -123,6 +129,10 @@ export const POLICY: Readonly<Record<PolicyOperation, Readonly<Record<ActorKind,
   /** ADR-0043 (T26.6): Steuerung aus fester Allowlist (Modus, Fortsetzen, Lauf beenden) — nur ein Mensch, jeder Befehl auditiert. */
   "factory.control": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   "sessions.prompt": { human: HUMAN, fleet: "allow", agent: "approve", bridge: "deny", companion: "deny", display: "deny" },
+  /** Die Vormerkung gehört dem Menschen, der sie gemacht hat — der Heim-Hub darf
+   * sie auf dem Partner-Rechner bedienen (Flotte: allow). Ein Agent schreibt der
+   * Eingabewarteschlange eines Menschen nicht um. */
+  "sessions.queue": { human: HUMAN, fleet: "allow", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   "sessions.park": { human: HUMAN, fleet: "allow", agent: "approve", bridge: "deny", companion: "deny", display: "deny" },
   "sessions.resume": { human: HUMAN, fleet: "allow", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** ADR-0076: work reports contain no commands and cannot resume a session. */

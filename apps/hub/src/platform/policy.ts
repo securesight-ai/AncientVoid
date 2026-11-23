@@ -57,6 +57,10 @@ export function operationOf(method: string, url: string, body: unknown): PolicyO
     return kind === "resume" ? "sessions.resume" : kind === "park" ? "sessions.park" : kind === "stop" ? "sessions.stop" : "sessions.prompt";
   }
   if (/^\/api\/sessions\/[^/]+\/resume$/.test(path)) return "sessions.resume";
+  // EPIC-P15/ADR-0085: die eigene Warteschlange ändern — Text, Stelle, streichen,
+  // sofort senden. Ohne Mapping galt der Fail-closed-Fallback und die Flotte war
+  // draußen (Nutzerfund 23.11.2026: „editieren und löschen geht nicht“).
+  if (/^\/api\/sessions\/[^/]+\/queue(\/[^/]+(\/send)?)?$/.test(path)) return "sessions.queue";
   if (/^\/api\/sessions\/[^/]+\/activity$/.test(path)) return "sessions.activity";
   if (/^\/api\/sessions\/[^/]+\/stop$/.test(path)) return "sessions.stop";
   if (/^\/api\/sessions\/[^/]+\/budget$/.test(path)) return "sessions.budget";

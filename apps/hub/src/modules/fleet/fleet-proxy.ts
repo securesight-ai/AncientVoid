@@ -131,6 +131,16 @@ export async function peerGetJson(
 }
 
 /** `/api/<rest>` if it is a clean, routable path — no `..`, no `//`. */
+/** Was der Peer als Ablehnungsgrund nennt (JSON-Feld `error`) — ehrlich zeigen. */
+function peerDeniedReason(body: Buffer): string {
+  try {
+    const parsed = JSON.parse(body.toString("utf8")) as { error?: unknown };
+    return typeof parsed.error === "string" ? parsed.error.slice(0, 200) : "";
+  } catch {
+    return "";
+  }
+}
+
 function routablePath(rest: string): string | null {
   const path = `/api/${rest}`;
   if (new URL(path, "http://hub").pathname !== path || path.includes("//")) return null;
@@ -196,14 +206,25 @@ export function registerFleetProxy(
     try {
       const res = await forward(`${peer.url}${path}${query}`, req.method, peer.token, req.body);
       if (res.status === 401 || res.status === 403) {
-        return reply.code(502).send({ error: `${hostId} lehnt den Zugriff ab (Kopplung widerrufen?)`, hostId, state: "unauthorized" });
+        // Der Grund des Peer-Hubs ist die Antwort — „Kopplung widerrufen“ war eine
+        // Vermutung, die ins Blaue zeigte, als der Peer schlicht eine Operation
+        // ablehnte (23.11.2026: Warteschlangen-Änderung einer fremden Sitzung).
+        const grund = peerDeniedReason(res.body);
+        return reply.code(502).send({
+          error: grund ? `${hostId}: ${grund}` : `${hostId} lehnt den Zugriff ab (Kopplung widerrufen?)`,
+          hostId,
+          state: "unauthorized",
+        });
       }
       return reply.code(res.status).type(res.contentType).send(res.body);
     } catch (err) {
       return reply.code(502).send({ error: `${hostId} nicht erreichbar: ${err instanceof Error ? err.message : String(err)}`, hostId, state: "offline" });
     }
   };
-  app.route({ method: ["GET", "POST", "PUT", "DELETE"], url: "/api/hosts/:hostId/*", handler });
+  // PATCH fehlt hier nicht aus Vorsicht: die Freigabe entscheidet die Policy des
+  // Peers (Positivliste pro Operation). Ohne PATCH kam eine Warteschlangen-
+  // Änderung an einer fremden Sitzung nie an (404), 23.11.2026.
+  app.route({ method: ["GET", "POST", "PUT", "PATCH", "DELETE"], url: "/api/hosts/:hostId/*", handler });
 
   // Bild einfügen in einer Sitzung, die auf einem ANDEREN Hub läuft: der
   // JSON-Pfad oben kann Rohbytes nicht tragen (Fastify hätte keinen Parser,
