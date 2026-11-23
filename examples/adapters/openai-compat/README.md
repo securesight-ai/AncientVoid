@@ -75,3 +75,11 @@ Config-Wert, kein Codepfad, der noch fehlt.
 - Große Outputs (Reasoning, Tool-Output) via `ctx.blob()` auslagern (K5).
 - `ctx.signal` respektieren — Stop/Park muss sofort durchgreifen.
 - `capabilities()` ehrlich ausfüllen — sie ist ein Versprechen, kein Marketing.
+
+## Compaction
+
+**Einstellungen → Dienste → AncientVoid-Compaction** aktiviert die
+automatische Kürzung älterer, wortgleicher Assistentenantworten. Ein
+`/compact` in der laufenden Session fordert die Kürzung für die nächste
+Antwort an. Der Adapter behält den vollständigen Verlauf im Handle und
+meldet die eingesparten Bytes im Session-Verlauf.

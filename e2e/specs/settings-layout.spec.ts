@@ -63,6 +63,26 @@ test.describe("Einstellungen: Gruppen und Raster (EPIC-P34)", () => {
     await expect(app.getByRole("switch", { name: "Pinch-Zoom" })).toBeChecked();
   });
 
+  test("AncientVoid-Compaction lässt sich dauerhaft ein- und ausschalten @desktop", async ({ app }) => {
+    await openSettings(app);
+    const toggle = app.getByRole("switch", { name: "AncientVoid-Compaction" });
+    await expect(toggle).toBeEnabled();
+    await expect(toggle).not.toBeChecked();
+    try {
+      await toggle.click();
+      await expect(toggle).toBeChecked();
+      await app.reload();
+      await openSettings(app);
+      await expect(toggle).toBeChecked();
+    } finally {
+      if (await toggle.isChecked()) await toggle.click();
+    }
+    await expect(toggle).not.toBeChecked();
+    await app.reload();
+    await openSettings(app);
+    await expect(toggle).not.toBeChecked();
+  });
+
   test("bestehende Funktionen bleiben erreichbar: Passkey, Token, Projekte, Flotte, Gemini, Push, PC-Eingabe @desktop", async ({ app }) => {
     await openSettings(app);
     await expect(app.getByRole("button", { name: "Passkey registrieren" })).toBeVisible();

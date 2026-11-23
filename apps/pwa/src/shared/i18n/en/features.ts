@@ -1329,6 +1329,8 @@ export const en = {
   "settings.security_connection": "Security & connection",
   "settings.send_test": "Send test",
   "settings.services": "Services",
+  "settings.compaction": "AncientVoid compaction",
+  "settings.compaction_note": "Automatically shortens older, identical assistant replies on supported direct adapters.",
   "settings.settings_unreachable": "Settings unreachable.",
   "settings.shortcut_hints": "Shortcut hints",
   "settings.sidebar_order": "Order and visibility on PC and tablet. The sidebar remains reachable via its own key.",

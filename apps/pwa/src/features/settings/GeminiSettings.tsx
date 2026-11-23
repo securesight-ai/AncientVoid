@@ -2,6 +2,7 @@ import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
 import { SettingRow, SettingsSection } from "./parts.tsx";
 import { hubApi } from "../../shared/api.ts";
+import { CompactionSetting } from "./CompactionSetting.tsx";
 import { Button } from "../../shared/ui/index.ts";
 
 /**
@@ -43,6 +44,7 @@ export function GeminiSettings() {
 
   return (
     <SettingsSection title={t("settings.services")} testid="gemini-settings">
+      <CompactionSetting />
       <SettingRow label={t("settings.gemini_reads")}>
         <span class={state?.configured ? "gemini-state ok" : "gemini-state dim"}>{state === null ? "…" : state.configured ? "Schlüssel hinterlegt ✓" : "kein Schlüssel"}</span>
       </SettingRow>

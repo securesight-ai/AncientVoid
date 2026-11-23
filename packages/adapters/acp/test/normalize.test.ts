@@ -126,3 +126,14 @@ describe("BUG-0247/0248 — Shell-command kommt oft erst im tool_call_update", (
     expect(ev).toMatchObject([{ type: "tool_use", payload: { id: "r1", name: "read", input: { path: "a.ts" } } }]);
   });
 });
+
+it("reports the OpenCode ACP compaction lifecycle from provider metadata", () => {
+  const mapper = new UpdateMapper("OpenCode");
+  const update = (status: string) => mapper.map({
+    sessionUpdate: "session_info_update",
+    _meta: { "opencode/compaction": { status, reason: "manual" } },
+  });
+  expect(update("started")[0]?.payload).toEqual({ kind: "acp.compaction_start", reason: "manual" });
+  expect(update("completed")[0]?.payload).toEqual({ kind: "acp.compaction_end", reason: "manual" });
+  expect(mapper.map({ sessionUpdate: "session_info_update" })).toEqual([]);
+});

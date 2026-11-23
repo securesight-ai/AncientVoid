@@ -1328,6 +1328,8 @@ export const de = {
   "settings.security_connection": "Sicherheit & Verbindung",
   "settings.send_test": "Test senden",
   "settings.services": "Dienste",
+  "settings.compaction": "AncientVoid-Compaction",
+  "settings.compaction_note": "Kürzt bei unterstützten Direktadaptern ältere, wortgleiche Assistentenantworten automatisch.",
   "settings.settings_unreachable": "Einstellungen nicht erreichbar.",
   "settings.shortcut_hints": "Shortcut-Hinweise",
   "settings.sidebar_order": "Reihenfolge und Sichtbarkeit auf PC und Tablet. Die Sidebar bleibt über ihre eigene Taste erreichbar.",

@@ -20,6 +20,8 @@
  * The ONLY thing an adapter is allowed to touch is @ancientvoid/contracts —
  * everything else the hub provides via AdapterContext.
  */
+import { isCompactionCommand } from "@ancientvoid/contracts";
+import { compactHistory, type HistoryMessage } from "./compaction.ts";
 import { z } from "zod";
 import type {
   Adapter,
@@ -41,7 +43,7 @@ const EndpointConfig = z.object({
 type EndpointConfig = z.infer<typeof EndpointConfig>;
 
 interface EndpointHandle extends SessionHandle {
-  meta: { history: { role: "user" | "assistant"; content: string }[] };
+  meta: { history: HistoryMessage[]; busy: boolean; compactNext: boolean };
 }
 
 export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapter {
@@ -61,6 +63,15 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
 
   /** Stream one completion, mapping SSE chunks to normalized events. */
   async function runCompletion(handle: EndpointHandle, ctx: AdapterContext): Promise<void> {
+    const { history, compactNext } = handle.meta;
+    const compacted = ctx.automaticCompaction || compactNext ? compactHistory(history) : null;
+    if (compacted && (compacted.repeats > 0 || compactNext)) {
+      ctx.emit({
+        type: "system",
+        summary: `AncientVoid: ${compacted.repeats} Wiederholungen gekürzt (${compacted.savedBytes} Bytes)`,
+        payload: { kind: "endpoint.compaction", repeats: compacted.repeats, savedBytes: compacted.savedBytes },
+      });
+    }
     ctx.emit({
       type: "system",
       summary: `querying ${cfg.baseUrl} (${cfg.model})`,
@@ -75,7 +86,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       },
       body: JSON.stringify({
         model: cfg.model,
-        messages: handle.meta.history,
+        messages: compacted?.messages ?? history,
         temperature: cfg.temperature,
         stream: true,
       }),
@@ -143,9 +154,20 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       });
     }
     if (assistant.length > 0) {
+      handle.meta.compactNext = false;
       handle.meta.history.push({ role: "assistant", content: assistant });
     }
     ctx.emit({ type: "system", summary: "completion finished", payload: {} });
+  }
+
+  function submit(handle: EndpointHandle, text: string, ctx: AdapterContext): void {
+    handle.meta.busy = true;
+    handle.meta.history.push({ role: "user", content: text });
+    ctx.turn?.("working");
+    void runCompletion(handle, ctx).catch((err: unknown) => reportFailure(err, ctx)).finally(() => {
+      handle.meta.busy = false;
+      ctx.turn?.("idle");
+    });
   }
 
   return {
@@ -153,19 +175,19 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
     version: "0.1.0",
 
     capabilities(): AdapterCapabilities {
-      return { reasoning: true, tools: false, cost: false, steer: true, usage: false, nativeDiscovery: "none", nativeResume: "none", features: { followUp: true, interrupt: false, toolGate: "none", questions: false, modelChoice: "none", skills: false, agents: false, images: false, files: false, contextFork: false, modelSwitch: false, permissionModes: [] } };
+      return { reasoning: true, tools: false, cost: false, steer: true, usage: false, promptDelivery: "next-turn", promptlessStartIdle: true, commands: [{ name: "/compact", description: "Wiederholungen für die nächste Anfrage kürzen", scope: "steer" }], nativeDiscovery: "none", nativeResume: "none", features: { followUp: true, interrupt: false, toolGate: "none", questions: false, modelChoice: "none", skills: false, agents: false, images: false, files: false, contextFork: false, modelSwitch: false, permissionModes: [] } };
     },
 
     async start(spec: SessionSpec, ctx: AdapterContext): Promise<SessionHandle> {
+      if (spec.prompt && isCompactionCommand(spec.prompt)) throw new Error("/compact erfordert eine gestartete Session");
       const handle: EndpointHandle = {
         sessionId: ctx.sessionId,
-        meta: { history: [] },
+        meta: { history: [], busy: false, compactNext: false },
       };
       handles.set(handle.sessionId, handle);
       ctx.emit({ type: "system", summary: `session ready (${cfg.baseUrl})`, payload: { baseUrl: cfg.baseUrl } });
       if (spec.prompt) {
-        handle.meta.history.push({ role: "user", content: spec.prompt });
-        void runCompletion(handle, ctx).catch((err: unknown) => reportFailure(err, ctx));
+        submit(handle, spec.prompt, ctx);
       }
       return handle;
     },
@@ -174,8 +196,16 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       const h = handles.get(handle.sessionId);
       if (!h) return { ok: false, detail: "unknown handle" };
       if (input.kind === "prompt") {
-        h.meta.history.push({ role: "user", content: input.text });
-        void runCompletion(h, ctx).catch((err: unknown) => reportFailure(err, ctx));
+        if (h.meta.busy) return { ok: false, detail: "Endpoint-Anfrage läuft bereits" };
+        if (isCompactionCommand(input.text)) {
+          if (input.text.trim() !== "/compact" || input.attachments?.length) {
+            return { ok: false, detail: "/compact nimmt keine Argumente oder Anhänge an" };
+          }
+          h.meta.compactNext = true;
+          ctx.emit({ type: "system", summary: "AncientVoid: Compaction für die nächste Anfrage vorgemerkt", payload: { kind: "endpoint.compaction_scheduled" } });
+          return { ok: true };
+        }
+        submit(h, input.text, ctx);
         return { ok: true };
       }
       if (input.kind === "stop") {

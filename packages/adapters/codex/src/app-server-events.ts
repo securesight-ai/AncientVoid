@@ -66,6 +66,9 @@ export function toolOf(item: CodexItem): { name: string; input: Record<string, u
 }
 
 export function itemStarted(item: CodexItem): EmittedEvent[] {
+  if (item.type === "contextCompaction") {
+    return [{ type: "system", summary: "codex: Kontext wird komprimiert", payload: { kind: "codex.compaction_start" } }];
+  }
   const tool = toolOf(item);
   if (!tool) return [];
   return [{ type: "tool_use", summary: summarize(`${tool.name}(${JSON.stringify(tool.input).slice(0, 150)})`), payload: { id: item.id, name: tool.name, input: tool.input, ...(item.type === "fileChange" ? { kind: "edit" } : item.type === "webSearch" ? { kind: "fetch" } : {}) } }];
@@ -110,12 +113,13 @@ export function itemCompleted(item: CodexItem): EmittedEvent[] {
     }
     case "plan":
       return item.text ? [{ type: "thinking", summary: summarize(item.text), payload: { text: item.text } }] : [];
+    case "contextCompaction":
+      return [{ type: "system", summary: "codex: Kontext komprimiert", payload: { kind: "codex.compaction_end" } }];
     case "userMessage":
     case "hookPrompt":
     case "subAgentActivity":
     case "enteredReviewMode":
     case "exitedReviewMode":
-    case "contextCompaction":
       return [];
     default:
       return [{ type: "system", summary: summarize(`codex: unbekannter Item-Typ „${item.type ?? "(ohne Typ)"}“`), payload: { kind: "codex.unknown_item", itemType: item.type ?? null } }];

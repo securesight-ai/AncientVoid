@@ -129,6 +129,26 @@ describe("Skill-Kette: einmaliges Laden (ADR-0100)", () => {
     }
   });
 
+  it("liefert /compact ohne Skill-Präfix und prüft den Geltungsbereich beim Start", async () => {
+    const seen: string[] = [];
+    const { manager } = await makeHarness(dir, "compact.db", (a) => ({
+      ...a,
+      capabilities: () => ({ ...a.capabilities(), promptlessStartIdle: true, commands: [{ name: "/compact", description: "Compact", scope: "steer" }] }),
+    }), seen, live);
+    const spec = { adapter: "dummy", project: join(dir, "proj-compact.db"), args: { skill: "neon" } };
+    try {
+      await expect(manager.create({ ...spec, prompt: "/compact" })).rejects.toThrow("beim Sessionstart");
+      const record = await manager.create(spec);
+      await waitFor(async () => manager.get(record.id)?.status === "idle");
+      expect((await manager.steer(record.id, { kind: "prompt", text: "/compact" })).ok).toBe(true);
+      expect(seen).toEqual(["", "/compact"]);
+      expect((await manager.steer(record.id, { kind: "prompt", text: "weiter" })).ok).toBe(true);
+      expect(seen.at(-1)).toContain("FORM");
+    } finally {
+      await manager.shutdown();
+    }
+  });
+
   it("Neustart ohne Resume injiziert wieder — der Kontext ist dann neu", async () => {
     const seen: string[] = [];
     const mutate = (a: Adapter) => ({ ...a, capabilities: () => ({ ...a.capabilities(), nativeResume: "native" as const }) });

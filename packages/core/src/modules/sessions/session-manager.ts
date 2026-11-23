@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readdir, rm } from "node:fs/promises";
 import type { PromptAttachment, ToolPermissionAnswer, ToolPermissionPoll, ToolPermissionRequest, Adapter, SessionMetricsState, AdapterContext, BlobRef, EmittedEvent, EmittedStreamFrame, WsStreamFrames, HubLogger, HubMetrics, NormalizedEvent, SessionRecord, SessionSnapshot, SessionSpec, SessionStatus, SteerInput, Ack, WorkerProcess, WorkerRunner, UsageQuota, ReportingSink, DiscoverySource, DiscoveredSession, HubNotification, NotificationAction, PendingOperation, RunEstimate, TurnMetric, WorkspaceManifest, WorkspaceServiceStatus, WorkspaceSetupApproval, WorkspaceStatus, MainSyncSettings, MainSyncApplyResult, MainSyncCheckResult } from "@ancientvoid/contracts";
-import { actorKind, blobRefToString, classifyProviderError, countMetrics, currentProviderFailureFromEvents, emptyMetricCounters, metricsState, promptWithAttachments, providerErrorEvent, DEFAULT_HOST_ID, MAIN_SYNC_DEFAULTS, RESUME_SCHEMA_VERSION, SessionSpec as SessionSpecSchema, isLoopAdapter, unsupportedResume, EmittedStreamFrame as StreamFrameSchema } from "@ancientvoid/contracts";
+import { isCompactionCommand, actorKind, blobRefToString, classifyProviderError, countMetrics, currentProviderFailureFromEvents, emptyMetricCounters, metricsState, promptWithAttachments, providerErrorEvent, DEFAULT_HOST_ID, MAIN_SYNC_DEFAULTS, RESUME_SCHEMA_VERSION, SessionSpec as SessionSpecSchema, isLoopAdapter, unsupportedResume, EmittedStreamFrame as StreamFrameSchema } from "@ancientvoid/contracts";
 import type { EventStore } from "../../platform/index.ts";
 import type { AdapterRegistry } from "../harness/index.ts";
 import type { HubDatabase } from "../../platform/index.ts";
@@ -39,6 +39,7 @@ import { type SessionRow, persistRecord, rowToRecord } from "./session-row.ts";
 
 export interface SessionManagerObservability {
   autoResumeInterrupted?: boolean;
+  automaticCompaction?: () => boolean;
   logger?: HubLogger;
   metrics?: HubMetrics;
   /** K7 budget for recoverAll in ms (default 3000); tests lower it. */
@@ -125,6 +126,7 @@ export class SessionManager {
   private readonly inFlightInputs = new Map<string, Set<string>>();
   /** T17.4: hard cap for the hub's wait on one adapter submission. */
   private readonly steerWaitMs: number;
+  private readonly automaticCompaction: () => boolean;
 
   private readonly db: HubDatabase;
   private readonly store: EventStore;
@@ -269,6 +271,7 @@ export class SessionManager {
     this.logger = observability.logger ?? createConsoleLogger();
     this.metrics = observability.metrics;
     this.recoveryBudgetMs = observability.recoveryBudgetMs ?? 3000;
+    this.automaticCompaction = observability.automaticCompaction ?? (() => false);
     this.steerWaitMs = observability.steerWaitMs ?? DEFAULT_STEER_WAIT_MS;
     // T1.9 (AC-P1-5): poll each live adapter's own status() on a timer,
     // not just react to its worker process exiting. A hard-killed process
@@ -655,6 +658,12 @@ export class SessionManager {
     const requested = SessionSpecSchema.parse(spec);
     if (requested.mirrorNativeSessionId) return this.createMirror(requested, actor);
     const registered = this.registry.require(requested.adapter);
+    if (requested.prompt && isCompactionCommand(requested.prompt)) {
+      if (!registered.capabilities.commands?.some((command) => command.name === "/compact" && command.scope !== "steer")) {
+        throw new Error(`${requested.adapter}: /compact ist beim Sessionstart nicht verfügbar`);
+      }
+      if (requested.attachments?.length) throw new Error("/compact nimmt keine Anhänge an");
+    }
     // ADR-0033: an explicit mode wins; otherwise the hub default, but only where the adapter has that mode.
     const asked = (requested.args as { permissionMode?: unknown } | undefined)?.permissionMode;
     const permissionMode =
@@ -787,7 +796,7 @@ export class SessionManager {
       if (chain) {
         // ADR-0100: nativeSkills-Adapter expandieren die Kette selbst — der
         // Hub liefert sie in diesem Lauf nie selbst nach.
-        const hubInjects = registered.capabilities.nativeSkills !== true;
+        const hubInjects = registered.capabilities.nativeSkills !== true && !(parsed.prompt && isCompactionCommand(parsed.prompt));
         startSpec = {
           ...parsed,
           ...(parsed.prompt !== undefined && hubInjects ? { prompt: withSkillChain(parsed.prompt, chain.block) } : {}),
@@ -1493,7 +1502,7 @@ export class SessionManager {
   }
 
   private async promptWithSkill(session: LiveSession, text: string, opts: { resumed?: boolean } = {}): Promise<string> {
-    if (!session.skillName) return text;
+    if (!session.skillName || isCompactionCommand(text)) return text;
     // ADR-0100 (EPIC-P72): nativeSkills-Adapter expandieren selbst — nie
     // injizieren. Bei fortbestehendem Kontext wird der Block nur einmal
     // geliefert; ein Neustart ohne Resume (resumed === false) ist neu.
@@ -1897,10 +1906,19 @@ export class SessionManager {
     }
     // EPIC-P15 T15.3: "Vormerken" — the prompt waits for the running turn instead of starting a second process.
     const caps = this.registry.get(session.record.adapter)?.capabilities;
-    const nextTurn = caps?.promptDelivery === "next-turn";
+    const compact = input.kind === "prompt" && isCompactionCommand(input.text);
+    if (compact) {
+      const command = caps?.commands?.find((entry) => entry.name === "/compact");
+      if (!command || command.scope === "start") return { ok: false, detail: `${session.record.adapter}: /compact wird nicht unterstützt` };
+      if (input.attachments?.length) return { ok: false, detail: "/compact nimmt keine Anhänge an" };
+      if (command.scope === "steer" && (!session.handle || ["stopped", "parked"].includes(session.record.status))) {
+        return { ok: false, detail: "/compact erfordert eine laufende Session" };
+      }
+    }
+    const nextTurn = compact || caps?.promptDelivery === "next-turn";
     // ADR-0085: "jetzt nicht vormerken" ist eine ausdrueckliche Wahl des Nutzers. Sie ist
     // nur dort erlaubt, wo der Adapter Eingaben mitten im laufenden Zug zusichert.
-    const wantsNow = meta?.queue === false && caps?.midTurnInput === true;
+    const wantsNow = !compact && meta?.queue === false && caps?.midTurnInput === true;
     if (input.kind === "prompt" && !wantsNow && (meta?.queue || nextTurn) && !meta?.fromQueue && session.handle && ["starting", "working", "waiting_approval"].includes(session.record.status)) {
       const item = this.queue.add(sessionId, input.text, input.attachments, actor ?? null);
       await this.emitSystem(session, "session.queued", { queueId: item.id, position: this.queue.count(sessionId), actor: actor ?? null });
@@ -2941,8 +2959,10 @@ export class SessionManager {
       signal.addEventListener("abort", abort, { once: true });
       if (signal.aborted) abort();
     };
+    const automaticCompaction = this.automaticCompaction;
     return {
       sessionId: session.record.id,
+      get automaticCompaction() { return automaticCompaction(); },
       signal,
       workdir: session.workdir,
       log: (level, msg, extra) => {
@@ -3548,7 +3568,10 @@ export class SessionManager {
       if (["working", "idle"].includes(session.record.status)) await this.setStatus(session, "error");
       await this.emitSystem(session, "session.recovery_blocked", { queueId: item.id, detail: "Nachrichtenannahme unklar — Verlauf prüfen, abbrechen oder übergeben. Kein automatisches erneutes Senden." });
     }
-    if (ack.ok) this.queue.remove(session.record.id, item.id);
+    if (ack.ok) {
+      this.queue.remove(session.record.id, item.id);
+      if (isCompactionCommand(item.text) && this.canDrain(session)) this.scheduleDrain(session.record.id);
+    }
     if (ack.detail !== STEER_TIMEOUT_DETAIL) {
       await this.emitSystem(session, "session.queue_ack", { queueId: item.id, ok: ack.ok });
       this.uncertainQueue.delete(item.id);

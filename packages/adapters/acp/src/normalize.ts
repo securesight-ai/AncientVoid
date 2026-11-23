@@ -24,6 +24,7 @@ interface ToolCallContent {
 }
 
 export interface SessionUpdate {
+  _meta?: Readonly<Record<string, unknown>>;
   sessionUpdate?: string;
   content?: ContentBlock | ToolCallContent[];
   messageId?: string | null;
@@ -178,11 +179,23 @@ export class UpdateMapper {
           }];
         }
         return [{ type: "system", summary: `${this.label}: ACP-Kontextmeldung ohne gültige Tokenzahlen`, payload: { kind: "acp.invalid_usage" } }];
+      case "session_info_update": {
+        // OpenCode ACP provider extension observed in BUG-0192.
+        const compact = update._meta?.["opencode/compaction"] as { status?: unknown; reason?: unknown } | undefined;
+        if (compact?.status !== "started" && compact?.status !== "completed") return [];
+        return [{
+          type: "system",
+          summary: compact.status === "started" ? `${this.label}: Kontext wird komprimiert` : `${this.label}: Kontext komprimiert`,
+          payload: {
+            kind: compact.status === "started" ? "acp.compaction_start" : "acp.compaction_end",
+            ...(typeof compact.reason === "string" ? { reason: compact.reason.slice(0, 60) } : {}),
+          },
+        }];
+      }
       case "user_message_chunk":
       case "available_commands_update":
       case "current_mode_update":
       case "config_option_update":
-      case "session_info_update":
       case "plan_update":
       case "plan_removed":
       case "compaction_update":

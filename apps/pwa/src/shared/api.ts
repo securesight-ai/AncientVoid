@@ -1,3 +1,4 @@
+import { compactionSettingsPath, type CompactionSettings } from "@ancientvoid/contracts";
 import { errorText } from "./i18n/index.ts";
 import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity } from "@ancientvoid/contracts";
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
@@ -1540,6 +1541,9 @@ function createHubApi(P: (path: string) => string) {
     }
     return res.blob();
   },
+  compactionSettings: () => api<CompactionSettings>(P(compactionSettingsPath)),
+  setCompactionSettings: (settings: CompactionSettings) =>
+    api<CompactionSettings>(P(compactionSettingsPath), { method: "PUT", body: JSON.stringify(settings) }),
   ttsSettings: () => api<{ tts: TtsSettingsView }>(P("/api/settings/tts")),
   setTtsSettings: (patch: TtsSettingsPatch) => api<{ tts: TtsSettingsView }>(P("/api/settings/tts"), { method: "PUT", body: JSON.stringify(patch) }),
   transcribe: async (audio: Blob): Promise<{ text: string; engine: string; audioMs: number; latencyMs: number }> => {
