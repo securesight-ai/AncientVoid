@@ -2761,6 +2761,8 @@ export function SessionTail({
                       sessionId={session.id}
                       api={api}
                       refreshKey={queueTick}
+                      working={turnRunning}
+                      steerable={midTurnInput}
                     />
                   )}
                   {showReply &&

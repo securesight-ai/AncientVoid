@@ -518,3 +518,10 @@
   margin-top: 4px;
   font-size: var(--text-sm);
 }
+
+/* Kein Knopf, der nur scheitern kann: Grund statt Fehler (Nutzerfund 23.11.2026). */
+.queue-wait {
+  align-self: center;
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}

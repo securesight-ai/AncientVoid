@@ -1127,6 +1127,8 @@ export const de = {
   "session.queue_remove": "Vorgemerkte Nachricht {n} streichen",
     "session.queue_edit_word": "ändern",
 "session.queue_retry": "Erneut versuchen",
+"session.queue_waits_turn": "geht automatisch raus, wenn der Zug fertig ist",
+"session.queue_waits_turn_hint": "Dieser Adapter nimmt mitten im Zug nichts an — ein zweiter Lauf auf derselben Sitzung würde die Dateien überschreiben.",
 "session.tool_image_open": "Bild öffnen",
 "session.tool_image_missing": "Bild hier nicht abrufbar — es liegt außerhalb des Projekts.",
   "session.queue_send_next": "Vorgemerkte Nachricht {n} als nächstes senden",
