@@ -15,6 +15,20 @@ stopReason=stop`; Prompt dieser Sitzung 238 205 → ~112 000 Token, seither kein
 weiterer Versuch. Chat-Zeile jetzt lesbar (PR #349, `compactionSummary()` in
 `packages/adapters/pi/src/normalize.ts`, 12 Tests grün).
 
+**Bild-Vorschau: gebaut, aber wirkungslos — second View übersehen (PR #354).** Nach
+dem Merge von #350 live nachgesehen: die Vorschau erschien **nirgends**. Zwei eigene
+Gründe: (a) `SessionTail` entschied `session.hostId ? undefined : …`, und **jeder**
+Sitzungsdatensatz trägt die hostId des eigenen Hubs (live: `hostId: "cachyos-ai"` auf
+der eigenen Sitzung) — die Weiche schloss also alle eigenen Sitzungen aus; jetzt
+vergleicht `sessionRefFor()` mit der eigenen Kennung (`remoteHost`). (b) Die Vorschau
+hing nur an der flachen Ereignisliste, nicht an der **Zug-Ansicht**, die im Chat
+standardmäßig gezeigt wird; `StepRow` rendert sie jetzt über denselben Detektor, und
+das Bild selbst ist der Link. Nachweis im Browser, Sitzung 7d3df295, Lese-Schritt
+#8474: `.turn-step .tool-image a img` gemessen **96x64, komplett geladen**, Meta-Zeile
+4 px unter dem Bild mit Dateiname und „Bild öffnen"; Screenshot zeigt den Farbverlauf
+mitten im Zug. Diagnose-Falle: mein erstes Test-PNG (239 Bytes) war kaputt — Chromium
+dekodierte nicht, `naturalWidth` blieb 0; das war kein App-Fehler.
+
 **Bild-Vorschau + Einfügen unter Linux (Punkte 1 und 2, PR #350).** `toolImageRef()`
 zeigt gelesene Bilder als Vorschau inkl. „Bild öffnen" über `GET /api/code/raw`
 (keine neuen Rechte). Linux/Wayland: Chromium liefert keine Bild-Bytes, Datei-Manager
@@ -42,7 +56,16 @@ hub-interne Kurz-Anfragen (Gatekeeper, Titel, Übersetzen, Enhance, Analyse) lau
 noch ohne `durchlassen()`.
 
 **Auslieferung.** main = cf96201f (#349, #350, #352 gemerged), PWA gebaut
-(`index-Dqzv9lG_.js`), Hub-Neustart durch Wächter `/tmp/hub-neustart-wait.sh`
+(`index-Dqzv9lG_.js`), Auslieferung läuft automatisch weiter: der Wächter `/tmp/hub-neustart-wait.sh`
+startet 60 s, nachdem der Hub keine Kindprozesse mehr hat (kein Zug läuft), und
+schreibt health, die drei Shas und den Bundle-Merker nach
+`/tmp/hub-neustart-watch.log`. Stand beim Schreiben: laufender Hub `cf96201f`,
+main `3b012409`, ausgeliefertes PWA-Bundle bereits `index-CepfQPIH.js` (statisch
+vom Datenträger, ohne Neustart wirksam). Nachweis der Pforte nach diesem Neustart:
+`GET /api/inference/gate` antwortet 200 (vorher 404, weil der Prozess älter war als
+der Pforte-Merge).
+
+Hub-Neustart durch Wächter `/tmp/hub-neustart-wait.sh`
 (startet 30 s nach dem letzten laufenden Zug, Protokoll
 `/tmp/hub-neustart-watch.log`: health, runtime/checkout/pwa, Gate-Status).
 
