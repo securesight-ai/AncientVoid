@@ -25,7 +25,9 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: var(--bg);
+  /* Dokumenteigene dunkle Fläche (00-tokens: „kein Themen-Thema“) — das
+   * xterm-Theme (terminal-theme.ts) liest dieselbe Tokenquelle. */
+  background: var(--content-terminal);
 }
 .terminal-host .xterm {
   height: 100%;

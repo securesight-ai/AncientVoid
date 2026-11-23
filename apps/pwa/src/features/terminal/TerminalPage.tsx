@@ -6,6 +6,9 @@ import "@xterm/xterm/css/xterm.css";
 import { hubApi, type TerminalTarget } from "../../shared/api.ts";
 import { Button, EmptyState } from "../../shared/ui/index.ts";
 import { TERMINAL_CLOSE_END } from "@ancientvoid/contracts";
+import { buildTerminalTheme } from "./terminal-theme.ts";
+import { clipboardShortcut } from "./terminal-clipboard.ts";
+import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 
 function cssColor(name: string, fallback: string): string {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -78,11 +81,9 @@ export function TerminalPage() {
       cursorBlink: true,
       fontFamily: cssColor("--font-mono", "ui-monospace, monospace"),
       fontSize: 13,
-      theme: {
-        background: cssColor("--bg", "#0d1117"),
-        foreground: cssColor("--fg", "#e6edf3"),
-        cursor: cssColor("--fg", "#e6edf3"),
-      },
+      // ADR-0087 Nachtrag 2026-11-23: komplette ANSI-Palette aus den
+      // App-Tokens; Cursor/Markierung/Magenta auf --accent.
+      theme: buildTerminalTheme(cssColor),
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
