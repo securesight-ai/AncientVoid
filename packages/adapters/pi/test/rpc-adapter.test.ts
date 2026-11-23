@@ -1,3 +1,6 @@
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import type { WorkerProcess } from "@ancientvoid/contracts";
 import { makeRecordingContext, waitFor } from "@ancientvoid/adapter-testkit";
@@ -154,6 +157,31 @@ describe("pi im RPC-Modus — ein Prozess, Lenken mitten im Zug", () => {
     p.ereignis({ type: "agent_settled" });
     await waitFor(() => wendungen.includes("idle"));
     expect(wendungen).toEqual(["working", "idle"]);
+  });
+
+  it("übernimmt nach einem Hub-Neustart denselben Steuerprozess", async () => {
+    // Der Adapter darf nach einem Neustart nicht blind einen zweiten pi-Prozess
+    // starten und schon gar nicht das One-Shot-Protokoll an einen RPC-Prozess
+    // anhängen — sonst ist Lenken genau dann weg, wenn der Hub neu gestartet ist.
+    const ordner = mkdtempSync(join(tmpdir(), "av-pi-sessions-"));
+    mkdirSync(join(ordner, "projekt"));
+    writeFileSync(join(ordner, "projekt", "p_11111111-2222-3333-4444-555555555555.jsonl"), "{}\n");
+    const prozess = piProzess();
+    prozess.zustand.isStreaming = true;
+    const adapter = createAdapter({ mode: "rpc", sessionsDir: ordner });
+    const neu = makeRecordingContext({
+      adoptWorker: async () => prozess,
+      spawnWorker: async () => {
+        throw new Error("nach dem Neustart darf kein zweiter pi-Prozess starten");
+      },
+    });
+    Object.defineProperty(neu, "nativeSessionId", { value: "11111111-2222-3333-4444-555555555555" });
+    const handle = await adapter.recover!("sitzung-nach-neustart", 0, neu);
+    expect(handle).not.toBeNull();
+    const ack = await adapter.steer(handle!, { kind: "prompt", text: "lenke nach dem Neustart" }, neu);
+    expect(ack.ok).toBe(true);
+    expect(prozess.gesendet.some((rahme) => rahme.type === "steer")).toBe(true);
+    expect(prozess.gesendet.some((rahme) => rahme.type === "prompt")).toBe(false);
   });
 
   it("Fähigkeiten: RPC verspricht Lenken mitten im Zug, One-Shot nicht", () => {

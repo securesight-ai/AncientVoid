@@ -120,6 +120,12 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
    * die native Session-Datei festhalten (für /compact, Übernahme, Fortsetzen). */
   async function startWorker(sessionId: string, ctx: AdapterContext, meta: SessionMeta, model: string | undefined): Promise<PiWorker> {
     const proc = await ctx.spawnWorker(rpcArgs(model, resumes.get(sessionId)), { stdin: "pipe", persistent: true });
+    return steuereProzess(sessionId, ctx, meta, proc);
+  }
+
+  /** Hängt einen Steuerprozess an die Session — egal ob frisch gestartet oder nach
+   * einem Hub-Neustart überlebt. Nur hier wird das JSONL-Gespräch geführt. */
+  async function steuereProzess(sessionId: string, ctx: AdapterContext, meta: SessionMeta, proc: WorkerProcess): Promise<PiWorker> {
     const live = ctx.stream ? createLivePump((f) => ctx.stream?.(f)) : undefined;
     const strom = createPiStream(live);
     const worker: PiWorker = { proc, running: false, rpc: undefined as unknown as ReturnType<typeof createPiRpc> };
@@ -453,7 +459,13 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       const proc = (await ctx.adoptWorker?.(cfg.mode === "rpc" ? { persistent: true } : undefined)) ?? null;
       const meta: SessionMeta = { healthy: true, busy: proc !== null };
       sessions.set(sessionId, meta);
-      if (proc) attach(ctx, proc, meta);
+      if (proc) {
+        // RPC-Sitzung: der überlebende Prozess redet JSONL. Ihn wie einen
+        // One-Shot-Lauf anhängen würde sein Protokoll missverstehen — und
+        // Lenken wäre nach dem Neustart tot.
+        if (cfg.mode === "rpc") await steuereProzess(sessionId, ctx, meta, proc);
+        else attach(ctx, proc, meta);
+      }
       return { sessionId, ...(proc?.pid !== undefined ? { pid: proc.pid } : {}) };
     },
 
