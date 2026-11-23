@@ -127,6 +127,13 @@
   align-items: center;
   gap: 8px;
   margin: 12px 0 8px;
+  /* Bleibt oben stehen, solange dieser Tag im Bild ist — sonst ist das Datum
+     nur dort, wo der Tag kippt, und wer mitten im Tag liest, sieht nur Uhrzeiten. */
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  padding: 6px 0 4px;
+  background: var(--bg-elev);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;

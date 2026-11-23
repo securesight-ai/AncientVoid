@@ -1,4 +1,4 @@
-import { fmtDate } from "./format.ts";
+import { fmtDate, fmtTime } from "./format.ts";
 import { t } from "./index.ts";
 
 /**
@@ -28,6 +28,16 @@ export function dayLabel(value: Date | number | string, now: Date = new Date()):
  * Trenner vor einem Eintrag? Vor dem ersten sichtbaren Eintrag ja (sonst weiß
  * niemand, von wann der Verlauf stammt), danach nur bei Tageswechsel.
  */
+/**
+ * Stempel an einer Nachricht: heute reicht die Uhrzeit (sonst rauscht das Datum
+ * durch den ganzen Chat), ab gestern steht das Datum davor — sonst weiß niemand,
+ * aus welchem Tag eine ältere Nachricht stammt.
+ */
+export function stampLabel(ts: string, now: Date = new Date()): string {
+  const time = fmtTime(ts, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return dayKey(ts) === dayKey(now) ? time : `${dayLabel(ts, now)} · ${time}`;
+}
+
 export function needsDaySeparator(prevTs: string | null | undefined, ts: string): boolean {
   if (prevTs === null || prevTs === undefined) return true;
   return dayKey(prevTs) !== dayKey(ts);

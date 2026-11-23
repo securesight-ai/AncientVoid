@@ -1,5 +1,6 @@
 import { t } from "../../shared/i18n/index.ts";
 import { fmtDateTime, fmtTime, fmtNumber } from "../../shared/i18n/format.ts";
+import { stampLabel } from "../../shared/i18n/day-label.ts";
 import { memo } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
@@ -71,7 +72,7 @@ function EventRowView({
   onJump: (anchor: string) => void;
 }) {
   const { event, state: fullText } = useFullEvent(rowEvent, useApi());
-  const time = fmtTime(event.ts, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const time = stampLabel(event.ts);
   const blobNote = event.blobRef ? " ⛁" : "";
   const toolId = toolIdOf(event);
   const visible = visibleEventText(event);
