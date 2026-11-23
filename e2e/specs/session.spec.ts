@@ -1,4 +1,16 @@
+import type { Page } from "@playwright/test";
 import { test, expect, statusPill, dockGo, openQuiet, seeAll, sessionTab, cardAction, hostedRunner } from "../support/fixtures.ts";
+
+/** BUG-0176: Der Klick auf „Starten“ darf nicht ins laufende Einwachsen des
+ * Arbeitsort-Feldes fallen (Vorschau-Antwort verschiebt das Formular unterm
+ * Zeiger) — erst warten, bis die Vorschau steht, dann klicken. */
+async function startWhenPreviewSettled(app: Page): Promise<void> {
+  const choice = app.locator("fieldset.workplace-choice");
+  if (await choice.count()) {
+    await expect(choice).toHaveAttribute("data-preview", /done|failed/);
+  }
+  await app.getByRole("button", { name: "Starten" }).click();
+}
 
 test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
   test("eine neue Session startet aus der UI und öffnet sich per Link @desktop", async ({ app, hub }) => {
@@ -7,7 +19,7 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
     await expect(app.getByRole("combobox", { name: "Projekt", exact: true })).toContainText("alpha (main)");
     await expect(app.getByRole("combobox", { name: "Projekt", exact: true })).toContainText("beta (main)");
     await app.getByPlaceholder("Refactore den Auth-Flow…").fill("Fasse die README zusammen");
-    await app.getByRole("button", { name: "Starten" }).click();
+    await startWhenPreviewSettled(app);
 
     await expect(app).toHaveURL(/#\/sessions\//);
     const id = decodeURIComponent(app.url().split("#/sessions/")[1]!);
@@ -42,7 +54,7 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
     // Manueller Override bleibt möglich — der eigene Pfad wird zur Session.
     await pfad.fill(hub.projectsDir);
     await app.getByPlaceholder("Refactore den Auth-Flow…").fill("Ohne Pfadtippen gestartet");
-    await app.getByRole("button", { name: "Starten" }).click();
+    await startWhenPreviewSettled(app);
     await expect(app).toHaveURL(/#\/sessions\//);
     const id = decodeURIComponent(app.url().split("#/sessions/")[1]!);
     const detail = await hub.api<{ project: string }>(`/api/sessions/${id}`);
@@ -53,7 +65,7 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
     await app.getByRole("button", { name: "Neue Session" }).click();
     await app.getByLabel("Adapter").selectOption("opencode");
     await app.getByPlaceholder("Refactore den Auth-Flow…").fill("Mein Startprompt");
-    await app.getByRole("button", { name: "Starten" }).click();
+    await startWhenPreviewSettled(app);
     await app.getByRole("button", { name: "Chat" }).click();
     await expect(app.locator(".tail-scroll").getByText(/Antwort auf: Mein Startprompt/)).toBeVisible();
     const id = decodeURIComponent(app.url().split("#/sessions/")[1]!);

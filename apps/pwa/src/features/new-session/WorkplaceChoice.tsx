@@ -71,7 +71,7 @@ export function WorkplaceChoice({
   useEffect(() => onBlockedChange(blocked), [blocked]);
 
   return (
-    <fieldset class="workplace-choice">
+    <fieldset class="workplace-choice" data-preview={preview ? "done" : failure ? "failed" : "pending"}>
       <legend>{t("newsession.workplace")}</legend>
       <div class="workplace-cards" role="radiogroup" aria-label={t("newsession.workplace")}>
         <label class={mode === "worktree" ? "workplace-card active" : "workplace-card"}>
