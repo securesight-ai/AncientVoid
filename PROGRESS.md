@@ -68,6 +68,16 @@ leuchtet 2,2 s nach. Im Probelauf auf dem echten Hub: Filter „Kurbelwelle“ �
 Treffer in der 4 800-Ereignisse-Sitzung, angesprungen bei seq 1639, dort
 sichtbar (`inView: true`, `hit-target` nachgewiesen).
 
+**Nachzug 23.11., zwei Nutzerfund-Stellen:** (1) In einer **laufenden** Sitzung
+fiel der Chat nach dem Sprung zur Fundstelle ans Ende zurück — der Sprung hält
+jetzt 8 s gegen das Mitlauf-Nachziehen (#329). (2) Der Tages-Anker saß nur an der
+Tagsgrenze: im Probelauf hing „Heute" 3 037 px über der Lesestelle, unten war nur
+Uhrzeit zu sehen. Die Tageslinie haftet jetzt an der Lesespitze (`sticky`,
+`--z-sticky`), und Stempel ab gestern tragen den Tag („Gestern · 09:16:59") —
+heute bleibt die nackte Uhrzeit (#331). Nachweis: 430 px am echten Hub, Stempel
+`#1 · system Gestern · 09:16:59`, haftende Linie exakt an der Behälterkante,
+keine Überlappung zweier Linien; chat- specs + Suche 9/9.
+
 ## Erledigt (verifiziert)
 - **Eingefügte Bilder erreichen den Agenten jetzt als Bild, nicht als Vermerk
   (BUG-0267).** Der Adapter `pi` sagt `images:false`, der Hub legte ihm deshalb
