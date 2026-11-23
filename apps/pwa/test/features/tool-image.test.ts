@@ -100,4 +100,37 @@ describe("Bildvorschläge aus Shell-Ausgaben", () => {
   it("ohne eigene Sitzung gibt es nichts zu zeigen", () => {
     expect(toolImageHits(schale("ls"), ergebnis("bild.png"), undefined)).toEqual({ direkt: [], vorschlaege: [] });
   });
+
+  // Fallstrick am 23.11.2026 live erwischt: `cd` verschiebt die Wurzel, über die
+  // relative Namen aufgelöst werden. Blind auf der Sitzungsroute = Vorschau 404.
+  it("cd in einen Unterordner des Projekts rechnet relativ von dort", () => {
+    const treffer = toolImageHits(
+      schale("cd /home/kaib/repos/AncientVoid/apps/pwa/public/icons && ls -1 *.png"),
+      ergebnis("icon-192.png\nicon-512.png"),
+      sitzung,
+    );
+    expect(treffer.vorschlaege).toEqual([
+      { target: "project=%2Fhome%2Fkaib%2Frepos%2FAncientVoid", path: "apps/pwa/public/icons/icon-192.png", name: "icon-192.png" },
+      { target: "project=%2Fhome%2Fkaib%2Frepos%2FAncientVoid", path: "apps/pwa/public/icons/icon-512.png", name: "icon-512.png" },
+    ]);
+  });
+
+  it("cd mit fremder oder relativer Wurzel liefert keine Vorschau — keine falsche Vorschau", () => {
+    const fremd = toolImageHits(schale("cd /home/kaib/repos/AncientVoid && ls -1 *.png"), ergebnis("bild.png"), {
+      id: "s1",
+      project: "/home/kaib/repos/ancientvoid-suche",
+    });
+    expect(fremd.vorschlaege).toEqual([]);
+    expect(toolImageHits(schale("cd sub && ls -1 *.png"), ergebnis("bild.png"), sitzung).vorschlaege).toEqual([]);
+    expect(toolImageHits(schale("cd ~ && ls -1 *.png"), ergebnis("bild.png"), sitzung).vorschlaege).toEqual([]);
+  });
+
+  it("mehrere cd in einer Zeile: das letzte bestimmt die Wurzel", () => {
+    const treffer = toolImageHits(
+      schale("cd /home/kaib/repos/AncientVoid && cd docs && ls -1 *.png"),
+      ergebnis("karte.png"),
+      sitzung,
+    );
+    expect(treffer.vorschlaege.map((b) => b.path)).toEqual(["docs/karte.png"]);
+  });
 });
