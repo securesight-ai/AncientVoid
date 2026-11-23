@@ -21,7 +21,7 @@ interface Forwarded {
   body: Buffer;
 }
 
-function forward(url: string, method: string, token: string, body: unknown): Promise<Forwarded> {
+function forward(url: string, method: string, token: string, body: unknown, timeoutOverrideMs?: number): Promise<Forwarded> {
   const target = new URL(url);
   const payload = body === undefined || body === null || method === "GET" ? undefined : JSON.stringify(body);
   const request = target.protocol === "https:" ? httpsRequest : httpRequest;
@@ -51,7 +51,7 @@ function forward(url: string, method: string, token: string, body: unknown): Pro
       },
     );
     const deletingSession = method === "DELETE" && /^\/api\/sessions\/[^/]+$/.test(target.pathname);
-    const timeoutMs = deletingSession || SLOW_PATHS.test(target.pathname) ? FORWARD_TIMEOUT_SLOW_MS : FORWARD_TIMEOUT_MS;
+    const timeoutMs = timeoutOverrideMs ?? (deletingSession || SLOW_PATHS.test(target.pathname) ? FORWARD_TIMEOUT_SLOW_MS : FORWARD_TIMEOUT_MS);
     // 2026-11-20: hard wall-clock deadline — req.setTimeout never fires during
     // TCP connect, an unreachable peer hung proxies for the kernel SYN budget.
     const deadline = setTimeout(() => req.destroy(new Error(`no answer within ${timeoutMs / 1000} s`)), timeoutMs);
@@ -60,6 +60,27 @@ function forward(url: string, method: string, token: string, body: unknown): Pro
     if (payload !== undefined) req.write(payload);
     req.end();
   });
+}
+
+/** GET auf einem gekoppelten Peer mit dessen Fleet-Token — die gemeinsame Tür
+ * für Hub-zu-Hub-Lesung (Suche Fächerung nutzt sie, der hosts-Proxy nutzt
+ * `forward` direkt). Liefert Status und, wenn JSON dahintersteht, das geparste
+ * Objekt; Fehler werfen wie bei `forward` (Zeitlimit, Verbindungsablehnung). */
+export async function peerGetJson(
+  peer: { url: string; token: string },
+  pathWithQuery: string,
+  timeoutMs = FORWARD_TIMEOUT_MS,
+): Promise<{ status: number; json: unknown } | { status: number; json: null; note: string }> {
+  const target = new URL(pathWithQuery, peer.url);
+  const res = await forward(target.toString(), "GET", peer.token, undefined, timeoutMs);
+  if (res.contentType.includes("json")) {
+    try {
+      return { status: res.status, json: JSON.parse(res.body.toString("utf8")) as unknown };
+    } catch {
+      return { status: res.status, json: null, note: "antwort war kein json" };
+    }
+  }
+  return { status: res.status, json: null, note: `antwort: ${res.contentType || "unbekannt"}` };
 }
 
 /** `/api/<rest>` if it is a clean, routable path — no `..`, no `//`. */
