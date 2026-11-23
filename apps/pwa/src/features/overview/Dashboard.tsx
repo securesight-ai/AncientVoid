@@ -25,6 +25,7 @@ import { emptyText, showStartGuide } from "./start-guide.ts";
 import { initSeen, isUnseen, seenKey } from "../../shared/seen.ts";
 import { DiscoveryPane } from "../discovery/Discovery.tsx";
 import { projectName } from "../../shared/project-name.ts";
+import { filterWithHits, hitKey, hitsBySession, topHit, type ContentHit } from "./content-hits.ts";
 
 export function formatUsd(n: number): string {
   if (n === 0) return "$0";
@@ -53,7 +54,7 @@ export interface DashboardProps {
   sessions: SessionRecord[];
   /** EPIC-P6: the fleet's hosts; more than one groups the overview by host. */
   hosts?: FleetHost[];
-  onOpen: (session: SessionRecord, opts?: { newTile?: boolean }) => void;
+  onOpen: (session: SessionRecord, opts?: { newTile?: boolean; seq?: number }) => void;
   /** T2.6: pending approval-queue count (0 on a hub without approvals
    * configured — not distinguished from "genuinely zero pending" here,
    * since either way there's nothing for the banner to show). */
@@ -146,6 +147,13 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
   const [deleting, setDeleting] = useState(false);
   const deleteInFlight = useRef(false);
   const [query, setQuery] = useState("");
+  // Der Sitzungsfilter ist für viele der eine Weg zu einer Sitzung — und gesucht
+  // wird nach ihrem **Inhalt**, nicht nach ihrem Titel. Darum läuft parallel eine
+  // Sitzungstext-Suche; ihre Fundstellen hängen an der Kachel und sind das
+  // Sprungziel, wenn die Kachel geöffnet wird.
+  const [contentHits, setContentHits] = useState<Map<string, ContentHit>>(new Map());
+  const [contentTotal, setContentTotal] = useState<number | null>(null);
+  const contentSeq = useRef(0);
   const [allRecent, setAllRecent] = useState(false);
   // T9.4: "Zeig wartende Sessions" narrows the overview; the chip undoes it.
   const [statusFilter, setStatusFilter] = useState(() => sessionStorage.getItem("ancientvoid.overviewFilter") ?? "all");
@@ -194,6 +202,32 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
       alive = false;
     };
   }, [view]);
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      contentSeq.current += 1;
+      setContentHits(new Map());
+      setContentTotal(null);
+      return;
+    }
+    const seq = ++contentSeq.current;
+    const timer = setTimeout(() => {
+      hubApi
+        .searchAll({ q, scope: "sessions", limit: 60 })
+        .then((r) => {
+          if (seq !== contentSeq.current) return;
+          setContentHits(hitsBySession(r.sessions));
+          setContentTotal(r.sessionTotal);
+        })
+        .catch(() => {
+          if (seq !== contentSeq.current) return;
+          setContentHits(new Map());
+          setContentTotal(null);
+        });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const queryRef = useRef(query);
   queryRef.current = query;
   useEffect(() => registerField("session_filter", { get: () => queryRef.current, set: setQuery }), []);
@@ -219,15 +253,15 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
     () => sessions.filter((s) => !deleted.has(sessionKey(s))).map((s) => (override[s.id] ? { ...s, ...override[s.id] } : s)),
     [sessions, override, deleted],
   );
-  const visible = useMemo(
-    () =>
-      sessionsForOverview(withOverride, showArchived)
-        .filter((s) => matches(s, query.trim()))
-        .filter((s) => (hostFilter ? (s.hostId ?? "local") === hostFilter : true))
-        // „wartende“ (Sprachbefehl T9.4) heißt blockiert: Freigabe, Frage, Fehler — ein fertiger Zug wartet nicht.
-        .filter((s) => showArchived || (statusFilter === "waiting" ? sectionOf(s) === "braucht" /* i18n-ignore: Daten-Key */ : statusFilter === "active" ? section(s) === "aktiv" /* i18n-ignore: Daten-Key */ || section(s) === "braucht" /* i18n-ignore: Daten-Key */ : true)),
-    [withOverride, showArchived, query, statusFilter, hostFilter],
-  );
+  const visible = useMemo(() => {
+    const base = sessionsForOverview(withOverride, showArchived)
+      .filter((s) => (hostFilter ? (s.hostId ?? "local") === hostFilter : true))
+      // „wartende“ (Sprachbefehl T9.4) heißt blockiert: Freigabe, Frage, Fehler — ein fertiger Zug wartet nicht.
+      .filter((s) => showArchived || (statusFilter === "waiting" ? sectionOf(s) === "braucht" /* i18n-ignore: Daten-Key */ : statusFilter === "active" ? section(s) === "aktiv" /* i18n-ignore: Daten-Key */ || section(s) === "braucht" /* i18n-ignore: Daten-Key */ : true));
+    // Titel-Treffer **und** Inhalts-Treffer: eine Sitzung, in der etwas gebaut
+    // wurde, ist gefunden, auch wenn ihr Titel nichts davon weiß.
+    return filterWithHits(base, (x) => matches(x, query.trim()), contentHits);
+  }, [withOverride, showArchived, query, statusFilter, hostFilter, contentHits]);
   const sorted = useMemo(() => [...visible].sort(compareByActivity), [visible]);
   const selectedVisible = sorted.filter((s) => selected.has(sessionKey(s)));
   // Entschiedene Anfragen verschwinden sofort; der nächste Abruf bestätigt es.
@@ -365,7 +399,31 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
             </Chip>
           )}
           {(sessions.length > 4 || query !== "") && (
-            <input class="dashboard-search" type="search" placeholder={t("common.filter_sessions_placeholder")} aria-label={t("common.filter_sessions")} value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
+            <>
+            <input
+              class="dashboard-search"
+              type="search"
+              placeholder={t("common.filter_sessions_placeholder")}
+              aria-label={t("common.filter_sessions")}
+              value={query}
+              onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                const top = topHit(sorted, contentHits);
+                if (top) location.hash = sessionHash(top.session.id, remoteHost(top.session.hostId), top.hit.seq);
+              }}
+            />
+            {query.trim().length >= 2 && (
+              <div class="dim dash-content-note">
+                {contentTotal === null
+                  ? t("search.content_loading")
+                  : contentTotal === 0
+                    ? t("search.content_none")
+                    : t(contentTotal === 1 ? "search.content_note_one" : "search.content_note", { total: contentTotal, sessions: contentHits.size })}
+              </div>
+            )}
+            </>
           )}
           {showArchived && sorted.length > 0 && (
             <div class="archive-actions">
@@ -421,6 +479,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
                       <SessionRow
                         key={`${s.hostId ?? ""}:${s.id}`}
                         session={s}
+                        hit={contentHits.get(hitKey(s.id))}
                         hosts={hosts ?? []}
                         onOpen={onOpen}
                         isLast={isLastSession(lastSession, s.id, remoteHost(s.hostId))}
@@ -555,6 +614,7 @@ function SessionRow({
   onArchive,
   onPin,
   onDelete,
+  hit,
   selection,
 }: {
   /** EPIC-P34 T34.10: die Session läuft in einem eigenen Fenster. */
@@ -566,7 +626,8 @@ function SessionRow({
   moved: boolean;
   session: SessionRecord;
   hosts: FleetHost[];
-  onOpen: (s: SessionRecord, opts?: { newTile?: boolean }) => void;
+  onOpen: (s: SessionRecord, opts?: { newTile?: boolean; seq?: number }) => void;
+  hit?: ContentHit;
   isLast: boolean;
   onArchive: (s: SessionRecord) => void;
   onPin: (s: SessionRecord) => void;
@@ -638,7 +699,11 @@ function SessionRow({
         setActionsOpen(true);
       }}
     >
-      <button class="session-open" type="button" onClick={(ev) => onOpen(session, { newTile: ev.ctrlKey || ev.metaKey })}>
+      <button
+        class="session-open"
+        type="button"
+        onClick={(ev) => onOpen(session, { newTile: ev.ctrlKey || ev.metaKey, ...(hit ? { seq: hit.seq } : {}) })}
+      >
         <div class="row">
           <strong class={`session-title${session.title ? "" : " dim"}`}>{session.title ?? (session.adapter === "loop:securesight-factory" ? t("common.factory_observer", { "project": project }) : t("common.no_order", { "project": project }))}</strong>
           <StatusDot status={session.status} question={question} unseen={unseen} />
@@ -656,6 +721,11 @@ function SessionRow({
           <span data-testid="session-project">{project}</span> · {session.adapter} · {session.model ?? t("common.default_model")}
           {session.costUsd > 0 ? ` · ${metricView(session, "cost", formatUsd, true).text}` : ""}
         </div>
+        {hit ? (
+          <div class="session-hit">
+            <span class="session-hit-chip">{t(hit.count === 1 ? "search.content_chip_one" : "search.content_chip", { n: hit.count })}</span>
+          </div>
+        ) : null}
         <div class="session-activity">
           <span class="session-activity-text">{session.lastActivity?.text ?? t("common.nothing_yet")}</span>
           <span class="dim session-ago">

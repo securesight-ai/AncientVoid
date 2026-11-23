@@ -243,6 +243,43 @@ body:has(.search-pane) .nyx-fab {
   text-align: left;
 }
 
+/* Sitzungsfilter der Übersicht: was die Kachel an Inhalt trägt, steht an ihr —
+   und ein Tipp darauf öffnet die Sitzung an genau dieser Fundstelle. */
+.dash-content-note {
+  font-size: var(--text-xs);
+  margin: 2px 0 6px;
+}
+
+.session-hit {
+  margin-top: 4px;
+}
+
+.session-hit-chip {
+  border: 1px solid var(--fg-dim);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+}
+
+/* Fundstelle aus der Adresse: die angesprungene Nachricht leuchtet kurz nach —
+   sonst steht man in einem langen Chat ohne zu wissen, welcher Block gemeint war. */
+.event.hit-target,
+.turn-step.hit-target,
+.turn-unknown.hit-target {
+  animation: hit-target 2.2s ease-out 1;
+}
+
+@keyframes hit-target {
+  0%,
+  35% {
+    background: color-mix(in srgb, var(--warn) 26%, transparent);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
 /* Cross-Hub: jeder gekoppelte Rechner nennt seinen Zustand. Ein Rechner, der
    nicht antwortet, ist ein Ergebnis — nicht „nichts gefunden“. */
 .search-hubs {

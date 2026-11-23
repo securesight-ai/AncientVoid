@@ -186,7 +186,7 @@ function Main() {
       .catch(() => setSelfHostId(null));
   };
   const [route, setRoute] = useState<
-    { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string }
+    { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string; seq?: number }
   >({ view: "list", page: "dashboard" });
 
   // Ein Anhang-Deep-Link (`#/anhang/<id>` oder `…/sessions/<id>/anhang/<id>`) liegt UEBER
@@ -295,7 +295,7 @@ function Main() {
       hostApi(parsed.hostId)
         .session(parsed.sessionId)
         .then((session) =>
-          setRoute({ view: "tail", session, ...(parsed.code ? { code: parsed.code } : {}), ...(parsed.tab ? { tab: parsed.tab } : {}), ...(parsed.file ? { file: parsed.file } : {}) }),
+          setRoute({ view: "tail", session, ...(parsed.code ? { code: parsed.code } : {}), ...(parsed.tab ? { tab: parsed.tab } : {}), ...(parsed.file ? { file: parsed.file } : {}), ...(parsed.seq !== undefined ? { seq: parsed.seq } : {}) }),
         )
         .catch(() => setRoute({ view: "list", page: "dashboard" }));
     };
@@ -405,7 +405,14 @@ function Main() {
     if (result === "opened") latest.current.changeWorkspace(detachTile(latest.current.ws, index));
   };
   // Opening a session adds a card; already detached sessions retain their explicit window.
-  const openFromList = (session: SessionRecord) => {
+  const openFromList = (session: SessionRecord, opts?: { newTile?: boolean; seq?: number }) => {
+    // Mit Fundstelle: über die Adresse öffnen, damit die Sitzung **an der
+    // Fundstelle** aufgeht (der Anker steckt in der Adresse, nicht in der Kachel).
+    if (opts?.seq !== undefined) {
+      rememberSession(tileRefOf(session));
+      location.hash = sessionHash(session.id, remoteHost(session.hostId), opts.seq);
+      return;
+    }
     const ref = tileRefOf(session);
     // EPIC-P34 T34.10: läuft die Session in einem eigenen Fenster, kommt dieses nach vorn — kein zweiter Composer.
     if (focusWindowFor({ kind: "session", sessionId: ref.sessionId, ...(ref.hostId ? { hostId: ref.hostId } : {}) })) return;
@@ -422,8 +429,8 @@ function Main() {
     const current = latest.current.ws;
     let ref: TileRef;
     if (route.view === "tail") {
-      const deep = !!(route.tab || route.code);
-      ref = { ...tileRefOf(route.session), ...(deep ? { content: { kind: "session" as const, tab: route.code ? "code" as const : route.tab!, ...(route.file ? { file: route.file } : {}), ...(route.code ? { code: route.code } : {}) } } : {}) };
+      const deep = !!(route.tab || route.code || route.seq !== undefined);
+      ref = { ...tileRefOf(route.session), ...(deep ? { content: { kind: "session" as const, tab: route.code ? "code" as const : route.tab ?? "chat", ...(route.file ? { file: route.file } : {}), ...(route.code ? { code: route.code } : {}), ...(route.seq !== undefined ? { seq: route.seq } : {}) } } : {}) };
       // Listen-/Session-Wechsel: schon offene Karte fokussieren, statt Tab-Default als neue Kachel.
       if (!deep) {
         const focused = focusOpenSession(current, ref);
@@ -579,8 +586,14 @@ function Main() {
         </div>
       ) : route.view === "list" ? (
         <App
-          onOpen={(session) => {
+          onOpen={(session, opts) => {
             rememberSession(tileRefOf(session));
+            // Mit Fundstelle: die Adresse trägt den Anker, die Sitzung geht dort
+            // auf — der Sitzungsfilter in der Übersicht öffnet so nach Inhalt.
+            if (opts?.seq !== undefined) {
+              location.hash = sessionHash(session.id, remoteHost(session.hostId), opts.seq);
+              return;
+            }
             location.hash = sessionHash(session.id, remoteHost(session.hostId));
             setRoute({ view: "tail", session });
           }}
@@ -601,6 +614,7 @@ function Main() {
             key={route.session.id}
             session={route.session}
             {...(route.code ? { initialCode: route.code } : {})}
+            {...(route.view === "tail" && route.seq !== undefined ? { initialSeq: route.seq } : {})}
             {...(route.view === "tail" && route.tab ? { initialTab: route.tab, ...(route.file ? { initialFile: route.file } : {}) } : {})}
             onNavigate={(page) => {
               location.hash = pageHash(page);
