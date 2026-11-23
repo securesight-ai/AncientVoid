@@ -73,6 +73,8 @@ describe("Werkzeugseiten (EPIC-P34 T34.2)", () => {
 describe("Analyse-Seite mit Tabs (BUG-0257)", () => {
   it("die drei Ansichten sind ein Reiter-Hash auf einer Seite", () => {
     expect(parseAppHash("#/statistik")).toEqual({ view: "list", page: "statistics" });
+    expect(parseAppHash("#/statistik/hosts")).toEqual({ view: "list", page: "statistics", statTab: "hosts" });
+    expect(parseAppHash("#/statistik/hosts/evox2")).toEqual({ view: "list", page: "statistics", statTab: "hosts" });
     expect(parseAppHash("#/statistik/metriken")).toEqual({ view: "list", page: "statistics", statTab: "metriken" });
     expect(parseAppHash("#/statistik/inferenz")).toEqual({ view: "list", page: "statistics", statTab: "inferenz" });
     expect(parseAppHash("#/statistik/statistik/")).toEqual({ view: "list", page: "statistics" });

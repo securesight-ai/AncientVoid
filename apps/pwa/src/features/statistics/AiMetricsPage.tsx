@@ -1,9 +1,9 @@
 import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
-import type { AiMetricsReport, AiMetricsSourceReport } from "@ancientvoid/contracts";
+import type { AiMetricsReport } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
-import { formatMetricAge, formatMetricValue } from "../../shared/metrics.ts";
 import { Card, EmptyState } from "../../shared/ui/index.ts";
+import { MetricSource } from "./MetricSource.tsx";
 
 /**
  * EPIC-P59 (ADR-0078): Metrik-Seite — Auslastung des lokalen KI-Servers.
@@ -49,37 +49,13 @@ export function AiMetricsPage() {
   if (!report) return <EmptyState text={stale ? "keine Daten — der Hub meldet nicht" : "lädt …"} />;
   if (report.sources.length === 0) return <EmptyState text={t("aimetrics.no_sources2")} />;
   return (
-    <div class="status-page">
-      {stale && <p  role="status">{t("aimetrics.no_fresh")}</p>}
+    <div class="status-page hosts">
+      {stale && <p class="stat-note" role="status">{t("aimetrics.no_fresh")}</p>}
       {report.sources.map((source) => (
-        <SourceCard key={source.id} source={source} />
+        <Card key={source.id} aria-label={`Metrik-Quelle ${source.label}`} class="hosts-hero">
+          <MetricSource source={source} stepMs={report.intervalSec * 1000} />
+        </Card>
       ))}
     </div>
-  );
-}
-
-function SourceCard({ source }: { source: AiMetricsSourceReport }) {
-  return (
-    <Card aria-label={`Metrik-Quelle ${source.label}`}>
-      <strong>{source.label}</strong>
-      {source.url && <> · <code>{source.url}</code></>}
-      {!source.status.ok && <p  role="status">{t("aimetrics.probe_failed")} {source.status.error}</p>}
-      <table>
-        <thead>
-          <tr><th>{t("aimetrics.field")}</th><th>{t("aimetrics.value")}</th><th>p50 / p95</th><th>{t("composer.source")}</th><th>{t("aimetrics.age")}</th></tr>
-        </thead>
-        <tbody>
-          {source.fields.map((field) => (
-            <tr key={field.key}>
-              <td>{field.label}</td>
-              <td>{formatMetricValue(field.value, field.unit)}</td>
-              <td>{field.window ? `${formatMetricValue(field.window.p50, field.unit)} / ${formatMetricValue(field.window.p95, field.unit)} (${field.window.samples})` : "—"}</td>
-              <td>{field.source}</td>
-              <td>{formatMetricAge(field.ts)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
   );
 }

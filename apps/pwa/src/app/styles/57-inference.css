@@ -34,9 +34,9 @@
 }
 
 .inference-hero > div {
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: linear-gradient(168deg, color-mix(in srgb, var(--data-1) 9%, var(--bg-elev)), var(--bg-elev) 60%);
+  border: 1px solid var(--bg-chip);
+  border-radius: var(--radius-lg);
   padding: var(--space-2) var(--space-3);
 }
 
@@ -89,28 +89,6 @@
 .inference-werte dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
-}
-
-.inference-balken {
-  height: 4px;
-  border-radius: var(--radius-sm);
-  background: var(--border);
-  overflow: hidden;
-  margin-top: var(--space-1);
-}
-
-.inference-balken > span {
-  display: block;
-  height: 100%;
-  background: var(--accent);
-}
-
-.inference-balken--warn > span {
-  background: var(--warn);
-}
-
-.inference-balken--err > span {
-  background: var(--err);
 }
 
 .inference-tabelle {
@@ -227,25 +205,6 @@
   font-size: var(--text-sm);
   display: grid;
   gap: var(--space-1);
-}
-
-/* EPIC-P79: Sekunden-Reihen der Engine — eine Zeile pro Messgröße, damit Decode,
- * Vorbehandlung und RAM nicht als ein Diagramm missverstanden werden. */
-.inference-verlauf {
-  display: grid;
-  grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--fg-dim);
-}
-
-.inference-verlauf svg {
-  width: 100%;
-  height: 32px; /* passt zur Höhe, die verlauf() zeichnet — sonst läuft die Linie aus der Box */
-  overflow: hidden;
-  color: var(--accent);
 }
 
 /* EPIC-P79: die Live-Kachel hält Textwerte (Zustand, Phase) — drei enge Spalten

@@ -3,11 +3,13 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import type { AiMetricsReport, StatisticsDistribution, StatisticsReport, TurnStatistics, SessionStatistics, SessionAnomaly } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
-import { formatMetricAge, formatMetricValue } from "../../shared/metrics.ts";
+import { ShareBars, StatTile } from "../../shared/ui/charts/index.tsx";
 import { pageHash, statTabHash } from "../../app/route.ts";
 import { Button, Card, EmptyState, Segmented, Select } from "../../shared/ui/index.ts";
 import { AiMetricsPage } from "./AiMetricsPage.tsx";
+import { HostsPage } from "./HostsPage.tsx";
 import { InferencePage } from "./InferencePage.tsx";
+import { MetricSource } from "./MetricSource.tsx";
 
 /**
  * EPIC-P56 T56.3/T56.4 + EPIC-P66: die eine Metrik-Zentrale — konsolidierte
@@ -123,16 +125,17 @@ function Section({ id, title, note, collapsed, onToggle, children }: { id: strin
         {note !== undefined && <small class="stat-section-note">{note}</small>}
         <span class="stat-chevron" aria-hidden="true">{collapsed ? "▸" : "▾"}</span>
       </button>
-      {!collapsed && <div id={`stat-sec-${id}`}>{children}</div>}
+      {!collapsed && <div id={`stat-sec-${id}`} class="stat-section-body stat-scroll">{children}</div>}
     </Card>
   );
 }
 
 /** BUG-0257: Reiter der einen Analyse-Seite — URL ist der Zustand (route.ts). */
-export type StatTab = "statistik" | "metriken" | "inferenz";
+export type StatTab = "statistik" | "hosts" | "metriken" | "inferenz";
 
 const STAT_TABS: readonly { id: StatTab; label: string; hash: string }[] = [
   { id: "statistik", label: t("dock.statistics"), hash: pageHash("statistics") },
+  { id: "hosts", label: t("hosts.tab"), hash: statTabHash("hosts") },
   { id: "metriken", label: t("dock.aimetrics"), hash: statTabHash("metriken") },
   { id: "inferenz", label: t("common.inference"), hash: statTabHash("inferenz") },
 ];
@@ -155,7 +158,7 @@ export function StatisticsPage({ tab = "statistik" }: { tab?: StatTab }) {
           </button>
         ))}
       </div>
-      {tab === "metriken" ? <AiMetricsPage /> : tab === "inferenz" ? <InferencePage /> : <StatistikTab />}
+      {tab === "hosts" ? <HostsPage /> : tab === "metriken" ? <AiMetricsPage /> : tab === "inferenz" ? <InferencePage /> : <StatistikTab />}
     </>
   );
 }
@@ -254,7 +257,8 @@ function StatistikTab() {
   const servers = ai === null ? null : ai.sources.filter(s => s.kind === "model-server");
 
   return (
-    <div class="status-page" aria-label={t("common.statistics")}>
+    <div class="status-page hosts" aria-label={t("common.statistics")}>
+      <Overview report={report} />
       <div class="stat-bar">
         <Button variant="subtle" onClick={() => setAll(!allCollapsed)}>
           {allCollapsed ? "alle auf" : "alle zu"}
@@ -303,7 +307,7 @@ function StatistikTab() {
         ) : hosts.length === 0 ? (
           <p class="stat-note">{t("statistics.host_probe")}</p>
         ) : (
-          hosts.map(s => <MetricsTable key={s.id} source={s} />)
+          hosts.map(s => <MetricSource key={s.id} source={s} stepMs={ai.intervalSec * 1000} />)
         )}
       </Section>
 
@@ -313,7 +317,7 @@ function StatistikTab() {
         ) : servers !== null && servers.length === 0 ? (
           <p class="stat-note">{t("statistics.no_sources")}</p>
         ) : (
-          servers?.map(s => <MetricsTable key={s.id} source={s} />)
+          servers?.map(s => <MetricSource key={s.id} source={s} stepMs={ai.intervalSec * 1000} />)
         )}
       </Section>
 
@@ -322,6 +326,7 @@ function StatistikTab() {
       ) : (
         <>
           <Section id="sessions" title={t("common.sessions_cap")} note="je Adapter und Modell" collapsed={collapsed.sessions ?? false} onToggle={() => toggle("sessions")}>
+            <ShareBars label={t("common.sessions_cap")} rows={topRows(report.sessions.map(s => ({ key: `${s.adapter}\u0000${s.model ?? ""}`, label: `${s.adapter} · ${s.model ?? t("statistics.modelUnknown")}`, value: s.sessions, text: formatCount(s.sessions), tone: "cpu" as const })))} />
             <SessionTable sessions={report.sessions} />
           </Section>
           <Section id="zuege" title={t("statistics.turns_tokens")} note="je Adapter und Modell" collapsed={collapsed.zuege ?? true} onToggle={() => toggle("zuege")}>
@@ -332,6 +337,7 @@ function StatistikTab() {
             <GateTable report={report} />
           </Section>
           <Section id="tools" title={t("statistics.tools")} note="Aufrufe und Fehlerquoten" collapsed={collapsed.tools ?? true} onToggle={() => toggle("tools")}>
+            <ShareBars label={t("statistics.tools")} rows={topRows(report.tools.map(x => ({ key: x.tool ?? "", label: x.tool ?? t("statistics.name_unbelegt"), value: x.calls, text: formatCount(x.calls), note: x.failureRate === null ? undefined : t("statistics.errorRate", { pct: Math.round(x.failureRate * 100) }), tone: "cpu" as const })))} />
             <ToolTable report={report} />
           </Section>
           <Section id="teams" title={t("statistics.teams")} note="Projekt-/Zeitraum-Schnitt" collapsed={collapsed.teams ?? true} onToggle={() => toggle("teams")}>
@@ -349,30 +355,25 @@ function StatistikTab() {
   );
 }
 
-function MetricsTable({ source }: { source: AiMetricsReport["sources"][number] }) {
+/** Die acht größten Gruppen als Balken; die Tabelle darunter bleibt vollständig. */
+function topRows<T extends { value: number }>(rows: T[]): T[] {
+  return rows.sort((a, b) => b.value - a.value).slice(0, 8);
+}
+
+/** T81.12: Kopf des Reiters. Nur Summen aus dem Schnitt, Fehlerquote nur aus belegten Ergebnissen. */
+function Overview({ report }: { report: StatisticsReport }) {
+  const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
+  const failed = sum(report.tools.map(x => x.failed));
+  const evidenced = failed + sum(report.tools.map(x => x.ok));
   return (
-    <div class="stat-metrics">
-      <p class="stat-metrics-head">
-        <strong>{source.label}</strong>
-        {!source.status.ok && <span role="status">{t("statistics.probe_failed")} {source.status.error}</span>}
-      </p>
-      <table>
-        <thead>
-          <tr><th>{t("statistics.field")}</th><th>{t("statistics.value")}</th><th>p50 / p95</th><th>{t("composer.source")}</th><th>{t("statistics.age")}</th></tr>
-        </thead>
-        <tbody>
-          {source.fields.map(field => (
-            <tr key={field.key}>
-              <td>{field.label}</td>
-              <td>{formatMetricValue(field.value, field.unit)}</td>
-              <td>{field.window ? `${formatMetricValue(field.window.p50, field.unit)} / ${formatMetricValue(field.window.p95, field.unit)} (${field.window.samples})` : "—"}</td>
-              <td>{field.source}</td>
-              <td>{formatMetricAge(field.ts)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Card aria-label={t("statistics.overview")} class="hosts-hero">
+      <div class="stat-tiles">
+        <StatTile label={t("common.sessions_cap")} value={formatCount(sum(report.sessions.map(s => s.sessions)))} note={t("statistics.openCount", { n: sum(report.sessions.map(s => s.openSessions)) })} />
+        <StatTile label={t("statistics.turns")} value={formatCount(sum(report.turns.map(x => x.turns)))} note={t("statistics.failedCount", { n: sum(report.turns.map(x => x.failedTurns)) })} />
+        <StatTile label={t("statistics.tools")} value={formatCount(sum(report.tools.map(x => x.calls)))} note={t("statistics.evidencedRate", { pct: ratio(failed, evidenced), n: formatCount(evidenced) })} />
+        <StatTile label={t("statistics.anomalies")} value={formatCount(report.anomalies.length)} />
+      </div>
+    </Card>
   );
 }
 
@@ -460,7 +461,7 @@ function SessionTable({ sessions }: { sessions: SessionStatistics[] }) {
             </td>
             <td><Distribution d={s.wallMs} unit="ms" /></td>
             <td><Distribution d={s.activeMs} unit="ms" /></td>
-            <td><Distribution d={s.turnsPerSession} unit="ms" /></td>
+            <td><Distribution d={s.turnsPerSession} unit="count" /></td>
           </tr>
         ))}
       </tbody>

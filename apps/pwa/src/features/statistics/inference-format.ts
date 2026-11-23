@@ -67,18 +67,8 @@ export function uhrzeit(iso: string): string {
   return datum.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 }
 
-export function verlauf(werte: number[], breite = 100, hohe = 32): string | null {
+/** Zeichenbar ist nur eine Reihe mit Bewegung; eine Konstante wäre eine „stabil“-Lüge. */
+export function hatVerlauf(werte: number[]): boolean {
   const sauber = werte.filter((v) => Number.isFinite(v));
-  if (sauber.length < 2) return null;
-  const min = Math.min(...sauber);
-  const max = Math.max(...sauber);
-  if (min === max) return null; // Konstante Serie wäre eine flache Linie als „stabil“-Lüge.
-  const span = max - min;
-  return sauber
-    .map((v, i) => {
-      const x = (i / (sauber.length - 1)) * breite;
-      const y = hohe - ((v - min) / span) * hohe;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+  return sauber.length >= 2 && Math.min(...sauber) !== Math.max(...sauber);
 }

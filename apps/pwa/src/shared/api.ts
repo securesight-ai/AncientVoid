@@ -3,7 +3,7 @@ import { errorText } from "./i18n/index.ts";
 import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity } from "@ancientvoid/contracts";
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
-import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, InferenceAskResult, InferenceModelStatus, InferenceModelView, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
+import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, HostMetricRange, HostMetricsDetail, HostMetricsHistory, HostMetricsReport, InferenceAskResult, InferenceModelStatus, InferenceModelView, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
 export type { TerminalTarget };
 import type { TtsSettingsPatch, TtsSettingsView, TtsStatusResponse } from "@ancientvoid/contracts";
 import type { SessionTextSearchResponse, TranscriptRole, UnifiedSearchResponse } from "@ancientvoid/contracts";
@@ -766,6 +766,9 @@ export interface RunEstimate {
   medianMs: number | null;
   p80Ms: number | null;
   tokensPerSec: number | null;
+  /** BUG-0167: Median/Zahl der eigenen Züge dieser Session (ab 2; nur mit Session-ID). */
+  sessionMedianMs?: number | null;
+  sessionTurns?: number;
 }
 
 export interface QueuedPrompt {
@@ -988,6 +991,11 @@ function createHubApi(P: (path: string) => string) {
   health: () => api<{ ok: boolean; serverTime: string; deployment?: DeploymentIdentity }>(P("/api/health")),
   /** EPIC-P59 (ADR-0078): Report der Metrik-Seite — REST, nicht EventBus (K5). */
   aimetrics: () => api<AiMetricsReport>(P("/api/aimetrics")),
+  /** EPIC-P81 (ADR-0117): alle Werte aller Hosts. */
+  hostMetrics: () => api<HostMetricsReport>(P("/api/hostmetrics")),
+  hostMetricsDetail: (id: string) => api<HostMetricsDetail>(P(`/api/hostmetrics/host?id=${encodeURIComponent(id)}`)),
+  hostMetricsHistory: (id: string, range: HostMetricRange, key?: string) =>
+    api<HostMetricsHistory>(P(`/api/hostmetrics/history?id=${encodeURIComponent(id)}&range=${range}${key ? `&key=${encodeURIComponent(key)}` : ""}`)),
   /** EPIC-P79 (ADR-0102): Token-Tempo der Inferenz-Engines (REST, gekappt — K5). */
   inferenceSources: () => api<InferenceSourceList>(P("/api/inference/sources")),
   inferenceSnapshot: (id: string, fensterH?: number) =>

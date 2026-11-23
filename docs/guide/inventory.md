@@ -36,7 +36,7 @@ Regeln:
 | page:vault | Notes vault with folder picker | `#/notizen` | vault |
 | page:teams | Agent teams: plan, dispatch, gates, deliveries | `#/teams` | team |
 | page:automationen | Automations: schedules and run history | `#/automationen` | automations |
-| page:statistics | One analysis page with tabs: session/turn/gate/tool statistics, AI server metrics, inference token tempo | `#/statistik` (+`/metriken`, `/inferenz`) | statistik |
+| page:statistics | One analysis page with tabs: session/turn/gate/tool statistics, host monitoring, AI server metrics, inference token tempo | `#/statistik` (+`/hosts`, `/hosts/<id>`, `/metriken`, `/inferenz`) | statistik |
 | page:terminal | Allowlisted SSH/local shell in the PWA | `#/terminal` | terminal |
 | page:releasenotes | Release notes: merged PRs with what changed and why | `#/releasenotes` | release-notes |
 

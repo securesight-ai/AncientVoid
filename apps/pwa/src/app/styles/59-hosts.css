@@ -1,0 +1,374 @@
+/* EPIC-P81 T81.9/T81.10: Diagramm-Bausteine (shared/ui/charts) und Hosts-Reiter.
+ * Leitwert ist die Containerbreite: die Seite lebt auch im schmalen Seitenpane. */
+.hosts {
+  display: grid;
+  gap: var(--space-3);
+  container-type: inline-size;
+  container-name: hosts;
+}
+
+.hosts > * {
+  margin: 0;
+  min-width: 0;
+}
+
+.hosts-hero {
+  display: grid;
+  gap: var(--space-2);
+  background: linear-gradient(168deg, color-mix(in srgb, var(--data-1) 9%, var(--bg-elev)), var(--bg-elev) 60%);
+  border-radius: var(--radius-lg);
+}
+
+.hosts > button,
+.hosts-hero > [role="group"],
+.hosts-hero > [role="radiogroup"] {
+  justify-self: start;
+}
+
+.hosts-hero p {
+  margin: 0;
+}
+
+.hosts-hero-value {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.hosts-hero-value > strong {
+  font-family: var(--font-mono);
+  font-size: calc(var(--text-xl) * 2.2);
+  line-height: 1;
+}
+
+.hosts-hero-value > strong.hosts-none {
+  font-family: var(--font-ui);
+  font-size: var(--text-lg);
+  color: var(--fg-dim);
+}
+
+.hosts-hero-value > span {
+  color: var(--fg-dim);
+}
+
+.hosts-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.hosts-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--bg-elev);
+  border: 1px solid var(--bg-chip);
+  border-radius: var(--radius-lg);
+}
+
+.hosts-card[data-ok="false"] {
+  border-color: var(--warn);
+}
+
+/* Letzte bekannte Werte eines ausgefallenen Hosts treten zurück. */
+.hosts-card[data-ok="false"] .hosts-meters,
+.hosts-card[data-ok="false"] .hosts-card-watts {
+  opacity: 0.55;
+}
+
+.hosts-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hosts-card-head strong {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.hosts-card-watts,
+.hosts-pair strong,
+.hosts-group strong,
+.chart-bar-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.hosts-failed {
+  margin: 0;
+  color: var(--warn);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.hosts-meters {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.hosts-pair {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.hosts-pair > span {
+  min-width: 0;
+  color: var(--fg-dim);
+  overflow-wrap: anywhere;
+}
+
+.hosts-group {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elev);
+  border: 1px solid var(--bg-chip);
+  border-radius: var(--radius);
+}
+
+.hosts-group summary,
+.hosts-table summary {
+  min-height: var(--target);
+  align-content: center;
+  cursor: pointer;
+}
+
+.hosts-group small,
+.hosts-table,
+.chart-bars small {
+  color: var(--fg-dim);
+  font-size: var(--text-xs);
+}
+
+.hosts-group ul,
+.chart-bars {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hosts-group li button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 var(--space-2);
+  width: 100%;
+  min-height: var(--target);
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.hosts-group li button:hover,
+.hosts-group li button[aria-pressed="true"] {
+  background: var(--bg-active);
+}
+
+.hosts-group li button > span {
+  overflow-wrap: anywhere;
+}
+
+.hosts-group li button > small {
+  grid-row: 2;
+}
+
+.hosts-group li button > strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.hosts-table table {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.hosts-table td,
+.hosts-table th {
+  text-align: left;
+}
+
+@container hosts (min-width: 640px) {
+  .hosts-group ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Diagramm-Bausteine */
+.chart-line {
+  fill: none;
+  stroke: var(--data-1);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-grid {
+  stroke: var(--bg-chip);
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-fade-top {
+  stop-color: var(--data-1);
+  stop-opacity: 0.28;
+}
+
+.chart-fade-bottom {
+  stop-color: var(--data-1);
+  stop-opacity: 0.02;
+}
+
+.chart-spark {
+  display: block;
+  width: 100%;
+  height: 36px;
+}
+
+.chart-area {
+  margin: 0;
+  min-width: 0;
+}
+
+.chart-plot {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.chart-plot svg {
+  display: block;
+  width: 100%;
+  height: 160px;
+}
+
+.chart-max,
+.chart-axis {
+  color: var(--fg-dim);
+  font-size: var(--text-xs);
+}
+
+.chart-max {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  pointer-events: none;
+}
+
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+}
+
+.chart-cross,
+.chart-dot,
+.chart-tip {
+  position: absolute;
+  left: var(--at);
+  pointer-events: none;
+}
+
+.chart-cross {
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--border-strong);
+}
+
+.chart-dot {
+  bottom: var(--up);
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--bg-elev);
+  border-radius: 50%;
+  background: var(--data-1);
+  transform: translate(-50%, 50%);
+}
+
+.chart-tip {
+  top: 20px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--fg);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  transform: translateX(8px);
+}
+
+.chart-tip[data-side="left"] {
+  transform: translateX(calc(-100% - 8px));
+}
+
+.chart-bars li,
+.chart-meter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.chart-bar-label {
+  color: var(--fg-dim);
+  overflow-wrap: anywhere;
+}
+
+.chart-bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--bg-chip);
+}
+
+.chart-bar > i {
+  display: block;
+  width: var(--fill);
+  height: 100%;
+  border-radius: 0 3px 3px 0;
+  background: var(--data-1);
+}
+
+.chart-bar[data-tone="gpu"] > i {
+  background: var(--data-2);
+}
+
+.chart-bar[data-tone="other"] > i {
+  background: var(--data-3);
+}
+
+.chart-bar[data-level="warn"] > i {
+  background: var(--warn);
+}
+
+.chart-bar[data-level="err"] > i {
+  background: var(--err);
+}
+
+.chart-trend {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--bg-chip);
+  color: var(--fg);
+  font-size: var(--text-sm);
+}

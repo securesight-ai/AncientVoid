@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { anteil, byteGroesse, dauer, tempo, uhrzeit, verlauf, zahl } from "../src/features/statistics/inference-format.ts";
+import { anteil, byteGroesse, dauer, hatVerlauf, tempo, uhrzeit, zahl } from "../src/features/statistics/inference-format.ts";
 
 /**
  * EPIC-P79 T79.4: die Zahlformate der Token-Tempo-Seite sind die Grenzlinie
@@ -68,11 +68,9 @@ describe("inference-Format (P79)", () => {
   });
 
   it("Verlauf braucht zwei unterschiedliche Punkte, sonst keine Linie", () => {
-    expect(verlauf([])).toBeNull();
-    expect(verlauf([7])).toBeNull();
-    expect(verlauf([5, 5, 5])).toBeNull();
-    const linie = verlauf([1, 2, 3]);
-    expect(linie).not.toBeNull();
-    expect(linie!.split(" ")).toHaveLength(3);
+    expect(hatVerlauf([])).toBe(false);
+    expect(hatVerlauf([7])).toBe(false);
+    expect(hatVerlauf([5, 5, 5])).toBe(false);
+    expect(hatVerlauf([1, 2, 3])).toBe(true);
   });
 });

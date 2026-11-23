@@ -2,11 +2,14 @@
 
 **Art:** erklaerung
 
-Stand: 2026-11-21. Basis: PRD §4 und `epics/EPIC-P0-hub-kern.md` ff.; Epics
+Stand: 2026-11-23. Basis: PRD §4 und `epics/EPIC-P0-hub-kern.md` ff.; Epics
 bis P56 (Statistik) und strukturrelevante Nachfolger (u. a. Teams P60,
-Live-Deltas ADR-0083) sind eingearbeitet, soweit sie Struktur verändern —
-fachliche Details und Verlauf leben in `epics/` (Index: `epics/README.md`).
-Diese Doku beschreibt den umgesetzten Stand; Abweichungen = ADR-Pflicht. Der
+Live-Deltas ADR-0083, Host-Metriken P81) sind eingearbeitet, soweit sie
+Struktur verändern — fachliche Details und Verlauf leben in `epics/`
+(Index: `epics/README.md`). Nachgetragen 2026-11-23: Notification-Feed mit
+Horizont/Retention im Core (BUG-0226), `RunEstimate` trägt additiv den
+Session-Median (BUG-0167), fastify wieder ungebunden. Abweichungen =
+ADR-Pflicht. Der
 P0-Grundriss gilt weiterhin, die Abschnitte „Erweiterungen“ fassen zusammen,
 was seitdem dazugekommen ist, ohne den Grundriss neu zu schreiben.
 
@@ -42,17 +45,20 @@ packages/                        Bibliotheken
                                  browser, code, commands, connections,
                                  custom-models, desktop, devices, diagnostics,
                                  discovery, fleet, forge, gatekeeper, git-graph,
-                                 graph, handover, harness, identity, inference,
-                                 loops, media, notifications, observability, team,
-                                 push, reporting, reviews, runs, sessions,
-                                 skills, statistics, vault, workspace
+                                 graph, handover, harness, hostmetrics, identity,
+                                 inference, issues, knowledge, loops, media,
+                                 notifications, observability, push,
+                                 release-notes, reporting, reviews, runs, search,
+                                 sessions, skills, statistics, team, vault,
+                                 workspace
   core/src/platform/             db, eventstore, config, logger, metrics
   workers/                       WorkerRunner (tmux, process)
   adapters/<name>/               acp, aider, claude, claude-clip, codex, copilot,
                                  cursor, cursor-clip, dummy, hermes, jsonrpc,
                                  opencode, pi, testkit
   loops/<name>/                  austauschbare Loop-Connectoren (P19, ADR-0038):
-                                 aspark-factory, securesight-factory
+                                 aspark-factory, ralph, ralph-hub (ADR-0110),
+                                 securesight-factory
   models/                        Modell-Metadaten (Context-Fenster je Model-Id,
                                  ADR-0032)
 ```
@@ -69,6 +75,13 @@ llama.cpp) in eigener Folge als `aimetrics` (P59) — Request-Historie als JSONL
 (K7, quellen-getaggt), Perzentile über eigene Requests, Gegenwerte nur als
 Gegenwerte. `null` heißt „Engine meldet nicht“ und wird nie zu `0`; die Antwort
 ist vertraglich gekappt (12 Request-Zeilen, 120 Verlaufspunkte, 8 Hinweise).
+
+Gleiche Bauart, anderer Gegenstand: `core/modules/hostmetrics` (EPIC-P81,
+ADR-0117) misst den Rechner, auf dem der Hub läuft (`/proc`, hwmon, GPU, RAPL);
+ein Host ohne Hub kommt als rein lesende SSH-Quelle dazu. Jeder Hub speichert
+seinen eigenen Verlauf in `hostmetrics.db` (gestuft, 90 Tage); der Home-Hub führt
+Peers erst beim Lesen zusammen. Die Datei ist entbehrlich: defekt wird sie
+beiseitegelegt und neu begonnen (K7).
 
 ## Pakete & Abhängigkeitsrichtung
 
@@ -196,8 +209,9 @@ ADR-0059), Desktop-Flächen (P18/P34, Companion P11/ADR-0031),
 Live-Deltas über `ctx.stream` (ADR-0083, transient am WS-Tail),
 Statistik-Modul + Rollup (P56, ADR-0079), Agenten-Teams (P60,
 ADR-0077), einheitliche UI-Bausteine unter `shared/ui` als einzige Form der
-Button-/Form-Sprache (P63), Terminal-Tab mit Allowlist-SSH über den Hub —
-keine nativen PTY-Module (ADR-0087) und Status-Sounds rein clientseitig als
+Button-/Form-Sprache (P63), Terminal-Tab mit Allowlist-SSH und den installierten Login-Shells über den Hub —
+keine nativen PTY-Module (ADR-0087), Volltextsuche über Sitzungen und Doku
+auch über gekoppelte Hubs (`core/modules/search`) und Status-Sounds rein clientseitig als
 WebAudio-Synthese, ohne Contract-Änderung und ohne Assets (P65),
 Mehrsprachigkeit nach ADR-0101: typisierte Textkataloge statt Framework —
 PWA in `apps/pwa/src/shared/i18n/`, serverseitiger Push-Katalog in
