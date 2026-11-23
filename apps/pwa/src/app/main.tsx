@@ -478,10 +478,9 @@ function Main() {
   return (
     <>
       <TooltipLayer />
-      {/* EPIC-P64 T64.4: am PC mit sichtbarer Liste sitzt die Glocke im Kopf
-       * der Listenspalte (App bell-Prop) — die globale Eck-Glocke gilt nur
-       * noch für zugeklappte Liste (T51.4) und schmale Layouts. */}
-      {wide ? (listCollapsed ? <NotificationCenter corner /> : null) : <NotificationCenter />}
+      {/* EPIC-P64: die Desktop-Liste hat ihre eigene Glocke. Am Tablet und
+       * bei eingeklappter Liste sitzt sie in der Fensterecke. */}
+      {wide ? (!filesWide || listCollapsed ? <NotificationCenter corner /> : null) : <NotificationCenter />}
       {staleAt && (
         <div class="topbar">
           {/* K10: tippen lädt neu — der Service Worker holt dann wieder Netz-zuerst. */}
@@ -527,7 +526,7 @@ function Main() {
         // T8.5 (AC-P8-6): from 1280 px list and session side by side.
         <div class={`split${listCollapsed ? " list-collapsed" : ""}`}>
           <aside class="split-list">
-            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={!listCollapsed} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
+            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={filesWide && !listCollapsed} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
           </aside>
           <section class="split-detail">
             {/* EPIC-P18: up to four sessions as tiles. */}
