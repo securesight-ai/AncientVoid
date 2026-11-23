@@ -1,4 +1,4 @@
-import { test, expect, openQuiet, seeAll } from "../support/fixtures.ts";
+import { test, expect, openQuiet, seeAll, enableAutoTiling } from "../support/fixtures.ts";
 
 /**
  * EPIC-P43 T43.6: die Schnellsuche im bestehenden Befehlsfeld (Strg+K bzw. Dock „Suchen“) springt zu Sessions,
@@ -10,8 +10,9 @@ test.describe("Schnellsuche (EPIC-P43 T43.6)", () => {
     await hub.until(async () => (await hub.api<{ status: string }>(`/api/sessions/${id}`)).body.status === "idle", "Zug fertig");
     await seeAll(app, hub);
     await openQuiet(app);
-    await app.getByLabel("Auftrag in Worten (Strg+K)").click();
     const grid = await app.locator(".tile-workspace").count() > 0;
+    if (grid) await enableAutoTiling(app);
+    await app.getByLabel("Auftrag in Worten (Strg+K)").click();
     const field = app.getByLabel("Auftrag", { exact: true });
     await field.fill("login");
     const jumps = app.getByRole("listbox", { name: "Springen zu" });

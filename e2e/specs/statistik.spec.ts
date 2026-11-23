@@ -1,5 +1,5 @@
 import { createServer, type Server } from "node:http";
-import { test, expect } from "../support/fixtures.ts";
+import { test, expect, dockGo } from "../support/fixtures.ts";
 import type { Page } from "@playwright/test";
 import { StatisticsReport } from "@ancientvoid/contracts";
 import { freePort } from "../support/ports.ts";
@@ -45,8 +45,7 @@ test.use({
 async function openStatistics(page: Page) {
   await page.setViewportSize({ width: 412, height: 850 });
   await page.reload();
-  await page.getByRole("button", { name: /Mehr/ }).first().click();
-  await page.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "Statistik" }).click();
+  await dockGo(page, "Statistik");
   await expect(page).toHaveURL(/#\/statistik$/);
 }
 

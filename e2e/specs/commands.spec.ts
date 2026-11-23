@@ -64,7 +64,7 @@ test.describe("Aufträge in Worten (T9.4, AC-P9-3)", () => {
     await app.keyboard.press("Control+k");
     await say(app, "Stoppe die Session Parser");
     await expect(app.locator(".command-question")).toContainText("Mehrere Sessions passen");
-    await app.locator(".command-options .chip").filter({ hasText: "alpha" }).click();
+    await app.getByRole("dialog", { name: "Auftrag in Worten" }).getByRole("button", { name: /Parser reparieren.*alpha/ }).click();
     await expect(app.locator(".command-step")).toContainText("Session beenden — Parser reparieren");
     await app.getByRole("button", { name: "Ausführen" }).click();
     await expect.poll(async () => (await hub.api<{ status: string }>(`/api/sessions/${a}`)).body.status).toBe("stopped");

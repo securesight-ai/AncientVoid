@@ -62,13 +62,14 @@ const layout = () => {
   const tabRects = [...document.querySelectorAll(".subtabs-wrap button")].map((b) => b.getBoundingClientRect());
   const tailBox = tail.getBoundingClientRect();
   const dockBox = dock.getBoundingClientRect();
-  const strip = el(".session-strip");
+  const list = el(".split-list")?.getBoundingClientRect();
+  const detail = el(".split-detail")?.getBoundingClientRect();
   const run = el(".run-strip");
   const input = el(".composer-input");
   return {
     chatHöhe: Math.round(Math.min(dockBox.top, tailBox.bottom) - tailBox.top),
     dockHöhe: Math.round(dockBox.height),
-    streifen: strip ? getComputedStyle(strip).flexDirection : "kein Streifen",
+    listeLinks: Boolean(list && detail && list.right <= detail.left + 1),
     laufleiste: run ? getComputedStyle(run).display : "kein Element",
     eingabe: input ? Math.round(input.getBoundingClientRect().height) : 0,
     tabsImScreen: tabRects.length > 0 && tabRects.every((r) => r.height > 0 && r.bottom <= window.innerHeight + 1 && r.top >= -1),
@@ -99,8 +100,8 @@ test.describe("Drehen und Querformat (BUG-0181)", () => {
     expect(q.tabsImScreen, "keine abgeschnittene Tab-Leiste").toBe(true);
     expect(q.horizontalesScrollen, "kein horizontales Scrollen").toBeLessThanOrEqual(0);
     expect(q.laufleiste, "Laufleiste ist im Querformat ausgeblendet").toBe("none");
-    // Der Sitzungsstreifen steht als Spalte links statt quer obendrauf.
-    expect(q.streifen).toBe("column");
+    // Niedrige Querformate behalten das einspaltige Mobil-Layout (BUG-0053).
+    expect(q.listeLinks).toBe(false);
 
     // BUG-0053: im niedrigen Fenster startet die Steuerung zugeklappt — ein Tipp
     // (▴) holt Eingabe und Warteschlange zurück, ohne den Chat zu verdrängen.
@@ -118,7 +119,7 @@ test.describe("Drehen und Querformat (BUG-0181)", () => {
     await sessionTab(app, "Chat");
 
     const hoch = await app.evaluate(layout);
-    expect(hoch.streifen, "im Handy-Hochformat gibt keinen Sitzungsstreifen").toBe("kein Streifen");
+    expect(hoch.listeLinks, "im Handy-Hochformat gibt es keine linke Liste").toBe(false);
     expect(hoch.laufleiste, "Hochformat zeigt die Laufleiste weiter").not.toBe("none");
     expect(hoch.eingabe, "Hochformat zeigt die Eingabe").toBeGreaterThan(0);
 
@@ -127,13 +128,8 @@ test.describe("Drehen und Querformat (BUG-0181)", () => {
     await expect
       .poll(async () => (await app.evaluate(layout)).laufleiste, "Laufleiste verschwindet im Querformat")
       .toBe("none");
-    // Der Sitzungsstreifen kommt aus React (Media-Breakpoint), nicht aus CSS —
-    // er darf nach dem Drehen nicht fehlen, bis neu geladen wird.
-    await expect
-      .poll(async () => (await app.evaluate(layout)).streifen, "Sitzungsstreifen erscheint als Spalte")
-      .toBe("column");
     const quer = await app.evaluate(layout);
-    expect(quer.streifen).toBe("column");
+    expect(quer.listeLinks).toBe(false);
     expect(quer.chatHöhe).toBeGreaterThanOrEqual(90);
     expect(quer.dockHöhe).toBeLessThanOrEqual(200);
     expect(quer.tabsImScreen).toBe(true);
@@ -146,8 +142,6 @@ test.describe("Drehen und Querformat (BUG-0181)", () => {
       .not.toBe("none");
     const zurueck = await app.evaluate(layout);
     expect(zurueck.laufleiste, "Laufleiste kommt zurück").not.toBe("none");
-    // Der Streifen ist entweder weg oder wieder die Reihe obendrauf — beides ist
-    // Hochformat; Spalte (column) wäre das Querformat-Layout.
-    expect(["kein Streifen", "row"], `Streifen nach zurückdrehen: ${zurueck.streifen}`).toContain(zurueck.streifen);
+    expect(zurueck.listeLinks).toBe(false);
   });
 });

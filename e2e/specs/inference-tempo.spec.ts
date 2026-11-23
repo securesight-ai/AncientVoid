@@ -2,7 +2,7 @@ import { createServer, type Server } from "node:http";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { test, expect } from "../support/fixtures.ts";
+import { test, expect, dockGo } from "../support/fixtures.ts";
 import type { Page } from "@playwright/test";
 import { freePort } from "../support/ports.ts";
 
@@ -121,7 +121,7 @@ async function openInferenz(page: Page): Promise<void> {
   await page.setViewportSize({ width: 412, height: 850 });
   await page.reload();
   // BUG-0257: Inferenz ist ein Reiter der Analyse-Seite — ein Menüpunkt, dann der Reiter.
-  await page.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "Statistik" }).click();
+  await dockGo(page, "Statistik");
   await page.getByRole("tab", { name: "Inferenz" }).click();
   await expect(page).toHaveURL(/#\/statistik\/inferenz$/);
 }

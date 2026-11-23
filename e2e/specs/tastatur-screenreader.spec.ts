@@ -73,7 +73,7 @@ test.describe("Tastatur und Screenreader (EPIC-P43 T43.9)", () => {
     await app.keyboard.press("Enter");
     const sheet = app.getByRole("dialog", { name: "Nyx" });
     await expect(sheet).toBeVisible();
-    await expect(sheet).toBeFocused();
+    await expect.poll(() => sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true);
     await app.keyboard.press("Tab");
     expect(await sheet.evaluate((el) => el.contains(document.activeElement)), "Tab bleibt zuerst im Blatt").toBe(true);
     await app.keyboard.press("Escape");

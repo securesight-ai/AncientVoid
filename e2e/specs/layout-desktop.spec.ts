@@ -32,7 +32,7 @@ test.describe("Desktop (T8.5, AC-P8-6)", () => {
     // Globale Navigation: schmale Leiste am linken Rand, Beschriftung nur als Tooltip/Name.
     const rail = await app.locator(".split-list .dock-stack").boundingBox();
     expect(rail!.width).toBeLessThanOrEqual(64);
-    await expect(app.locator('.split-list .dock-item[data-shortcut="files.toggle"]')).toHaveAttribute("data-tip", "Dateibaum (Strg+Umschalt+E)");
+    await expect(app.getByRole("button", { name: "Projektansicht", exact: true })).toBeVisible();
 
     // EPIC-P43 T43.6: die Ansichten stehen im Kachelkopf (Griff, Titel, Zustand, Reiter, rechts Herauslösen) —
     // Chat, Änderungen, Befehle und „Mehr“ (Verlauf, Bericht, Datei, Graph, GitLab, Suche, Umgebung).
@@ -58,8 +58,10 @@ test.describe("Desktop (T8.5, AC-P8-6)", () => {
     await app.getByRole("group", { name: "Kachel-Aktionen" }).getByRole("button", { name: /Layout/ }).click();
     await expect(app.locator(".tile")).not.toHaveCount(1);
     await app.getByRole("button", { name: "Layout lösen" }).click();
-    const tiles = await app.locator(".tile").count();
-    await app.getByRole("button", { name: /Schließen/ }).click();
-    expect(await app.locator(".tile").count()).toBeLessThan(tiles);
+    await app.locator(".split-list .session-card").filter({ hasText: "Zweite Aufgabe" }).locator(".session-open").click();
+    await expect(app.locator(".tile")).toHaveCount(2);
+    await app.getByRole("group", { name: "Kachel-Aktionen" }).getByRole("button", { name: "✕ Schließen", exact: true }).click();
+    await expect(app.locator(".tile")).toHaveCount(1);
+    await expect(app.locator(".tile .session-top-title")).toContainText("Erste Aufgabe");
   });
 });

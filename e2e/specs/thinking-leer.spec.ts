@@ -17,7 +17,7 @@ test("BUG-0046: ein Denk-Block ohne Text ist eine ruhige Zeile ohne leeren Inhal
   // Verlauf: eine Zeile mit der Erklärung, nichts zum Aufklappen oder Kopieren.
   await sessionTab(app, "Verlauf");
   await app.getByRole("button", { name: "Debuggen" }).click();
-  const row = app.locator(".event.thinking.withheld");
+  const row = app.getByTestId("withheld");
   await expect(row).toHaveCount(1);
   await expect(row).toContainText("Der Anbieter liefert keinen Denktext");
   await row.click();
