@@ -22,7 +22,7 @@ test.describe("Factory-Lauf über den Hub (T26.5, ADR-0043)", () => {
     execSync("git init -q", { cwd: project }); // nur so taucht das Projekt in der Auswahl auf (Tiefe 1, .git)
 
     await app.getByRole("button", { name: "Neue Session" }).click();
-    await app.locator(".form-grid > label").first().locator("select").selectOption(project);
+    await app.getByRole("combobox", { name: "Projekt", exact: true }).selectOption(project);
     await app.getByLabel("Loop", { exact: true }).selectOption("securesight-factory");
     await app.getByPlaceholder("Refactore den Auth-Flow…").fill("AncientVoid-Rename vorbereiten");
     await app.getByRole("button", { name: "Starten" }).click();
@@ -70,7 +70,7 @@ test.describe("Factory-Lauf über den Hub (T26.5, ADR-0043)", () => {
     await app.getByRole("combobox", { name: "Adapter", exact: true }).selectOption("maki");
     await expect(app.getByRole("combobox", { name: "Modell", exact: true })).toHaveValue("lokal/klein");
     await app.getByRole("combobox", { name: "Modell", exact: true }).selectOption("lokal/glm-5.3");
-    await app.locator(".form-grid > label").first().locator("select").selectOption(project);
+    await app.getByRole("combobox", { name: "Projekt", exact: true }).selectOption(project);
     await app.getByLabel("Loop", { exact: true }).selectOption("securesight-factory");
     await expect(app.getByRole("combobox", { name: "Factory-Treiber", exact: true })).toHaveValue("maki");
     await app.getByPlaceholder("Refactore den Auth-Flow…").fill("Produkt bauen");
@@ -98,7 +98,7 @@ test.describe("Factory-Lauf über den Hub (T26.5, ADR-0043)", () => {
     // Zuerst codex wählen (ohne Loop ist jeder Adapter wählbar), dann den
     // Factory-Loop: nur claude/maki sind Treiber — die Ersetzung muss anstehen.
     await app.getByRole("combobox", { name: "Adapter", exact: true }).selectOption("codex");
-    await app.locator(".form-grid > label").first().locator("select").selectOption(project);
+    await app.getByRole("combobox", { name: "Projekt", exact: true }).selectOption(project);
     await app.getByLabel("Loop", { exact: true }).selectOption("securesight-factory");
     await expect(app.getByRole("combobox", { name: "Factory-Treiber", exact: true })).toHaveValue("claude");
     await expect(app.getByRole("status").filter({ hasText: "codex" })).toContainText("claude oder maki");

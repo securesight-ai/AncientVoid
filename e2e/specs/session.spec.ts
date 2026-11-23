@@ -30,14 +30,14 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
 
   test("Projektauswahl zuerst: Pfad wird vorbelegt, folgt der Auswahl und bleibt überschreibbar @desktop", async ({ app, hub }) => {
     await app.getByRole("button", { name: "Neue Session" }).click();
-    // Die Projektauswahl ist das erste Feld des Formulars — vor Loop und Adapter.
-    const first = app.locator(".form-grid > label").first();
-    await expect(first).toContainText("Projekt");
+    // Ohne Host-Auswahl kommt das Projekt vor Loop und Adapter, auch im zweispaltigen Formular.
+    const project = app.getByRole("combobox", { name: "Projekt", exact: true });
+    await expect(app.locator(".new-session-form label").first()).toContainText("Projekt");
     // Das vorausgewählte Projekt füllt den Pfad automatisch: Start ohne jede Pfad-Eingabe.
     const pfad = app.getByLabel("Pfad");
     await expect(pfad).toHaveValue(hub.alpha);
     // Anderes Projekt gewählt: der Pfad folgt der Auswahl.
-    await app.getByLabel("Projekt").selectOption(hub.beta);
+    await project.selectOption(hub.beta);
     await expect(pfad).toHaveValue(hub.beta);
     // Manueller Override bleibt möglich — der eigene Pfad wird zur Session.
     await pfad.fill(hub.projectsDir);

@@ -1,9 +1,10 @@
-import { test, expect } from "../support/fixtures.ts";
+import { test, expect, enableAutoTiling } from "../support/fixtures.ts";
 
 test("Browser und Geräte öffnen Karten mit festem Sessionbezug @desktop @tablet", async ({ app, hub }, info) => {
   test.skip(info.project.name === "mobile", "PC-/Tablet-Grid");
   const id = await hub.createSession({ adapter: "opencode", prompt: "Gebundene Werkzeuge" });
   await app.goto(`${hub.origin}/#/sessions/${id}`);
+  await enableAutoTiling(app);
   const first = app.locator('.tile[data-tile="1"]');
   await expect(first.locator(".session-top-title")).toHaveText("Gebundene Werkzeuge");
   for (const [i, name] of ["Browser", "Geräte"].entries()) {
@@ -26,6 +27,7 @@ test("Suchen bleibt als Karte erhalten, wenn ein Treffer geöffnet wird @desktop
   test.skip(info.project.name === "mobile", "PC-/Tablet-Grid");
   const id = await hub.createSession({ adapter: "opencode", prompt: "Suche verdrängt nichts" });
   await app.goto(`${hub.origin}/#/sessions/${id}`);
+  await enableAutoTiling(app);
   await expect(app.locator('.tile[data-tile="1"] .session-top-title')).toHaveText("Suche verdrängt nichts");
   await app.getByRole("navigation", { name: "Sidebar", exact: true }).getByRole("button", { name: "Suchen", exact: true }).click();
   const search = app.locator(".tile .command-card");
