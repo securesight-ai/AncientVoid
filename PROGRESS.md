@@ -57,6 +57,21 @@ Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile
 Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
 
 ## Erledigt (verifiziert)
+- **Bild-Anhang: ehrlicher Auslese-Befund + Vorschau schon VOR dem Senden
+  (BUG-0266).** Der Hub meldete bei Bildern pauschal „Kein Text gefunden. Mit
+  einem Gemini-Schluessel …", obwohl auf dem Hub-Rechner **gar kein**
+  OCR-Werkzeug sitzt und kein Vision-Schluessel gewollt ist. `extractText`
+  meldet jetzt werkzeugabhaengig („tesseract nicht installiert — der Text wurde
+  nie gelesen; das Bild ist unveraendert in voller Groesse zu sehen“) und nennt
+  ein Vision-Modell nur, wenn keins eingeschaltet ist. Der alte Test war an
+  `tesseract`/`magick` gekoppelt und wurde ohne diese Werkzeuge
+  **uebersprungen** — deshalb fiel das nie auf. Neu: `hasTool` ist injizierbar,
+  der Fall laeuft determiniert auf jedem Rechner (`extract.test.ts`
+  **5 passed | 2 skipped**). Ausserdem zeigt die Eingabezeile jetzt ein echtes
+  Vorschaubild (ein Tipp = dasselbe Vollbild wie im Chat, Esc schliesst, Anhang
+  bleibt haengen) und nur noch ein Kurzlabel („1 KB · kein Text gelesen“); der
+  volle Grund bleibt als `title`. E2E `anhang-bilder.spec.ts` **3 passed**.
+
 - **Kontextüberlauf ist keine Anmeldepleite mehr (BUG-0265, ADR-0115).** Vier
   identische Rohfehler in Sitzung `943797b3` („prompt (237428 tokens) … context
   (204800)") liefen als „Die CLI ist nicht (mehr) angemeldet" ins Banner — die

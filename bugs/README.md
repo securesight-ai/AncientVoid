@@ -298,8 +298,9 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 | [BUG-0263](bug-0263-tmux-log-fehlt-beim-start.md) | Der Worker-Logwatcher startet vor der tmux-Pipe | fixed | S2 | workers | [#104](https://github.com/securesight-ai/AncientVoid/issues/104) |
 | [BUG-0264](bug-0264-verdeckte-kachel-wird-nicht-gezeigt.md) | Ein erneut geöffnetes Werkzeug bleibt hinter dem fixierten Raster unsichtbar | fixed | S2 | pwa | [#104](https://github.com/securesight-ai/AncientVoid/issues/104) |
 | [BUG-0265](bug-0265-kontextueberlauf-meldet-anmeldeproblem.md) | Kontextüberlauf („prompt exceeds the context window") fällt in die auth-Regel — Banner verlangt Neuanmeldung, ADR-0115 | fixed | S2 | core | — |
+| [BUG-0266](bug-0266-bild-auslese-ohne-ocr-werkzeug-schickt-zum-schluessel.md) | Bild ohne OCR-Werkzeug auf dem Hub meldet „Kein Text gefunden … Gemini-Schlüssel" — und die Eingabezeile bietet keine Vorschau | fixed | S2 | core | — |
 
-Die nächste freie Nummer ist **0266** (0265 ist der Kontextüberlauf, der als Anmeldepleite gemeldet wurde — ADR-0115; gemerged, 0260 mit PR #297 gemerged,
+Die nächste freie Nummer ist **0267** (0265/0266 sind Kontextüberlauf und Bild-Auslese ohne OCR-Werkzeug, der als Anmeldepleite gemeldet wurde — ADR-0115; gemerged, 0260 mit PR #297 gemerged,
 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
 0183 mit PR #50, 0184 mit PR #48 und 0185 mit dem Nightly-Fix aus den Issues #54–#57 gemerged,
 0180 mit PR #40; 0186 ist das eingemauerte Manifest auf dem Handy; 0187 sind die Geister-Tokens
