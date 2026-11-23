@@ -165,6 +165,38 @@ describe("aimetrics sampler (EPIC-P59)", () => {
     expect(host.fields.find((f) => f.key === "sysfs:power_watts")!.value).toBeNull();
   });
 
+  describe("BUG-0274: PPT aus hwmon — Karte oder CPU-Paket", () => {
+    const HWMON = "/sys/class/drm/card0/device/hwmon/hwmon3";
+    const probe = async (extra: Record<string, string>) => {
+      const files: Record<string, string> = { ...SYSFS, ...extra };
+      const s = sampler(fakeDeps({ readFile: async (path) => files[path] ?? null }));
+      await s.tickNow();
+      const host = s.report().sources.find((x) => x.kind === "hub-host")!;
+      const value = (key: string) => host.fields.find((f) => f.key === key)?.value;
+      return { gpu: value("sysfs:power_watts"), paket: value("sysfs:package_power_watts") };
+    };
+
+    it("gesteckte Karte (power1_cap): GPU-Leistung", async () => {
+      expect(await probe({ [`${HWMON}/power1_input`]: "65980000\n", [`${HWMON}/power1_cap`]: "175000000\n" })).toEqual({ gpu: 65.98, paket: null });
+    });
+
+    it("APU (vddnb): CPU-Paket, nie GPU-Leistung", async () => {
+      expect(await probe({ [`${HWMON}/power1_input`]: "64120000\n", [`${HWMON}/in1_label`]: "vddnb\n" })).toEqual({ gpu: null, paket: 64.12 });
+    });
+
+    it("power1_average geht vor, power1_input ist der Rückfall", async () => {
+      expect((await probe({ [`${HWMON}/power1_average`]: "50000000", [`${HWMON}/power1_input`]: "70000000", [`${HWMON}/power1_cap`]: "1" })).gpu).toBe(50);
+    });
+
+    it("nicht zuordenbar, leer oder keine Zahl: nicht gemeldet, nie 0", async () => {
+      const leer = { gpu: null, paket: null };
+      expect(await probe({ [`${HWMON}/power1_input`]: "64120000" })).toEqual(leer);
+      expect(await probe({ [`${HWMON}/power1_input`]: "\n", [`${HWMON}/power1_cap`]: "1" })).toEqual(leer);
+      expect(await probe({ [`${HWMON}/power1_input`]: "<n/a", [`${HWMON}/power1_cap`]: "1" })).toEqual(leer);
+      expect(await probe({ [`${HWMON}/power1_input`]: "1", [`${HWMON}/power1_cap`]: "1", [`${HWMON}/in1_label`]: "vddnb" })).toEqual(leer);
+    });
+  });
+
   it("K7-Recovery: ein frischer Sampler baut die Felder aus den Live-Proben wieder auf (AC-P59-3)", async () => {
     const deps = fakeDeps();
     const s1 = sampler(deps);

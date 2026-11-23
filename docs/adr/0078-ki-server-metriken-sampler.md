@@ -111,3 +111,12 @@ antwortet mit 404, obwohl `/health` den Pfad nennt. Entscheidung:
    SSH-Scraping vom Home-Hub.
 4. **`probeKnown`:** Cloud-URLs (nicht Tailnet/RFC1918/localhost) werden nicht
    mehr als Modell-Server angezapft — vermeidet z.ai-404-Rauschen.
+
+## Nachtrag 2026-11-23 — Leistung liegt in hwmon (BUG-0274)
+
+Der Spike-Befund „`power1_average` nicht lesbar“ prüfte `device/power1_average`. Der
+Kernel meldet PPT unter `device/hwmon/hwmonN/power1_{average,input}` in µW. Auf einer APU
+(`in1_label` = `vddnb`) ist das die Leistung des CPU-Pakets
+(`sysfs:package_power_watts`), auf einer Karte (`power1_cap` vorhanden) die der GPU
+(`sysfs:power_watts`). Trifft keins oder beides zu, bleibt beides „nicht gemeldet“.
+Der neue Feldschlüssel ist additiv (`key` ist ein freier String).

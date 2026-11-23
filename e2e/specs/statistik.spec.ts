@@ -66,7 +66,7 @@ test.describe("Statistik-Zentrale (EPIC-P56/P66)", () => {
     await expect(app.getByRole("region", { name: "Metrik-Quelle E2E KI-Server" })).toBeVisible();
     await app.getByRole("tab", { name: "Inferenz" }).click();
     await expect(app).toHaveURL(/#\/statistik\/inferenz$/);
-    await expect(app.getByText(/Keine Engines konfiguriert/)).toBeVisible();
+    await expect(app.getByText(/Keine Metrik-Quelle konfiguriert/)).toBeVisible();
     // Altlinks leiten permanent um (route.ts, redirectLegacyStatHash).
     await app.goto(`${app.url().split("#")[0]}#/metriken`);
     await expect(app).toHaveURL(/#\/statistik\/metriken$/);
@@ -223,5 +223,26 @@ test.describe("Statistik-Zentrale (EPIC-P56/P66)", () => {
     await expect(ki).toContainText("E2E KI-Server");
     await expect(ki).toContainText("nicht gemeldet"); // fehlende Familien bleiben ehrlich (ADR-0023)
     await expect(ki.locator("tr").filter({ hasText: "Queue: in Bearbeitung" })).toContainText("3");
+  });
+
+  test("BUG-0274: „System“ zeigt jeden Hub-Host, auch den ausgefallenen Peer", async ({ app }) => {
+    const host = (id: string, label: string, status: object) => ({ id, kind: "hub-host", label, url: null, status, lastSampleAt: null, fields: [] });
+    await app.route("**/api/aimetrics", (route) =>
+      route.fulfill({
+        json: {
+          generatedAt: new Date().toISOString(),
+          intervalSec: 10,
+          windowSec: 900,
+          self: { hostLabel: "home" },
+          sources: [host("hub-host", "Hub-Host (home)", { ok: true }), host("zwei:peer", "zwei · Peer", { ok: false, error: "HTTP 503" })],
+        },
+      }),
+    );
+    await openStatistics(app);
+    await openSection(app, "System (Hub-Host)");
+    const system = app.getByRole("region", { name: "Statistik System (Hub-Host)" });
+    await expect(system).toContainText("Hub-Host (home)");
+    await expect(system).toContainText("zwei · Peer");
+    await expect(system).toContainText("HTTP 503");
   });
 });

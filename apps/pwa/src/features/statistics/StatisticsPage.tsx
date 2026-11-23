@@ -250,7 +250,7 @@ function StatistikTab() {
   if (error) return <EmptyState text={`Statistik nicht erreichbar — ${error}`} />;
   if (!report) return <EmptyState text={t("common.loading")} />;
   const filtered = project !== "" || host !== "" || harness !== "" || period !== "all";
-  const host2 = ai?.sources.find(s => s.kind === "hub-host") ?? null;
+  const hosts = ai?.sources.filter(s => s.kind === "hub-host") ?? [];
   const servers = ai === null ? null : ai.sources.filter(s => s.kind === "model-server");
 
   return (
@@ -300,10 +300,10 @@ function StatistikTab() {
       <Section id="system" title={t("statistics.system_hub")} note="unabhängig vom Schnitt" collapsed={collapsed.system ?? true} onToggle={() => toggle("system")}>
         {ai === null ? (
           <p class="stat-note">{t("statistics.source_unreachable")}</p>
-        ) : host2 === null ? (
+        ) : hosts.length === 0 ? (
           <p class="stat-note">{t("statistics.host_probe")}</p>
         ) : (
-          <MetricsTable source={host2} />
+          hosts.map(s => <MetricsTable key={s.id} source={s} />)
         )}
       </Section>
 

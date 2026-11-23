@@ -119,6 +119,7 @@ const HOST_FIELDS: FieldDef[] = [
   { key: "sysfs:gtt_used_bytes", label: "GTt belegt", unit: "bytes", source: "sysfs", file: "mem_info_gtt_used" },
   { key: "sysfs:gpu_temp_celsius", label: "GPU-Temperatur", unit: "°C", source: "sysfs" },
   { key: "sysfs:power_watts", label: "GPU-Leistung", unit: "W", source: "sysfs" },
+  { key: "sysfs:package_power_watts", label: "CPU-Paket-Leistung", unit: "W", source: "sysfs" },
 ];
 
 function rate(prev: Record<string, number>, cur: Record<string, number>, dtSec: number, families: string[]): number | null {
@@ -294,12 +295,35 @@ export function createAiMetricsSampler(options: AiMetricsSamplerOptions): AiMetr
         break;
       }
     }
-    const readSysfs = async (file: string): Promise<number | null> => {
-      if (!card) return null;
-      const rawValue = await deps.readFile(`${sysfsRoot}/${card}/device/${file}`).catch(() => null);
-      const n = rawValue === null ? NaN : Number(rawValue.trim());
+    // Eine leere Datei ist keine Messung: Number("") wäre 0 (ADR-0023).
+    const readNumber = async (path: string): Promise<number | null> => {
+      const text = (await deps.readFile(path).catch(() => null))?.trim();
+      const n = text ? Number(text) : NaN;
       return Number.isFinite(n) ? n : null;
     };
+    const readSysfs = async (file: string): Promise<number | null> => {
+      if (!card) return null;
+      return readNumber(`${sysfsRoot}/${card}/device/${file}`);
+    };
+    let hwmonDir: string | null = null;
+    if (card) {
+      const base = `${sysfsRoot}/${card}/device/hwmon`;
+      for (const entry of await deps.readdir(base).catch(() => [] as string[])) {
+        const chip = await deps.readFile(`${base}/${entry}/name`).catch(() => null);
+        if (chip?.trim() === "amdgpu") hwmonDir = `${base}/${entry}`;
+      }
+    }
+    // BUG-0274: PPT ist auf einer APU (vddnb) das CPU-Paket, auf einer Karte
+    // (power1_cap) die GPU. Ohne eindeutiges Merkmal bleibt beides „nicht gemeldet“.
+    let pptKind: "card" | "package" | null = null;
+    let pptWatts: number | null = null;
+    if (hwmonDir !== null) {
+      const apu = (await deps.readFile(`${hwmonDir}/in1_label`).catch(() => null))?.trim() === "vddnb";
+      const capped = (await readNumber(`${hwmonDir}/power1_cap`)) !== null;
+      if (apu !== capped) pptKind = apu ? "package" : "card";
+      const micro = (await readNumber(`${hwmonDir}/power1_average`)) ?? (await readNumber(`${hwmonDir}/power1_input`));
+      pptWatts = micro === null ? null : micro / 1_000_000;
+    }
     raw["os:load1"] = deps.os.loadavg()[0] ?? NaN;
     raw["os:load5"] = deps.os.loadavg()[1] ?? NaN;
     raw["os:load15"] = deps.os.loadavg()[2] ?? NaN;
@@ -317,18 +341,15 @@ export function createAiMetricsSampler(options: AiMetricsSamplerOptions): AiMetr
       if (dT > 0) raw["derived:cpu_busy_percent"] = (dB / dT) * 100;
     }
     for (const def of HOST_FIELDS) {
-      let value: number | null = null;
+      let value: number | null;
       if (def.file) value = await readSysfs(def.file);
       else if (def.key === "sysfs:gpu_temp_celsius") {
-        for (const hwmon of await deps.readdir(`${sysfsRoot}/${card ?? "card0"}/device/hwmon`).catch(() => [] as string[])) {
-          const chip = (await deps.readFile(`${sysfsRoot}/${card}/device/hwmon/${hwmon}/name`).catch(() => null))?.trim();
-          if (chip !== "amdgpu") continue;
-          const temp = await deps.readFile(`${sysfsRoot}/${card}/device/hwmon/${hwmon}/temp1_input`).catch(() => null);
-          if (temp !== null) value = Number(temp.trim()) / 1000;
-        }
+        const milli = hwmonDir === null ? null : await readNumber(`${hwmonDir}/temp1_input`);
+        value = milli === null ? null : milli / 1000;
       } else if (def.key === "sysfs:power_watts") {
-        const microWatts = await readSysfs("power1_average");
-        value = microWatts === null ? null : microWatts / 1_000_000;
+        value = pptKind === "card" ? pptWatts : null;
+      } else if (def.key === "sysfs:package_power_watts") {
+        value = pptKind === "package" ? pptWatts : null;
       } else {
         value = raw[def.key] !== undefined && Number.isFinite(raw[def.key]) ? raw[def.key]! : null;
       }
