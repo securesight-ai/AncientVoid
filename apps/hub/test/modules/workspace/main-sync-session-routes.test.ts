@@ -116,6 +116,24 @@ describe("main-sync session routes", () => {
     expect((await call("POST", `/api/sessions/${sessionId}/main-sync`, agent)).status).toBe(403);
   });
 
+  it("BUG-0260: Projekt ohne Haupt-Fern — 501 mit Grund no_remote statt 502, auf GET und POST", async () => {
+    const stille = join(dir, "ohne-fern-repo");
+    await git(["init", "-q", "-b", "main", stille]);
+    await git(["-C", stille, "config", "user.email", "test@ancientvoid.local"]);
+    await git(["-C", stille, "config", "user.name", "ancientvoid test"]);
+    await writeFile(join(stille, "a.txt"), "initial\n");
+    await git(["-C", stille, "add", "-A"]);
+    await git(["-C", stille, "commit", "-q", "-m", "initial"]);
+    const record = await sessions.create({ adapter: "idle", project: stille, prompt: "arbeite" }, "pc");
+    const deadline = Date.now() + 8000;
+    while (sessions.get(record.id)?.status !== "idle" && Date.now() < deadline) await new Promise((r) => setTimeout(r, 20));
+    const get = await call("GET", `/api/sessions/${record.id}/main-sync`, human);
+    expect(get.status).toBe(501);
+    expect(get.body.reason).toBe("no_remote");
+    const post = await call("POST", `/api/sessions/${record.id}/main-sync`, human);
+    expect(post.status).toBe(501); // ohne Fern gibt es nichts anzuwenden — kein 502, kein Fehler-Event
+  });
+
   it("409 ohne Worktree-Isolation (direkter Modus)", async () => {
     const db2 = new HubDatabase(":memory:");
     const tokens2 = new TokenService(db2);

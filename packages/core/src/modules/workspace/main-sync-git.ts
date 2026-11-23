@@ -39,6 +39,18 @@ export async function fetchMainBranch(projectPath: string, branch: string, timeo
   );
 }
 
+/**
+ * `origin`-Fern des Projekts, null wenn gar kein Fern konfiguriert ist
+ * (BUG-0260). „Kein Fern“ ist eine benannte Lage, kein Fehler: Main-Sync ist
+ * dann nicht moeglich, und das darf weder Fetch-Versuche noch Fehler-Events
+ * erzeugen. Stufe 1 (`worktree.ts`) behandelt es so — Check und Scheduler
+ * mussten nachziehen.
+ */
+export async function originRemoteUrl(projectPath: string): Promise<string | null> {
+  const { stdout } = await execFileAsync("git", ["-C", projectPath, "remote", "get-url", "origin"]).catch(() => ({ stdout: "" }));
+  return stdout.trim() || null;
+}
+
 /** Fetch-Fehler klassifizieren — bekannte Gründe statt `unknown`-Brei (dokumentiert in ADR-0088). */
 export function classifyFetchError(err: unknown): { reason: "timeout" | "auth" | "offline" | "unknown"; detail: string } {
   const message = err instanceof Error ? err.message : String(err);
