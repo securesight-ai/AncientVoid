@@ -911,7 +911,7 @@ export function SessionTail({
   // BUG-0056: nicht auf Code/Suche/Bericht — dort schiebt „nach unten“ das Suchfeld aus dem Bild.
   useLayoutEffect(() => {
     if (activeTab !== "chat" && activeTab !== "verlauf") return;
-    if (stickRef.current)
+    if (stickRef.current && Date.now() > jumpHoldUntilRef.current)
       tailRef.current?.scrollTo({ top: tailRef.current.scrollHeight });
   }, [tailMaxHeight, activeTab]);
 
@@ -1130,7 +1130,10 @@ export function SessionTail({
           // Nachricht ganz sichtbar, waere ein Sprung nur Flackern.
           if (box && node.getBoundingClientRect().top < box.top - 8) {
             stickRef.current = false;
+            jumpHoldUntilRef.current = Date.now() + 8_000;
             node.scrollIntoView({ behavior: "auto", block: "start" });
+          } else {
+            jumpHoldUntilRef.current = Date.now() + 4_000;
           }
           // Nachleuchten: die Fundstelle ist gefunden, sie muss aber auch als solche
           // zu sehen sein — 2,2 s, damit das Auge sie erkennt.
@@ -1144,7 +1147,7 @@ export function SessionTail({
       attempt();
       return () => cancelAnimationFrame(raf);
     }
-    if (stickRef.current) el.scrollTo({ top: el.scrollHeight });
+    if (stickRef.current && Date.now() > jumpHoldUntilRef.current) el.scrollTo({ top: el.scrollHeight });
   }, [events, chat.events, liveText, activeTab, filter, session.id, jumpTick]);
 
   /** BUG-0211: der Schwanz des Hubs enthaelt alles, der Client hielt nur die letzten
@@ -1235,6 +1238,9 @@ export function SessionTail({
    * einer Arbeitsflächen-Kachel oder in einem eigenen Fenster leben kann und dort
    * niemand den Anker weitergeben würde. */
   const jumpedSeqRef = useRef<number | string | null>(null);
+  /** Nach einem Sprung zur Fundstelle nicht sofort ans Ende zurückfallen — die
+   * Stelle muss lesbar bleiben, auch wenn die Sitzung gerade weiterläuft. */
+  const jumpHoldUntilRef = useRef(0);
   const seqFromHash = (): number | null => {
     // Die Sitzung ist an ihrer Id erkannt — host-qualifiziert (`hosts/<rechner>/…`)
     // oder nicht; dazwischen kann noch ein Tab stehen (graph/git/datei).
