@@ -34,9 +34,14 @@ tot gewesen. Behoben: `steuereProzess()` (frisch oder übernommen), Test
 grün). Live: tmux-Worker eines laufenden pi-Zugs überlebt den Hub-Kill, danach neues
 Prompt + Lenken → Antwort `NACHNEUSTART`. Paket: 66/66 grün.
 
-**Noch nicht erledigt.** (1) Der **Live-Hub läuft weiterhin `oneshot`** — der
-Config-Schalter `adapters.pi.config.mode = "rpc"` wird erst nach dem Merge gesetzt
-(Rollback = eine Zeile + Neustart). (2) **BUG-0272 Pforte**: `durchlassen()` in
+**Live umgestellt (23.11., 20:05 UTC).** PR #357 ist gemerged (main `b0103583`),
+`hub.config.json` (unversioniert) hat für pi `"config": { "mode": "rpc" }`; der
+Hub-Neustart läuft per Wächter, sobald kein Zug mehr offen ist. Danach muss
+`GET /api/health` bei adapter `pi` `midTurnInput: true` und
+`promptDelivery: "live"` zeigen. **Rollback:** `"mode"` aus dem pi-Eintrag nehmen und
+den Hub neu starten — damit ist wieder die alte One-Shot-Schiene aktiv.
+
+**Noch nicht erledigt.** (1) **BUG-0272 Pforte**: `durchlassen()` in
 `packages/core/src/modules/inference/pforte.ts` hat weiter **keine Aufrufstelle** —
 Admission-Kontrolle existiert nur als Route (`/api/inference/gate`) und Lease, nicht
 als Riegel vor den Modellaufrufen.
