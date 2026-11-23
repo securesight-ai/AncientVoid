@@ -1128,6 +1128,8 @@ export const en = {
   "session.queue_remove": "Remove queued message {n}",
     "session.queue_edit_word": "edit",
 "session.queue_retry": "Try again",
+"session.tool_image_open": "Open image",
+"session.tool_image_missing": "Image not available here — it is outside the project.",
   "session.queue_send_next": "Send queued message {n} next",
   "session.queue_send_now": "Send queued message {n} now",
   "session.queue_to_back": "Move queued message {n} to the back",

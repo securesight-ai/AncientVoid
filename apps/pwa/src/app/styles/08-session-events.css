@@ -496,3 +496,25 @@
 .mainsync-modal-error {
   color: var(--err);
 }
+
+/* Bildvorschau zu einem vom Werkzeug gelesenen Bild (Nutzerfund 2026-11-23). */
+.tool-image {
+  margin: 6px 0 2px;
+}
+.tool-image img {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-chip);
+  object-fit: contain;
+}
+.tool-image-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+  font-size: var(--text-sm);
+}

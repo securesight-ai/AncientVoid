@@ -12,6 +12,48 @@ import { Markdown } from "../../shared/Markdown.tsx";
 import { AttachmentChips, type AttachmentRef } from "../attachments/Attachments.tsx";
 import { SpeakButton } from "../../shared/SpeakButton.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
+import { toolImageRef, type SessionRef, type ToolImageRef } from "./tool-image.ts";
+
+/** Bildvorschau zu einem gelesenen Bild — Bytes vom Hub, Token im Header. */
+function ToolImageView({ image }: { image: ToolImageRef }) {
+  const api = useApi();
+  const [url, setUrl] = useState("");
+  const [fehler, setFehler] = useState("");
+  useEffect(() => {
+    let lebt = true;
+    let objectUrl = "";
+    setUrl("");
+    setFehler("");
+    api
+      .toolImageBlobUrl(image.target, image.path)
+      .then((u) => {
+        objectUrl = u;
+        if (lebt) setUrl(u);
+        else URL.revokeObjectURL(u);
+      })
+      .catch(() => {
+        if (lebt) setFehler(t("session.tool_image_missing"));
+      });
+    return () => {
+      lebt = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [api, image.target, image.path]);
+  return (
+    <div class="tool-image">
+      {url ? <img src={url} alt={image.name} loading="lazy" decoding="async" /> : null}
+      <div class="tool-image-meta">
+        <span class="dim">{image.name}</span>
+        {url ? (
+          <a class="link-btn" href={url} target="_blank" rel="noopener">
+            {t("session.tool_image_open")}
+          </a>
+        ) : null}
+        {fehler ? <span class="dim">{fehler}</span> : null}
+      </div>
+    </div>
+  );
+}
 
 function toolAnchor(toolId: string, side: "use" | "result"): string {
   return `tool-${side}-${toolId}`;
@@ -62,6 +104,7 @@ function EventRowView({
   onToggleExpand,
   toolResult,
   onJump,
+  sessionRef,
 }: {
   event: NormalizedEvent;
   expanded: boolean;
@@ -70,6 +113,8 @@ function EventRowView({
    * arrived yet (undefined -> still running). */
   toolResult: NormalizedEvent | undefined;
   onJump: (anchor: string) => void;
+  /** Eigene Sitzung — nötig, um ein gelesenes Bild über die Rohroute zu zeigen. */
+  sessionRef: SessionRef | undefined;
 }) {
   const { event, state: fullText } = useFullEvent(rowEvent, useApi());
   const time = stampLabel(event.ts);
@@ -130,6 +175,10 @@ function EventRowView({
           )}
         </div>
         <div class="summary">{event.summary}</div>
+        {(() => {
+          const bild = toolImageRef(event, toolResult, sessionRef);
+          return bild ? <ToolImageView image={bild} /> : null;
+        })()}
         <CopyButton text={copyText(event)} />
         {expanded && <EventDetail event={rowEvent} />}
       </div>
@@ -263,5 +312,5 @@ function CopyButton({ text }: { text: string }) {
  * purpose: they are recreated each render but do the same for this row. */
 export const EventRow = memo(
   EventRowView,
-  (a, b) => a.event === b.event && a.expanded === b.expanded && a.toolResult === b.toolResult,
+  (a, b) => a.event === b.event && a.expanded === b.expanded && a.toolResult === b.toolResult && a.sessionRef === b.sessionRef,
 );

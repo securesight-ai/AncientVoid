@@ -1370,6 +1370,14 @@ function createHubApi(P: (path: string) => string) {
     if (!res.ok) throw new Error(res.status === 409 ? "Die Datei hat sich geändert — neu laden." : `${res.status}`);
     return URL.createObjectURL(await res.blob());
   },
+  /** Bytes eines Bildes, das ein Werkzeug gelesen hat — ohne Revisionsprüfung,
+   * weil die Vorschau die Datei so zeigt, wie sie jetzt ist. Der Token bleibt im
+   * Header; in der Bild-URL steckt nie ein Geheimnis. */
+  toolImageBlobUrl: async (target: string, path: string): Promise<string> => {
+    const res = await fetch(P(`/api/code/raw?${target}&path=${encodeURIComponent(path)}`), { headers: { authorization: `Bearer ${getToken()}` } });
+    if (!res.ok) throw new Error(`${res.status}`);
+    return URL.createObjectURL(await res.blob());
+  },
   sessionActions: (sessionId: string) => api<{ actions: ActionDefinition[]; runs: ActionRun[] }>(P(`/api/sessions/${sessionId}/actions`)),
   runAction: (sessionId: string, actionId: string, params: Record<string, string>) =>
     api<ActionRun>(P(`/api/sessions/${sessionId}/actions/${encodeURIComponent(actionId)}`), { method: "POST", body: JSON.stringify({ params }) }),

@@ -263,6 +263,13 @@ export function SessionTail({
 }) {
   // EPIC-P6: every call of this view goes to the session's own host.
   const api = useMemo(() => hostApi(session.hostId), [session.hostId]);
+  // Bildvorschau gelesener Bilder (Nutzerfund 2026-11-23): nur eigene Sitzungen,
+  // weil die Rohroute die Projektwurzel dieses Hubs braucht. Fremde Sitzungen
+  // zeigen deshalb keine Vorschau — auch keine falsche Fehlermeldung.
+  const sessionRef = useMemo(
+    () => (session.hostId ? undefined : { id: session.id, project: session.project }),
+    [session.hostId, session.id, session.project],
+  );
   const [events, setEvents] = useState<NormalizedEvent[]>([]);
   // EPIC-P67 T67.8: Main-Sync-Stand der Session (N hinter main). null = kein
   // Stand (noch nicht geladen, kein Git/Remote oder direkter Modus) — dann
@@ -2542,6 +2549,7 @@ export function SessionTail({
                 <ChatTurns
                   key={session.id}
                   sessionId={session.id}
+                  sessionRef={sessionRef}
                   items={chatItems}
                   live={liveText}
                   expanded={expanded}
@@ -2613,6 +2621,7 @@ export function SessionTail({
                         event={e}
                         expanded={expanded.has(e.seq)}
                         onToggleExpand={() => toggleExpanded(e.seq)}
+                        sessionRef={sessionRef}
                         toolResult={
                           e.type === "tool_use"
                             ? toolResultByToolId.get(toolIdOf(e) ?? "")
