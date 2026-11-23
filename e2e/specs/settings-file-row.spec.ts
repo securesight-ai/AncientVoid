@@ -21,4 +21,18 @@ test.describe("Einstellungen: Hintergrundbild-Upload (BUG-0221)", () => {
     // … und die Zeile bleibt in der Kartenbreite (nicht überstehend).
     expect(controlBox!.x + controlBox!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width + 1);
   });
+  test("keine Beschriftung in den Einstellungen wird zeichenweise umgebrochen", async ({ app, hub }) => {
+    await app.goto(`${hub.origin}/#/einstellungen`);
+    await expect(app.getByLabel("Lokales Hintergrundbild")).toBeVisible();
+    // Textzeilen ("immer aktiv — …") dürfen die Beschriftungsspalte nicht auf ~0 drücken.
+    const breiten = await app.locator(".setting-row .setting-label").evaluateAll((els) =>
+      els.map((el) => ({ text: (el.textContent ?? "").slice(0, 40), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height })),
+    );
+    expect(breiten.length).toBeGreaterThan(0);
+    for (const b of breiten) {
+      if (b.w === 0) continue; // ausgeblendete Abschnitte
+      expect(b.w, `Label "${b.text}"`).toBeGreaterThanOrEqual(100);
+      expect(b.h, `Label "${b.text}" zu hoch (Zeichenumbruch?)`).toBeLessThan(120);
+    }
+  });
 });

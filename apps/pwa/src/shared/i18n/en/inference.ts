@@ -3,7 +3,7 @@ export const en = {
   "inference.title": "Inference token tempo",
   "inference.hint": "Measured on the engines the hub probes. Distributions are computed over our own request history, never over counters.",
   "inference.empty.loading": "loading …",
-  "inference.empty.noEngines": "No engines configured. The hub only probes what is listed in `inference.engines`.",
+  "inference.empty.noEngines": "No metrics source configured. The tempo dashboard only shows engines from `inference.engines` (an endpoint with /metrics). The model binding from Settings only powers the ask box.",
   "inference.empty.noSnapshot": "This source reports nothing — probably unreachable right now.",
   "inference.stale": "No fresh data — the last known values stay on screen.",
   "inference.probeFailed": "Probe failed: {error}",
