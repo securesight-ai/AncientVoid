@@ -98,7 +98,7 @@ export function layoutGitGraph(commits: readonly GitGraphCommit[]): { rows: GitG
     });
   }
 
-  const laneCount = Math.max(1, nextLane, ...rows.map((r) => Math.max(r.lane, ...r.active, ...r.edges.map((e) => Math.max(e.fromLane, e.toLane))) + 1));
+  const laneCount = Math.max(1, ...rows.map((r) => Math.max(r.lane, ...r.active, ...r.edges.map((e) => Math.max(e.fromLane, e.toLane))) + 1));
   return { rows, laneCount };
 }
 
@@ -125,4 +125,58 @@ export function formatGitRefLabel(name: string): { label: string; title: string 
   const id = m[1]!;
   const short = id.length > 8 ? id.slice(0, 8) : id;
   return { label: `Session ${short}…`, title: name };
+}
+
+/** Ein Chip am Commit: lokaler Branch (ggf. mit Remote-Gegenstück) oder reiner Remote-Ref. */
+export interface GitRefChip {
+  label: string;
+  title: string;
+  /** `origin/<name>` zeigt auf denselben Commit — im Chip als „⇄ origin“ gekennzeichnet. */
+  withRemote: boolean;
+  remoteOnly: boolean;
+  /** Worktree-Branch einer Agenten-Session. */
+  session: boolean;
+}
+
+const REMOTE_PREFIX = /^(origin|upstream)\//;
+
+/**
+ * Refs eines Commits zu Chips verdichten, wie VS-Code-Git-Graph: `main` und
+ * `origin/main` auf demselben Commit werden EIN Chip (lokal = Remote), sonst
+ * wirkt jeder Branch doppelt und der Verlauf unübersichtlich.
+ */
+export function groupGitRefs(refs: readonly string[]): GitRefChip[] {
+  const locals = refs.filter((r) => !REMOTE_PREFIX.test(r));
+  const remotes = refs.filter((r) => REMOTE_PREFIX.test(r));
+  const chips: GitRefChip[] = [];
+  const matched = new Set<string>();
+  for (const name of locals) {
+    const remote = remotes.find((r) => r.replace(REMOTE_PREFIX, "") === name);
+    if (remote) matched.add(remote);
+    const { label, title } = formatGitRefLabel(name);
+    chips.push({ label, title: remote ? `${title} (= ${remote})` : title, withRemote: Boolean(remote), remoteOnly: false, session: AV_WT.test(name) });
+  }
+  for (const name of remotes) {
+    if (matched.has(name)) continue;
+    chips.push({ label: name, title: name, withRemote: false, remoteOnly: true, session: AV_WT.test(name.replace(REMOTE_PREFIX, "")) });
+  }
+  return chips;
+}
+
+/** Woher ein Merge-Commit kommt: die zweiten (und weiteren) Eltern. */
+export interface GitMergeSource {
+  shortSha: string;
+  /** Bester Name: lokaler Branch > Remote > nichts (dann zählt der Kurz-Hash). */
+  name: string | null;
+  /** Eltern-Commit liegt außerhalb des geladenen Verlaufs. */
+  outside: boolean;
+}
+
+export function mergeSources(commit: GitGraphCommit, bySha: ReadonlyMap<string, GitGraphCommit>): GitMergeSource[] {
+  return commit.parents.slice(1).map((sha) => {
+    const parent = bySha.get(sha);
+    const chips = parent ? groupGitRefs(parent.refs) : [];
+    const best = chips.find((c) => !c.remoteOnly) ?? chips[0];
+    return { shortSha: parent?.shortSha ?? sha.slice(0, 7), name: best ? best.label : null, outside: !parent };
+  });
 }

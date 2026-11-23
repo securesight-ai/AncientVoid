@@ -2,14 +2,6 @@
  * Git-Struktur-Ebene ist entfernt). */
 .git-graph-pane { display: flex; flex-direction: column; gap: 8px; min-height: 0; height: 100%; }
 .git-graph-legend { margin: 0; font-size: var(--text-sm); line-height: 1.35; }
-.git-graph-branches { display: flex; flex-wrap: wrap; gap: 6px; }
-.git-graph-branch {
-  font-size: var(--text-xs);
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--lane) 55%, var(--bg-chip));
-  color: var(--lane);
-}
 .git-graph-list { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 1; min-height: 0; }
 /* BUG-0190: keine Lücke zwischen Zeilen — Spurlinien stoßen Kante an Kante. */
 .git-graph-row { display: flex; gap: 4px; align-items: flex-start; margin: 0; padding: 0; }
@@ -21,15 +13,36 @@
 }
 .git-graph-commit:hover { background: var(--bg-chip); border-radius: var(--radius-sm); }
 .git-graph-sha { font-family: var(--font-code); color: var(--accent); font-size: var(--text-sm); }
-.git-graph-subject { font-weight: 600; }
+.git-graph-subject { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .git-graph-refs { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+/* Chips sitzen direkt am Commit in der Farbe seiner Spur (wie VS-Code-Git-Graph). */
 .git-graph-ref {
   font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  color: var(--bg);
+  background: var(--lane, var(--accent));
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.git-graph-ref.remote { background: transparent; color: var(--lane, var(--accent)); border: 1px solid var(--lane, var(--accent)); font-weight: 500; }
+.git-graph-ref.session { font-weight: 500; opacity: 0.85; }
+.git-graph-sync { font-weight: 400; }
+.git-graph-head {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
   padding: 1px 6px;
   border-radius: 4px;
-  background: var(--bg-chip);
-  color: var(--fg-dim);
+  border: 2px solid var(--fg);
+  color: var(--fg);
 }
+.git-graph-merge { margin: 2px 4px 0; font-size: var(--text-sm); }
+.git-graph-norepo { display: grid; gap: 6px; text-align: center; padding: 24px 12px; }
+.git-graph-norepo p { margin: 0; }
 .git-graph-meta { font-size: var(--text-sm); width: 100%; }
 .git-graph-files { list-style: none; margin: 4px 0 0; padding: 0 0 0 4px; }
 .git-graph-files li { margin: 2px 0; }

@@ -3,12 +3,14 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import type { GitGraphReport } from "@ancientvoid/contracts";
 import { hostApi } from "../../shared/api.ts";
 import { openLayer } from "../../shared/layers.ts";
-import { formatGitRefLabel, GIT_LANE_COLORS, layoutGitGraph } from "./layout.ts";
+import { GIT_LANE_COLORS, groupGitRefs, layoutGitGraph, mergeSources } from "./layout.ts";
 
 const ROW_H = 44;
 const LANE_W = 14;
 const DOT_R = 5;
 const FILE_ROW_H = 22;
+/** Git-Fachbegriff, nicht übersetzt. */
+const HEAD_LABEL = "HEAD";
 
 /**
  * ADR-0071: farbige Branch-Linien, Merge-/Fork-Punkte; Datei-Klick → Projekt-Explorer.
@@ -47,12 +49,7 @@ export function GitGraphPane({
   }, [api, target]);
 
   const { rows, laneCount } = useMemo(() => (report ? layoutGitGraph(report.commits) : { rows: [], laneCount: 1 }), [report]);
-  const commitShas = useMemo(() => new Set(report?.commits.map((c) => c.sha) ?? []), [report]);
-  /** Nur Refs, deren Tip im geladenen Verlauf liegt — sonst wirken alle Worktrees „oben gestapelt“. */
-  const visibleBranches = useMemo(
-    () => (report?.branches ?? []).filter((b) => commitShas.has(b.sha)).slice(0, 24),
-    [report, commitShas],
-  );
+  const bySha = useMemo(() => new Map((report?.commits ?? []).map((c) => [c.sha, c])), [report]);
 
   const openInExplorer = (path: string, sha: string) => {
     if (!sessionId) return;
@@ -73,30 +70,18 @@ export function GitGraphPane({
           {t("git-graph.history_capped")} {report.maxCommits} {t("git-graph.commits_missing")}
         </div>
       )}
-      {visibleBranches.length > 0 && (
-        <div class="git-graph-branches" data-testid="git-graph-branches">
-          {visibleBranches.map((b) => {
-            const { label, title } = formatGitRefLabel(b.name);
-            return (
-              <span
-                class="git-graph-branch"
-                key={b.name}
-                title={title}
-                style={{ "--lane": GIT_LANE_COLORS[b.colorIndex % GIT_LANE_COLORS.length] } as never}
-              >
-                {label}
-              </span>
-            );
-          })}
-        </div>
-      )}
       {report && !report.error && (
         <p class="git-graph-legend dim" data-testid="git-graph-legend">
           {t("git-graph.lanes_note")}
         </p>
       )}
       {error && <div class="files-error">{t("git-graph.gitgraph_not_loadable")} {error}</div>}
-      {report?.error && <div class="files-error">{report.error}</div>}
+      {report?.error && (
+        <div class="ui-empty git-graph-norepo" data-testid="git-graph-error">
+          <strong>{report.error}</strong>
+          {report.error.startsWith("Kein Git") && <p class="dim">{t("git-graph.no_repo_hint")}</p>}
+        </div>
+      )}
       {!report && !error && <div class="ui-empty">{t("git-graph.gitgraph_loading")}</div>}
       {report && !report.error && (
         <ul class="git-graph-list" role="list">
@@ -106,6 +91,9 @@ export function GitGraphPane({
             const filesH = open ? Math.max(1, row.commit.files.length) * FILE_ROW_H + (row.commit.filesTruncated ? FILE_ROW_H : 0) + 12 : 0;
             const svgH = ROW_H + filesH;
             const dotY = ROW_H / 2;
+            const chips = groupGitRefs(row.commit.refs);
+            const isHead = report?.head === row.commit.sha;
+            const sources = row.merge ? mergeSources(row.commit, bySha) : [];
             return (
               <li key={row.commit.sha} class={`git-graph-row${row.merge ? " merge" : ""}`} data-sha={row.commit.sha}>
                 <svg class="git-graph-rails" width={graphW} height={svgH} aria-hidden="true">
@@ -117,7 +105,7 @@ export function GitGraphPane({
                       x2={8 + lane * LANE_W}
                       y2={svgH}
                       stroke={GIT_LANE_COLORS[lane % GIT_LANE_COLORS.length]}
-                      stroke-width="2"
+                      stroke-width="2.5" stroke-linecap="round"
                     />
                   ))}
                   {/* Spur des Commits von oben bis zum Punkt */}
@@ -127,7 +115,7 @@ export function GitGraphPane({
                     x2={8 + row.lane * LANE_W}
                     y2={dotY}
                     stroke={color}
-                    stroke-width="2"
+                    stroke-width="2.5" stroke-linecap="round"
                   />
                   {row.edges.map((e, ei) => {
                     const x1 = 8 + e.fromLane * LANE_W;
@@ -136,7 +124,7 @@ export function GitGraphPane({
                     const y2 = svgH;
                     const c = GIT_LANE_COLORS[e.colorLane % GIT_LANE_COLORS.length];
                     if (x1 === x2) {
-                      return <line key={ei} x1={x1} y1={y1} x2={x2} y2={y2} stroke={c} stroke-width="2" />;
+                      return <line key={ei} x1={x1} y1={y1} x2={x2} y2={y2} stroke={c} stroke-width="2.5" stroke-linecap="round" />;
                     }
                     return (
                       <path
@@ -144,7 +132,7 @@ export function GitGraphPane({
                         d={`M ${x1} ${y1} C ${x1} ${(y1 + y2) / 2}, ${x2} ${(y1 + y2) / 2}, ${x2} ${y2}`}
                         fill="none"
                         stroke={c}
-                        stroke-width="2"
+                        stroke-width="2.5" stroke-linecap="round"
                       />
                     );
                   })}
@@ -153,26 +141,46 @@ export function GitGraphPane({
                     cy={dotY}
                     r={row.merge ? DOT_R + 1.5 : DOT_R}
                     fill={color}
-                    stroke={row.merge ? "var(--fg)" : "transparent"}
-                    stroke-width={row.merge ? 2 : 0}
+                    stroke={isHead ? "var(--fg)" : "var(--bg)"}
+                    stroke-width={isHead ? 3 : 2}
                   />
                 </svg>
                 <div class="git-graph-body">
                   <button type="button" class="git-graph-commit" onClick={() => setExpanded(open ? null : row.commit.sha)}>
                     <code class="git-graph-sha">{row.commit.shortSha}</code>
-                    <span class="git-graph-subject">{row.commit.subject}</span>
-                    {row.commit.refs.length > 0 && (
+                    {isHead && <span class="git-graph-head" title={t("git-graph.head_title")}>{HEAD_LABEL}</span>}
+                    {chips.length > 0 && (
                       <span class="git-graph-refs">
-                        {row.commit.refs.map((r) => {
-                          const { label, title } = formatGitRefLabel(r);
-                          return (
-                            <span class="git-graph-ref" key={r} title={title}>{label}</span>
-                          );
-                        })}
+                        {chips.map((c) => (
+                          <span
+                            class={`git-graph-ref${c.remoteOnly ? " remote" : ""}${c.session ? " session" : ""}`}
+                            key={c.label}
+                            title={c.title}
+                            style={{ "--lane": color } as never}
+                          >
+                            {c.label}
+                            {c.withRemote && <span class="git-graph-sync" aria-label={t("git-graph.remote_in_sync")}> ⇄</span>}
+                          </span>
+                        ))}
                       </span>
                     )}
+                    <span class="git-graph-subject">{row.commit.subject}</span>
                     <span class="dim git-graph-meta">{row.commit.author} · {new Date(row.commit.date).toLocaleString("de-DE")}</span>
                   </button>
+                  {sources.length > 0 && (
+                    <p class="git-graph-merge dim" data-testid="git-graph-merge">
+                      {t("git-graph.merge_from")}{" "}
+                      {sources.map((m, i) => (
+                        <span key={m.shortSha}>
+                          {i > 0 && ", "}
+                          <strong>{m.name ?? m.shortSha}</strong>
+                          {m.name && <code class="git-graph-sha"> {m.shortSha}</code>}
+                          {m.outside && ` ${t("git-graph.merge_outside")}`}
+                        </span>
+                      ))}
+                      {" "}{t("git-graph.merge_into")}
+                    </p>
+                  )}
                   {open && (
                     <ul class="git-graph-files" data-testid="git-graph-files">
                       {row.commit.files.map((f) => (

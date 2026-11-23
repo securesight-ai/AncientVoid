@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GitGraphCommit } from "@ancientvoid/contracts";
-import { formatGitRefLabel, layoutGitGraph } from "../../../src/features/git-graph/layout.ts";
+import { formatGitRefLabel, groupGitRefs, layoutGitGraph, mergeSources } from "../../../src/features/git-graph/layout.ts";
 
 function c(partial: Partial<GitGraphCommit> & Pick<GitGraphCommit, "sha" | "parents" | "subject">): GitGraphCommit {
   return {
@@ -58,5 +58,41 @@ describe("formatGitRefLabel (BUG-0190)", () => {
     expect(title).toBe(`ancientvoid/${id}`);
     expect(formatGitRefLabel("main")).toEqual({ label: "main", title: "main" });
     expect(formatGitRefLabel("origin/feat/x")).toEqual({ label: "origin/feat/x", title: "origin/feat/x" });
+  });
+});
+
+describe("groupGitRefs", () => {
+  it("fasst main und origin/main auf demselben Commit zu einem Chip zusammen", () => {
+    const chips = groupGitRefs(["main", "origin/main", "origin/feature"]);
+    expect(chips.map((x) => x.label)).toEqual(["main", "origin/feature"]);
+    expect(chips[0]).toMatchObject({ withRemote: true, remoteOnly: false });
+    expect(chips[1]).toMatchObject({ remoteOnly: true });
+  });
+
+  it("kennzeichnet Worktree-Branches", () => {
+    const [chip] = groupGitRefs(["ancientvoid/26e91d83-125a-441c-b9d6-add5b0447d52"]);
+    expect(chip).toMatchObject({ session: true, label: "Session 26e91d83…" });
+  });
+});
+
+describe("mergeSources", () => {
+  const commits = [
+    c({ sha: "m1", parents: ["a1", "b1"], subject: "merge" }),
+    c({ sha: "b1", parents: ["a0"], subject: "side", refs: ["origin/feat", "feat"] }),
+    c({ sha: "a1", parents: ["a0"], subject: "main" }),
+  ];
+  const bySha = new Map(commits.map((x) => [x.sha, x]));
+
+  it("nennt den eingeführten Branch statt nur des Hashs", () => {
+    expect(mergeSources(commits[0]!, bySha)).toEqual([{ shortSha: "b1", name: "feat", outside: false }]);
+  });
+
+  it("meldet Eltern außerhalb des geladenen Verlaufs", () => {
+    const m = c({ sha: "m2", parents: ["a1", "zzzzzzzzzz"], subject: "merge" });
+    expect(mergeSources(m, bySha)).toEqual([{ shortSha: "zzzzzzz", name: null, outside: true }]);
+  });
+
+  it("liefert für Nicht-Merges nichts", () => {
+    expect(mergeSources(commits[2]!, bySha)).toEqual([]);
   });
 });
