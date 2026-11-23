@@ -2,8 +2,9 @@
 
 **Art:** tutorial
 
-Stand 2026-11-23 (Frischhalte-Review, drift 31 > 30 nach BUG-0255/0256- und
-Ralph-PRs): Wizard-Pfad (`./setup.sh --yes --adapter=dummy`), Device-Token und
+Stand 2026-11-23 (Frischhalte-Review, drift 33 > 30 nach Toast-Overlay-
+(BUG-0271) und Status-Fix (BUG-0270); Erststart-Ablauf unberührt — davor:
+drift 31 > 30 nach BUG-0255/0256- und Ralph-PRs): Wizard-Pfad (`./setup.sh --yes --adapter=dummy`), Device-Token und
 `/api/ready` unverändert; der Erststart-Ablauf (Dock → Session → Nachricht)
 bleibt derselbe. Neue Oberflächen-Details ändern ihn nicht: Icon-Leisten-
 Tooltips stehen rechts neben dem Icon (BUG-0255), die Glocke trägt ihre
