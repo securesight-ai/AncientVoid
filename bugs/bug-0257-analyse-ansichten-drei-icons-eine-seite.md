@@ -6,7 +6,7 @@ severity: S3
 area: pwa
 instance: dev
 commit: "2a7eab27"
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/issues/294"
 epic: ""
 created: 2026-11-22
 reporter: Nutzermeldung 22.11.2026 (Statistik, Metriken und Inferenz teilen sich ein Icon und stehen als drei Seiten nebeneinander)
@@ -79,3 +79,17 @@ erreicht und jeweils eigenen Inhalt sieht.
 - [ ] Datei im Index [`README.md`](README.md)
 - [ ] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`)
 - [ ] `bugfix` oder offen lassen
+
+
+## Fix (verifiziert 2026-11-23)
+
+- Eine Seite `#/statistik` mit drei Reitern (Statistik · Metrik · Inferenz),
+  Reiter-Zustand in der URL (`#/statistik/metriken`, `#/statistik/inferenz`);
+  Altlinks leiten permanent um (`redirectLegacyStatHash`, Muster wie
+  `#/runs` → `#/teams`). Ein Navigations-Eintrag/Icon in Dock, Seitenleiste
+  und Quick-Commands. AiMetricsPage/InferencePage leben als Tab-Inhalte unter
+  `features/statistics/` (ADR-0020).
+- Rot-dann-grün: `apps/pwa/test/app/route.test.ts` (3 neue Fälle, ohne Fix
+  rot via Stash) + E2E `statistik.spec.ts` „eine Seite, drei Reiter …
+  Altlinks leiten um“; `ki-server-metriken`/`inference-tempo` navigieren
+  über Menüpunkt + Reiter (16/16 grün).
