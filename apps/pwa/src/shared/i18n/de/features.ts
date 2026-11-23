@@ -1125,6 +1125,8 @@ export const de = {
   "session.provider_no_thinking_text": "Der Anbieter liefert keinen Denktext",
   "session.queue_edit": "Vorgemerkte Nachricht {n} bearbeiten",
   "session.queue_remove": "Vorgemerkte Nachricht {n} streichen",
+    "session.queue_edit_word": "ändern",
+"session.queue_retry": "Erneut versuchen",
   "session.queue_send_next": "Vorgemerkte Nachricht {n} als nächstes senden",
   "session.queue_send_now": "Vorgemerkte Nachricht {n} jetzt senden",
   "session.queue_to_back": "Vorgemerkte Nachricht {n} nach hinten setzen",
