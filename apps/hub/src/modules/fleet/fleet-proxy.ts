@@ -4,7 +4,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import WebSocket from "ws";
 import type { FleetStore, SessionManager, TokenService } from "@ancientvoid/core";
 import type { HubMetrics } from "@ancientvoid/contracts";
-import { isFleetRoutable } from "@ancientvoid/contracts";
+import { isFleetRoutable, MAX_ATTACHMENT_BYTES } from "@ancientvoid/contracts";
 import { createTailHandler } from "../sessions/ws.ts";
 
 const FORWARD_TIMEOUT_MS = 10_000;
@@ -14,11 +14,58 @@ const FORWARD_TIMEOUT_MS = 10_000;
 const FORWARD_TIMEOUT_SLOW_MS = 90_000;
 const SLOW_PATHS = /^\/api\/(prompt-enhance|prompt-recommendation|prompt-optimizer|skills\/revise|sessions\/[^/]+\/(steer|apply|stop|archive|budget|workspace\/retry))$/;
 const MAX_FORWARD_BYTES = 16 * 1024 * 1024;
+/** Bild- und Datei-Anhänge kommen als Rohbytes (kein JSON). Über die Tailscale-
+ * Strecke darf ein Upload schon mal 60 s brauchen. */
+const FORWARD_TIMEOUT_UPLOAD_MS = 60_000;
 
 interface Forwarded {
   status: number;
   contentType: string;
   body: Buffer;
+}
+
+/**
+ * Rohbytes weiterreichen — für Anhänge. `forward()` kann das nicht: es
+ * serialisiert den Body als JSON, und ein Bild wäre damit hinüber.
+ */
+function forwardRaw(url: string, token: string, body: Buffer, headers: Record<string, string>): Promise<Forwarded> {
+  const target = new URL(url);
+  const request = target.protocol === "https:" ? httpsRequest : httpRequest;
+  return new Promise((resolve, reject) => {
+    const req = request(
+      target,
+      {
+        method: "POST",
+        agent: false,
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-length": body.length,
+          "content-type": headers["content-type"] ?? "application/octet-stream",
+          ...(headers["x-filename"] ? { "x-filename": headers["x-filename"] } : {}),
+        },
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        let size = 0;
+        res.on("data", (chunk: Buffer) => {
+          size += chunk.length;
+          if (size > MAX_FORWARD_BYTES) req.destroy(new Error("response too large"));
+          else chunks.push(chunk);
+        });
+        res.on("end", () => {
+          clearTimeout(deadline);
+          resolve({ status: res.statusCode ?? 502, contentType: String(res.headers["content-type"] ?? "application/json"), body: Buffer.concat(chunks) });
+        });
+      },
+    );
+    const deadline = setTimeout(() => req.destroy(new Error(`no answer within ${FORWARD_TIMEOUT_UPLOAD_MS / 1000} s`)), FORWARD_TIMEOUT_UPLOAD_MS);
+    req.on("error", (err) => {
+      clearTimeout(deadline);
+      reject(err);
+    });
+    req.write(body);
+    req.end();
+  });
 }
 
 function forward(url: string, method: string, token: string, body: unknown, timeoutOverrideMs?: number): Promise<Forwarded> {
@@ -157,4 +204,39 @@ export function registerFleetProxy(
     }
   };
   app.route({ method: ["GET", "POST", "PUT", "DELETE"], url: "/api/hosts/:hostId/*", handler });
+
+  // Bild einfügen in einer Sitzung, die auf einem ANDEREN Hub läuft: der
+  // JSON-Pfad oben kann Rohbytes nicht tragen (Fastify hätte keinen Parser,
+  // forward() würde den Body als JSON neu bauen) — deshalb eine eigene Route
+  // mit Roh-Parser. Dieselbe Routen-Erlaubnis, dasselbe Kopplungs-Token.
+  app.register(async (scope) => {
+    scope.addContentTypeParser("*", { parseAs: "buffer", bodyLimit: MAX_ATTACHMENT_BYTES + 1024 }, (_req, body, done) => done(null, body));
+    scope.post("/api/hosts/:hostId/attachments", { bodyLimit: MAX_ATTACHMENT_BYTES + 1024 }, async (req: FastifyRequest, reply: FastifyReply) => {
+      const { hostId } = req.params as { hostId: string };
+      const body = req.body as Buffer | undefined;
+      if (!isFleetRoutable("/api/attachments")) return reply.code(403).send({ error: "path not routable to other hosts", hostId });
+      if (!body || !Buffer.isBuffer(body) || body.length === 0) return reply.code(400).send({ error: "Leere Datei." });
+      const mitgabe: Record<string, string> = {
+        "content-type": String(req.headers["content-type"] ?? "application/octet-stream"),
+        ...(req.headers["x-filename"] ? { "x-filename": String(req.headers["x-filename"]) } : {}),
+      };
+      if (hostId === deps.hostId) {
+        const res = await app.inject({
+          method: "POST",
+          url: "/api/attachments",
+          payload: body,
+          headers: { authorization: String(req.headers.authorization ?? ""), ...mitgabe },
+        });
+        return reply.code(res.statusCode).type(String(res.headers["content-type"] ?? "application/json")).send(res.rawPayload);
+      }
+      const peer = deps.fleet.peer(hostId);
+      if (!peer) return reply.code(404).send({ error: "unknown host", hostId });
+      try {
+        const res = await forwardRaw(`${peer.url}/api/attachments`, peer.token, body, mitgabe);
+        return reply.code(res.status).type(res.contentType).send(res.body);
+      } catch (err) {
+        return reply.code(502).send({ error: `${hostId} nicht erreichbar: ${err instanceof Error ? err.message : String(err)}`, hostId, state: "offline" });
+      }
+    });
+  });
 }
