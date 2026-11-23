@@ -185,6 +185,36 @@ it("Halogen: Cache aus /cache und /health, Experten-Treffer bleibt null", () => 
   assert.equal(reading.totals?.expertHitRate, null, "Halogen hat keinen MoE-Experten-Cache");
 });
 
+it("Halogen: wiederverwendete Token kommen zum frisch gelesenen Prompt hinzu (Live-Werte, kein negatives „gelesen“)", () => {
+  const text = [
+    "# TYPE llamacpp:prompt_tokens_total counter", "llamacpp:prompt_tokens_total 98187",
+    "# TYPE halogen:prompt_tokens_cached_total counter", "halogen:prompt_tokens_cached_total 3335890",
+    "# TYPE llamacpp:prompt_seconds_total counter", "llamacpp:prompt_seconds_total 99.1725",
+    "# TYPE llamacpp:tokens_predicted_total counter", "llamacpp:tokens_predicted_total 15278",
+    "# TYPE llamacpp:tokens_predicted_seconds_total counter", "llamacpp:tokens_predicted_seconds_total 251.4754",
+    "# TYPE llamacpp:predicted_tokens_seconds gauge", "llamacpp:predicted_tokens_seconds 0",
+    "",
+  ].join("\n");
+  const { reading } = promReading("halogen", text, {
+    prev: null,
+    nowMs: 0,
+    health: { model: "m", version: { api: "0.18.2", engine: "0.18.2" }, context: 216064, slot_ctx: 216064, slots: 2, drafter_default: "mtp", prompt_cache: { cap_mb: 110 } },
+    cache: { hit_rate: 0.9339, token_hit_rate: 0.9714 },
+  });
+  assert.equal(reading.totals?.read, 98187);
+  assert.ok(Math.abs((reading.totals?.avgPrefillTokS ?? 0) - 990) < 1, "Ø Prefill seit Start statt leer");
+  assert.ok(Math.abs((reading.totals?.avgDecodeTokS ?? 0) - 60.75) < 0.1, "Ø Decode seit Start statt 0,0 im Leerlauf");
+  assert.equal(reading.totals?.prompt, 98187 + 3335890);
+  assert.equal(reading.totals?.reused, 3335890);
+  assert.ok(Math.abs((reading.totals?.reuseShare ?? 0) - 0.9714) < 0.001, "Anteil deckt sich mit token_hit_rate der Engine");
+  assert.equal(reading.cache?.tokenHitRate, 0.9714);
+  assert.equal(reading.cache?.budgetMib, 110);
+  assert.equal(reading.engine.version, "0.18.2");
+  assert.equal(reading.engine.context, 216064);
+  assert.equal(reading.engine.batchSlots, 2);
+  assert.equal(reading.engine.drafting, "mtp");
+});
+
 // --- Store: K7-Rekonstruktion ---------------------------------------------
 
 function storeDeps() {
@@ -310,6 +340,18 @@ it("Tracker: Accept-Kopf passt zur Quelle (Strata liefert sonst Prometheus-Text)
   await tracker.tickNow();
   assert.equal(gesehene["http://strata/metrics"], "application/json");
   assert.match(gesehene["http://halo/metrics"] ?? "", /^text\/plain/);
+});
+
+it("Tracker: Halogen holt /health und /cache vom Host, nicht unter /metrics", async () => {
+  const a = attrappen();
+  const abgefragt: string[] = [];
+  const tracker = createInferenceTracker(
+    { ...a.deps, fetch: async (url: string) => { abgefragt.push(url); return a.deps.fetch(url); } },
+    [{ id: "halo", kind: "halogen", url: "http://halo/metrics" }],
+  );
+  await tracker.tickNow();
+  assert.ok(abgefragt.includes("http://halo/health"), `abgefragt: ${abgefragt.join(", ")}`);
+  assert.ok(abgefragt.includes("http://halo/cache"), `abgefragt: ${abgefragt.join(", ")}`);
 });
 
 it("Tracker: Snapshot gültig, Grenzen eingehalten, kaputte Quelle bleibt sichtbar", async () => {

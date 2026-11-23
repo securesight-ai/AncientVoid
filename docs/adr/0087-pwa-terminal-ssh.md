@@ -54,3 +54,31 @@ Tab oder die App verlässt.
 - K7: Sitzungen sind flüchtig. Ein Hub-Neustart beendet sie, und der Client
   startet dann eine neue Shell. Wer Sitzungen über Hub-Neustarts hinweg
   braucht, nutzt tmux auf dem Ziel.
+
+## Nachtrag 2026-11-23 — Shell-Auswahl, Auto-Erkennung, Farben, Copy/Paste
+
+Nutzerreport nach dem ersten Arbeiten im Terminal-Tab: Farben passten nicht
+zur App, die Shell war starr bash, und Einfügen (Strg+V) war unmöglich.
+
+- **Shell pro Ziel:** lokale Ziele bekommen optionales `shell` (Pfad oder
+  Name, Default bash) in `hub.config.json`. Login-Flag (`-l`) nur für
+  bash/zsh. Die API (`TerminalTarget`) ändert sich nicht — `shell` bleibt
+  Hub-intern, kein Contract-Bruch.
+- **Auto-Erkennung:** `terminalAutodetect` (Default an) hängt die auf dem
+  Hub-Host installierten Login-Shells (`/etc/shells`, Fallback-Sonde) als
+  Ziele `local-<name>` an die Allowlist — config first, Duplikate und
+  belegte ids übersprungen. Damit ist „ohne Config: leere Liste“ nur noch
+  mit `terminalAutodetect: false` erreichbar.
+- **Farben:** das xterm-Theme entsteht aus den App-Tokens
+  (`terminal-theme.ts`), komplette ANSI-16-Palette; Cursor, Markierung und
+  ANSI-Magenta laufen auf `--accent`. Die Fläche bleibt dunkel
+  (`--content-terminal`, dokumenteneigen — auch im hellen App-Thema), weil
+  Shell-Ausgaben auf Dunkel getunt sind.
+- **Copy/Paste:** `attachCustomKeyEventHandler` + Klassifikator
+  (`terminal-clipboard.ts`). Paste (Strg/Cmd+V ± Shift, Shift+Einfg) wird
+  nur aus xterms Tastenlogik genommen — das native paste-Event der
+  xterm-Textarea fügt ein (Bracketed Paste, kein Berechtigungsdialog).
+  Copy: Strg/Cmd+Shift+C, Strg+Einfg, Strg+C mit Markierung (ohne bleibt
+  es SIGINT), über den einen Kopierweg (ADR-0090). Toolbar-Buttons decken
+  das Handy ohne Tastatur ab. OS-Kürzel außerhalb der Seite (z. B. Win+V
+  der Windows-Zwischenablagenhistorie) bleiben außer Reichweite der App.

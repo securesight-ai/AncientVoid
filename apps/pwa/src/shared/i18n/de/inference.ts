@@ -3,7 +3,7 @@ export const de = {
   "inference.title": "Token-Tempo der Inferenz",
   "inference.hint": "Gemessen an den Engines, die der Hub beprobt. Verteilungen rechnen über eigene Request-Historie, nicht über Gegenwerte.",
   "inference.empty.loading": "lädt …",
-  "inference.empty.noEngines": "Keine Engines konfiguriert. Der Hub beprobt nur, was in `inference.engines` steht.",
+  "inference.empty.noEngines": "Keine Metrik-Quelle konfiguriert. Das Tempo-Dashboard zeigt nur Engines aus `inference.engines` (Endpunkt mit /metrics). Die Modell-Anbindung aus den Einstellungen liefert nur die Frage-Box.",
   "inference.empty.noSnapshot": "Diese Quelle meldet nichts — vermutlich gerade nicht erreichbar.",
   "inference.stale": "Keine frischen Daten — letzte bekannte Werte bleiben stehen.",
   "inference.probeFailed": "Probe fehlgeschlagen: {error}",

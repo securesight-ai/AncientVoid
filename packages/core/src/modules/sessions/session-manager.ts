@@ -3631,7 +3631,7 @@ export class SessionManager {
       // im laufenden Zug annehmen wuerde.
       const caps = this.registry.get(session.record.adapter)?.capabilities;
       if (caps?.promptDelivery === "next-turn" && caps?.midTurnInput !== true && session.record.status !== "idle")
-        return { ok: false, detail: "Dieser Adapter kann während des laufenden Zugs keine weitere Nachricht annehmen. Die Nachricht bleibt vorgemerkt." };
+        return { ok: false, detail: "Dieser Adapter kann während des laufenden Zugs keine weitere Nachricht annehmen (Pi lenkt erst im nächsten Zug — ein zweiter Lauf auf derselben Sitzung überschreibt die Dateien). Die Nachricht bleibt vorgemerkt und geht automatisch raus, wenn der Zug fertig ist." };
       return this.deliverQueued(session, item, actor);
     });
   }

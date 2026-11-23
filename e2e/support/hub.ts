@@ -68,7 +68,9 @@ export interface HubOptions {
   /** EPIC-P79 (ADR-0102): inference-Abschnitt für die Hub-Config (Engine-Stand-ins). */
   inference?: Record<string, unknown>;
   /** ADR-0087: Allowlist für den PWA-Terminal-Tab. */
-  terminals?: Array<{ id: string; label: string; ssh?: string; local?: boolean }>;
+  terminals?: Array<{ id: string; label: string; ssh?: string; local?: boolean; shell?: string }>;
+  /** ADR-0087 Nachtrag 2026-11-23: Auto-Erkennung der Host-Shells (Default: an). */
+  terminalAutodetect?: boolean;
   /** EPIC-P54 (ADR-0110): registriert den hub-getriebenen Ralph-Loop mit Stand-in-CLI. */
   ralphHub?: boolean;
 }
@@ -206,6 +208,7 @@ export class TestHub {
       ...(this.options.aiMetrics ? { aiMetrics: this.options.aiMetrics } : {}),
       ...(this.options.inference ? { inference: this.options.inference } : {}),
       ...(this.options.terminals ? { terminals: this.options.terminals } : {}),
+      ...(this.options.terminalAutodetect === false ? { terminalAutodetect: false } : {}),
       media: { ytDlp: standIn("yt-dlp") },
       forge: { gitlab: { command: this.options.forgeCommand ?? standIn("glab") } },
       server: { host: "127.0.0.1", port: this.port, pwaDir: E2E_PWA_DIST },

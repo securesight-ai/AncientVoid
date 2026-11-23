@@ -6,6 +6,9 @@ import "@xterm/xterm/css/xterm.css";
 import { hubApi, type TerminalTarget } from "../../shared/api.ts";
 import { Button, EmptyState } from "../../shared/ui/index.ts";
 import { TERMINAL_CLOSE_END } from "@ancientvoid/contracts";
+import { buildTerminalTheme } from "./terminal-theme.ts";
+import { clipboardShortcut } from "./terminal-clipboard.ts";
+import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 
 function cssColor(name: string, fallback: string): string {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -41,12 +44,14 @@ export function TerminalPage() {
   const [selected, setSelected] = useState<string>("");
   const [state, setState] = useState<ConnState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [hasSelection, setHasSelection] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const dataDispRef = useRef<{ dispose(): void } | null>(null);
   const connectRef = useRef<(target: string) => Promise<void>>(async () => {});
+  const clipRef = useRef<{ paste(): void; copy(): void }>({ paste: () => {}, copy: () => {} });
 
   useEffect(() => {
     let alive = true;
@@ -78,11 +83,9 @@ export function TerminalPage() {
       cursorBlink: true,
       fontFamily: cssColor("--font-mono", "ui-monospace, monospace"),
       fontSize: 13,
-      theme: {
-        background: cssColor("--bg", "#0d1117"),
-        foreground: cssColor("--fg", "#e6edf3"),
-        cursor: cssColor("--fg", "#e6edf3"),
-      },
+      // ADR-0087 Nachtrag 2026-11-23: komplette ANSI-Palette aus den
+      // App-Tokens; Cursor/Markierung/Magenta auf --accent.
+      theme: buildTerminalTheme(cssColor),
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
@@ -90,10 +93,26 @@ export function TerminalPage() {
     fit.fit();
     termRef.current = term;
     fitRef.current = fit;
+    // Copy/Paste-Shortcuts (ADR-0087 Nachtrag 2026-11-23): paste wird nicht
+    // abgefangen, sondern nur aus xterms Tastenlogik genommen (false) — der
+    // Browser feuert dann sein natives paste-Event auf xterms Textarea und
+    // xterm fügt selbst ein (Bracketed Paste inklusive, kein Berechtigungs-
+    // prompt). Copy schreibt die Markierung über den einen Weg (ADR-0090).
+    term.attachCustomKeyEventHandler((ev) => {
+      const action = clipboardShortcut(ev, term.hasSelection());
+      if (!action) return true;
+      if (action === "copy") {
+        ev.preventDefault();
+        clipRef.current.copy();
+      }
+      return false;
+    });
+    const selDisp = term.onSelectionChange(() => setHasSelection(term.hasSelection()));
     const onResize = () => fit.fit();
     window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("resize", onResize);
+      selDisp.dispose();
       wsRef.current?.close();
       wsRef.current = null;
       term.dispose();
@@ -111,6 +130,33 @@ export function TerminalPage() {
     writeLast(null);
     setState("closed");
   };
+
+  /** Toolbar-Weg fürs Einfügen (Handy ohne Tastatur); Shortcut nimmt den nativen Pfad. */
+  const pasteFromClipboard = () => {
+    const term = termRef.current;
+    if (!term || !navigator.clipboard?.readText) {
+      setError(t("terminal.clipboard_unsupported"));
+      return;
+    }
+    navigator.clipboard
+      .readText()
+      .then((text) => {
+        if (text) term.paste(text);
+      })
+      .catch(() => setError(t("terminal.clipboard_denied")));
+  };
+
+  const copySelection = () => {
+    const selection = termRef.current?.getSelection() ?? "";
+    if (!selection) {
+      setError(t("terminal.copy_empty"));
+      return;
+    }
+    setError(null);
+    void copyIntoShelf(selection, "markierung");
+  };
+
+  clipRef.current = { paste: pasteFromClipboard, copy: copySelection };
 
   const connect = async (target: string) => {
     if (!target || !termRef.current) return;
@@ -210,6 +256,10 @@ export function TerminalPage() {
             {t("common.connect")}
           </Button>
         )}
+        {/* ADR-0087 Nachtrag 2026-11-23: Einfügen/Kopieren auch ohne
+            Tastatur (Handy) — Shortcuts decken den PC ab. */}
+        <Button size="sm" onClick={pasteFromClipboard} disabled={state !== "open"}>{t("terminal.paste")}</Button>
+        <Button size="sm" onClick={copySelection} disabled={state !== "open" || !hasSelection}>{t("terminal.copy")}</Button>
         <span class="terminal-state dim" aria-live="polite">
           {state === "idle" && "bereit"}
           {state === "connecting" && "verbinde…"}

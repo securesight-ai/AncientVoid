@@ -136,10 +136,37 @@ function normalize(rec: Record_, live?: LivePump): EmittedEvent[] {
     case "auto_compaction_end":
     case "compaction_start":
     case "compaction_end":
-      return [{ type: "system", summary: `pi: ${type}`, payload: { kind: `pi.${type}`, ...pick(rec, ["attempt", "maxAttempts", "success", "reason", "aborted"]), ...(typeof rec.errorMessage === "string" ? { errorMessage: rec.errorMessage.slice(0, 300) } : {}), ...(typeof rec.finalError === "string" ? { finalError: rec.finalError.slice(0, 300) } : {}) } }];
+      return [{ type: "system", summary: compactionSummary(type, rec), payload: { kind: `pi.${type}`, ...pick(rec, ["attempt", "maxAttempts", "success", "reason", "aborted"]), ...(typeof rec.errorMessage === "string" ? { errorMessage: rec.errorMessage.slice(0, 300) } : {}), ...(typeof rec.finalError === "string" ? { finalError: rec.finalError.slice(0, 300) } : {}) } }];
     default:
       return [unknown(type || "(ohne type)")];
   }
+}
+
+/**
+ * Nutzerfund 2026-11-23: im Chat standen nur `pi: compaction_start` /
+ * `pi: compaction_end` — elf mal in Folge, ohne Hinweis, dass jede dieser
+ * Compactions **fehlgeschlagen** hatte („generation hit the token cap and the
+ * summary is incomplete“). Der Grund steckt im Payload, den die Zeile nicht
+ * zeigt. Also: lesbare Zeile samt Grund und Folge — und ohne Beschönigung,
+ * dass der Kontext unverändert bleibt (sonst liest sich das wie Fortschritt).
+ */
+function compactionSummary(type: string, rec: Record_): string {
+  const grund = typeof rec.reason === "string" ? rec.reason : "";
+  if (type.endsWith("_start")) {
+    if (grund === "manual") return "pi: verdichtet den Kontext (von Hand ausgelöst)";
+    if (grund === "overflow") return "pi: verdichtet den Kontext (Kontext übervoll)";
+    return "pi: verdichtet den Kontext (Kontext an der Grenze)";
+  }
+  if (rec.aborted === true) return "pi: Verdichten abgebrochen";
+  const fehler = typeof rec.errorMessage === "string" ? rec.errorMessage : "";
+  if (fehler) {
+    if (/token cap|summary is incomplete/i.test(fehler)) {
+      return "pi: Verdichten fehlgeschlagen: die Zusammenfassung lief ins Antwort-Budget — Kontext unverändert, der nächste Zug versucht es erneut";
+    }
+    if (/too small/i.test(fehler)) return "pi: nichts zu verdichten — der Kontext ist noch klein";
+    return `pi: Verdichten fehlgeschlagen: ${fehler.slice(0, 160)}`;
+  }
+  return "pi: Kontext verdichtet";
 }
 
 /** ADR-0032: one event per model reply. The fill is what the request

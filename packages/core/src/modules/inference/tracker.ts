@@ -107,8 +107,9 @@ export function createInferenceTracker(
       return strataReading(assertStrataShape(JSON.parse(await hol(q.url)), q.url), deps.now().toISOString());
     }
     const promText = await hol(q.url);
-    // /health und /cache sind optional (ältere Halogen-Bauten, andere Engines).
-    const basis = q.url.replace(/\/$/, "");
+    // /health und /cache sind optional (ältere Halogen-Bauten, andere Engines)
+    // und liegen neben /metrics, nicht darunter.
+    const basis = q.url.replace(/\/$/, "").replace(/\/metrics$/, "");
     const extra = async (pfad: string): Promise<unknown> => {
       try {
         return JSON.parse(await hol(`${basis}${pfad}`));

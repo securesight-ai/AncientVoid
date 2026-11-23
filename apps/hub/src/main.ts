@@ -80,6 +80,7 @@ import { ExternalJobsService } from "./modules/automations/external-jobs.ts";
 import { createAiMetricsSampler, createInferenceTracker, createPforte, type AiMetricsSamplerServer, type InferenceEngineConfig, type InferenceTracker } from "@ancientvoid/core";
 import { StatisticsService } from "./modules/statistics/statistics.service.ts";
 import { createPermissionBridge } from "./modules/approvals/permission-bridge.ts";
+import { detectLocalShells, mergeLocalShells } from "./modules/terminal/local-shells.ts";
 
 // `dummy` used to be hardcoded here, always visible in every real hub's
 // adapter list/status rows regardless of whether anyone wanted it — real
@@ -582,12 +583,20 @@ async function main(): Promise<void> {
     // EPIC-P56 T56.3: Statistik-Rollup — hält die Fakten-Caches frisch und
     // liest sie für die Statistik-Seite (Journal bleibt Wahrheit, K7).
     statistics: new StatisticsService(db, sessions, team),
-    terminals: config.terminals.map((t) => ({
-      id: t.id,
-      label: t.label,
-      ...(t.ssh ? { ssh: t.ssh } : {}),
-      ...(t.local ? { local: true as const } : {}),
-    })),
+    terminals: [
+      ...config.terminals.map((t) => ({
+        id: t.id,
+        label: t.label,
+        ...(t.ssh ? { ssh: t.ssh } : {}),
+        ...(t.local ? { local: true as const } : {}),
+        ...(t.local && t.shell ? { shell: t.shell } : {}),
+      })),
+      // ADR-0087 Nachtrag 2026-11-23: installierte Shells des Hub-Hosts
+      // automatisch anbieten — config first, Duplikate überspringen.
+      ...(config.terminalAutodetect
+        ? mergeLocalShells(config.terminals, detectLocalShells())
+        : []),
+    ],
   });
 
   const listen = config.server.host === "127.0.0.1" && process.env.ANCIENTVOID_EXPOSE === "1"

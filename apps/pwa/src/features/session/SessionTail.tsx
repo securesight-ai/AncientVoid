@@ -67,6 +67,7 @@ import type { SlashCommand } from "../composer/slash.ts";
 import { SessionConfigure } from "./SessionConfigure.tsx";
 import { WorkplaceBadge } from "./WorkplaceBadge.tsx";
 import { QueueList } from "./QueueList.tsx";
+import { sessionRefFor } from "./tool-image.ts";
 import { PcOpenNotice } from "./PcOpenNotice.tsx";
 import { WorkspaceRuntimePane } from "../workspace/runtime/WorkspaceRuntimePane.tsx";
 import type { Page } from "../../app/Dock.tsx";
@@ -263,6 +264,13 @@ export function SessionTail({
 }) {
   // EPIC-P6: every call of this view goes to the session's own host.
   const api = useMemo(() => hostApi(session.hostId), [session.hostId]);
+  // Bildvorschau gelesener Bilder (Nutzerfund 2026-11-23): nur eigene Sitzungen,
+  // weil die Rohroute die Projektwurzel dieses Hubs braucht. Fremde Sitzungen
+  // zeigen deshalb keine Vorschau — auch keine falsche Fehlermeldung.
+  const sessionRef = useMemo(
+    () => sessionRefFor(session, remoteHost(session.hostId)),
+    [session.hostId, session.id, session.project],
+  );
   const [events, setEvents] = useState<NormalizedEvent[]>([]);
   // EPIC-P67 T67.8: Main-Sync-Stand der Session (N hinter main). null = kein
   // Stand (noch nicht geladen, kein Git/Remote oder direkter Modus) — dann
@@ -2542,6 +2550,7 @@ export function SessionTail({
                 <ChatTurns
                   key={session.id}
                   sessionId={session.id}
+                  sessionRef={sessionRef}
                   items={chatItems}
                   live={liveText}
                   expanded={expanded}
@@ -2613,6 +2622,7 @@ export function SessionTail({
                         event={e}
                         expanded={expanded.has(e.seq)}
                         onToggleExpand={() => toggleExpanded(e.seq)}
+                        sessionRef={sessionRef}
                         toolResult={
                           e.type === "tool_use"
                             ? toolResultByToolId.get(toolIdOf(e) ?? "")
@@ -2752,6 +2762,8 @@ export function SessionTail({
                       sessionId={session.id}
                       api={api}
                       refreshKey={queueTick}
+                      working={turnRunning}
+                      steerable={midTurnInput}
                     />
                   )}
                   {showReply &&

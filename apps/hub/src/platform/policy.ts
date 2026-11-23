@@ -85,6 +85,8 @@ export function operationOf(method: string, url: string, body: unknown): PolicyO
   // EPIC-P68: a revision proposal writes nothing — it is a rewrite call like enhance.
   if (path === "/api/skills/revise") return "prompt.enhance";
   if (path.startsWith("/api/attachments")) return "attachments.upload";
+  // Nur dieser Hub, nur von Hand: Bild aus dem lokalen Dateisystem holen.
+  if (path.startsWith("/api/local-files")) return "files.readLocal";
   if (path.startsWith("/api/settings") || path.startsWith("/api/vault") || path === "/api/push/enabled") return "settings.manage";
   if (path.startsWith("/api/push/")) return "push.subscribe";
   if (path === "/api/prompt-enhance" || path === "/api/prompt-recommendation" || path === "/api/prompt-optimizer/feedback") return "prompt.enhance";

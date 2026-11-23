@@ -46,6 +46,10 @@ function zaehler(text_: string): Record<string, number> {
   return out;
 }
 
+function rate(menge: number | null, sekunden: number | undefined): number | null {
+  return menge != null && sekunden != null && sekunden >= MIN_SECONDS && menge > 0 ? menge / sekunden : null;
+}
+
 function hole(families: Map<string, MetricFamily>, name: string): number | null {
   return gauge(families, name);
 }
@@ -60,8 +64,14 @@ export function promReading(
   const d = deltas(opts.prev, now);
   const hinweise: string[] = [];
 
-  const prompt = now.values["llamacpp:prompt_tokens_total"] ?? null;
+  const promptRaw = now.values["llamacpp:prompt_tokens_total"] ?? null;
   const cached = now.values["llamacpp:prompt_tokens_cached_total"] ?? now.values["halogen:prompt_tokens_cached_total"] ?? null;
+  // Halogens eigener Zähler `halogen:prompt_tokens_cached_total` steht NEBEN dem frisch gelesenen
+  // `prompt_tokens_total` (Live: 98 187 Token in 99 s Prefill, 3,3 Mio. wiederverwendet); der
+  // llama.cpp-Zähler ist dagegen Teil des Prompts. Sonst käme „gelesen“ negativ heraus.
+  const cachedIstZusatz = now.values["llamacpp:prompt_tokens_cached_total"] == null && now.values["halogen:prompt_tokens_cached_total"] != null;
+  const prompt = cachedIstZusatz && promptRaw != null && cached != null ? promptRaw + cached : promptRaw;
+  const gelesenGesamt = cachedIstZusatz ? promptRaw : prompt != null && cached != null ? prompt - cached : null;
   const output = now.values["llamacpp:tokens_predicted_total"] ?? null;
   const requests = kind === "halogen" ? (now.values["halogen:requests_total"] ?? null) : null;
 
@@ -70,11 +80,12 @@ export function promReading(
   let fenster: InferenceTotals["window"] = null;
   if (d) {
     const dCached = d.values["llamacpp:prompt_tokens_cached_total"] ?? d.values["halogen:prompt_tokens_cached_total"] ?? 0;
-    const gelesen = Math.max(0, (d.values["llamacpp:prompt_tokens_total"] ?? 0) - dCached);
+    const dPromptRaw = d.values["llamacpp:prompt_tokens_total"] ?? 0;
+    const gelesen = Math.max(0, cachedIstZusatz ? dPromptRaw : dPromptRaw - dCached);
     const dOut = d.values["llamacpp:tokens_predicted_total"] ?? 0;
     fenster = {
       seconds: d.seconds,
-      prompt: d.values["llamacpp:prompt_tokens_total"] ?? null,
+      prompt: d.values["llamacpp:prompt_tokens_total"] == null ? null : cachedIstZusatz ? dPromptRaw + dCached : dPromptRaw,
       read: gelesen,
       output: dOut,
       prefillTokS: gelesen >= MIN_READ && (d.values["llamacpp:prompt_seconds_total"] ?? 0) >= MIN_SECONDS
@@ -96,11 +107,13 @@ export function promReading(
         requests,
         prompt,
         reused: cached,
-        read: prompt != null && cached != null ? prompt - cached : null,
+        read: gelesenGesamt,
         output,
         reuseShare: anteil(cached, prompt),
-        avgPrefillTokS: fenster?.prefillTokS ?? null,
-        avgDecodeTokS: fenster?.decodeTokS ?? hole(families, "llamacpp:predicted_tokens_seconds"),
+        // Ø seit Engine-Start, wenn das Poll-Fenster leer ist (Leerlauf): der Momentwert-Gauge
+        // steht dann auf 0 und würde „0,0 tok/s“ als Durchschnitt vortäuschen.
+        avgPrefillTokS: fenster?.prefillTokS ?? rate(gelesenGesamt, now.values["llamacpp:prompt_seconds_total"]),
+        avgDecodeTokS: fenster?.decodeTokS ?? rate(output, now.values["llamacpp:tokens_predicted_seconds_total"]) ?? hole(families, "llamacpp:predicted_tokens_seconds"),
         draftAcceptShare: anteil(draftAcc, draftOff),
         expertHitRate: null,
         window: fenster,
@@ -109,10 +122,15 @@ export function promReading(
   const health = typeof opts.health === "object" && opts.health !== null ? (opts.health as Record<string, unknown>) : null;
   const cacheJson = typeof opts.cache === "object" && opts.cache !== null ? (opts.cache as Record<string, unknown>) : null;
 
+  const promptCache = typeof health?.prompt_cache === "object" && health.prompt_cache !== null ? (health.prompt_cache as Record<string, unknown>) : null;
+  // Halogen meldet die Version als { api, engine }, ältere Bauten als String.
+  const versionObj = typeof health?.version === "object" && health.version !== null ? (health.version as Record<string, unknown>) : null;
+
   const cache: InferenceCache = {
     ...EMPTY,
     hitRate: num(cacheJson?.hit_rate),
-    tokenHitRate: num(cacheJson?.tokenHit_rate),
+    tokenHitRate: num(cacheJson?.token_hit_rate),
+    budgetMib: num(promptCache?.cap_mb),
     savedTokens: now.values["halogen:cache_prompt_tokens_saved_total"] ?? null,
     entries: hole(families, "halogen:cache_entries"),
     bytes: hole(families, "halogen:cache_bytes"),
@@ -143,18 +161,18 @@ export function promReading(
 
   const engine: InferenceEngine = {
     model: text(health?.model),
-    version: text(health?.version) ?? text(health?.engine_version),
-    context: null,
+    version: text(versionObj?.engine) ?? text(health?.version) ?? text(health?.engine_version),
+    context: num(health?.slot_ctx) ?? num(health?.context),
     kvTokens: hole(families, "llamacpp:kv_cache_tokens"),
     kvResident: null,
     expertCacheMib: null,
-    maxContext: null,
+    maxContext: num(health?.context),
     kvQuant: null,
     expertSlots: null,
     expertsTotal: null,
     arenaMib: null,
-    batchSlots: null,
-    drafting: null,
+    batchSlots: num(health?.slots),
+    drafting: text(health?.drafter_default),
     spec: null,
     pcieFrac: null,
     poolWorkers: null,
