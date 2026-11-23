@@ -66,7 +66,8 @@ describe("BUG-0261: Pi oeffnet keinen zweiten Lauf auf dieselbe native Sitzung",
     const adapter = createAdapter({});
     let finish!: (code: number) => void;
     const worker = { ...laufenderProzess(), onExit: (cb: (code: number | null) => void) => { finish = cb; } };
-    const { promise, resolve } = Promise.withResolvers<WorkerProcess>();
+    let resolve!: (proc: WorkerProcess) => void;
+    const promise = new Promise<WorkerProcess>((complete) => { resolve = complete; });
     let spawns = 0;
     const ctx = makeRecordingContext({
       spawnWorker: () => ++spawns === 2 ? promise : Promise.resolve(worker),
