@@ -111,3 +111,68 @@ describe("BUG-0261: Pi oeffnet keinen zweiten Lauf auf dieselbe native Sitzung",
     expect(spawned).toHaveLength(2);
   });
 });
+
+/**
+ * Dieselbe Leitlinie in der RPC-Betriebsart: dort ist der Prozess langlebig,
+ * Lenken geht als Frame in ihn hinein — auch dann darf kein zweiter Pi-Prozess
+ * entstehen (ADR-0114).
+ */
+describe("BUG-0261 in RPC-Betriebsart: Lenken bleibt ein Prozess", () => {
+  it("lenkt im laufenden Zug durch denselben Prozess", async () => {
+    const adapter = createAdapter({ mode: "rpc" });
+    const gesendet: string[] = [];
+    let ereignis!: (zeile: string) => void;
+    const prozesse: number[] = [];
+    let kills = 0;
+    const ctx = makeRecordingContext({
+      spawnWorker: async () => {
+        prozesse.push(prozesse.length);
+        return {
+          onStdout: (cb) => { ereignis = cb; },
+          onStderr: () => undefined,
+          onExit: () => undefined,
+          write: (daten) => {
+            gesendet.push(String(daten));
+            // pi antwortet auf jeden Frame mit einer Quittung — sonst wartete
+            // der Adapter auf eine Antwort, die nie kommt.
+            for (const zeile of String(daten).split("\n").filter(Boolean)) {
+              const rahme = JSON.parse(zeile) as { id?: string; command?: string; type?: string };
+              if (rahme.id === undefined) continue;
+              // pi antwortet als eigene Zeile — das Rahmenformat ist LF.
+              ereignis(`${JSON.stringify({
+                type: "response",
+                id: rahme.id,
+                command: rahme.command ?? rahme.type,
+                success: true,
+                data: { sessionId: "pi-nativ", sessionFile: "/tmp/pi-nativ.jsonl" },
+              })}\n`);
+            }
+          },
+          kill: async () => { kills += 1; },
+          exited: () => new Promise<{ code: number | null }>(() => undefined),
+        };
+      },
+    });
+    const handle = await adapter.start({ adapter: "pi", project: process.cwd(), prompt: "erster Zug" }, ctx);
+    await new Promise<void>((complete) => setTimeout(complete, 10));
+    // pi meldet den Lauf — wieder als LF-umrahmte Zeile.
+    ereignis(`${JSON.stringify({ type: "agent_start" })}\n`);
+
+    const ack = await adapter.steer(handle, { kind: "prompt", text: "lenke mitten im Zug" }, ctx);
+    expect(ack.ok).toBe(true);
+    expect(gesendet.some((zeile) => zeile.includes('"type":"steer"'))).toBe(true);
+    expect(gesendet.some((zeile) => zeile.includes('"type":"prompt"'))).toBe(true);
+    // Der Nachweis, um den es geht: genau ein Pi-Prozess.
+    expect(prozesse).toHaveLength(1);
+
+    await adapter.stop(handle, ctx);
+    // Abbruch zuerst im Prozess (`abort`), dann die Keule — und es war immer einer.
+    expect(gesendet.some((zeile) => zeile.includes('"type":"abort"'))).toBe(true);
+    expect(kills).toBeGreaterThan(0);
+  });
+
+  it("sichert Mid-Turn-Eingabe nur in der RPC-Betriebsart zu", () => {
+    expect(createAdapter({ mode: "rpc" }).capabilities().midTurnInput).toBe(true);
+    expect(createAdapter({}).capabilities().midTurnInput).not.toBe(true);
+  });
+});

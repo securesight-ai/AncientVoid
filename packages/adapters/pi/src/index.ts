@@ -18,6 +18,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { contextWindowFor, modelsFromCommand, parseModelTable } from "@ancientvoid/models";
 import { createPiStream } from "./normalize.ts";
+import { createPiRpc } from "./rpc.ts";
 import { createLivePump } from "@ancientvoid/contracts"; // ADR-0083
 import { findSessionFile, isSessionId, readTranscript } from "./transcript.ts";
 
@@ -54,6 +55,12 @@ const PiConfig = z.object({
   modelsCommand: z.array(z.string().min(1)).min(1).optional(),
   /** ADR-0041: where pi keeps its session files (adoption looks sessions up here). Default: pi's own. */
   sessionsDir: z.string().min(1).optional(),
+  /** Zug um Zug (`pi -p`) oder ein langlebiger Steuerprozess (`pi --mode rpc`).
+   * RPC ist der Weg, der Lenken mitten im Zug erlaubt, ohne je einen
+   * Zweitprozess auf dieselbe native Session zu öffnen (BUG-0261). Voreinstellung
+   * bleibt `oneshot`, bis der Live-Nachweis auf einem echten Hub erbracht ist —
+   * so ist der Rückfall eine Zeile in hub.config.json, kein Rückbau. */
+  mode: z.enum(["oneshot", "rpc"]).default("oneshot"),
 });
 
 /** ADR-0041: start arguments of an adoption (set by the hub, never by the person). */
@@ -84,6 +91,98 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
   /** ADR-0041: an adopted session is addressed by its file (`pi --session <path>` also finds other projects'
    * sessions, an id does not); a fork uses `--fork` for its first turn only. */
   const resumes = new Map<string, { file: string; fork: boolean }>();
+
+  /**
+   * BUG-0261 (Nachweis 2026-11-23): Lenken war bei Pi ein **zweiter**
+   * `pi -p --session <dieselbe Datei>` — drei solcher Prozesse schrieben
+   * gleichzeitig ins Arbeitsverzeichnis. pi bietet für genau diesen Fall einen
+   * Steuerkanal: `pi --mode rpc` (docs/rpc.md) nimmt `prompt`, `steer`,
+   * `follow_up` und `abort` als JSONL auf stdin. Ein Prozess pro Session, viele
+   * Züge, Lenkung wirkt nach dem laufenden Tool-Aufruf vor dem nächsten
+   * Modell-Aufruf (im pi-Eigentest gemessen: `queue_update` mitten im
+   * `tool_execution_update`, Antwort `disposition: "queued"`).
+   */
+  interface PiWorker {
+    proc: WorkerProcess;
+    rpc: ReturnType<typeof createPiRpc>;
+    running: boolean;
+  }
+  const arbeiter = new Map<string, PiWorker>();
+
+  function rpcArgs(model: string | undefined, resume?: { file: string; fork: boolean }): string[] {
+    const args = [cfg.command, "--mode", "rpc"];
+    if (resume) args.push(resume.fork ? "--fork" : "--session", resume.file);
+    if (model) args.push("--model", model);
+    return [...args, ...cfg.extraArgs];
+  }
+
+  /** Ein Steuerprozess für eine Session: starten, Protokoll an den Hub hänken,
+   * die native Session-Datei festhalten (für /compact, Übernahme, Fortsetzen). */
+  async function startWorker(sessionId: string, ctx: AdapterContext, meta: SessionMeta, model: string | undefined): Promise<PiWorker> {
+    const proc = await ctx.spawnWorker(rpcArgs(model, resumes.get(sessionId)), { stdin: "pipe", persistent: true });
+    return steuereProzess(sessionId, ctx, meta, proc);
+  }
+
+  /** Hängt einen Steuerprozess an die Session — egal ob frisch gestartet oder nach
+   * einem Hub-Neustart überlebt. Nur hier wird das JSONL-Gespräch geführt. */
+  async function steuereProzess(sessionId: string, ctx: AdapterContext, meta: SessionMeta, proc: WorkerProcess): Promise<PiWorker> {
+    const live = ctx.stream ? createLivePump((f) => ctx.stream?.(f)) : undefined;
+    const strom = createPiStream(live);
+    const worker: PiWorker = { proc, running: false, rpc: undefined as unknown as ReturnType<typeof createPiRpc> };
+    const rpc = createPiRpc(proc, (record) => {
+      // Zugrahmen: ein persistenter Prozess endet nicht pro Zug, also meldet der
+      // Adapter sie selbst (contracts: ctx.turn für persistente Worker). pi sagt
+      // `agent_start` und `agent_settled` — letzteres heißt: pi macht von allein
+      // weiter mit nichts (docs/rpc.md), genau die Zuggrenze.
+      if (record.type === "agent_start") {
+        worker.running = true;
+        ctx.turn?.("working");
+      }
+      if (record.type === "agent_settled") {
+        worker.running = false;
+        ctx.turn?.("idle");
+      }
+      for (const event of strom.push(`${JSON.stringify(record)}\n`)) ctx.emit(event);
+    });
+    worker.rpc = rpc;
+    let fehlerText = "";
+    proc.onStderr((chunk: string) => {
+      fehlerText = (fehlerText + chunk).slice(-2000);
+      ctx.log("warn", "pi stderr", { chunk: chunk.slice(0, 500) });
+    });
+    proc.onExit((code: number | null) => {
+      meta.busy = false;
+      for (const event of strom.end()) ctx.emit(event);
+      live?.close();
+      if (code !== 0 && code !== null && fehlerText.trim()) ctx.emit(providerErrorEvent("pi", fehlerText.trim()));
+      ctx.emit({ type: "system", summary: "pi: Steuerprozess beendet", payload: { kind: "pi.worker_end", code: code ?? 0 } });
+      if (procs.get(sessionId) === proc) procs.delete(sessionId);
+      if (arbeiter.get(sessionId) === worker) arbeiter.delete(sessionId);
+    });
+    arbeiter.set(sessionId, worker);
+    procs.set(sessionId, proc);
+    meta.healthy = true;
+    settleFork(sessionId);
+    const zustand = await rpc.request("get_state", undefined, 8_000);
+    if (zustand.success && zustand.data && typeof zustand.data === "object") {
+      const d = zustand.data as { sessionId?: unknown; sessionFile?: unknown; isStreaming?: unknown };
+      worker.running = d.isStreaming === true;
+      if (typeof d.sessionId === "string" && d.sessionId) {
+        ctx.emit({
+          type: "system",
+          summary: "pi: Session gestartet",
+          payload: {
+            kind: "pi.session",
+            piSessionId: d.sessionId,
+            nativeSessionId: d.sessionId,
+            ...(typeof d.sessionFile === "string" ? { sessionFile: d.sessionFile } : {}),
+          },
+        });
+        if (!resumes.get(sessionId) && typeof d.sessionFile === "string") resumes.set(sessionId, { file: d.sessionFile, fork: false });
+      }
+    }
+    return worker;
+  }
 
   function buildArgs(prompt: string, model: string | undefined, first: boolean, resume?: { file: string; fork: boolean }): string[] {
     // pi -p hangs when stdin is a TTY (hub workers run under tmux) — route
@@ -153,15 +252,17 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
     },
 
     capabilities(): AdapterCapabilities {
+      const steuern = cfg.mode === "rpc";
       return {
-        promptDelivery: "next-turn",
+        promptDelivery: steuern ? "live" : "next-turn",
         // BUG-0261: Pi sicherte `midTurnInput: true` zu (ADR-0085) mit der Begruendung
         // „jeder Lenk-Aufruf ist ein eigener Lauf“. Genau dieser eigene Lauf ist ein
         // **zweiter Prozess auf dieselbe native Session** — gemessen 2026-11-23: drei
         // `pi -p --session <dieselbe Datei>` gleichzeitig, die sich im Arbeitsverzeichnis
         // gegenseitig überschrieben. Was ADR-0074 für Claude & Co. verbietet, galt bei
-        // Pi nur wegen einer falschen Zusicherung. Lenken heißt bei Pi: im nächsten Zug.
-        midTurnInput: false,
+        // Pi nur wegen einer falschen Zusicherung. Im RPC-Modus entfällt der Grund:
+        // ein Prozess, die Meldung kommt auf dem Steuerkanal an (`steer`/`prompt`).
+        midTurnInput: steuern,
         commands: [{ name: "/compact", description: "Pi-Kontext der aktuellen Session komprimieren", scope: "steer" }],
         reasoning: true,
         tools: true,
@@ -236,6 +337,23 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
           payload: { kind: "pi.model", model, ...(window !== undefined ? { contextWindowTokens: window } : {}) },
         });
       }
+      if (cfg.mode === "rpc") {
+        // Ohne Prompt kein Prozess: ein Steuerprozess ohne erste Meldung würde nur
+        // auf Eingabe warten und die Session auf `working` halten (e2e-Fund bei
+        // Claude, 2026-11-20). Der nächste Lenk-Aufruf spawnt.
+        if (!spec.prompt?.trim()) {
+          const modelOhneZug = spec.model ?? cfg.model;
+          if (modelOhneZug) sessionModels.set(ctx.sessionId, modelOhneZug);
+          return { sessionId: ctx.sessionId };
+        }
+        const arbeiterNeu = await startWorker(ctx.sessionId, ctx, meta, model);
+        arbeiterNeu.running = true;
+        arbeiterNeu.rpc.send({ type: "prompt", message: spec.prompt });
+        return {
+          sessionId: ctx.sessionId,
+          ...(arbeiterNeu.proc.pid !== undefined ? { pid: arbeiterNeu.proc.pid } : {}),
+        };
+      }
       const proc = await ctx.spawnWorker(
         buildArgs(spec.prompt ?? "(Session startet — bitte bestätigen mit OK)", model, true, resumes.get(ctx.sessionId)),
         spec.env ? { env: spec.env } : undefined,
@@ -253,6 +371,26 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
         case "prompt": {
           const meta = sessions.get(handle.sessionId);
           if (!meta) return { ok: false, detail: "pi: unbekannte Session" };
+          if (cfg.mode === "rpc") {
+            const arbeiterBestehend = arbeiter.get(handle.sessionId);
+            const ziel = arbeiterBestehend ?? (await startWorker(handle.sessionId, ctx, meta, sessionModels.get(handle.sessionId)));
+            if (isCompactionCommand(input.text)) {
+              if (input.text.trim() !== "/compact" || input.attachments?.length) {
+                return { ok: false, detail: "pi: /compact nimmt keine Argumente oder Anhänge an" };
+              }
+              const kompakt = await ziel.rpc.request("compact", undefined, 120_000);
+              return kompakt.success ? { ok: true } : { ok: false, detail: `pi: /compact — ${kompakt.error ?? "abgelehnt"}` };
+            }
+            if (input.attachments?.length) {
+              return { ok: false, detail: "pi: Anhänge im Steuerprozess noch nicht möglich — bitte Pfad oder URL im Text nennen" };
+            }
+            // Läuft ein Zug, ist die Meldung eine **Lenkung**: pi stellt sie nach dem
+            // laufenden Tool-Aufruf vor den nächsten Modell-Aufruf (pi docs/rpc.md).
+            // Zwischendrin ist es ein normaler Prompt im selben Prozess.
+            ziel.rpc.send(ziel.running ? { type: "steer", message: input.text } : { type: "prompt", message: input.text });
+            meta.busy = true;
+            return { ok: true };
+          }
           // BUG-0261: reserve the session before awaiting a process spawn.
           if (meta.busy) {
             ctx.log("warn", "pi: Prompt abgelehnt — ein Lauf läuft bereits", { sessionId: handle.sessionId });
@@ -291,6 +429,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
           await adapter.stop(handle, ctx);
           return { ok: true };
         case "park": {
+          await arbeiter.get(handle.sessionId)?.proc.kill("SIGTERM");
           await procs.get(handle.sessionId)?.kill("SIGTERM");
           return { ok: true };
         }
@@ -317,14 +456,28 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       // BUG-0209: pi läuft one-shot je Zug. Der Hub muss wissen, ob der Worker des offenen
       // Zugs den Neustart überlebt hat — sonst stand die Session ewig auf `working`, obwohl
       // niemand mehr lief (kein Adoptions-Ergebnis → adopted=false → Zug wird unterbrochen).
-      const proc = (await ctx.adoptWorker?.()) ?? null;
+      const proc = (await ctx.adoptWorker?.(cfg.mode === "rpc" ? { persistent: true } : undefined)) ?? null;
       const meta: SessionMeta = { healthy: true, busy: proc !== null };
       sessions.set(sessionId, meta);
-      if (proc) attach(ctx, proc, meta);
+      if (proc) {
+        // RPC-Sitzung: der überlebende Prozess redet JSONL. Ihn wie einen
+        // One-Shot-Lauf anhängen würde sein Protokoll missverstehen — und
+        // Lenken wäre nach dem Neustart tot.
+        if (cfg.mode === "rpc") await steuereProzess(sessionId, ctx, meta, proc);
+        else attach(ctx, proc, meta);
+      }
       return { sessionId, ...(proc?.pid !== undefined ? { pid: proc.pid } : {}) };
     },
 
-    async stop(handle: SessionHandle): Promise<void> {
+    async stop(handle: SessionHandle, ctx: AdapterContext): Promise<void> {
+      const steuernd = arbeiter.get(handle.sessionId);
+      if (steuernd) {
+        // pi docs/rpc.md: `abort` bricht ab **und wartet**, bis die Sitzung leerläuft.
+        const abbruch = await steuernd.rpc.request("abort", undefined, 20_000);
+        if (!abbruch.success) ctx.log("warn", "pi: abort fehlgeschlagen", { detail: abbruch.error ?? "" });
+        await steuernd.proc.kill("SIGTERM");
+        arbeiter.delete(handle.sessionId);
+      }
       await procs.get(handle.sessionId)?.kill("SIGTERM");
       procs.delete(handle.sessionId);
       sessions.delete(handle.sessionId);

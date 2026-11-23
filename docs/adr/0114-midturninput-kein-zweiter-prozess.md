@@ -73,3 +73,22 @@ eines laufenden Zug wird abgelehnt und erzeugt **keinen** zweiten Spawn
 möglich. Rot zuerst (3/3 fehlgeschlagen), nach dem Fix grün. Der
 Fork-Test in `adoption.test.ts` endet jetzt sauber zwischen den Zügen —
 genau so ruft der Hub den Adapter an.
+
+## Nachtrag (2026-11-23, PR #357): der Mechanismus ohne Zweitprozess ist da
+
+Die Leitlinie dieses ADR bleibt unverändert — `midTurnInput: true` nur mit
+`promptDelivery: "live"` und **ohne** zweiten Prozess auf dieselbe native Session.
+Pi erfüllt beides jetzt über `pi --mode rpc` (ADR-0116): ein Prozess pro Sitzung,
+Eingaben als JSONL auf stdin, `steer`/`follow_up`/`abort` als Frames. Damit ist
+`midTurnInput: true` für pi zulässig, solange `adapters.pi.config.mode = "rpc"`
+gesetzt ist; mit `mode: "oneshot"` (Standard) gilt weiter die alte Zurückhaltung.
+
+Drei Regeln, die der RPC-Weg einhalten muss (Tests in
+`packages/adapters/pi/test/rpc-adapter.test.ts` und
+`keine-parallelen-laeufe.test.ts`):
+
+1. Ein Zug, ein Prozess: Lenken schreibt in den laufenden Prozess, es spawnet nie.
+2. Zugrahmen meldet der Adapter (`ctx.turn`) — ein persistenter Prozess endet nicht
+   pro Zug, `turn_end` an der Prozess-Keule wäre falsch.
+3. Nach einem Hub-Neustart wird der überlebende Prozess als RPC-Prozess
+   übernommen, nicht an den One-Shot-Parser gehängt.
