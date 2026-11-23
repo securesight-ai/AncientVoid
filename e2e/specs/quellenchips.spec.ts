@@ -85,7 +85,12 @@ test("Quellensprung per Tastatur bewahrt Entwurf und Verbindung, Popout teilt Qu
   for (let i = 0; i <= sourceIndex; i++) await command.press("ArrowDown");
   await expect(source).toHaveAttribute("aria-selected", "true");
   await command.press("Enter");
-  if (await showControls.isVisible()) await showControls.click();
+  // EPIC-P20 T20.1: Der Sprung wechselt auf den Code-Lesetab — dessen Steuerung
+  // startet eingeklappt. Erst den Sprung selbst abwarten (URL), dann für den
+  // Entwurf aufklappen; einmalige isVisible-Proben liefen sonst in den Umstieg.
+  await expect(app).toHaveURL(/\/code\/README\.md/);
+  await expect(showControls).toBeVisible();
+  await showControls.click();
   await expect(reply).toHaveValue("Entwurf behalten");
   expect(connections).toBe(before);
   await expect(app.getByTestId("source-chips")).toBeVisible();

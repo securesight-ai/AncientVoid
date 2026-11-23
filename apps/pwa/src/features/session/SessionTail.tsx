@@ -837,6 +837,16 @@ export function SessionTail({
     if (tab === "chat") setFilter("lesen");
     if (tab === "verlauf") setFilter(lastVerlaufFilter);
   };
+  // EPIC-P43.5: Der Key der Kachel ist die Session — Sprünge innerhalb derselben
+  // Session (datei→code) wechseln nur das Ziel der Karte, ohne Remount. Verbindung
+  // (WS) und Entwurf bleiben; der Tab folgt der Kartenreferenz direkt, ohne das
+  // openWorkspaceContent-Echo (das Grid hat den Wechsel bereits vollzogen).
+  useEffect(() => {
+    if (workspaceTab) setActiveTab(workspaceTab);
+  }, [workspaceTab, initialFile, initialCode?.path, initialCode?.line]);
+  useEffect(() => {
+    if (initialFile != null) setOpenFile(initialFile);
+  }, [initialFile]);
   const showChatTab = () => selectTab("chat");
   const showVerlaufTab = () => selectTab("verlauf");
   const showBerichtTab = () => selectTab("bericht");
