@@ -89,6 +89,14 @@ export type SearchIndexState = z.infer<typeof SearchIndexState>;
 export const SessionSearchMode = z.enum(["and", "teil", "or", "typo"]);
 export type SessionSearchMode = z.infer<typeof SessionSearchMode>;
 
+/** Ähnliches Wort aus dem Bestand mit mehr Fundstellen als der eingegebene
+ * Begriff — die Antwort auf „ich finde nichts“, obwohl man tippt. */
+export const SessionSearchSuggestion = z.object({
+  term: z.string(),
+  count: z.number().int().nonnegative(),
+});
+export type SessionSearchSuggestion = z.infer<typeof SessionSearchSuggestion>;
+
 export const SessionTextSearchResponse = z.object({
   status: z.literal("ready"),
   query: z.string(),
@@ -96,6 +104,8 @@ export const SessionTextSearchResponse = z.object({
   mode: SessionSearchMode,
   /** Bei `mode: "typo"`: die Wörter, nach denen wirklich gesucht wurde. */
   corrected: z.array(z.string()).optional(),
+  /** Vorschläge samt ihrer Fundstellenzahl (`count > total`). */
+  suggest: z.array(SessionSearchSuggestion).max(3).optional(),
   index: SearchIndexState,
   hits: z.array(SessionTextHit).max(TranscriptQueryLimits.maxLimit),
   /** Fundstellen insgesamt (über `limit` hinaus) — „mehr laden“ ist ehrlich. */
@@ -156,6 +166,8 @@ export const UnifiedSearchResponse = z.object({
   mode: SessionSearchMode,
   /** Bei `mode: "typo"`: die Wörter, nach denen wirklich gesucht wurde. */
   corrected: z.array(z.string()).optional(),
+  /** Vorschläge samt ihrer Fundstellenzahl (`count > total`). */
+  suggest: z.array(SessionSearchSuggestion).max(3).optional(),
   /** Was tatsächlich gelaufen ist — `all` antwortet mit beiden Teilen. */
   scope: z.enum(["all", "docs", "sessions"]),
   sessions: z.array(SessionTextHit).max(TranscriptQueryLimits.maxLimit),
