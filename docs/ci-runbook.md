@@ -46,7 +46,13 @@ Links auf `gitlab.com/SiLenT_Tz/…` zeigen auf das private Archiv.
 | `e2e-shards` + `e2e` (`nightly.yml`) | Playwright Chromium gegen einen echten Hub, danach Skip-Bericht (4 Shards parallel, Browser-Cache); der Aggregations-Job `e2e` fasst die Shard-Berichte nach denselben Regeln zusammen (fehlender Bericht, null Tests, Failures — `scripts/ci-e2e-aggregate.mjs`) | `npm run test:e2e` |
 
 Der PR-Gate läuft auf jedem PR (auch reine Doku- und Dependabot-PRs);
-`pipeline-sync.yml` aktualisiert nach Pushes auf `main` den Zweig `ci/full-suite` per Fast-forward (keine eigenen Commits auf diesem Zweig).
+`dependabot-automerge.yml` stellt auf jedem Dependabot-PR mit **Patch-/Minor**-Bump
+Auto-Merge ein (Merge-Commit, Branch weg) — der Merge feuert erst, wenn der
+Ruleset `main-gate` den grünen `verify` sieht; rote PRs bleiben offen und
+sichtbar. **Major-Bumps** mergt bewusst niemand automatisch: API-Brüche deckt
+nur die volle Messlatte im Nightly auf, und Exaktpins (z. B. `typescript`)
+gehen solche Bumps gar nicht erst ein. Security-Advisories übersteuern nicht —
+auch sie laufen durch den PR-Gate (2026-11-24).
 Die vollen Läufe (`nightly.yml`) laufen um 03:00/15:00 UTC und per
 `workflow_dispatch`; alle Jobs prüfen denselben beim Start festgehaltenen SHA.
 Dafür wartet `prepare` bis zu 90 s, bis `ci/full-suite` dem main-HEAD entspricht
