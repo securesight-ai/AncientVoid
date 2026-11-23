@@ -56,7 +56,7 @@ export function vaultFileHash(path: string): string {
 }
 
 /** BUG-0257: der Metrik-/Inferenz-Reiter der Analyse-Seite — `#/statistik/<tab>`. */
-export function statTabHash(tab: "metriken" | "inferenz"): string {
+export function statTabHash(tab: "hosts" | "metriken" | "inferenz"): string {
   return `#/statistik/${tab}`;
 }
 
@@ -114,7 +114,7 @@ export function redirectLegacyStatHash(hash: string): string | null {
 }
 
 export type AppRoute =
-  | { view: "list"; page: ListPage; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" }
+  | { view: "list"; page: ListPage; vaultFile?: string; vaultTab?: "wissen"; statTab?: "hosts" | "metriken" | "inferenz" }
   | { view: "tail"; sessionId: string; hostId?: string; code?: CodeTarget; tab?: TailTab; file?: string; browser?: true; attachment?: string; seq?: number }
   | { view: "attachment"; attachmentId: string }
   | { view: "devices" }
@@ -139,8 +139,8 @@ export function parseAppHash(hash: string): AppRoute {
   // BUG-0128: Fenster-Route der Datei-Seitenleiste — vor dem Slug-Match prüfen.
   if (/^#\/dateibaum\/?$/.test(hash)) return { view: "filetree" };
   // BUG-0257: Reiter der Analyse-Seite vor dem Slug-Match prüfen (Pfad-Segmente!).
-  const statTab = /^#\/statistik\/(metriken|inferenz)\/?$/.exec(hash);
-  if (statTab?.[1]) return { view: "list", page: "statistics", statTab: statTab[1] as "metriken" | "inferenz" };
+  const statTab = /^#\/statistik\/(hosts|metriken|inferenz)(?:\/[^/]*)?\/?$/.exec(hash);
+  if (statTab?.[1]) return { view: "list", page: "statistics", statTab: statTab[1] as "hosts" | "metriken" | "inferenz" };
   // BUG-0257: unbekannter Reiter unter #/statistik/… fällt auf die Seite selbst zurück.
   if (/^#\/statistik(\/|$)/.test(hash)) return { view: "list", page: "statistics" };
   // EPIC-P74 T74.6 / BUG-0275: Wissen-Tab vor den Datei- und Slug-Matches

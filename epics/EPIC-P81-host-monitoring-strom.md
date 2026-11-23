@@ -148,8 +148,8 @@ Jeder Hub speichert nur sich selbst, der Home-Hub zusätzlich das NAS.
 - [x] **T81.7** Routen, `FLEET_ROUTABLE`, Peer-Zusammenführung; Alt-Hub meldet sich als
   „Version zu alt“ statt leer. **K5/K9**
 - [x] **T81.8** NAS-Sammler per SSH. **K9**
-- [ ] **T81.9** Chart-Bausteine und Tokens, Design-System-Doku.
-- [ ] **T81.10** Reiter „Hosts“ mit Detailseite, E2E `host-monitoring.spec.ts`. **K10**
+- [x] **T81.9** Chart-Bausteine und Tokens, Design-System-Doku.
+- [x] **T81.10** Reiter „Hosts“ mit Detailseite, E2E `host-monitoring.spec.ts`. **K10**
 - [ ] **T81.11** Reiter Metriken und Inferenz auf die Bausteine; bestehende Specs grün.
 - [ ] **T81.12** Reiter Statistik überarbeiten; Filter-/Klapp-Zustand (P66) bleibt. **K10**
 - [ ] **T81.13** Roll-out auf drei Hubs (evox2 läuft unter anderem Benutzer: Nutzer nötig), `docs/host-monitoring.md`, Guide-Inventar,

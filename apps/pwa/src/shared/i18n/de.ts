@@ -6,6 +6,7 @@ import { de as notifications } from "./de/notifications.ts";
 import { de as common } from "./de/common.ts";
 import { de as features } from "./de/features.ts";
 import { de as inference } from "./de/inference.ts";
+import { de as hosts } from "./de/hosts.ts";
 
 export const de = {
   ...dock,
@@ -13,6 +14,7 @@ export const de = {
   ...common,
   ...features,
   ...inference,
+  ...hosts,
 
   "settings.language.title": "Sprache",
   "settings.language.hint": "Gerät-Einstellung; folgt dem System beim ersten Start. Ein Wechsel lädt neu — Entwürfe bleiben erhalten.",
