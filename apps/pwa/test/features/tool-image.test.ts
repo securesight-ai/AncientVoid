@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toolImageRef, sessionRefFor } from "../../src/features/session/tool-image.ts";
+import { toolImageRef, toolImageHits, sessionRefFor } from "../../src/features/session/tool-image.ts";
 import type { NormalizedEvent } from "../../src/shared/ws.ts";
 
 const sitzung = { id: "s1", project: "/home/kaib/repos/AncientVoid" };
@@ -54,5 +54,50 @@ describe("Bildvorschau für gelesene Bilder (Nutzerfund 2026-11-23)", () => {
     expect(sessionRefFor({ ...eigene, hostId: "kaisgamingdesk" }, "kaisgamingdesk")).toBeUndefined();
     expect(sessionRefFor({ id: "s1", hostId: "cachyos-ai" }, null)).toBeUndefined();
     expect(sessionRefFor(undefined, null)).toBeUndefined();
+  });
+});
+
+/** Nutzerfund 23.11.2026: eine Shell-Ausgabe nannte Bildnamen als Text
+ * (`neonsunset_shot1.png 200 65140 …`) — im Chat führte kein Weg zu den Dateien. */
+function schale(befehl: string): NormalizedEvent {
+  return { type: "tool_use", payload: { id: "call_9", name: "bash", input: { command: befehl } } } as unknown as NormalizedEvent;
+}
+
+describe("Bildvorschläge aus Shell-Ausgaben", () => {
+  it("Dateinamen in der Ausgabe werden zu Sitzungs-Zielen (relativ zum Arbeitsverzeichnis)", () => {
+    const treffer = toolImageHits(schale("for f in *.png; do printf '%s %s\\n' \"$f\" $(wc -c < \"$f\"); done"), ergebnis("neonsunset_shot1.png 200 65140\r\nneonsunset_shot2.png 200 58564\r\nneonbay_shot1.png 200 61989\n"), sitzung);
+    expect(treffer.direkt).toEqual([]);
+    expect(treffer.vorschlaege.map((b) => b.name)).toEqual(["neonsunset_shot1.png", "neonsunset_shot2.png", "neonbay_shot1.png"]);
+    expect(treffer.vorschlaege[0]).toMatchObject({ target: "session=s1", path: "neonsunset_shot1.png" });
+  });
+
+  it("Pfade mit Ordner bleiben erhalten, absolute Pfade im Projekt werden umgewurzelt", () => {
+    const treffer = toolImageHits(schale("ls"), ergebnis("docs/skaleneu/webp/banner.webp\n/home/kaib/repos/AncientVoid/e2e/fixtures/shot.jpg"), sitzung);
+    expect(treffer.vorschlaege.map((b) => `${b.target} ${b.path}`)).toEqual([
+      "session=s1 docs/skaleneu/webp/banner.webp",
+      "project=%2Fhome%2Fkaib%2Frepos%2FAncientVoid e2e/fixtures/shot.jpg",
+    ]);
+  });
+
+  it("unauflösbares Zeug fliegt raus: URLs, Egg-dirs, mehr als sechs Vorschläge", () => {
+    const text = ["https://cdn.example.de/bild.png", "../geheim/oben.png", ".git/objects/blobs/paket.png", "a.png", "b.png", "c.png", "d.png", "e.png", "f.png", "g.png"].join("\n");
+    const treffer = toolImageHits(schale("liste"), ergebnis(text), sitzung);
+    expect(treffer.vorschlaege.map((b) => b.path)).toEqual(["a.png", "b.png", "c.png", "d.png", "e.png", "f.png"]);
+  });
+
+  it("nur Schalen-Werkzeuge schlagen vor — ein grep oder read-listet keine Bilder", () => {
+    const treffer = toolImageHits({ type: "tool_use", payload: { id: "c", name: "grep", input: {} } } as unknown as NormalizedEvent, ergebnis("styles/banner.png:1"), sitzung);
+    expect(treffer.vorschlaege).toEqual([]);
+  });
+
+  it("ein gelesenes Bild bleibt Vorschau (direkt) und taucht nicht doppelt auf", () => {
+    const e = nutzung({ path: "/home/kaib/repos/AncientVoid/data/attachments/12033b.png" });
+    const treffer = toolImageHits(e, ergebnis("Read image file [image/png][image] 12033b.png"), sitzung);
+    expect(treffer.direkt.map((b) => b.name)).toEqual(["12033b.png"]);
+    expect(treffer.vorschlaege).toEqual([]);
+  });
+
+  it("ohne eigene Sitzung gibt es nichts zu zeigen", () => {
+    expect(toolImageHits(schale("ls"), ergebnis("bild.png"), undefined)).toEqual({ direkt: [], vorschlaege: [] });
   });
 });
