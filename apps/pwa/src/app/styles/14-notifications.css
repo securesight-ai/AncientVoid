@@ -292,10 +292,12 @@
  * nichts wird verdeckt. 44 px: größer als die umliegenden Icons/Chips
  * (zuvor 36 px), damit sie heraussticht. */
 .notif-bell.flow {
-  /* BUG-0256: relativ statt static — sonst verankert die absolut positionierte
-   * `.notif-count` am nächsten positionierten Vorfahren (sticky Topbar) und
-   * hängt sichtbar über der Glocke bis über den Viewport-Rand. */
-  position: relative;
+  /* BUG-0256: contain:layout macht die Glocke zum Containing-Block der absolut
+   * positionierten `.notif-count` (vorher verankerte sie am sticky Topbar und
+   * hing 227 px ueber der Glocke, y=-4) — ohne position:relative, das die
+   * Zoom-Geometrie des Benachrichtigungs-Panels verschiebt (P50-Nachtest). */
+  position: static;
+  contain: layout;
   width: 44px;
   height: 44px;
   font-size: var(--text-lg);
