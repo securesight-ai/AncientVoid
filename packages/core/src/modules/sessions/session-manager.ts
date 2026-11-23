@@ -12,7 +12,7 @@ import type { EventStore } from "../../platform/index.ts";
 import type { AdapterRegistry } from "../harness/index.ts";
 import type { HubDatabase } from "../../platform/index.ts";
 import type { WorktreeBaseChoice, WorktreeManager } from "../workspace/index.ts";
-import { MainSyncEngine, resolveMainBranch, fetchMainBranch, classifyFetchError } from "../workspace/index.ts";
+import { MainSyncEngine, resolveMainBranch, fetchMainBranch, classifyFetchError, originRemoteUrl } from "../workspace/index.ts";
 import type { MainSyncCandidate } from "../workspace/index.ts";
 import { WorkspaceRuntime, ManifestApprovalStore, ServiceSupervisor, CheckoutLeaseStore, canonicalCheckout, checkoutState, foldWorkspaceState, gateManifest, resolveManifest } from "../workspace/index.ts";
 import { refuseSpec, refuseSteer } from "../harness/index.ts";
@@ -1214,6 +1214,13 @@ export class SessionManager {
     if ("error" in targets) throw new Error(targets.error);
     const { session } = targets;
     const settings = await this.mainSyncSettingsFor(session.record.project);
+    // BUG-0260: „kein Haupt-Fern“ ist eine benannte Lage, kein Fehler. Stufe 1
+    // (worktree.ts) behandelt sie schon so — hier durfte die Sessions-Akte
+    // trotzdem mit `main_sync_failed` vollgemuellert werden, weil der Fetch
+    // unbedingt versucht wurde.
+    if ((await originRemoteUrl(session.record.project)) === null) {
+      throw new Error(`Main-Sync nicht moeglich: Projekt ${session.record.project} hat kein Haupt-Fern 'origin'`);
+    }
     const branch = await resolveMainBranch(session.record.project, settings);
     const engine = new MainSyncEngine();
     try {
@@ -1259,6 +1266,11 @@ export class SessionManager {
       return skipped;
     }
     const settings = await this.mainSyncSettingsFor(session.record.project);
+    // BUG-0260: ohne Haupt-Fern gibt es nichts anzuwenden — gleicher Grund wie im
+    // Check, damit die Route nicht auf 502 faellt und die Akte fuellt.
+    if ((await originRemoteUrl(session.record.project)) === null) {
+      throw new Error(`Main-Sync nicht moeglich: Projekt ${session.record.project} hat kein Haupt-Fern 'origin'`);
+    }
     const branch = await resolveMainBranch(session.record.project, settings);
     const engine = new MainSyncEngine();
     if (!opts.skipFetch) {
@@ -3229,12 +3241,15 @@ export class SessionManager {
    */
   private async emitMainSyncBaseEvent(session: LiveSession, base: WorktreeBaseChoice): Promise<void> {
     if (base.source === "origin" || base.reason === "off") return;
-    if (base.reason === "not-main-branch") {
+    // BUG-0260: „Projekt hat kein Haupt-Fern“ ist eine Konfigurationslage, kein
+    // Defekt — wie `off` und `not-main-branch` als Skip benannt. Sonst steht in
+    // der Sessions-Akte jedes Projekt ohne Fern als Fehler da.
+    if (base.reason === "not-main-branch" || base.reason === "no-remote") {
       await this.emitSystem(session, "workspace.main_sync_skipped", { reason: base.reason, ...(base.detail ? { detail: base.detail } : {}) });
       return;
     }
     await this.emitSystem(session, "workspace.main_sync_failed", {
-      reason: base.reason === "no-remote" ? "no-remote" : base.fetchReason,
+      reason: base.fetchReason,
       ...(base.detail ? { detail: base.detail } : {}),
     });
   }

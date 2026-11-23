@@ -4,7 +4,7 @@ export { WorktreeManager, type WorktreeBaseChoice } from "./worktree.ts";
 export { MainSyncSettingsService, type MainSyncKV } from "./main-sync-settings.ts";
 export { MainSyncEngine, MAIN_SYNC_MERGE_MESSAGE, type MainSyncMeasure, type MainSyncDryRun, type MainSyncApplyOutcome } from "./main-sync-engine.ts";
 export { MainSyncScheduler, type MainSyncCandidate, type MainSyncSchedulerNotice, type MainSyncSchedulerDeps } from "./main-sync-scheduler.ts";
-export { resolveMainBranch, currentGitBranch, fetchMainBranch, classifyFetchError } from "./main-sync-git.ts";
+export { resolveMainBranch, currentGitBranch, fetchMainBranch, classifyFetchError, originRemoteUrl } from "./main-sync-git.ts";
 export { canonicalCheckout, checkoutState, CheckoutLeaseStore, type CheckoutLease } from "./checkout.ts";
 export { resolveManifest, sha256, type ResolvedManifest } from "./manifest-resolver.ts";
 export { ManifestApprovalStore, gateManifest, type ManifestApprovalInput, type ManifestApprovalRecord, type ManifestGate } from "./manifest-approval.ts";
