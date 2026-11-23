@@ -83,6 +83,10 @@ test.describe("Statistik-Zentrale (EPIC-P56/P66)", () => {
     await expect(card).toContainText(/n \d+/);
     // Klein-n ist Pflichtkennzeichnung, kein optionaler Schmuck (AC-P56-3).
     await expect(card).toContainText("wenige Daten");
+    // T81.12: Überblick aus demselben Report; Züge je Session sind eine Anzahl, keine Dauer.
+    await expect(app.getByRole("region", { name: "Überblick" })).toContainText("Sessions");
+    await expect(card.locator("tbody tr").first().locator("td").last()).not.toContainText(/ ms|unbekannt/);
+    expect(await app.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
 
     await openSection(app, "Züge und Tokens");
     const turns = app.getByRole("region", { name: "Statistik Züge und Tokens" });

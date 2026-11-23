@@ -47,8 +47,13 @@ export function totalCostText(sessions: SessionRecord[], format: (n: number) => 
  */
 export function formatMetricValue(value: number | null, unit: string): string {
   if (value === null) return "nicht gemeldet";
-  const rounded = Math.abs(value) >= 1000 || Number.isInteger(value) ? Math.round(value) : Math.round(value * 10) / 10;
-  return `${rounded.toLocaleString("de-DE")} ${unit}`;
+  const abs = Math.abs(value);
+  // Kleine Werte behalten zwei gültige Stellen: 0,02 s/token ist keine 0.
+  const text =
+    abs > 0 && abs < 0.1
+      ? value.toLocaleString("de-DE", { maximumSignificantDigits: 2 })
+      : (abs >= 1000 || Number.isInteger(value) ? Math.round(value) : Math.round(value * 10) / 10).toLocaleString("de-DE");
+  return unit === "count" ? text : `${text} ${unit}`;
 }
 
 export function formatMetricAge(ts: string | null, nowMs: number = Date.now()): string {
