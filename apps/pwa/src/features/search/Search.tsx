@@ -7,7 +7,7 @@ import { type ProjectDoc, type ProjectFile } from "../../shared/api.ts";
 import { sessionHash } from "../../app/route.ts";
 import { Markdown } from "../../shared/Markdown.tsx";
 import { Button, Chip, Segmented } from "../../shared/ui/index.ts";
-import { DEFAULT_ROLES, ROLE_ORDER, SessionHits, Snippet, groupHits, hiddenFacetRoles, hitsLabel, roleLabel, toggleRole } from "./session-hits.tsx";
+import { DEFAULT_ROLES, ROLE_ORDER, SessionHits, Snippet, groupHits, hiddenFacetRoles, hitsLabel, hubStatusLine, roleLabel, toggleRole } from "./session-hits.tsx";
 import { projectName } from "../../shared/project-name.ts";
 
 // T3.8 (EPIC-P3 §3 "Sprachsuche"): real qmd-backed project MARKDOWN search
@@ -83,6 +83,10 @@ export function SearchPane({
   // arbeitet. Umschaltbar, weil beides berechtigte Fragen sind. Der Hub sagt
   // danach ehrlich, wie viele Projekte er tatsächlich angefasst hat.
   const [docsEverywhere, setDocsEverywhere] = useState(false);
+  // Eine Sitzung, die auf einem anderen Rechner des Fleet lief, liegt in dessen
+  // dataDir — hier ist sie nicht im Index. Einschaltbar, und was nicht antwortet
+  // wird genannt.
+  const [crossHub, setCrossHub] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [res, setRes] = useState<UnifiedSearchResponse | null>(null);
   const [loaded, setLoaded] = useState(0);
@@ -108,7 +112,15 @@ export function SearchPane({
   }, [project]);
 
   const request = useCallback(
-    async (q: string, offset = 0, nextScope = scope, nextRoles = roles, hereOnly = sessionsHereOnly, allDocs = docsEverywhere) => {
+    async (
+      q: string,
+      offset = 0,
+      nextScope = scope,
+      nextRoles = roles,
+      hereOnly = sessionsHereOnly,
+      allDocs = docsEverywhere,
+      withHubs = crossHub,
+    ) => {
       if (!q) return;
       const mine = ++seqRef.current;
       setStatus("searching");
@@ -121,6 +133,7 @@ export function SearchPane({
           limit: PAGE,
           offset,
           ...(allDocs ? { allProjects: true } : { project }),
+          ...(withHubs ? { hubs: true } : {}),
           ...(hereOnly ? { sessionProject: project } : {}),
         });
         if (mine !== seqRef.current) return;
@@ -133,7 +146,7 @@ export function SearchPane({
         setErrorMsg(err instanceof Error ? err.message : t("search.doc_error"));
       }
     },
-    [api, project, roles, scope, sessionsHereOnly, docsEverywhere],
+    [api, project, roles, scope, sessionsHereOnly, docsEverywhere, crossHub],
   );
 
   /** Tippen sucht: 350 ms Ruhe, dann läuft die Anfrage. Ein Ein-Wort-Rest
@@ -175,6 +188,12 @@ export function SearchPane({
     setDocsEverywhere(on);
     const q = query.trim();
     if (q.length >= MIN_QUERY) void request(q, 0, scope, roles, sessionsHereOnly, on);
+  };
+
+  const changeCrossHub = (on: boolean) => {
+    setCrossHub(on);
+    const q = query.trim();
+    if (q.length >= MIN_QUERY) void request(q, 0, scope, roles, sessionsHereOnly, docsEverywhere, on);
   };
 
   const hidden = res ? hiddenFacetRoles(res.facets, roles) : { roles: [], count: 0 };
@@ -264,7 +283,25 @@ export function SearchPane({
             {t("search.docs_all_projects")}
           </label>
         )}
+        <label class="search-here" hidden={!!res && (res.peers ?? 0) === 0 && !crossHub}>
+          <input type="checkbox" checked={crossHub} onChange={(e) => changeCrossHub((e.target as HTMLInputElement).checked)} />
+          {t("search.hubs_all")}
+        </label>
       </div>
+
+      {res && res.hubs && res.hubs.length > 0 && (
+        <div class="search-hubs dim">
+          {res.hubs.map((hub) => {
+            const line = hubStatusLine(hub);
+            return (
+              <span key={hub.hostId} class={`search-hub search-hub--${hub.state}`}>
+                {t(line.key, line.params)}
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {res && crossHub && (res.peers ?? 0) === 0 && <div class="dim search-status">{t("search.hubs_none")}</div>}
 
       {status === "error" && <div class="reply-error">{errorMsg}</div>}
       {res && <div class="search-index dim mono">{indexLine}</div>}
@@ -281,7 +318,7 @@ export function SearchPane({
               class="search-where-chip"
               onClick={() => setViewing({ path: doc.file, snippet: doc.snippet, ...(doc.project ? { project: doc.project } : {}) })}
             >
-              <span class="mono">{`${doc.project ? `${projectName(doc.project)}/` : ""}${doc.file}`}</span>
+              <span class="mono">{`${doc.hub ? `${doc.hub}/` : ""}${doc.project ? `${projectName(doc.project)}/` : ""}${doc.file}`}</span>
             </button>
           ))}
         </div>
@@ -308,7 +345,9 @@ export function SearchPane({
               groups={groups}
               currentSessionId={sessionId}
               onJumpToSeq={onJumpToSeq}
-              onOpenSession={(id) => (window.location.hash = sessionHash(id))}
+              onOpenSession={(id, hubUrl) =>
+                hubUrl ? window.open(`${hubUrl}/#/sessions/${id}`, "_blank", "noopener") : (window.location.hash = sessionHash(id))
+              }
             />
           )}
           {res.sessionTotal > loaded && (

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { SessionTextHit } from "@ancientvoid/contracts";
-import { DEFAULT_ROLES, ROLE_KEYS, ROLE_ORDER, groupHits, hiddenFacetRoles, roleLabel, splitSnippet, toggleRole } from "../../src/features/search/session-hits.tsx";
+import type { HubSearchStatus, SessionTextHit } from "@ancientvoid/contracts";
+import { DEFAULT_ROLES, ROLE_KEYS, ROLE_ORDER, groupHits, hiddenFacetRoles, hubStatusLine, roleLabel, splitSnippet, toggleRole } from "../../src/features/search/session-hits.tsx";
 import { projectName } from "../../src/shared/project-name.ts";
 
 /**
@@ -81,6 +81,28 @@ describe("Rollen-Chips", () => {
   it("Standard ist die Unterhaltung, nicht die Denk- und Werkzeugmasse", () => {
     expect(DEFAULT_ROLES).toEqual(["user", "assistant"]);
     expect(ROLE_ORDER).toEqual(["user", "assistant", "thinking", "tool", "system"]);
+  });
+
+  it("trägt den Rechner einer Fremdsitzung an die Gruppe", () => {
+    const groups = groupHits([
+      hit({ sessionId: "a", seq: 1 }),
+      hit({ sessionId: "b", seq: 2, hub: "kaisgamingdesk", hubUrl: "https://kaisgamingdesk.tail" } as never),
+    ]);
+    expect(groups[0]?.hub).toBeUndefined();
+    expect(groups[1]).toMatchObject({ sessionId: "b", hub: "kaisgamingdesk", hubUrl: "https://kaisgamingdesk.tail" });
+  });
+
+  it("benennt den Zustand jedes Hub-Rechners — ein toter ist ein Ergebnis", () => {
+    const line = (over: Partial<HubSearchStatus> & Pick<HubSearchStatus, "state">) =>
+      hubStatusLine({ hostId: "andre", label: "andre.tail", sessions: 3, docs: 1, ...over });
+    expect(line({ state: "ok" })).toEqual({ key: "search.hub_ok", params: { label: "andre.tail", sessions: 3, docs: 1 } });
+    expect(line({ state: "offline" }).key).toBe("search.hub_offline");
+    expect(line({ state: "denied" }).key).toBe("search.hub_denied");
+    expect(line({ state: "unsupported" }).key).toBe("search.hub_unsupported");
+    expect(line({ state: "skipped" }).key).toBe("search.hub_skipped");
+    expect(line({ state: "error", note: "HTTP 500" })).toEqual({ key: "search.hub_error", params: { label: "andre.tail", note: "HTTP 500" } });
+    // Ohne lesbaren Namen bleibt die Kurzform des Rechners stehen.
+    expect(hubStatusLine({ hostId: "andre", state: "offline", sessions: 0, docs: 0 }).params.label).toBe("andre");
   });
 
   it("schaltet zu und ab, und der letzte Chip bleibt stehen", () => {
