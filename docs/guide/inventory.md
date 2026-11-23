@@ -36,9 +36,7 @@ Regeln:
 | page:vault | Notes vault with folder picker | `#/notizen` | vault |
 | page:teams | Agent teams: plan, dispatch, gates, deliveries | `#/teams` | team |
 | page:automationen | Automations: schedules and run history | `#/automationen` | automations |
-| page:aimetrics | Local AI server metrics (CPU/GPU, tokens/s) | `#/metriken` | ki-server-metriken |
-| page:inference | Token tempo of local inference engines (decode, prefill, KV reuse) | `#/inferenz` | inference-tempo |
-| page:statistics | Session, turn, gate, tool and team statistics from the rollup cache | `#/statistik` | statistik |
+| page:statistics | One analysis page with tabs: session/turn/gate/tool statistics, AI server metrics, inference token tempo | `#/statistik` (+`/metriken`, `/inferenz`) | statistik |
 | page:terminal | Allowlisted SSH/local shell in the PWA | `#/terminal` | terminal |
 | page:releasenotes | Release notes: merged PRs with what changed and why | `#/releasenotes` | release-notes |
 
@@ -63,8 +61,6 @@ Regeln:
 
 | ID | English description | e2e spec |
 |---|---|---|
-| feature:aimetrics | AI server metrics sampling and display | ki-server-metriken |
-| feature:inference | Inference token/tempo adapters, request history and percentiles | inference-tempo |
 | feature:approvals | Approve, reject or answer agent requests | quick-confirm |
 | feature:attachments | Attach files to prompts | attachments |
 | feature:automations | Automation plans: create, activate, history | automations |
@@ -94,7 +90,7 @@ Regeln:
 | feature:settings | Settings views and choices | settings-layout |
 | feature:shell | App shell: dock, layout, frame | layout |
 | feature:status | Status line language (measured vs unknown) | zustandssprache |
-| feature:statistics | One metrics hub: system, AI server, sessions/turns/tools with slices, collapsible sections | statistik |
+| feature:statistics | One analysis page: metrics hub (system, AI server, sessions/turns/tools) plus inference token/tempo adapters with request history and percentiles | statistik |
 | feature:stt | Speech-to-text dictation | voice-local |
 | feature:team | Team cards, DAG view, model choice | team |
 | feature:terminal | Allowlisted hub SSH/local terminal (xterm) | terminal |

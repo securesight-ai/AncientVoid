@@ -16,8 +16,6 @@ import { DesktopPage } from "../features/desktop/DesktopPage.tsx";
 import { VaultTabs } from "../features/vault/VaultTabs.tsx";
 import { TeamsPane } from "../features/team/TeamsPane.tsx";
 import { AutomationsPane } from "../features/automations/AutomationsPane.tsx";
-import { AiMetricsPage } from "../features/aimetrics/AiMetricsPage.tsx";
-import { InferencePage } from "../features/inference/InferencePage.tsx";
 import { StatisticsPage } from "../features/statistics/StatisticsPage.tsx";
 import { TerminalPage } from "../features/terminal/TerminalPage.tsx";
 import { ReleaseNotesPage } from "../features/release-notes/ReleaseNotesPage.tsx";
@@ -33,6 +31,7 @@ export function App({
   page,
   vaultFile = null,
   vaultTab = "notizen",
+  statTab = null,
   wide = false,
   dock = true,
   bell = false,
@@ -47,6 +46,8 @@ export function App({
   /** EPIC-P74 T74.6: Reiter im Notizen-Bereich aus dem Hash (#/notizen/wissen). */
   vaultTab?: "notizen" | "wissen";
   /** EPIC-P34 T34.2: on a wide screen the tool pages live in the detail column (ToolPane); the list stays the list. */
+  /** BUG-0257: Reiter der Analyse-Seite aus dem Hash (#/statistik/metriken). */
+  statTab?: "metriken" | "inferenz" | null;
   wide?: boolean;
   /** EPIC-P43 T43.7: die Warteschlange als eigenes Fenster hat kein Dock (ADR-0053 Punkt 2). */
   dock?: boolean;
@@ -205,9 +206,7 @@ export function App({
       {shown === "vault" && <VaultTabs {...(vaultFile ? { initialFile: vaultFile } : {})} initialTab={vaultTab} />}
       {shown === "teams" && <TeamsPane />}
       {shown === "automationen" && <AutomationsPane />}
-      {shown === "aimetrics" && <AiMetricsPage />}
-      {shown === "inference" && <InferencePage />}
-      {shown === "statistics" && <StatisticsPage />}
+      {shown === "statistics" && <StatisticsPage {...(statTab ? { tab: statTab } : {})} />}
       {shown === "terminal" && <TerminalPage />}
       {shown === "releasenotes" && <ReleaseNotesPage />}
       {shown === "dashboard" &&

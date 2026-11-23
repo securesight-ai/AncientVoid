@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { anteil, byteGroesse, dauer, tempo, uhrzeit, verlauf, zahl } from "../src/features/inference/format.ts";
+import { anteil, byteGroesse, dauer, tempo, uhrzeit, verlauf, zahl } from "../src/features/statistics/inference-format.ts";
 
 /**
  * EPIC-P79 T79.4: die Zahlformate der Token-Tempo-Seite sind die Grenzlinie
