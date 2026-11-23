@@ -3,7 +3,8 @@ import { Fragment, type ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import type { NormalizedEvent } from "../../shared/ws.ts";
 import { EventDetail, EventRow } from "./EventRow.tsx";
-import { currentStep, stepsOf, workSummary, type ChatItem, type Step, type Work } from "./turns.ts";
+import { currentStep, itemTs, stepsOf, workSummary, type ChatItem, type Step, type Work } from "./turns.ts";
+import { dayLabel, needsDaySeparator } from "../../shared/i18n/day-label.ts";
 
 /**
  * EPIC-P43 T43.4: der Chat in Zügen (turns.ts). Laufende Arbeit steht offen, der laufende Schritt
@@ -75,10 +76,23 @@ export function ChatTurns({
     });
   };
   const dividerAt = firstNewSeq === null ? -1 : items.findIndex((item) => itemLastSeq(item) >= firstNewSeq);
+  /** Zeit des vorherigen Eintrags mit Zeitstempel (Sammelzeilen haben keine eigene). */
+  const vorigeZeit = (i: number): string | null => {
+    for (let j = i - 1; j >= 0; j--) {
+      const zeit = itemTs(items[j]!);
+      if (zeit) return zeit;
+    }
+    return null;
+  };
   return (
     <>
       {items.map((item, i) => (
         <Fragment key={item.kind === "event" ? item.event.seq : item.key}>
+          {itemTs(item) && needsDaySeparator(vorigeZeit(i), itemTs(item)!) && (
+            <div class="day-sep" data-testid="day-sep">
+              <span>{dayLabel(itemTs(item)!)}</span>
+            </div>
+          )}
           {i === dividerAt && (
             <div class="new-divider" id="seit-letztem-besuch">
               {t("session.new_since_last_visit_cap")}

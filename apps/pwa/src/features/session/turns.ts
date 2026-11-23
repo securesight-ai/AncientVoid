@@ -42,6 +42,14 @@ export interface Work {
 
 export type ChatItem = { kind: "event"; event: NormalizedEvent } | Work | { kind: "unknown"; key: string; count: number; firstSeq: number };
 
+/** Zeitstempel eines Chat-Eintrags — für den Tages-Trenner (Sammelzeile ohne Zeit: undefined). */
+export function itemTs(item: ChatItem): string | undefined {
+  if (item.kind === "event") return item.event.ts;
+  if (item.kind === "work") return item.startTs;
+  return undefined;
+}
+
+
 const KNOWN_TYPES: ReadonlySet<string> = new Set(["user", "assistant", "thinking", "tool_use", "tool_result", "gate", "error", "system"]);
 
 /**
