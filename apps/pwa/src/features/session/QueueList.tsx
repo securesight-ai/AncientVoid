@@ -20,7 +20,18 @@ export function queueOrder(items: QueuedPrompt[]): QueuedPrompt[] {
   return [...items].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 }
 
-export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; api: HubApi; refreshKey: number }) {
+/**
+ * Nutzerfund 23.11.2026 (PC): „Jetzt senden“ gab nur einen Fehler, wenn der
+ * Adapter mitten im Zug gar nichts annehmen kann (Pi seit BUG-0261: lenken heißt
+ * nächster Zug — ein zweiter Lauf auf derselben Sitzung überschreibt die Dateien).
+ * Ein Knopf, der nur scheitern kann, ist kein Angebot: dann steht der Grund da,
+ * und die Vormerkung geht von selbst raus, sobald der Zug endet.
+ */
+export function sendNowPossible(working: boolean, steerable: boolean): boolean {
+  return !working || steerable;
+}
+
+export function QueueList({ sessionId, api, refreshKey, working = false, steerable = true }: { sessionId: string; api: HubApi; refreshKey: number; working?: boolean; steerable?: boolean }) {
   const [items, setItems] = useState<QueuedPrompt[]>([]);
   const [error, setError] = useState("");
   /** Fehlgeschlagene Aktion nachschlagen — der Nutzer sieht den Grund und kann
@@ -161,17 +172,23 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
               {/* ADR-0085 + eigener Review: die Knöpfe unter dem Text — sonst bleibt auf
                   dem Handy (390 px) nur eine fünfzehn Zeichen lange Textspur übrig. */}
               <span class="queue-actions">
-                <button
-                  disabled={item.delivery === "unknown"}
-                  class="icon-action queue-send"
-                  type="button"
-                  data-testid="queue-send-now"
-                  aria-label={t("session.queue_send_now", { "n": i + 1 })}
-                  title={t("composer.send_into_running_turn")}
-                  onClick={() => sendNow(item)}
-                >
-                  ➤
-                </button>
+                {sendNowPossible(working, steerable) ? (
+                  <button
+                    disabled={item.delivery === "unknown"}
+                    class="icon-action queue-send"
+                    type="button"
+                    data-testid="queue-send-now"
+                    aria-label={t("session.queue_send_now", { "n": i + 1 })}
+                    title={t("composer.send_into_running_turn")}
+                    onClick={() => sendNow(item)}
+                  >
+                    ➤
+                  </button>
+                ) : (
+                  <span class="queue-wait" title={t("session.queue_waits_turn_hint")}>
+                    {t("session.queue_waits_turn")}
+                  </span>
+                )}
                 {/* ADR-0085: der Nächste in der Reihe werden — oder zurückfallen. */}
                 <button
                   disabled={i === 0 || item.delivery === "unknown" || !speaksQueueOrder}

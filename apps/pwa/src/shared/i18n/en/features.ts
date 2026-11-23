@@ -1128,6 +1128,8 @@ export const en = {
   "session.queue_remove": "Remove queued message {n}",
     "session.queue_edit_word": "edit",
 "session.queue_retry": "Try again",
+"session.queue_waits_turn": "sends automatically when the turn ends",
+"session.queue_waits_turn_hint": "This adapter accepts nothing mid-turn — a second run on the same session would overwrite the files.",
 "session.tool_image_open": "Open image",
 "session.tool_image_missing": "Image not available here — it is outside the project.",
   "session.queue_send_next": "Send queued message {n} next",
