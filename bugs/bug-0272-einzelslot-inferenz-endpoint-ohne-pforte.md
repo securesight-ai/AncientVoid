@@ -116,7 +116,7 @@ Hub neu gestartet. Live bewiesen: `GET /api/inference/gate` liefert
     {"endpoint":"strata","slots":1,"maxContext":262144,
      "plaetze":[{"inhaber":"943797b3-…","priorität":"interaktiv","warum":"Zug"}]}
 
-— der Platz gehört in diesem Moment der Session, die den请求 gerade laufen hat.
+— der Platz gehört in diesem Moment der Session, die den Zug gerade laufen hat.
 
 **Offener Rest (eigentliche Folgeaufgabe):** hub-interne Kurz Anfragen (Gatekeeper,
 Sitzungstitel, Übersetzen, Enhance, Analyse-Antworten) laufen noch *ohne* `durchlassen()`
