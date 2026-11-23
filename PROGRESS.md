@@ -1,5 +1,51 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
+
+## 23.11.2026 Abend — Compaction-Schleife, Bilder, Warteschlange (verifiziert)
+
+**Compaction-Loop (Punkt 5).** Ursache gemessen: `Auto-compaction failed:
+Summarization failed: generation hit the token cap and the summary is incomplete` —
+11 Fehlversuche in 3,5 h (events.jsonl von 7d3df295), Kontext fiel nie, also Versuch
+für Versuch jeden Zug. Zusammenfassungen wuchsen 11 494 → 93 231 Zeichen. Behoben:
+`maxTokens` 32 768 (normal Antwort darf 30k+ sein), Extension
+`~/.pi/agent/extensions/compaction-budget.ts` (eigenes Budget 10 000 Token, max 180
+Zeilen, Schleifenschutz <8 % Fortschritt / 3 min). Nachweis: `/compact` auf Kratz-
+Sitzung → `FERTIG grund=manual tokensBefore=42259 zusammenfassung=3442 Zeichen
+stopReason=stop`; Prompt dieser Sitzung 238 205 → ~112 000 Token, seither kein
+weiterer Versuch. Chat-Zeile jetzt lesbar (PR #349, `compactionSummary()` in
+`packages/adapters/pi/src/normalize.ts`, 12 Tests grün).
+
+**Bild-Vorschau + Einfügen unter Linux (Punkte 1 und 2, PR #350).** `toolImageRef()`
+zeigt gelesene Bilder als Vorschau inkl. „Bild öffnen" über `GET /api/code/raw`
+(keine neuen Rechte). Linux/Wayland: Chromium liefert keine Bild-Bytes, Datei-Manager
+legen Pfade ab → neue Route `POST /api/local-files/bytes` (nur absolute Pfade, nur
+innerhalb `projectRoots`, Endung **und** Magic Bytes, `MAX_ATTACHMENT_BYTES`), eigene
+Policy-Operation `files.readLocal` (nur Mensch, fleet/agent/bridge/companion/display
+deny), **nicht** flotten-routbar. Tests: 6 Route + 2 Policy + 5 PWA-Pfade.
+
+**Warteschlange am PC (Punkt 3, PR #352).** Gemessen: pi `midTurnInput: false`
+(BUG-0261, zwei pi-Prozesse auf derselben Sitzung überschreiben das Arbeitsverzeichnis)
+→ alles im laufenden Zug wird vorgemerkt; PWA bezieht die Fähigkeit live aus
+`/api/adapters`; Hub-Journal seit 17:00: **kein** Request ≥ 400. Der einzige echte
+Ärgernis-Knopf „Jetzt senden" kann in diesem Modus nie funktionieren →
+`sendNowPossible(working, steerable)` zeigt stattdessen Grund + „geht automatisch
+raus, wenn der Zug fertig ist"; Core-Meldung erklärt jetzt das Warum.
+
+**Parallelverarbeitung (Punkt 4).** Der Mechanismus existiert schon: **Pforte pro
+Modell-Endpoint** (ADR-0116, PR #343, `GET /api/inference/gate`,
+`inference.slot_wait` statt Provider-Fehler). ABER: auf diesem Rechner lief der
+Hub-Prozess von `83d57105` — **älter** als `5e71d1e0` — die Pforte war also nicht
+wirksam (404 auf `/api/inference/gate`). Wackeltum: deployment-Identität
+(`runtimeSha` vs `checkoutSha`) nach jedem Merge prüfen und neu starten, sonst
+Rollt der laufende Prozess hinter main zurück. Offener Rest aus BUG-0272:
+hub-interne Kurz-Anfragen (Gatekeeper, Titel, Übersetzen, Enhance, Analyse) laufen
+noch ohne `durchlassen()`.
+
+**Auslieferung.** main = cf96201f (#349, #350, #352 gemerged), PWA gebaut
+(`index-Dqzv9lG_.js`), Hub-Neustart durch Wächter `/tmp/hub-neustart-wait.sh`
+(startet 30 s nach dem letzten laufenden Zug, Protokoll
+`/tmp/hub-neustart-watch.log`: health, runtime/checkout/pwa, Gate-Status).
+
 ## Ziel
 Die Suche des Hubs war zu billig (nur Markdown, nur ein Projekt). Sie sucht
 jetzt den ganzen Fundus: **Sessiontexte — Fragen und Antworten** — plus Doku,
