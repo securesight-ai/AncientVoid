@@ -312,6 +312,18 @@ it("Tracker: Accept-Kopf passt zur Quelle (Strata liefert sonst Prometheus-Text)
   assert.match(gesehene["http://halo/metrics"] ?? "", /^text\/plain/);
 });
 
+it("Tracker: Halogen holt /health und /cache vom Host, nicht unter /metrics", async () => {
+  const a = attrappen();
+  const abgefragt: string[] = [];
+  const tracker = createInferenceTracker(
+    { ...a.deps, fetch: async (url: string) => { abgefragt.push(url); return a.deps.fetch(url); } },
+    [{ id: "halo", kind: "halogen", url: "http://halo/metrics" }],
+  );
+  await tracker.tickNow();
+  assert.ok(abgefragt.includes("http://halo/health"), `abgefragt: ${abgefragt.join(", ")}`);
+  assert.ok(abgefragt.includes("http://halo/cache"), `abgefragt: ${abgefragt.join(", ")}`);
+});
+
 it("Tracker: Snapshot gültig, Grenzen eingehalten, kaputte Quelle bleibt sichtbar", async () => {
   const a = attrappen();
   const tracker = createInferenceTracker(a.deps, [
