@@ -6,7 +6,7 @@ severity: S3
 area: pwa
 instance: dev
 commit: "2a7eab27"
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/issues/291"
 epic: ""
 created: 2026-11-22
 reporter: Nutzermeldung 22.11.2026 (Tablet: Badge-Zahl der Glocke unlesbar, hängt aus dem Bild)
@@ -84,3 +84,17 @@ verankert damit am nächstgelegenen positionierten Vorfahren, dem sticky
 - [ ] Datei im Index [`README.md`](README.md)
 - [ ] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`)
 - [ ] `bugfix` oder offen lassen
+
+
+## Fix (verifiziert 2026-11-23)
+
+- `contain: layout` auf `.notif-bell.flow` macht die Glocke zum
+  Containing-Block der Zahl; `left: -4px` setzt sie an den linken Rand.
+  `position: relative` wäre die naheliegende Verankerung, verschiebt aber die
+  Zoom-Geometrie des Benachrichtigungs-Panels (P50-Regression im Nachtest,
+  „Panel rechtsbündig (Zoom 130 %)“ 158,4 px daneben) — verworfen.
+- Gemessen (Tablet 800×1280, vorher → nachher): Zahl y=−4 / 227 px über der
+  Glocke → an der Glocke (b.y−8 erfüllt), vollständig im Viewport, am linken
+  Rand. E2E `e2e/specs/notifications.spec.ts` „Badge-Geometrie der Glocke
+  (BUG-0256)“ rot ohne Fix, grün mit Fix; alle 19 Notifications-Tests grün
+  (inkl. der Zoom-Regression, die die relative-Variante gebrochen hätte).
