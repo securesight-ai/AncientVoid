@@ -39,3 +39,9 @@ describe("slash layer (ADR-0042, EPIC-P25 T25.4)", () => {
     expect(applySuggestion("/c mit Anleitung", cmds[1]!)).toBe("/compact mit Anleitung ");
   });
 });
+
+
+it("reports reserved /compact as unavailable when this adapter or scope has no command", () => {
+  expect(slashNotice("/compact", [])).toBe("/compact is unavailable here.");
+  expect(slashNotice(" /compact focus", [])).toBe("/compact is unavailable here.");
+});

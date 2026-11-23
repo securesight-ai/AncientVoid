@@ -1,3 +1,6 @@
+import { isCompactionCommand } from "@ancientvoid/contracts";
+import { t } from "../../shared/i18n/index.ts";
+
 /**
  * ADR-0042 (EPIC-P25 T25.4): pure logic for the composer's slash layer.
  * Suggestions only ever come from the adapter's declared `commands`
@@ -28,6 +31,9 @@ export function slashSuggestions(value: string, commands: readonly SlashCommand[
  * not a declared command — null while suggestions could still apply.
  */
 export function slashNotice(value: string, commands: readonly SlashCommand[]): string | null {
+  if (isCompactionCommand(value) && !commands.some((c) => c.name === "/compact")) {
+    return t("composer.compaction_unavailable");
+  }
   const first = /^(\S+)(\s[\s\S]*)?$/.exec(value);
   if (!first || !first[1].startsWith("/")) return null;
   if (!first[2]) return null; // still typing the first word — suggestions own this state

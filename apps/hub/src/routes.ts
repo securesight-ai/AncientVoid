@@ -6,6 +6,7 @@ import { registerPromptsRoutes } from "./modules/prompts/prompts.routes.ts";
 import { registerWorkspaceRoutes } from "./modules/workspace/workspace.routes.ts";
 import { registerMainSyncSettingsRoutes } from "./modules/workspace/main-sync.routes.ts";
 import { registerProjectCreateRoute } from "./modules/workspace/project-create.routes.ts";
+import { registerCompactionSettingsRoutes } from "./modules/sessions/compaction.routes.ts";
 import { registerSessionsRoutes } from "./modules/sessions/sessions.routes.ts";
 import { registerDiscoveryRoutes } from "./modules/discovery/discovery.routes.ts";
 import { registerHandoverRoutes } from "./modules/sessions/handover.routes.ts";
@@ -46,6 +47,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
   registerMainSyncSettingsRoutes(app, ctx);
   registerProjectCreateRoute(app, ctx);
   registerSessionsRoutes(app, ctx);
+  registerCompactionSettingsRoutes(app, ctx);
   registerDiscoveryRoutes(app, ctx);
   registerNotificationsRoutes(app, ctx);
   registerRunsRoutes(app, ctx);

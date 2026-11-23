@@ -11,7 +11,7 @@ import { sttModuleConfig } from "./modules/voice/stt-wiring.ts";
 import { chmodSync, mkdirSync, existsSync } from "node:fs";
 import { appendFile, readFile, readdir } from "node:fs/promises";
 import { homedir, hostname, loadavg, cpus, totalmem, freemem } from "node:os";
-import { LOOP_ARG, toHostId, sessionMainSyncPath } from "@ancientvoid/contracts";
+import { compactionSettingsKey, LOOP_ARG, toHostId, sessionMainSyncPath } from "@ancientvoid/contracts";
 import { projectName } from "@ancientvoid/core";
 import { resolve } from "node:path";
 import type { WorkerRunner, DiscoverySource } from "@ancientvoid/contracts";
@@ -233,7 +233,7 @@ async function main(): Promise<void> {
     config.dailyCapUsd,
     reportingSinks,
     // T17.4: the steer wait travels with the rest of the observability bag.
-    { logger: logger.child({ component: "sessions" }), metrics, autoResumeInterrupted: config.autoResumeInterrupted, steerWaitMs: config.steerWaitMs },
+    { logger: logger.child({ component: "sessions" }), metrics, autoResumeInterrupted: config.autoResumeInterrupted, steerWaitMs: config.steerWaitMs, automaticCompaction: () => settings.get(compactionSettingsKey) === "true" },
     opencodeDataDir,
     config.defaultPermissionMode,
     // EPIC-P67 Stufe 1: Basis neuer Worktrees ist origin/<Hauptbranch>, nach

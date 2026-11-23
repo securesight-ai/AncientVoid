@@ -10,25 +10,33 @@ Code und bricht bei Abweichung ab.
 Zeichen: ✓ kann es, — kann es nicht. Tool-Gate: `native` fragt pro Tool,
 `sandbox` Tools in OS-Sandbox ohne Nachfrage, `allowlist` feste Liste ohne
 Nachfrage, `bypass` alles ungefragt, `none` keine Tools unter Kontrolle
-dieser Session.
+dieser Session. Command-Geltung: `start` beim Start, `steer` im
+Folgezug und `both` in beiden Fällen. Die Tabelle beschreibt die
+Deklarationen. Live-Belege stehen bei den jeweiligen Adapterpfaden.
 
 <!-- harness-matrix:start -->
-| Adapter | geprüfte CLI | Folgeprompt | Anhalten | Tool-Gate | Rückfragen | Modellwahl | Agenten | Bilder | Dateien | Abzweig | Modell wechseln | Modi |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| claude | 2.1.280 | ✓ | ✓ | native | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | auto, manual, plan, acceptEdits, dontAsk, bypassPermissions |
-| codex | 0.156.1 `app-server` | ✓ | ✓ | native | ✓ | ✓ | — | ✓ | ✓ | — | — | — |
-| opencode | 1.18.32 | ✓ | ✓ | allowlist | — | ✓ | ✓ | ✓ | ✓ | — | — | — |
-| copilot | 1.0.88 | ✓ | ✓ | bypass | — | ✓ | ✓ | — | — | — | — | — |
-| pi | pi coding agent 1.4.0 (`pi -p`), 2026-10-26 | ✓ | ✓ | bypass | — | ✓ | — | — | — | — | — | — |
-| aider | 0.86.2 | — | ✓ | bypass | — | ✓ | — | — | — | — | — | — |
-| hermes | hermes-agent venv, 03.10.2026 | ✓ | ✓ | bypass | — | ✓ | — | — | — | — | — | — |
-| cursor-clip | Cursor state.vscdb | — | — | none | — | — | — | — | — | — | — | — |
-| claude-clip | Transcript JSONL | — | — | none | — | — | — | — | — | — | — | — |
-| dummy | — | ✓ | ✓ | none | — | — | — | — | — | — | — | — |
-| acp · copilot | 1.0.88 `--acp` | ✓ | ✓ | native | — | — | — | ✓ | ✓ | — | — | — |
-| acp · opencode | 1.18.32 `acp` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — |
-| acp · dsh | 0.2.1-rc.2 `--profile acp` | ✓ | ✓ | native | — | ✓ | — | — | ✓ | — | ✓ | — |
-| acp · maki | 0.6.5 `maki acp` | ✓ | ✓ | native | — | ✓ | — | — | ✓ | — | ✓ | — |
+| Adapter | geprüfte CLI | Folgeprompt | Anhalten | Tool-Gate | Rückfragen | Modellwahl | Agenten | Bilder | Dateien | Abzweig | Modell wechseln | Modi | Skills | Commands (scope) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| claude | 2.1.280 | ✓ | ✓ | native | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | auto, manual, plan, acceptEdits, dontAsk, bypassPermissions | ✓ | `/clear:both`, `/compact:both` |
+| codex | 0.156.1 `app-server` | ✓ | ✓ | native | ✓ | ✓ | — | ✓ | ✓ | — | — | — | — | `/compact:steer` |
+| opencode | 1.18.32 | ✓ | ✓ | allowlist | — | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ | — |
+| copilot | 1.0.88 | ✓ | ✓ | bypass | — | ✓ | ✓ | — | — | — | — | — | — | — |
+| pi | pi coding agent 1.4.0 (`pi -p`), 2026-10-26 | ✓ | ✓ | bypass | — | ✓ | — | — | — | — | — | — | — | `/compact:steer` |
+| aider | 0.86.2 | — | ✓ | bypass | — | ✓ | — | — | — | — | — | — | — | `/clear:start`, `/reset:start`, `/add:start`, `/tokens:start` |
+| hermes | hermes-agent venv, 03.10.2026 | ✓ | ✓ | bypass | — | ✓ | — | — | — | — | — | — | — | — |
+| cursor-clip | Cursor state.vscdb | — | — | none | — | — | — | — | — | — | — | — | — | — |
+| claude-clip | Transcript JSONL | — | — | none | — | — | — | — | — | — | — | — | — | — |
+| dummy | — | ✓ | ✓ | none | — | — | — | — | — | — | — | — | — | `/compact:both` |
+| acp · copilot | 1.0.88 `--acp` | ✓ | ✓ | native | — | — | — | ✓ | ✓ | — | — | — | — | `/compact:both`, `/usage:both` |
+| acp · opencode | 1.18.32 `acp` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | `/init:both`, `/review:both`, `/compact:both` |
+| acp · dsh | 0.2.1-rc.2 `--profile acp` | ✓ | ✓ | native | — | ✓ | — | — | ✓ | — | ✓ | — | — | — |
+| acp · maki | 0.6.5 `maki acp` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | — |
+| codex · exec | `codex exec` | ✓ | ✓ | sandbox | — | ✓ | — | — | — | — | — | — | — | — |
+| cursor | `cursor-agent -p` | ✓ | ✓ | allowlist | — | ✓ | — | — | — | — | — | — | — | — |
+| acp · omp | 19.1.1 `omp acp` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | `/fresh:both`, `/compact:both` |
+| acp · maki mit Brücke | `bridgeCommands: true` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | `/new:both` |
+| acp · eigener Befehl | generischer ACP-Adapter | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | — |
+| OpenAI-kompatibler Direktadapter | Chat Completions SSE | ✓ | — | none | — | — | — | — | — | — | — | — | — | `/compact:steer` |
 <!-- harness-matrix:end -->
 
 ## Belege je Zeile
@@ -102,7 +110,7 @@ Der Heim-Hub weicht von der Standard-Konfiguration ab: claude mit
 `native` laufen, sobald das Skip-Flag aus `hub.config.json` entfernt ist
 (Umstellung nach dem Live-Messlauf, T7.2).
 
-## Nicht in der Tabelle
+## Direktadapter und geplante Adapter
 
 - `deepseek`/`local-llm` über `examples/adapters/openai-compat`: Modell-Endpunkt
   ohne Tools (`toolGate: none`), kein Coding-Harness. Mit Tools läuft das

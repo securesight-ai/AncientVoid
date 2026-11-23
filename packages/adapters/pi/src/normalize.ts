@@ -130,9 +130,13 @@ function normalize(rec: Record_, live?: LivePump): EmittedEvent[] {
     }
     case "auto_retry_start":
     case "auto_retry_end":
+    case "compact_worker_error":
+      return [providerErrorEvent("pi", asString(rec.errorMessage, 500))];
+    case "auto_compaction_start":
+    case "auto_compaction_end":
     case "compaction_start":
     case "compaction_end":
-      return [{ type: "system", summary: `pi: ${type}`, payload: { kind: `pi.${type}`, ...pick(rec, ["attempt", "maxAttempts", "errorMessage", "success", "finalError", "reason", "aborted"]) } }];
+      return [{ type: "system", summary: `pi: ${type}`, payload: { kind: `pi.${type}`, ...pick(rec, ["attempt", "maxAttempts", "success", "reason", "aborted"]), ...(typeof rec.errorMessage === "string" ? { errorMessage: rec.errorMessage.slice(0, 300) } : {}), ...(typeof rec.finalError === "string" ? { finalError: rec.finalError.slice(0, 300) } : {}) } }];
     default:
       return [unknown(type || "(ohne type)")];
   }

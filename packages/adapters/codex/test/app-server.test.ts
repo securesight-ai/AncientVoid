@@ -56,6 +56,40 @@ describe("codex app-server mode (T7.2)", () => {
       expect(ack).toMatchObject({ ok: false, detail: expect.stringContaining("turn/start") });
     } finally { await adapter.stop(handle, ctx); }
   });
+  it("uses native /compact and resumes normal prompts after the provider finishes", async () => {
+    const { ctx, turns } = context();
+    const adapter = createAdapter({ command: fakeCodex });
+    const handle = await adapter.start({ adapter: "codex", project: process.cwd() }, ctx);
+    try {
+      expect(adapter.capabilities().commands).toContainEqual(expect.objectContaining({ name: "/compact", scope: "steer" }));
+      expect(createAdapter({ mode: "exec" }).capabilities().commands ?? []).not.toContainEqual(expect.objectContaining({ name: "/compact" }));
+      expect(await adapter.steer(handle, { kind: "prompt", text: "/compact text" }, ctx)).toMatchObject({ ok: false });
+      const pending = adapter.steer(handle, { kind: "prompt", text: "/compact" }, ctx);
+      expect(await adapter.steer(handle, { kind: "prompt", text: "/compact" }, ctx)).toMatchObject({ ok: false });
+      expect(await pending).toEqual({ ok: true });
+      await waitFor(() => turns.at(-1) === "idle");
+      expect(kinds(ctx.events).filter((kind) => kind?.startsWith("codex.compaction"))).toEqual(["codex.compaction_start", "codex.compaction_end"]);
+      expect(ctx.events.some((event) => event.type === "assistant")).toBe(false);
+      expect(await adapter.steer(handle, { kind: "prompt", text: "Weiter" }, ctx)).toEqual({ ok: true });
+      await waitFor(() => ctx.events.some((event) => event.payload.text === "Antwort auf: Weiter · Codex"));
+    } finally { await adapter.stop(handle, ctx); }
+  });
+
+  it("reports provider refusal and releases the compaction lock", async () => {
+    const { ctx, turns } = context();
+    const adapter = createAdapter({ command: fakeCodex });
+    const handle = await adapter.start({ adapter: "codex", project: process.cwd(), env: { ANCIENTVOID_FAKE_COMPACT_REJECT: "1" } }, ctx);
+    try {
+      expect(await adapter.steer(handle, { kind: "prompt", text: "/compact" }, ctx)).toMatchObject({
+        ok: false,
+        detail: expect.stringContaining("Provider rejected compaction"),
+      });
+      expect(turns.at(-1)).toBe("idle");
+      expect(kinds(ctx.events)).toContain("provider.error");
+      expect(await adapter.steer(handle, { kind: "prompt", text: "Weiter" }, ctx)).toEqual({ ok: true });
+    } finally { await adapter.stop(handle, ctx); }
+  });
+
   it("continues the existing native thread instead of silently starting a new conversation", async () => {
     const first = context();
     const adapter = createAdapter({ command: fakeCodex });

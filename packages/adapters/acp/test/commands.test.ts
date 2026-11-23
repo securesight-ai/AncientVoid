@@ -52,3 +52,8 @@ describe("acp capabilities().commands — preset opencode (BUG-0192)", () => {
     expect(createAdapter({ command: ["opencode"], env: {} }).capabilities().commands).toBeUndefined();
   });
 });
+
+it("advertises /fresh for OMP ACP 19.1.1, which dispatches /fresh and rejects /new", () => {
+  const commands = createAdapter({ preset: "omp" }).capabilities().commands;
+  expect(commands?.map(({ name, scope }) => [name, scope])).toEqual([["/fresh", "both"], ["/compact", "both"]]);
+});

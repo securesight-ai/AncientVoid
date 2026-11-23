@@ -245,6 +245,8 @@ export interface SpawnOptions {
  * surface — keep it small, stable and testable.
  */
 export interface AdapterContext {
+  /** Hub setting for AncientVoid-managed compaction on adapter-owned requests. */
+  readonly automaticCompaction?: boolean;
   /** The hub-assigned session id — use for handle.sessionId and logging. */
   readonly sessionId: string;
   /** Emit a normalized event; hub assigns seq/ts/sessionId and enforces K5. */

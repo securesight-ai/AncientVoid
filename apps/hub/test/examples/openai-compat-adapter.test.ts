@@ -11,14 +11,14 @@ afterEach(() => {
 });
 
 describe("examples/openai-compat — Fehler werden sichtbar (BUG-0131)", () => {
-  it("eine ungültige SSE-Datenzeile wird zum begrenzten error-Event, der Strom läuft weiter", async () => {
+  it("eine ungültige SSE-Datenzeile bleibt als begrenzter Hinweis sichtbar und der Strom läuft weiter", async () => {
     vi.stubGlobal("fetch", async () => sse(`data: INVALID\n\ndata: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n\n`));
     const ctx = makeRecordingContext();
     await adapter().start({ adapter: "openai-compat", project: "/tmp", prompt: "test" }, ctx);
     await waitFor(() => ctx.events.some((e) => e.summary === "completion finished"));
-    const error = ctx.events.find((e) => e.type === "error");
-    expect(error?.summary).toMatch(/unlesbare Antwortzeile/);
-    expect(JSON.stringify(error?.payload).length).toBeLessThan(1024);
+    const warning = ctx.events.find((e) => e.payload.kind === "endpoint.invalid_sse_line");
+    expect(warning).toMatchObject({ type: "system", summary: expect.stringMatching(/unlesbare Antwortzeile/) });
+    expect(JSON.stringify(warning?.payload).length).toBeLessThan(1024);
     expect(ctx.events.some((e) => e.type === "assistant" && e.summary === "ok")).toBe(true);
   });
 
@@ -31,7 +31,6 @@ describe("examples/openai-compat — Fehler werden sichtbar (BUG-0131)", () => {
   });
 
   it("ein Transportfehler beim Folgeprompt wird zum error-Event", async () => {
-    vi.stubGlobal("fetch", async () => sse(`data: [DONE]\n\n`));
     const ctx = makeRecordingContext();
     const a = adapter();
     const handle = await a.start({ adapter: "openai-compat", project: "/tmp" }, ctx);

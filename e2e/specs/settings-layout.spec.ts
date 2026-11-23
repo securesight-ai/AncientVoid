@@ -2,7 +2,7 @@ import { test, expect, dockGo } from "../support/fixtures.ts";
 import type { Page } from "@playwright/test";
 
 /** EPIC-P34 T34.3: Einstellungen als feste Gruppen in einem symmetrischen Raster.
- * „Töne“ kam mit EPIC-P65, „Main-Synchronisation“ mit EPIC-P67, „Wissensquellen“ mit EPIC-P74 — die Liste
+ * „Töne“ kam mit EPIC-P65, „Main-Synchronisation“ mit EPIC-P67, „Wissensquellen“ mit EPIC-P74 und „Sprachausgabe“ mit EPIC-P75 — die Liste
  * ist die Ordnung, die das Handy zeigt (DOM-Reihenfolge). */
 const GROUPS = ["Darstellung", "Sidebar", "Schrift", "Darstellungs- und Layout-Presets", "Vorschau", "Benachrichtigungen", "Töne", "Spracheingabe", "Sprachausgabe", "Geräte", "Flotte", "Verbindungen", "Wissensquellen", "Main-Synchronisation", "Dienste", "Modell-Inferenz (manuelle Anbindung)", "Sicherheit & Verbindung"];
 
@@ -61,6 +61,26 @@ test.describe("Einstellungen: Gruppen und Raster (EPIC-P34)", () => {
     await expect(shimmer).not.toBeChecked();
     await expect(app.locator("html")).toHaveAttribute("data-ctx-motion", "off");
     await expect(app.getByRole("switch", { name: "Pinch-Zoom" })).toBeChecked();
+  });
+
+  test("AncientVoid-Compaction lässt sich dauerhaft ein- und ausschalten @desktop", async ({ app }) => {
+    await openSettings(app);
+    const toggle = app.getByRole("switch", { name: "AncientVoid-Compaction" });
+    await expect(toggle).toBeEnabled();
+    await expect(toggle).not.toBeChecked();
+    try {
+      await toggle.click();
+      await expect(toggle).toBeChecked();
+      await app.reload();
+      await openSettings(app);
+      await expect(toggle).toBeChecked();
+    } finally {
+      if (await toggle.isChecked()) await toggle.click();
+    }
+    await expect(toggle).not.toBeChecked();
+    await app.reload();
+    await openSettings(app);
+    await expect(toggle).not.toBeChecked();
   });
 
   test("bestehende Funktionen bleiben erreichbar: Passkey, Token, Projekte, Flotte, Gemini, Push, PC-Eingabe @desktop", async ({ app }) => {

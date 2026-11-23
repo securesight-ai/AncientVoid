@@ -4,6 +4,7 @@ export * from "./sessions/draft.ts";
 export * from "./sessions/session.ts";
 export * from "./sessions/activity.ts";
 export * from "./harness/adapter.ts";
+export * from "./harness/compaction.ts";
 export * from "./sessions/worker.ts";
 export * from "./sessions/wire.ts";
 export * from "./sessions/stream.ts";
