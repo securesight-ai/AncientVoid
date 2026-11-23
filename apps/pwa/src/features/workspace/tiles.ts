@@ -84,6 +84,16 @@ function put(ws: Workspace, index: number, ref: TileRef | null): Workspace {
   return { ...ws, slots, focus: index };
 }
 
+function revealFixedTile(ws: Workspace, index: number, ref: TileRef): Workspace {
+  const count = COUNT[ws.layout];
+  if (index < count) return put(ws, index, ref);
+  const target = Math.min(Math.max(0, ws.focus), count - 1);
+  const slots = [...ws.slots];
+  slots[index] = slots[target] ?? null;
+  slots[target] = ref;
+  return { ...ws, slots, focus: target };
+}
+
 /** All opening paths share the non-destructive default. */
 export function openSession(ws: Workspace, ref: TileRef): Workspace {
   return openInNewTile(ws, ref);
@@ -99,13 +109,7 @@ export function focusOpenSession(ws: Workspace, ref: TileRef): Workspace | null 
   if (at < 0) return null;
   const visible = COUNT[ws.layout];
   if (at < visible) return { ...ws, focus: at };
-  if (isLayoutFixed(ws)) {
-    // Hinter dem fixierten Raster: mit dem Fokus-Slot tauschen, Layout bleibt.
-    const target = Math.min(Math.max(0, ws.focus), visible - 1);
-    const slots = [...ws.slots];
-    [slots[target], slots[at]] = [slots[at]!, slots[target] ?? null];
-    return { ...ws, slots, focus: target };
-  }
+  if (isLayoutFixed(ws)) return revealFixedTile(ws, at, ws.slots[at]!);
   const layout = (GROW[at] ?? "2x2") as Layout;
   return { ...ws, layout, focus: at };
 }
@@ -114,14 +118,15 @@ export function focusOpenSession(ws: Workspace, ref: TileRef): Workspace | null 
 export function openInNewTile(ws: Workspace, ref: TileRef): Workspace {
   const at = ws.slots.findIndex((t) => same(t, ref));
   if (at >= 0) {
-    const layout = !isLayoutFixed(ws) && at >= COUNT[ws.layout] ? (GROW[at] ?? "2x2") : ws.layout;
+    if (isLayoutFixed(ws)) return revealFixedTile(ws, at, ws.slots[at]!);
+    const layout = at >= COUNT[ws.layout] ? (GROW[at] ?? "2x2") : ws.layout;
     return { ...ws, layout, focus: at };
   }
 
   // Fixiertes Raster: dieselbe Session (anderer Tab) aktualisiert die bestehende Karte.
   if (isLayoutFixed(ws) && isSessionCard(ref)) {
     const sessionAt = ws.slots.findIndex((t) => sameSessionCard(t, ref));
-    if (sessionAt >= 0) return put(ws, sessionAt, ref);
+    if (sessionAt >= 0) return revealFixedTile(ws, sessionAt, ref);
   }
 
   if (isLayoutFixed(ws)) {
