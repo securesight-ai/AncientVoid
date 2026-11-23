@@ -36,6 +36,8 @@ export async function collectHwmon({ deps }: SourceContext): Promise<HostMetricP
       const def = KINDS[kind]!;
       const raw = await readNumber(deps.files, posix.join(dir, file));
       const label = await readText(deps.files, posix.join(dir, `${id}_label`));
+      // Super-I/O-Chips melden unbelegte Eingänge als exakt 0 °C — das ist kein Messwert (ADR-0023).
+      const unwired = kind === "temp" && raw === 0 && chip.startsWith("nct");
       let powerDomain: string | null = null;
       if (kind === "power" && chip === "amdgpu" && apu !== capped) powerDomain = apu ? "cpu-package:0" : `gpu:${address}`;
       out.push(
@@ -45,7 +47,8 @@ export async function collectHwmon({ deps }: SourceContext): Promise<HostMetricP
           device: chip,
           label: label || id,
           unit: def.unit,
-          value: raw === null ? null : raw * def.scale,
+          value: raw === null || unwired ? null : raw * def.scale,
+          ...(unwired ? { reason: "Sensor nicht belegt" } : {}),
           source: "hwmon",
           powerDomain,
         }),

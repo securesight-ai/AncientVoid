@@ -269,10 +269,7 @@
 }
 
 .chart-max {
-  position: absolute;
-  top: 2px;
-  left: 0;
-  pointer-events: none;
+  display: block;
 }
 
 .chart-axis {

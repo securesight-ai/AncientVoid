@@ -55,8 +55,8 @@ export function AreaChart({ points, stepMs, label, format, formatTime, table }: 
   };
   return (
     <figure class="chart-area" aria-label={label}>
+      <span class="chart-max">{format(max)}</span>
       <div class="chart-plot" onPointerMove={pick} onPointerDown={pick} onPointerLeave={() => setHover(null)}>
-        <span class="chart-max">{format(max)}</span>
         <svg viewBox={`0 0 ${W} 160`} preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">

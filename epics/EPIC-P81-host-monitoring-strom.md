@@ -1,6 +1,6 @@
 # EPIC-P81 — Host-Monitoring und Strom: alle Werte aller Hosts, schick und ehrlich
 
-**Status:** in Umsetzung seit 23.11.2026 (T81.1–T81.12 liegen), Rest offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
+**Status:** in Umsetzung seit 23.11.2026 (T81.1–T81.13 liegen), Abschluss-Gate offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
 
 ## 1. Ziel & Entscheidung
 
@@ -152,8 +152,9 @@ Jeder Hub speichert nur sich selbst, der Home-Hub zusätzlich das NAS.
 - [x] **T81.10** Reiter „Hosts“ mit Detailseite, E2E `host-monitoring.spec.ts`. **K10**
 - [x] **T81.11** Reiter Metriken und Inferenz auf die Bausteine; bestehende Specs grün.
 - [x] **T81.12** Reiter Statistik überarbeiten; Filter-/Klapp-Zustand (P66) bleibt. **K10**
-- [ ] **T81.13** Roll-out auf drei Hubs (evox2 läuft unter anderem Benutzer: Nutzer nötig), `docs/host-monitoring.md`, Guide-Inventar,
-  Host-Liste in `~/AGENTS.md`.
+- [x] **T81.13** Roll-out auf drei Hubs und NAS (23.11.2026), `docs/host-monitoring.md`, Guide-Inventar,
+  Host-Liste in `~/AGENTS.md`. Sensor- und RAPL-Freigabe mit sudo auf omarchy/evox2 und Geräteabnahme: nach P000 verschoben (T000.33).
+- [ ] **T81.14** Abschluss-Gate: volle Suite (`nightly.yml` bzw. `npm run gate`) auf dem Stand mit allen P81-PRs grün.
 
 Reihenfolge: T81.1 sofort; T81.3 → T81.4/6/7 → T81.10; T81.9 parallel.
 
@@ -205,3 +206,36 @@ Alle T81.* und AC-P81-* mit Evidenz; `npm run gate` lokal grün; GitHub-Actions-
 `e2e/specs/`; alle vier Hosts live erreichbar, Reiter im Guide-Inventar; Geräteabnahme
 auf Handy und Tablet als P000-Eintrag; Defekt-PRs mit `Fixes #<nr>`, Tracker-Issue in der
 Statuszeile, Issues des Epics gesichtet (`docs/issues.md`).
+
+## Retro (Zwischenstand nach Roll-out, 23.11.2026)
+
+| AC | Stand | Beleg / was fehlt |
+|---|---|---|
+| AC-P81-1 | 🟡 | Live: omarchy 107, evox2 120, Server 116, NAS 42 Messpunkte, keine Quellenfehler. CPU-Watt, Lüfter und SATA-Temperatur auf omarchy brauchen sudo (T000.33); zeilenweiser Abgleich gegen `sensors` fehlt |
+| AC-P81-2 | 🟡 | 10 Proben: Mittel 64,9 W gegen 64,5 W (0,7 %). Einzelwerte bis 6,6 % daneben, weil der letzte Takt bis 5 s alt ist; gleichzeitige Messung fehlt |
+| AC-P81-3 | 🟢 | `history.test.ts` „Ausfall und Hänger werden sichtbar“, `routes.test.ts` „toter Peer behält den letzten Wert“, E2E `host-monitoring` „Summe ohne ausgefallenen Host“ |
+| AC-P81-4 | 🟢 | `history.test.ts` „überlebt den Neustart“, „legt eine defekte Datei beiseite“ |
+| AC-P81-5 | 🟢 | `collector.test.ts` „APU-PPT und RAPL desselben Pakets zählen einmal“ |
+| AC-P81-6 | 🟢 | Katalog `i18n/de/hosts.ts` ohne Euro; Summe nur aus `power.ts` `sumComponentPower` |
+| AC-P81-7 | 🟢 | 10-min-Mittel des ganzen Hub-Prozesses: Server 0,47 %, evox2 0,46 % eines Kerns; `history.test.ts` „90 Tage bleiben unter 200 MB“. Auf omarchy nicht einzeln messbar (Hub trägt dort alle Sessions) |
+| AC-P81-8 | 🟢 | Übersicht live 2,5 KB; `history.test.ts` ≤ 720 Punkte; E2E 412 px ohne Querscrollen |
+| AC-P81-9 | 🟢 | `ssh-host.test.ts` „liest keine Seriennummern“ |
+| AC-P81-10 | 🟢 | `css-tokens`, `ui-primitives`, `check:i18n`, `check:arch` grün; Tabelle je Kurve im E2E |
+
+**Premortem:** 6 (RAPL-Recht fehlt) eingetreten und wie geplant sichtbar („keine Berechtigung“, nie 0 W);
+1 (schöne, aber falsche Summe) in milder Form: der PPT-Sensor des Servers springt kurz auf 1–14 W, das Minutenmittel
+gleicht es aus. 2, 4, 5, 7, 8 nicht eingetreten; 3 widerlegt (AC-P81-7).
+
+**Erkenntnisse**
+
+1. Stand-in-Daten verdecken echte Geometrie: abgeschnittene Balken, 0 °C unbelegter Super-I/O-Eingänge und die leere
+   NAS-Kurve fielen erst in der Live-Ansicht auf (Fix: dieser PR).
+2. Der Umbau fand zwei alte Anzeigefehler (#384): „Züge/Session“ als Millisekunden, 0,02 s/token als 0.
+3. Das Drift-Gate stoppte #380 zu Recht: `docs/architecture.md` kannte Suche, Ralph und Host-Metriken nicht.
+4. NAS-Schlüssel hält: ein fremdes Kommando liefert trotzdem nur den Messabzug (Live-Probe).
+
+**Action Items**
+
+- AI-P81-1: Abschluss-Gate fahren — zurück als: T81.14.
+- AI-P81-2: sudo-Schritte und Geräteabnahme — zurück als: T000.33.
+- AI-P81-3: AC-P81-1/-2 gegen `sensors` zeitgleich messen — zurück als: T81.14 (Teil der Abschlussprüfung).

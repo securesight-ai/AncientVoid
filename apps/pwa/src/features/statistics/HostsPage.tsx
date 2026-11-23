@@ -205,13 +205,16 @@ function Detail({ id, onBack }: { id: string; onBack: () => void }) {
   const [metric, setMetric] = useState<HostMetricPoint | null>(null);
   const [query, setQuery] = useState("");
   const { data, stale } = usePoll<HostMetricsDetail>(() => hubApi.hostMetricsDetail(id), POLL_MS, [id]);
-  const key = metric?.key ?? COMPONENT_POWER_KEY;
+  // Ein Host ohne jede Watt-Quelle (NAS) zeigt statt einer leeren Leistungskurve seine erste Temperatur.
+  const noPower = data !== null && data.host.summary !== null && data.host.summary.watts === null && data.host.summary.wattMissing.length === 0;
+  const shown = metric ?? (noPower ? (data.sample?.points.find((p) => p.group === "temperature" && p.value !== null) ?? null) : null);
+  const key = shown?.key ?? COMPONENT_POWER_KEY;
   const { data: history } = usePoll<HostMetricsHistory>(() => hubApi.hostMetricsHistory(id, range, key), HISTORY_POLL_MS, [id, range, key]);
   const back = <Button variant="subtle" onClick={onBack}>‹ {t("hosts.back")}</Button>;
   if (!data) return <div class="status-page hosts">{back}<EmptyState text={stale ? t("hosts.failed", { error: id }) : t("hosts.loading")} /></div>;
   const { host, sample } = data;
-  const label = metric ? `${metric.device} ${metric.label}` : t("hosts.power");
-  const format = (v: number) => formatHostValue(v, metric?.unit ?? "W");
+  const label = shown ? `${shown.device} ${shown.label}` : t("hosts.power");
+  const format = (v: number) => formatHostValue(v, shown?.unit ?? "W");
   const days = history?.days.slice(-14) ?? [];
   const groups = groupPoints(sample?.points ?? [], query);
   return (
@@ -246,7 +249,7 @@ function Detail({ id, onBack }: { id: string; onBack: () => void }) {
           <ul>
             {g.points.map((p) => (
               <li key={p.key}>
-                <button type="button" aria-pressed={p.key === metric?.key} onClick={() => setMetric(p)}>
+                <button type="button" aria-pressed={p.key === shown?.key} onClick={() => setMetric(p)}>
                   <span>{p.device} · {p.label}</span>
                   <small>{p.reason ?? p.source}</small>
                   <strong>{formatHostValue(p.value, p.unit)}</strong>
