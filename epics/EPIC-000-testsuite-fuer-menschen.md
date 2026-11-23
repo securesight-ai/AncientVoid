@@ -197,6 +197,16 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   dass Events kompakt bleiben (K5). Stand-in-Rauch (T54.5) zählt nicht als
   Abnahme. Beleg: Checklisten-Zeile mit Datum.
 
+### Übernommen aus BUG-0167 (2026-11-23)
+
+- [ ] **T000.32 — fastify entpinnt am macOS-Host nachweisen (BUG-0167).**
+  (Herkunft: bugs/bug-0167-fastify-update-macht-zughistorie-flaky.md)
+  Auf gpubox den Repeat-Lauf `npx playwright test e2e/specs/progress.spec.ts
+  -g Zughistorie --repeat-each=30` gegen den entpinnten Stand (fastify
+  5.12.8+) fahren — grün heißt Pin bleibt weg, rot heißt Playwright-Trace
+  (`--trace on`) anlegen und BUG-0167 wieder öffnen. Beleg: Laufzeile mit
+  Datum und fastify-Version.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine

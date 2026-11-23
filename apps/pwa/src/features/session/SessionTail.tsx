@@ -2134,9 +2134,12 @@ export function SessionTail({
               ) : (
                 <div class="run-progress dim">
                   {t("session.running_since")} {formatMinutes(progress.elapsedMs)}
-                  {progress.medianTurnMs !== null
-                    ? t("session.turn_median", { "med": formatMinutes(progress.medianTurnMs), "count": progress.turnCount })
-                    : " · ohne Plan kein Fortschritt messbar"}
+                  {/* BUG-0167: Server-Median vorziehen — der Client-Rechner kennt nur sein gekapptes Fenster. */}
+                  {estimate?.sessionMedianMs != null
+                    ? t("session.turn_median", { "med": formatMinutes(estimate.sessionMedianMs), "count": estimate.sessionTurns ?? 0 })
+                    : progress.medianTurnMs !== null
+                      ? t("session.turn_median", { "med": formatMinutes(progress.medianTurnMs), "count": progress.turnCount })
+                      : " · ohne Plan kein Fortschritt messbar"}
                   {estimateText(estimate, progress.elapsedMs)
                     ? ` · ${estimateText(estimate, progress.elapsedMs)}`
                     : ""}

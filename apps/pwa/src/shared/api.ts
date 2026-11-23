@@ -766,6 +766,9 @@ export interface RunEstimate {
   medianMs: number | null;
   p80Ms: number | null;
   tokensPerSec: number | null;
+  /** BUG-0167: Median/Zahl der eigenen Züge dieser Session (ab 2; nur mit Session-ID). */
+  sessionMedianMs?: number | null;
+  sessionTurns?: number;
 }
 
 export interface QueuedPrompt {

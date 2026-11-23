@@ -87,4 +87,17 @@ describe("TurnMetricStore", () => {
     store.replaceSession("s3", [1, 2].map((n) => row(n, 99_000, "claude", "opus", "s3")));
     expect(store.estimate("claude", "opus", "s3")).toMatchObject({ basis: "model" });
   });
+
+  it("BUG-0167: eigene Züge der Session unabhängig von MIN_TURNS mitgeben — der Client-Reload kennt sein Fenster nicht", () => {
+    const store = new TurnMetricStore(new HubDatabase(":memory:"));
+    store.replaceSession("a1", [1, 2].map((n) => row(n, n * 1000, "claude", "opus", "a1")));
+    // Fallback-Kette bleibt wie sie ist (a1 selbst zu klein → Modell/Adapter),
+    // aber Median und Zahl der eigenen Züge stehen mit dabei.
+    expect(store.estimate("claude", "opus", "a1")).toMatchObject({ state: "too-few", sessionTurns: 2, sessionMedianMs: 1500 });
+    // Ohne Session-ID (Status-Seite) bleiben die Felder weg.
+    expect(store.estimate("claude", "opus")).not.toHaveProperty("sessionTurns");
+    // Ein einziger Zug ist keine Statistik — auch serverseitig nicht.
+    store.replaceSession("a3", [row(1, 4000, "claude", "haiku3", "a3")]);
+    expect(store.estimate("claude", "haiku3", "a3")).toMatchObject({ sessionTurns: 1, sessionMedianMs: null });
+  });
 });

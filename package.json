@@ -82,7 +82,7 @@
     "dependency-cruiser": "^18.7.2",
     "eslint": "^10.12.0",
     "eslint-plugin-n": "^18.5.0",
-    "fastify": "5.12.5",
+    "fastify": "^5.12.8",
     "fflate": "^0.8.3",
     "knip": "^6.45.1",
     "playwright": "^1.65.1",
@@ -96,8 +96,5 @@
   "allowScripts": {
     "esbuild@0.21.5": true,
     "esbuild@0.25.12": true
-  },
-  "overrides": {
-    "fastify": "5.12.5"
   }
 }

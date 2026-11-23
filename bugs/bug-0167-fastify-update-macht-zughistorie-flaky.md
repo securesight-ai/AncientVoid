@@ -1,7 +1,7 @@
 ---
 id: BUG-0167
 slug: fastify-update-macht-zughistorie-flaky
-status: open
+status: done
 severity: S3
 area: server
 instance: dev
@@ -76,3 +76,37 @@ er ist offenbar an die macOS-Umgebung des Erstbefunds gebunden (dort
 Spekulation ohne Repro — root-caused werden muss mit Playwright-Trace
 (`--trace on`) auf dem macOS-Host (gpubox) im Repeat-Lauf. Pin bleibt
 bis dahin Notlösung; Issue bleibt offen.
+
+## Fix (2026-11-23) — Root cause war der Client, nicht fastify
+
+Die fehlende Regression aus der Testlücke oben ergänzt und damit den Fall
+**deterministisch auf Linux (und mit gepinntem 5.12.5!)** reproduziert:
+Nach einem Reload mitten im dritten Zug fällt die Anzeige immer auf
+„Schätzung ab 5 Läufen (bisher 2)“ zurück. Ursache: Der Client rechnete die
+„Zug hier meist (n gelaufen)“-Mediane aus **seinem gekappten Ereignisfenster**
+(TAIL_ROWS) — fehlt dort der älteste `session.prompt`, zählt der Zug nicht und
+der Median kippt unter 2. Die fastify-Version bestimmte nur über Timing/
+Fenstergrenze mit, ob es auffiel — daher der macOS-Flake ohne Reload und die
+90/90 auf Linux.
+
+Fix:
+
+- `RunEstimate` (Contract, additiv-optional): `sessionMedianMs`,
+  `sessionTurns` — Median/Zahl der eigenen erfolgreichen Züge, unabhängig
+  von `MIN_TURNS_FOR_ESTIMATE` (Client-Regel ab 2), Median-Regel wie der
+  Client (gerade Anzahl = Mittelwert).
+- `TurnMetricStore.estimate()` hängt die Felder an jede Antwort mit
+  Session-ID an; `SessionTail` zieht den Server-Median vor den
+  Fenster-Median.
+- Pin entfernt (`fastify` ^5.12.8, Overrides weg), Dependabot-Ignore weg.
+  macOS/gpubox-Nachweis des entpinnten Standes (Repeat-Lauf
+  „ohne Plan, mit Zughistorie“, bei Bedarf `--trace on`): **nach P000
+  verschoben** (T000.32).
+
+Rot ohne Fix: `e2e/specs/progress.spec.ts` „Zughistorie“-Reload-Schritt
+(2 Läufe rot) und Unit `turn-metrics.test.ts` „BUG-0167“ (Felder fehlten).
+Grün mit Fix: Unit runs 9/9; „Zughistorie“-E2E 5× sequenziell grün mit
+fastify 5.12.8 (9,5–17,9 s je Lauf). Die Kontingent-/Kontextfenster-Fälle
+der gleichen Datei flaken nur unter zwei parallelen Playwright-Instanzen —
+nachgewiesen auch auf saubinem main ohne diesen Fix (Stash-Vergleich), also
+fix-fremd. lint + typecheck grün.
