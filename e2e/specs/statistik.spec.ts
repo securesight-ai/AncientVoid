@@ -56,9 +56,9 @@ async function openSection(page: Page, title: string) {
 }
 
 test.describe("Statistik-Zentrale (EPIC-P56/P66)", () => {
-  test("BUG-0257: eine Seite, drei Reiter — Metriken/Inferenz über denselben Menüpunkt, Altlinks leiten um", async ({ app }) => {
+  test("BUG-0257: eine Seite, vier Reiter — Metriken/Inferenz über denselben Menüpunkt, Altlinks leiten um", async ({ app }) => {
     await openStatistics(app);
-    await expect(app.getByRole("tab")).toHaveCount(3);
+    await expect(app.getByRole("tab")).toHaveCount(4);
     await expect(app.getByRole("tab", { name: "Statistik" })).toHaveAttribute("aria-selected", "true");
     await app.getByRole("tab", { name: "Metrik" }).click();
     await expect(app).toHaveURL(/#\/statistik\/metriken$/);

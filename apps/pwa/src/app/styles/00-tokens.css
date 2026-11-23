@@ -73,6 +73,12 @@
   --orange-400: #ff9e64;
   --orange-700: #a04b0a;
   --blue-400: #7aa2f7;
+  /* Daten (EPIC-P81): auf Farbfehlsichtigkeit und Kontrast geprüft, je Thema eigene Stufe */
+  --data-blue-400: #3987e5;
+  --data-blue-600: #2a78d6;
+  --data-orange-400: #d95926;
+  --data-orange-600: #eb6834;
+  --data-aqua-400: #199e70;
 
   /* ─── Schicht 2: Semantik — Flächen, Text, Linien ─── */
   --bg: var(--gray-950);
@@ -109,6 +115,10 @@
   --graph-code: var(--cyan-400);
   --graph-config: var(--void-violet-500);
   --graph-other: var(--gray-300);
+  /* EPIC-P81: Datenfarben folgen dem Bauteil (CPU, GPU, Rest), nie dem Rang. */
+  --data-1: var(--data-blue-400);
+  --data-2: var(--data-orange-400);
+  --data-3: var(--data-aqua-400);
 
   /* ─── Form ─── */
   --radius: 7px;
@@ -209,6 +219,9 @@
   --graph-code: var(--cyan-800);
   --graph-config: var(--void-violet-600);
   --graph-other: var(--gray-600);
+  --data-1: var(--data-blue-600);
+  --data-2: var(--data-orange-600);
+  --data-3: var(--mint-700);
   --shadow-elev: 0 0 0 1px var(--bg-chip), 0 14px 28px -18px var(--scrim-700);
   --shadow-sheet: 0 18px 48px -22px var(--scrim-600);
   --backdrop: var(--scrim-600);

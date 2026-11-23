@@ -47,7 +47,7 @@ export function App({
   vaultTab?: "notizen" | "wissen";
   /** EPIC-P34 T34.2: on a wide screen the tool pages live in the detail column (ToolPane); the list stays the list. */
   /** BUG-0257: Reiter der Analyse-Seite aus dem Hash (#/statistik/metriken). */
-  statTab?: "metriken" | "inferenz" | null;
+  statTab?: "hosts" | "metriken" | "inferenz" | null;
   wide?: boolean;
   /** EPIC-P43 T43.7: die Warteschlange als eigenes Fenster hat kein Dock (ADR-0053 Punkt 2). */
   dock?: boolean;

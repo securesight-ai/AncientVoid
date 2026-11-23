@@ -68,6 +68,11 @@ Drei Schichten: **Primitiv** (nur Hex/rgb, nur in `00-tokens.css`) →
 | `--orange-400` | primitiv | `#ff9e64` |
 | `--orange-700` | primitiv | `#a04b0a` |
 | `--blue-400` | primitiv | `#7aa2f7` |
+| `--data-blue-400` | primitiv | `#3987e5` |
+| `--data-blue-600` | primitiv | `#2a78d6` |
+| `--data-orange-400` | primitiv | `#d95926` |
+| `--data-orange-600` | primitiv | `#eb6834` |
+| `--data-aqua-400` | primitiv | `#199e70` |
 | `--bg` | semantik | `var(--gray-950)` |
 | `--bg-elev` | semantik | `var(--gray-850)` |
 | `--bg-chip` | semantik | `var(--gray-800)` |
@@ -98,6 +103,9 @@ Drei Schichten: **Primitiv** (nur Hex/rgb, nur in `00-tokens.css`) →
 | `--graph-code` | semantik | `var(--cyan-400)` |
 | `--graph-config` | semantik | `var(--void-violet-500)` |
 | `--graph-other` | semantik | `var(--gray-300)` |
+| `--data-1` | semantik | `var(--data-blue-400)` |
+| `--data-2` | semantik | `var(--data-orange-400)` |
+| `--data-3` | semantik | `var(--data-aqua-400)` |
 | `--radius` | form | `7px` |
 | `--radius-sm` | form | `4px` |
 | `--radius-lg` | form | `14px` |
