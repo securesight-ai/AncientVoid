@@ -1,7 +1,7 @@
 import type { MainSyncSettings } from "@ancientvoid/contracts";
 import type { MainSyncApplyResult } from "@ancientvoid/contracts";
 import { MainSyncEngine } from "./main-sync-engine.ts";
-import { fetchMainBranch, resolveMainBranch } from "./main-sync-git.ts";
+import { fetchMainBranch, originRemoteUrl, resolveMainBranch } from "./main-sync-git.ts";
 
 /** Was der Scheduler über eine Sync-fähige Session wissen muss (SessionManager liefert das). */
 export interface MainSyncCandidate {
@@ -134,6 +134,10 @@ export class MainSyncScheduler {
   }
 
   private async runProject(projectPath: string, sessions: MainSyncCandidate[], settings: MainSyncSettings): Promise<void> {
+    // BUG-0260: ohne Haupt-Fern ist nichts zu holen — kein Fetch, keine
+    // Projekt-Meldung „fetch-failed“ (die Lage heisst „kein Fern“, nicht „Fern
+    // nicht erreichbar“). Stufe 1 meldet sie beim Session-Start ohnehin.
+    if ((await originRemoteUrl(projectPath)) === null) return;
     let branch: string;
     try {
       branch = await resolveMainBranch(projectPath, settings);

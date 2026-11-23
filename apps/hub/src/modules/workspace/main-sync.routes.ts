@@ -43,7 +43,8 @@ export function registerMainSyncSettingsRoutes(app: FastifyInstance, ctx: RouteC
   // Session — derselbe Endpunkt für Menü, Benachrichtigungs-Knopf und hubctl.
   // GET ist generisches `read`; POST fällt unter `main-sync.apply` (Mensch +
   // Agent). Fehler sind ehrlich: 404 unbekannte Session, 409 ohne
-  // Worktree-Isolation, 502 Fetch nicht möglich.
+  // Worktree-Isolation, 501 ohne Haupt-Fern (benannte Lage, BUG-0260),
+  // 502 Fetch nicht möglich.
   app.get("/api/sessions/:id/main-sync", async (req, reply) => {
     const { id } = req.params as { id: string };
     if (!deps.sessions.get(id)) return reply.code(404).send({ error: "unknown session" });
@@ -53,6 +54,7 @@ export function registerMainSyncSettingsRoutes(app: FastifyInstance, ctx: RouteC
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (/Isolation/.test(message)) return reply.code(409).send({ error: message });
+      if (/kein Haupt-Fern/.test(message)) return reply.code(501).send({ error: message, reason: "no_remote" });
       return reply.code(502).send({ error: message });
     }
   });
@@ -66,6 +68,7 @@ export function registerMainSyncSettingsRoutes(app: FastifyInstance, ctx: RouteC
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (/Isolation/.test(message)) return reply.code(409).send({ error: message });
+      if (/kein Haupt-Fern/.test(message)) return reply.code(501).send({ error: message, reason: "no_remote" });
       return reply.code(502).send({ error: message });
     }
   });

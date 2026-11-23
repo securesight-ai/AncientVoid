@@ -97,6 +97,30 @@ describe("EPIC-P67 T67.5 — MainSyncScheduler: Takt, Modi, Entprellen", () => {
     expect(behind[0]).toMatchObject({ behind: 1, sessions: 20 });
   });
 
+  it("BUG-0260: Projekt ohne Haupt-Fern — kein Fetch, keine fetch-failed-Meldung", async () => {
+    const repo = join(base, "nofern-repo");
+    await execFileAsync("git", ["init", "-q", "-b", "main", repo]);
+    await execFileAsync("git", ["-C", repo, "config", "user.email", "test@ancientvoid.local"]);
+    await execFileAsync("git", ["-C", repo, "config", "user.name", "ancientvoid test"]);
+    await commit(repo, "initial", "a.txt");
+    const counter = { calls: 0 };
+    const notices: MainSyncSchedulerNotice[] = [];
+    const wt = new WorktreeManager(join(out, "nofern"));
+    const created = await wt.create("nofern-session", repo); // Stufe 1: Grund no-remote, Basis lokaler HEAD
+    const clock = { value: Date.parse("2026-11-22T12:00:00Z") };
+    const scheduler = new MainSyncScheduler({
+      settingsFor: () => settings(),
+      candidates: () => [fakeCandidate("s-nofern", repo, created!.path, true)],
+      apply: async () => ({ outcome: "skipped", reason: "session-busy" }),
+      notice: (n) => notices.push(n),
+      now: () => new Date(clock.value),
+      fetch: countingFetch(counter, repo),
+    });
+    await scheduler.tick();
+    expect(counter.calls).toBe(0); // kein Fetch gegen ein Fern, das es nicht gibt
+    expect(notices.length).toBe(0); // und keine Projekt-Meldung „fetch-failed“
+  });
+
   it("Intervall: zweiter Takt innerhalb des Intervalls fetcht nicht; nach Ablauf wieder — und 0 = aus", async () => {
     const { repo } = await mkProject(base, "intervall");
     const counter = { calls: 0 };

@@ -292,6 +292,27 @@ describe("EPIC-P67 T67.4 — SessionManager: Check/Apply, Gating, Journal, K7-Fa
     }
   });
 
+  it("BUG-0260: Projekt ohne Haupt-Fern — benannter Grund statt Fehler-Event in der Sessions-Akte", async () => {
+    const repo = join(base, "nofern-repo");
+    await execFileAsync("git", ["init", "-q", "-b", "main", repo]);
+    await execFileAsync("git", ["-C", repo, "config", "user.email", "test@ancientvoid.local"]);
+    await execFileAsync("git", ["-C", repo, "config", "user.name", "ancientvoid test"]);
+    await commit(repo, "initial", "a.txt");
+    const manager = await setupManager(repo, "nofern");
+    try {
+      const record = await manager.create({ adapter: "a", project: repo, prompt: "arbeite" }, "pc");
+      await waitStatus(manager, record.id, "idle");
+      await expect(manager.mainSyncCheck(record.id)).rejects.toThrow(/kein Haupt-Fern/);
+      const kinds = (await manager.tail(record.id, 0)).map((e) => (e.payload as { kind?: string }).kind);
+      expect(kinds).not.toContain("workspace.main_sync_failed");
+      expect(kinds).toContain("workspace.main_sync_skipped"); // Grund no-remote, benannt statt Fehler
+      // Stufe 1 bleibt unberuehrt: der Worktree entstand auf lokalem HEAD (reason no-remote)
+      expect(manager.workdirOf(record.id)).toBeTruthy();
+    } finally {
+      await manager.shutdown();
+    }
+  });
+
   it("Ohne Worktree-Isolation (direkter Modus): Check/Apply werfen mit benanntem Grund", async () => {
     const db = new HubDatabase(":memory:");
     const registry = new AdapterRegistry();

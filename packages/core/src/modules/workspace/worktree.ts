@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { lstat, mkdir, readdir, realpath, rm } from "node:fs/promises";
 import { join, sep } from "node:path";
 import type { MainSyncSettings } from "@ancientvoid/contracts";
-import { classifyFetchError, currentGitBranch, fetchMainBranch, resolveMainBranch } from "./main-sync-git.ts";
+import { classifyFetchError, currentGitBranch, fetchMainBranch, originRemoteUrl, resolveMainBranch } from "./main-sync-git.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -206,9 +206,8 @@ export class WorktreeManager {
   }
 
   /** Remote-URL von `origin`, null wenn kein Remote konfiguriert ist. */
-  private async remoteUrl(projectPath: string): Promise<string | null> {
-    const { stdout } = await execFileAsync("git", ["-C", projectPath, "remote", "get-url", "origin"]).catch(() => ({ stdout: "" }));
-    return stdout.trim() || null;
+  private remoteUrl(projectPath: string): Promise<string | null> {
+    return originRemoteUrl(projectPath); // BUG-0260: eine Definition dafuer, ob ein Projekt ein Haupt-Fern hat
   }
 
   /**
