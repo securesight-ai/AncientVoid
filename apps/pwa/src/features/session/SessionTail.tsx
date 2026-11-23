@@ -205,6 +205,11 @@ function BoltGlyph() {
   );
 }
 
+/** Ein Hash muss als Suchmuster passen: Hostkürzel enthalten Punkte. */
+function escapeForRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function fitSessionMenu(menu: HTMLDetailsElement | null): void {
   if (!menu?.open) return;
   const items = menu.querySelector<HTMLElement>(".session-menu-items");
@@ -229,6 +234,7 @@ export function SessionTail({
   onNavigate,
   onArchived,
   initialCode,
+  initialSeq,
   initialTab,
   initialFile,
   workspaceTab,
@@ -241,6 +247,9 @@ export function SessionTail({
    * die Übersicht zurück. */
   onArchived?: () => void;
   initialCode?: CodeTarget;
+  /** Fundstelle aus der Hash-Route (`…/seq/474`): die Sitzung öffnet sich und der
+   * Chat läuft zu der Nachricht, die den Fund trägt. */
+  initialSeq?: number;
   /** EPIC-P48 / ADR-0071: Graph-, Git- oder Datei-Tab (Hash-Routen). */
   initialTab?: "graph" | "git" | "datei";
   initialFile?: string | null;
@@ -397,6 +406,9 @@ export function SessionTail({
   const awayRef = useRef(false);
   /** BUG-0211: unterste Folge, die gehalten wird — hierher hat der Leser sich hochgeladen. */
   const floorSeqRef = useRef(0);
+  /** Während eines Sprungs gilt: kein Abschneiden des Fensters (sonst fällt das
+   * Ziel heraus, während die älteren Seiten hereinkommen). */
+  const jumpHoldRef = useRef<number | null>(null);
   /** Haltet die Ansicht, als aeltere Eintraege dazukamen: die Haltezeile behaelt ihren
    *  Abstand zum Rand. `floor` ist die aelteste frisch vorgelagerte Folge — der Anker wirkt
    *  erst, wenn diese Zeile tatsaechlich im DOM steht (ein Events-Commit vorher darf ihn
@@ -1107,7 +1119,7 @@ export function SessionTail({
         if (jumpSeqRef.current !== seq) return; // durch eine neuere Absicht ersetzt
         const node =
           tailRef.current?.querySelector<HTMLElement>(`[data-seq="${seq}"]`) ??
-          null;
+          (tries > 8 ? resolveSeqNode(seq) : null);
         if (node) {
           jumpSeqRef.current = null;
           const box = tailRef.current?.getBoundingClientRect();
@@ -1117,9 +1129,13 @@ export function SessionTail({
             stickRef.current = false;
             node.scrollIntoView({ behavior: "auto", block: "start" });
           }
+          // Nachleuchten: die Fundstelle ist gefunden, sie muss aber auch als solche
+          // zu sehen sein — 2,2 s, damit das Auge sie erkennt.
+          node.classList.add("hit-target");
+          window.setTimeout(() => node.classList.remove("hit-target"), 2200);
           return;
         }
-        if (++tries < 120) raf = requestAnimationFrame(attempt);
+        if (++tries < 300) raf = requestAnimationFrame(attempt);
         else jumpSeqRef.current = null; // nie im DOM aufgetaucht — nicht ewig nachhalten
       };
       attempt();
@@ -1166,9 +1182,14 @@ export function SessionTail({
       }
       anchorRef.current = anchor ? { ...anchor, floor: older[0]!.seq } : null;
       floorSeqRef.current = older[0]!.seq;
-      setEvents((prev) =>
-        tailWindow([...older, ...prev], TAIL_ROWS, floorSeqRef.current),
-      );
+      setEvents((prev) => {
+        const merged = [...older, ...prev];
+        // Ein Sprung zu einer Fundstelle darf das Ziel nicht selbst abschneiden:
+        // das Fenster hängt unten am nachgeladenen Rand, bei einem Sprung wäre die
+        // Fundstelle nach dem letzten Nachladen genau herausgefallen.
+        if (jumpHoldRef.current !== null) return merged;
+        return tailWindow(merged, TAIL_ROWS, floorSeqRef.current);
+      });
       setOlderNote(older[0]!.seq <= 1 ? "ende" : "mehr" /* i18n-ignore: Daten-Key */);
     } catch {
       setOlderNote("fehler");
@@ -1183,14 +1204,99 @@ export function SessionTail({
    * DOM-Wartezyklus unten nach 120 Frames ehrlich aufgibt). */
   const jumpToSeq = async (seq: number): Promise<void> => {
     setActiveTab("chat");
-    for (let tries = 0; tries < 15; tries++) {
-      const floor = floorSeqRef.current;
-      if (loadingOlderRef.current || floor === 0 || seq >= floor) break;
+    jumpHoldRef.current = seq;
+    let lastFloor = Number.POSITIVE_INFINITY;
+    for (let tries = 0; tries < 30; tries++) {
+      // Der Haltepunkt ist am Anfang unbekannt: beim Öffnen einer Sitzung ist
+      // floorSeqRef noch 0 (gesetzt erst durch das erste Nachladen). Ohne den
+      // Blick auf die geladene Seite bricht die Schleife sofort ab und der
+      // Sprung geht ins Leere — genau der Fall aus der Suche / dem Sitzungsfilter.
+      const floor = floorSeqRef.current || events[0]?.seq || 0;
+      if (loadingOlderRef.current) {
+        await new Promise((r) => setTimeout(r, 120)); // ein laufender Nachladelauf erst auslaufen lassen
+        continue;
+      }
+      if (floor <= 1 || seq >= floor) break;
+      if (floor >= lastFloor) break; // kein Fortschritt — nicht endlos nachladen
+      lastFloor = floor;
       await loadOlder();
     }
     jumpSeqRef.current = seq;
     setJumpTick((n) => n + 1);
+    jumpHoldRef.current = null;
   };
+
+  /** Fundstelle aus der Adresse (`…/seq/474`): die Sitzung öffnet sich, der Chat
+   * läuft zu der Nachricht, und sie leuchtet kurz nach. Der Anker wird hier aus der
+   * Adresse gelesen — über Props gereicht wird er nicht, weil dieselbe Sitzung in
+   * einer Arbeitsflächen-Kachel oder in einem eigenen Fenster leben kann und dort
+   * niemand den Anker weitergeben würde. */
+  const jumpedSeqRef = useRef<number | null>(null);
+  const seqFromHash = (): number | null => {
+    // Die Sitzung ist an ihrer Id erkannt — host-qualifiziert (`hosts/<rechner>/…`)
+    // oder nicht; dazwischen kann noch ein Tab stehen (graph/git/datei).
+    const anchor = new RegExp(`sessions/${escapeForRegExp(session.id)}(?:/[^/]+)*/seq/(\\d+)$`);
+    const m = anchor.exec(location.hash);
+    return m ? Number(m[1]) : null;
+  };
+  /** Die Fundstelle ist eine Ereignis-Id, gemalt wird aber in Zügen: liegt die Id
+   * mitten in einem Turn, ist der Turn das Ziel — er enthält die Stelle, und nur er
+   * liegt im DOM. */
+  const resolveSeqNode = (seq: number): HTMLElement | null => {
+    const root = tailRef.current;
+    if (!root) return null;
+    const exact = root.querySelector<HTMLElement>(`[data-seq="${seq}"]`);
+    if (exact) return exact;
+    const nodes = [...root.querySelectorAll<HTMLElement>("[data-seq]")]
+      .map((n) => ({ node: n, at: Number(n.getAttribute("data-seq")) }))
+      .filter((x) => Number.isFinite(x.at))
+      .sort((a, b) => a.at - b.at);
+    if (!nodes.length) return null;
+    let pick = nodes[0]!;
+    for (const x of nodes) {
+      if (x.at <= seq) pick = x;
+      else break;
+    }
+    return pick.node;
+  };
+
+  /** Schon beim ersten Rendern merken: die App schreibt die Adresse um, sobald ein
+   * anderer Fokus wechselt — wäre der Anker dann weg, wäre der Sprung ein Zufall. */
+  const pendingSeqRef = useRef<number | null>(initialSeq ?? seqFromHash());
+  const runJump = (seq: number): void => {
+    void (async () => {
+      await jumpToSeq(seq);
+      // Der Layout-Effect (jumpSeqRef) scrollt und leuchtet nach, sobald die Zeile im
+      // DOM steht. Hier nur: darauf warten, dann die Fundstellen-Adresse abräumen.
+      for (let tries = 0; tries < 120 && jumpSeqRef.current !== null; tries++) {
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      if (seqFromHash() === null && location.hash.includes("/seq/")) {
+        history.replaceState(null, "", sessionHash(session.id, remoteHost(session.hostId)));
+      }
+    })();
+  };
+
+  const [hashTick, setHashTick] = useState(0);
+  useEffect(() => {
+    const on = () => {
+      // Gleich hier merken: die App schreibt die Adresse um, sobald ein anderer
+      // Fokus greift — wer den Anker erst in der nächsten Renderstufe holt, findet
+      // ihn nicht mehr.
+      const seq = seqFromHash();
+      if (seq !== null) pendingSeqRef.current = seq;
+      setHashTick((n) => n + 1);
+    };
+    window.addEventListener("hashchange", on);
+    return () => window.removeEventListener("hashchange", on);
+  }, []);
+  useEffect(() => {
+    const seq = pendingSeqRef.current ?? initialSeq ?? seqFromHash();
+    if (seq === null || seq === undefined || !events.length || jumpedSeqRef.current === seq) return;
+    jumpedSeqRef.current = seq;
+    pendingSeqRef.current = null;
+    runJump(seq);
+  }, [initialSeq, events.length, session.id, hashTick]);
 
   // Vorgelagerte Eintraege verschieben den Inhalt — die Lesestelle haelt an ihrem Abstand.
   useLayoutEffect(() => {
