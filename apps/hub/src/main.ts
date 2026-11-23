@@ -272,7 +272,7 @@ async function main(): Promise<void> {
   if (gk.model?.apiKeyFile && !gatekeeperKey) logger.warn("gatekeeper key file unreadable — model calls will fail (fail-closed)", { file: gk.model.apiKeyFile });
   const gatekeeper = gk.enabled
     ? new Gatekeeper({
-        ...(gk.model ? { model: { url: gk.model.url, model: gk.model.model, ...(gatekeeperKey ? { apiKey: gatekeeperKey } : {}) } } : {}),
+        ...(gk.model ? { model: { url: gk.model.url, model: gk.model.model, ...(gatekeeperKey ? { apiKey: gatekeeperKey } : {}), ...(config.inference?.gate ? { pforte: inferenzPforte } : {}) } } : {}),
         timeoutMs: gk.timeoutMs,
         minConfidence: gk.minConfidence,
       })
@@ -280,7 +280,9 @@ async function main(): Promise<void> {
   // T9.2: the same local model serves text commands unless one is set apart.
   const assistantCfg = config.assistant.model ?? gk.model;
   const assistantKey = assistantCfg?.apiKeyFile ? (await readFile(resolve(assistantCfg.apiKeyFile.replace(/^~(?=\/)/, homedir())), "utf8").catch(() => "")).split("\n")[0]?.trim() : undefined;
-  const assistantModel = assistantCfg ? { url: assistantCfg.url, model: assistantCfg.model, ...(assistantKey ? { apiKey: assistantKey } : {}) } : undefined;
+  // BUG-0272 Rest: dieselbe Pforte für die hub-internen Nutzer dieser Modell-URL
+  // (Titel, Befehle, Analyse) — als Hintergrund, hinter laufenden Zügen.
+  const assistantModel = assistantCfg ? { url: assistantCfg.url, model: assistantCfg.model, ...(assistantKey ? { apiKey: assistantKey } : {}), ...(config.inference?.gate ? { pforte: inferenzPforte } : {}) } : undefined;
   sessions.enableAiTitles(assistantModel);
   sessions.enableToolPermissions({
     approvals,

@@ -1,5 +1,6 @@
-import { isAbsolute, relative, resolve } from "node:path";
 import { SECURITY_GATES, TOOL_RISKS, type ModelVerdict, type SecurityGate, type ToolRisk } from "@ancientvoid/contracts";
+import { isAbsolute, relative, resolve } from "node:path";
+import { hintergrundAnfrage, type Pforte } from "../inference/index.ts";
 
 /**
  * T7.9: the model half of the gatekeeper — an OpenAI-compatible llama.cpp
@@ -13,6 +14,9 @@ export interface GatekeeperModelConfig {
   apiKey?: string | undefined;
   model: string;
   fetch?: typeof fetch;
+  /** BUG-0272 Rest: Labeln läuft als Hintergrund durch die Modell-Pforte —
+   * es wartet hinter laufenden Zügen, statt sie im KV zu verdrängen. */
+  pforte?: Pforte | undefined;
 }
 
 export const GATEKEEPER_GRAMMAR = [
@@ -107,21 +111,22 @@ export function valueConfidence(tokens: TokenLogprob[], valueStart: number, allo
 export async function askGatekeeperModel(cfg: GatekeeperModelConfig, toolName: string, input: Record<string, unknown>, workdir: string | null, signal?: AbortSignal): Promise<ModelVerdict> {
   const started = Date.now();
   const doFetch = cfg.fetch ?? fetch;
-  const res = await doFetch(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
-    method: "POST",
-    headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
-    body: JSON.stringify({
-      model: cfg.model,
-      messages: gatekeeperMessages(toolName, input, workdir),
-      grammar: GATEKEEPER_GRAMMAR,
-      temperature: 0,
-      max_tokens: 24,
-      logprobs: true,
-      top_logprobs: 8,
-      cache_prompt: true,
-    }),
-    ...(signal ? { signal } : {}),
-  });
+  const res = await hintergrundAnfrage(cfg.pforte, cfg.model, cfg.url, "gatekeeper", "Werkzeug labeln", () =>
+    doFetch(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
+      body: JSON.stringify({
+        model: cfg.model,
+        messages: gatekeeperMessages(toolName, input, workdir),
+        grammar: GATEKEEPER_GRAMMAR,
+        temperature: 0,
+        max_tokens: 24,
+        logprobs: true,
+        top_logprobs: 8,
+        cache_prompt: true,
+      }),
+      ...(signal ? { signal } : {}),
+    }));
   if (!res.ok) throw new Error(`Gatekeeper-Modell ${res.status}`);
   const body = (await res.json()) as { choices?: { message?: { content?: string }; logprobs?: { content?: TokenLogprob[] } }[] };
   const text = body.choices?.[0]?.message?.content ?? "";
