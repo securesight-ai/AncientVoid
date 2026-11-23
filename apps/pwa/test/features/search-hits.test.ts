@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { SessionTextHit } from "@ancientvoid/contracts";
-import { DEFAULT_ROLES, ROLE_KEYS, ROLE_ORDER, groupHits, roleLabel, splitSnippet, toggleRole } from "../../src/features/search/session-hits.tsx";
+import { DEFAULT_ROLES, ROLE_KEYS, ROLE_ORDER, groupHits, hiddenFacetRoles, roleLabel, splitSnippet, toggleRole } from "../../src/features/search/session-hits.tsx";
+import { projectName } from "../../src/shared/project-name.ts";
 
 /**
  * Suche (Nachschärfe 2026-11-22): die Fundstellen-Logik der PWA. Hier sitzt
@@ -89,5 +90,27 @@ describe("Rollen-Chips", () => {
     // Eine Suche ohne jede Rolle gibt es nicht — sonst füllt der Hub still die
     // Standardrolle auf, und die Oberfläche zeigt etwas anderes als gewählt.
     expect(toggleRole(["assistant"], "assistant")).toEqual(["assistant"]);
+  });
+
+  it("nennt den Kurznamen eines Projekts, auch mit Schrägstrichen am Ende", () => {
+    expect(projectName("/home/kaib/repos/tokdeck")).toBe("tokdeck");
+    expect(projectName("/home/kaib/repos/tokdeck/")).toBe("tokdeck");
+    expect(projectName("/")).toBe("/");
+  });
+
+  it("zählt die Fundstellen in abgeschalteten Rollen, damit eine leere Liste nicht lügt", () => {
+    const facets = [
+      { role: "user" as const, count: 2 },
+      { role: "assistant" as const, count: 18 },
+      { role: "thinking" as const, count: 284 },
+      { role: "tool" as const, count: 765 },
+    ];
+    const hidden = hiddenFacetRoles(facets, DEFAULT_ROLES);
+    expect(hidden.roles).toEqual(["thinking", "tool"]);
+    expect(hidden.count).toBe(1049);
+    // Alles an: nichts verborgen — der Hinweis darf nicht stehenbleiben.
+    expect(hiddenFacetRoles(facets, ROLE_ORDER)).toEqual({ roles: [], count: 0 });
+    // Eine Facette mit 0 ist keine versteckte Fundstelle.
+    expect(hiddenFacetRoles([{ role: "system", count: 0 }], DEFAULT_ROLES).count).toBe(0);
   });
 });

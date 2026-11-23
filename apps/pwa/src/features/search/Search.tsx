@@ -7,7 +7,8 @@ import { type ProjectDoc, type ProjectFile } from "../../shared/api.ts";
 import { sessionHash } from "../../app/route.ts";
 import { Markdown } from "../../shared/Markdown.tsx";
 import { Button, Chip, Segmented } from "../../shared/ui/index.ts";
-import { DEFAULT_ROLES, ROLE_ORDER, SessionHits, Snippet, groupHits, hitsLabel, roleLabel, toggleRole } from "./session-hits.tsx";
+import { DEFAULT_ROLES, ROLE_ORDER, SessionHits, Snippet, groupHits, hiddenFacetRoles, hitsLabel, roleLabel, toggleRole } from "./session-hits.tsx";
+import { projectName } from "../../shared/project-name.ts";
 
 // T3.8 (EPIC-P3 §3 "Sprachsuche"): real qmd-backed project MARKDOWN search
 // (the underlying qmd CLI only ever indexes `**/*.md` files — see
@@ -78,6 +79,10 @@ export function SearchPane({
   const [scope, setScope] = useState<Scope>("all");
   const [roles, setRoles] = useState<readonly TranscriptRole[]>(DEFAULT_ROLES);
   const [sessionsHereOnly, setSessionsHereOnly] = useState(false);
+  // Doku im aktuellen Projekt findet kein Tool, an dem man gerade nicht
+  // arbeitet. Umschaltbar, weil beides berechtigte Fragen sind. Der Hub sagt
+  // danach ehrlich, wie viele Projekte er tatsächlich angefasst hat.
+  const [docsEverywhere, setDocsEverywhere] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [res, setRes] = useState<UnifiedSearchResponse | null>(null);
   const [loaded, setLoaded] = useState(0);
@@ -103,7 +108,7 @@ export function SearchPane({
   }, [project]);
 
   const request = useCallback(
-    async (q: string, offset = 0, nextScope = scope, nextRoles = roles, hereOnly = sessionsHereOnly) => {
+    async (q: string, offset = 0, nextScope = scope, nextRoles = roles, hereOnly = sessionsHereOnly, allDocs = docsEverywhere) => {
       if (!q) return;
       const mine = ++seqRef.current;
       setStatus("searching");
@@ -115,7 +120,7 @@ export function SearchPane({
           roles: [...nextRoles],
           limit: PAGE,
           offset,
-          project,
+          ...(allDocs ? { allProjects: true } : { project }),
           ...(hereOnly ? { sessionProject: project } : {}),
         });
         if (mine !== seqRef.current) return;
@@ -128,7 +133,7 @@ export function SearchPane({
         setErrorMsg(err instanceof Error ? err.message : t("search.doc_error"));
       }
     },
-    [api, project, roles, scope, sessionsHereOnly],
+    [api, project, roles, scope, sessionsHereOnly, docsEverywhere],
   );
 
   /** Tippen sucht: 350 ms Ruhe, dann läuft die Anfrage. Ein Ein-Wort-Rest
@@ -164,6 +169,31 @@ export function SearchPane({
     setSessionsHereOnly(on);
     const q = query.trim();
     if (q.length >= MIN_QUERY) void request(q, 0, scope, roles, on);
+  };
+
+  const changeDocsEverywhere = (on: boolean) => {
+    setDocsEverywhere(on);
+    const q = query.trim();
+    if (q.length >= MIN_QUERY) void request(q, 0, scope, roles, sessionsHereOnly, on);
+  };
+
+  const hidden = res ? hiddenFacetRoles(res.facets, roles) : { roles: [], count: 0 };
+  // „nichts gefunden“ dreimal untereinander ist Lärm, nicht Auskunft: wenn im
+  // kombinierten Bereich beide Seiten leer sind, sagt die eine Zeile unten alles —
+  // die Abschnitte behalten nur ihren Status (Index, Rollenhinweis, Fehler).
+  const bothEmpty =
+    !!res &&
+    scope === "all" &&
+    res.sessions.length === 0 &&
+    res.docs.length === 0 &&
+    res.docStatus !== "indexing" &&
+    res.docStatus !== "unavailable" &&
+    res.docStatus !== "error";
+  const includeHidden = () => {
+    const next = ROLE_ORDER.filter((r) => roles.includes(r) || hidden.roles.includes(r));
+    setRoles(next);
+    const q = query.trim();
+    if (q.length >= MIN_QUERY) void request(q, 0, scope, next, sessionsHereOnly, docsEverywhere);
   };
 
   const groups = res ? groupHits(res.sessions) : [];
@@ -228,6 +258,12 @@ export function SearchPane({
           <input type="checkbox" checked={sessionsHereOnly} onChange={(e) => changeHereOnly((e.target as HTMLInputElement).checked)} />
           {t("search.only_this_project")}
         </label>
+        {scope !== "sessions" && (
+          <label class="search-here">
+            <input type="checkbox" checked={docsEverywhere} onChange={(e) => changeDocsEverywhere((e.target as HTMLInputElement).checked)} />
+            {t("search.docs_all_projects")}
+          </label>
+        )}
       </div>
 
       {status === "error" && <div class="reply-error">{errorMsg}</div>}
@@ -242,7 +278,15 @@ export function SearchPane({
             <span class="dim">{hitsLabel(res.sessionTotal)}</span>
           </div>
           {res.sessionStatus === "unavailable" && <div class="dim search-status">{t("search.sessions_unavailable")}</div>}
-          {groups.length === 0 && res.sessionStatus !== "unavailable" && <div class="ui-empty">{t("search.no_hits")}</div>}
+          {groups.length === 0 && res.sessionStatus !== "unavailable" && !bothEmpty && <div class="ui-empty">{t("search.no_hits")}</div>}
+          {groups.length === 0 && hidden.count > 0 && (
+            <div class="search-hint">
+              <span>{t("search.hidden_roles", { count: hidden.count, roles: hidden.roles.map(roleLabel).join(", ") })}</span>
+              <button class="ui-chip" onClick={includeHidden}>
+                {t("search.hidden_include")}
+              </button>
+            </div>
+          )}
           {groups.length > 0 && (
             <SessionHits
               groups={groups}
@@ -268,12 +312,18 @@ export function SearchPane({
           {res.docStatus === "indexing" && <div class="dim search-status">{t("search.doc_indexing")}</div>}
           {res.docStatus === "unavailable" && <div class="dim search-status">{t("search.doc_no_project")}</div>}
           {res.docStatus === "error" && <div class="dim search-status">{t("search.doc_error")}</div>}
+          {res.docProjects && (
+            <div class="dim search-status">
+              {t("search.docs_projects", { count: res.docProjects.length })}
+              {res.docTruncated ? ` · ${t("search.docs_more")}` : ""}
+            </div>
+          )}
           {res.docEngine === "local" && res.docs.length > 0 && (
             <div class="dim search-status">
               {t("search.fulltext_unavailable")} <span class="mono">{t("search.qmd")}</span> {t("search.not_installed")}
             </div>
           )}
-          {res.docs.length === 0 && res.docStatus !== "indexing" && res.docStatus !== "unavailable" && res.docStatus !== "error" && (
+          {res.docs.length === 0 && !bothEmpty && res.docStatus !== "indexing" && res.docStatus !== "unavailable" && res.docStatus !== "error" && (
             <div class="ui-empty">{t("search.no_hits")}</div>
           )}
           {res.docs.map((doc, i) => (
@@ -281,6 +331,7 @@ export function SearchPane({
               <div class="search-result-head">
                 <span class="mono search-result-file">{doc.file}</span>
                 <span class="dim">
+                  {doc.project ? `${projectName(doc.project)} · ` : ""}
                   {t("search.line")} {doc.line}
                 </span>
               </div>

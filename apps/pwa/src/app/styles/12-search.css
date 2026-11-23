@@ -215,6 +215,25 @@
   font-size: var(--text-xs);
 }
 
+/* Der Nyx-Knopf schwebt über der Liste und würde auf dem Handy genau auf dem
+   „Sitzung öffnen"-Knopf einer Fundkarte landen (gemessen: 48×48 px rechts unten).
+   Auf der Suchseite ist der Assistent einen Tab entfernt — hier steht er nur im Weg.
+   Dasselbe Muster wie die Vollansicht des Repo-Graphen (32-repo-graph.css). */
+body:has(.search-pane) .nyx-fab {
+  display: none;
+}
+
+/* Hinweis auf abgeschaltete Rollen: eine leere Liste liest sich sonst wie
+   „der Hub weiß nichts“, dabei liegen die Funde nur in einer anderen Rolle. */
+.search-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}
+
 .search-block {
   display: grid;
   gap: 8px;
