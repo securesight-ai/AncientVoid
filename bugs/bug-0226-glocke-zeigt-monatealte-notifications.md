@@ -1,7 +1,7 @@
 ---
 id: BUG-0226
 slug: glocke-zeigt-monatealte-notifications
-status: open
+status: done
 severity: S2
 area: server
 instance: dev
@@ -109,4 +109,24 @@ einem Gerät mit leerem Read-Mark alle Altzeilen als ungelesen.
 
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`)
-- [ ] `bugfix` oder offen lassen
+- [x] `bugfix` oder offen lassen
+
+
+## Fix (2026-11-23)
+
+Drei Teile:
+
+1. **Horizont + Retention (core):** `notifications()` liefert nur Zeilen ab
+   `NOTIFICATION_HORIZON_DAYS = 14` (`notificationHorizonCutoff`) und kappt
+   ältere gedrosselt (max. 1×/h, erster Lesezugriff = Start-Aufräumung).
+2. **Offline-Kennzeichnung (pwa/api):** `hubApi.notifications` liefert
+   `cachedAt` (aus `X-AncientVoid-Cached-At` des Service Workers) mit; der
+   Poll zählt eine gecachte Antwort als Hub-Ausfall (gleiche Warnung wie bei
+   totem Hub) und spielt sie nicht in die Liste ein.
+3. Verwaiste Zeilen beim Session-Löschen waren bereits mit BUG-0246 erledigt
+   (`purgeSessionSidecars`).
+
+Rot ohne Fix: Unit `session-manager.test.ts` „BUG-0226" (Altzeile wurde
+ausgeliefert), E2E `notifications.spec.ts` „BUG-0226" (ohne Client-Fix fehlt
+die Hub-down-Warnung, per Stash belegt). Grün mit Fix: Unit 61/61
+(session-manager + notifications), E2E grün, lint, typecheck.

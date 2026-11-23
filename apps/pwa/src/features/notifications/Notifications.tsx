@@ -245,9 +245,19 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
         try {
           const page = await hubApi.notifications(lastIds.current[""] ?? 0);
           if (!alive) return;
-          if (failures.current >= HUB_DOWN_AFTER) toast({ key: `hub-${Date.now()}`, level: "success", kind: null, title: t("notifications.hub_back"), detail: null, sessionId: null, hostId: null });
-          failures.current = 0;
-          take(null, page);
+          if (page.cachedAt) {
+            // BUG-0226: der Service Worker spielt offline die zuletzt gespeicherte
+            // Antwort als 200 nach — das ist kein erfolgreicher Poll. Der Bestand
+            // bleibt stehen, der Ausfall zählt sichtbar wie ein toter Hub.
+            failures.current += 1;
+            if (failures.current === HUB_DOWN_AFTER) {
+              toast({ key: `hub-${Date.now()}`, level: "warning", kind: null, title: t("notifications.hub_down"), detail: t("notifications.hub_down_detail"), sessionId: null, hostId: null });
+            }
+          } else {
+            if (failures.current >= HUB_DOWN_AFTER) toast({ key: `hub-${Date.now()}`, level: "success", kind: null, title: t("notifications.hub_back"), detail: null, sessionId: null, hostId: null });
+            failures.current = 0;
+            take(null, page);
+          }
         } catch {
           if (!alive) return;
           failures.current += 1;
