@@ -1,0 +1,131 @@
+/**
+ * Bilder in der Chat-Zeile und ihr Vollbild.
+ *
+ * Die Vorschau haelt eine feste Hoehe: träfen die Bytes erst ein und schübe das Bild
+ * die Zeile, spränge der Chat unter dem Finger weg. Das Vollbild arbeitet mit `dvh`
+ * und Safe-Area, damit es am Handy nicht hinter Adressleiste oder Gestenleiste verschwindet.
+ */
+.attachment-thumb {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 132px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  text-align: left;
+}
+.attachment-thumb-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 92px;
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  box-shadow: 0 0 0 1px var(--bg-chip);
+  overflow: hidden;
+}
+/* Am Handy gibt es keinen Hover — die Ecke sagt, dass ein Tipp das Bild oeffnet. */
+.attachment-thumb-frame::after {
+  content: "⤢";
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--scrim-950), black 60%);
+  color: var(--fg);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+.attachment-thumb-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.attachment-thumb-ph {
+  color: var(--fg-faint);
+  font-size: var(--text-sm);
+}
+.attachment-thumb-meta {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--fg-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachment-thumb:hover .attachment-thumb-frame,
+.attachment-thumb:focus-visible .attachment-thumb-frame {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.attachment-thumb:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.attachment-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-lightbox);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: color-mix(in srgb, var(--scrim-950), black 60%);
+  backdrop-filter: blur(3px);
+}
+.attachment-lightbox-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: calc(var(--space-2) + env(safe-area-inset-top, 0px)) var(--space-4) var(--space-2);
+  color: var(--fg);
+  font-size: var(--text-sm);
+}
+.attachment-lightbox-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachment-lightbox-dl {
+  color: var(--fg-dim);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+}
+.attachment-lightbox-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-3);
+}
+.attachment-lightbox-stage {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 var(--space-3) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+}
+.attachment-lightbox-stage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  box-shadow: var(--shadow-sheet);
+}
+.attachment-lightbox-note {
+  color: var(--err);
+  font-size: var(--text-sm);
+}
+
+/* Niedriges Querformat am Handy: Vorschau flacher, Leiste enger — das Bild bleibt gross. */
+@media (max-height: 520px) {
+  .attachment-thumb-frame {
+    height: 64px;
+  }
+  .attachment-lightbox-bar {
+    padding: var(--space-1) var(--space-3);
+  }
+}

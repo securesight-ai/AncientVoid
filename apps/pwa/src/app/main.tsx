@@ -13,6 +13,7 @@ import { getToken, isAuthError, setToken, hubApi, hostApi, remoteHost, setSelfHo
 import { resyncPush } from "../shared/push.ts";
 import { CommandBar } from "../features/commands/CommandBar.tsx";
 import { pageHash, parseAppHash, redirectLegacyRunHash, redirectLegacyStatHash, sessionHash, type CodeTarget, type TailTab } from "./route.ts";
+import { AttachmentRouteView } from "../features/attachments/Attachments.tsx";
 import { registerShortcut } from "../shared/shortcuts/registry.ts";
 import { CheatSheet } from "../shared/shortcuts/CheatSheet.tsx";
 import { installShortcutHints } from "../shared/shortcut-hint.ts";
@@ -188,6 +189,12 @@ function Main() {
     { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string }
   >({ view: "list", page: "dashboard" });
 
+  // Ein Anhang-Deep-Link (`#/anhang/<id>` oder `…/sessions/<id>/anhang/<id>`) liegt UEBER
+  // der jeweiligen Seite — der Link aus einer Agent-Nachricht oeffnet das Bild, Schliessen
+  // fuehrt dorthin zurueck, wo man war.
+  const [attachmentView, setAttachmentView] = useState<{ attachmentId: string; back: string } | null>(null);
+  const letzterHash = useRef("#/");
+
   useEffect(() => {
     // BUG-0006 (part 2): /api/health is deliberately open (tailnet
     // monitoring) — using it here to decide "ready" meant this always
@@ -259,6 +266,17 @@ function Main() {
         return;
       }
       const parsed = parseAppHash(location.hash);
+      if (parsed.view === "attachment") {
+        setAttachmentView({ attachmentId: parsed.attachmentId, back: letzterHash.current });
+        return;
+      }
+      if (parsed.view === "tail" && parsed.attachment) {
+        letzterHash.current = sessionHash(parsed.sessionId, parsed.hostId ?? null);
+        setAttachmentView({ attachmentId: parsed.attachment, back: letzterHash.current });
+      } else {
+        setAttachmentView(null);
+        letzterHash.current = location.hash || "#/";
+      }
       if (parsed.view === "devices") {
         // EPIC-P42: `#/geraete` ist die Fenster-Route des Popouts; im Hauptfenster geht es zur Übersicht
         // (das Panel öffnet sich über den Geräte-Knopf).
@@ -589,6 +607,9 @@ function Main() {
       {!wide && <FilesLayer wide={false} focusedSessionId={route.view === "tail" ? route.session.id : null} />}
       {!wide && <BrowserLayer focusedSessionId={route.view === "tail" ? route.session.id : null} />}
       {!wide && <DeviceLayer focusedSessionId={route.view === "tail" ? route.session.id : null} />}
+      {attachmentView && (
+        <AttachmentRouteView key={attachmentView.attachmentId} attachmentId={attachmentView.attachmentId} onClose={() => (location.hash = attachmentView.back)} />
+      )}
       <NyxFab />
     </>
   );

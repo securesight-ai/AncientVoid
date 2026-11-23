@@ -13,6 +13,8 @@ import { SourceChips, SourcePreviewNote } from "./SourceChips.tsx";
 import type { AttachmentRecord } from "../../shared/api.ts";
 import { Button } from "../../shared/ui/index.ts";
 import { openClipboardShelf } from "../../shared/clipboard-shelf.ts";
+import { imageFilesFrom } from "../../shared/paste-images.ts";
+import { requestAttach } from "../../shared/attach-external.ts";
 import { ShelfGlyph, useShelfCount } from "../clipboard/ClipboardShelf.tsx";
 
 /** T1.5-8: enhance.ts only has a real implementation for these adapters —
@@ -269,6 +271,27 @@ export function Composer({
       // sich das Layout unter dem Finger und der Klick auf die Taste darunter ginge ins Leere.
       onFocusIn={(e) => {
         if (e.target === inputRef.current) setTouched(true);
+      }}
+      // Ein Screenshot aus der Zwischenablage oder eine fallengelassene Bilddatei wird zum
+      // Anhang derselben Session — derselbe Weg wie die Bueroklammer (ADR-0093), damit
+      // Hochladen, Lese-Status und Fehler denselben Anzeigezustand haben.
+      onPaste={(e) => {
+        if (disabled || !onAttachmentsChange) return;
+        const bilder = imageFilesFrom(e.clipboardData);
+        if (bilder.length === 0) return;
+        e.preventDefault();
+        for (const bild of bilder) requestAttach(bild);
+      }}
+      onDragOver={(e) => {
+        if (disabled || !onAttachmentsChange) return;
+        if (Array.from(e.dataTransfer?.types ?? []).includes("Files")) e.preventDefault();
+      }}
+      onDrop={(e) => {
+        if (disabled || !onAttachmentsChange) return;
+        const bilder = imageFilesFrom(e.dataTransfer);
+        if (bilder.length === 0) return;
+        e.preventDefault();
+        for (const bild of bilder) requestAttach(bild);
       }}
     >
       <textarea

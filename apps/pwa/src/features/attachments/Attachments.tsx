@@ -1,4 +1,7 @@
 import { t } from "../../shared/i18n/index.ts";
+import { createPortal } from "preact/compat";
+import type { ComponentChildren } from "preact";
+import { useOverlayFocus } from "../../shared/overlay-focus.ts";
 import { Sheet, Button } from "../../shared/ui/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
@@ -109,16 +112,189 @@ export interface AttachmentRef {
 /** In the chat: what was sent along; tap for the picture and the read text. */
 export function AttachmentChips({ refs }: { refs: AttachmentRef[] }) {
   const [open, setOpen] = useState<AttachmentRef | null>(null);
+  const images = refs.filter((a) => a.kind === "image");
+  const documents = refs.filter((a) => a.kind !== "image");
   return (
     <div class="attachment-chips">
-      {refs.map((a) => (
+      {images.map((a) => (
+        <AttachmentThumb key={a.id} attachment={a} onOpen={() => setOpen(a)} />
+      ))}
+      {documents.map((a) => (
         <button key={a.id} type="button" class="attachment-chip" onClick={() => setOpen(a)}>
-          {a.kind === "image" ? "🖼" : "📄"} <strong>{a.name}</strong> <span class="dim">{size(a.bytes)}</span>
+          📄 <strong>{a.name}</strong> <span class="dim">{size(a.bytes)}</span>
         </button>
       ))}
-      {open && <AttachmentViewer attachment={open} onClose={() => setOpen(null)} />}
+      {open &&
+        (open.kind === "image" ? <ImageLightbox attachment={open} onClose={() => setOpen(null)} /> : <AttachmentViewer attachment={open} onClose={() => setOpen(null)} />)}
     </div>
   );
+}
+
+/** Holt die Bytes als Objekt-URL — der Token bleibt im Header, niemals in der URL. */
+function useObjectUrl(attachmentId: string): { url: string | null; fehlgeschlagen: boolean } {
+  const api = useApi();
+  const [url, setUrl] = useState<string | null>(null);
+  const [fehlgeschlagen, setFehlgeschlagen] = useState(false);
+  useEffect(() => {
+    let revoke: string | null = null;
+    let lebt = true;
+    setUrl(null);
+    setFehlgeschlagen(false);
+    void api.attachmentUrl(attachmentId).then(
+      (neue) => {
+        if (!lebt) {
+          URL.revokeObjectURL(neue);
+          return;
+        }
+        revoke = neue;
+        setUrl(neue);
+      },
+      () => {
+        if (lebt) setFehlgeschlagen(true);
+      },
+    );
+    return () => {
+      lebt = false;
+      if (revoke) URL.revokeObjectURL(revoke);
+    };
+  }, [attachmentId, api]);
+  return { url, fehlgeschlagen };
+}
+
+/**
+ * Ein Bild in der Chat-Zeile: echtes Vorschaubild statt Chip, ein Tipp darauf oeffnet
+ * das Vollbild. Die Vorschau haelt eine feste Hohe — der Chat springt nicht, wenn die
+ * Bytes eintreffen.
+ */
+function AttachmentThumb({ attachment, onOpen }: { attachment: AttachmentRef; onOpen: () => void }) {
+  const { url, fehlgeschlagen } = useObjectUrl(attachment.id);
+  return (
+    <button type="button" class="attachment-thumb" onClick={onOpen} data-testid="attachment-thumb" aria-label={`${t("attachments.open_image")}: ${attachment.name}`}>
+      <span class="attachment-thumb-frame">
+        {url ? <img src={url} alt="" loading="lazy" /> : <span class="attachment-thumb-ph">{fehlgeschlagen ? "⚠︎" : "…"}</span>}
+      </span>
+      <span class="attachment-thumb-meta">
+        <strong>{attachment.name}</strong> <span class="dim">{size(attachment.bytes)}</span>
+      </span>
+    </button>
+  );
+}
+
+/**
+ * Das Vollbild-geruest. Es liegt — wie der Datei-Betrachter und die Medien-Lupe — im `body`:
+ * nur dann liegt es ueber allen Flaechebenen (Schiene, Kopfzeile, Statusleiste) statt in der
+ * Stapelung des Composers stecken zu bleiben.
+ */
+function LightboxShell({
+  title,
+  meta,
+  onClose,
+  download,
+  children,
+}: {
+  title: string;
+  meta?: string;
+  onClose: () => void;
+  download?: { href: string; name: string };
+  children: ComponentChildren;
+}) {
+  const { ref } = useOverlayFocus<HTMLDivElement>(true);
+  useEffect(() => {
+    const auf = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", auf);
+    return () => document.removeEventListener("keydown", auf);
+  }, [onClose]);
+  return createPortal(
+    <div
+      ref={ref}
+      class="attachment-lightbox"
+      data-testid="attachment-lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      tabindex={-1}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div class="attachment-lightbox-bar">
+        <span class="attachment-lightbox-name">
+          <strong>{title}</strong>
+          {meta ? <span class="dim"> {meta}</span> : null}
+        </span>
+        <span class="attachment-lightbox-actions">
+          {download && (
+            <a class="attachment-lightbox-dl" href={download.href} download={download.name}>
+              {t("attachments.download")}
+            </a>
+          )}
+          <Button onClick={onClose} aria-label={t("common.close")}>
+            ✕
+          </Button>
+        </span>
+      </div>
+      <div class="attachment-lightbox-stage">{children}</div>
+    </div>,
+    document.body,
+  );
+}
+
+/** Vollbild fuer ein Bild: ein Tipp oeffnet, ein Tipp am Rand, ✕ oder Esc schliesst. */
+export function ImageLightbox({ attachment, onClose }: { attachment: AttachmentRef; onClose: () => void }) {
+  const { url, fehlgeschlagen } = useObjectUrl(attachment.id);
+  return (
+    <LightboxShell title={attachment.name} meta={size(attachment.bytes)} onClose={onClose} {...(url ? { download: { href: url, name: attachment.name } } : {})}>
+      {fehlgeschlagen ? (
+        <div class="attachment-lightbox-note">{t("attachments.image_failed")}</div>
+      ) : url ? (
+        <img src={url} alt={attachment.name} data-testid="attachment-lightbox-img" />
+      ) : (
+        <div class="dim">{t("common.loading_dots")}</div>
+      )}
+    </LightboxShell>
+  );
+}
+
+/**
+ * Der Deep-Link eines Anhangs (`#/anhang/<id>` oder `…/sessions/<id>/anhang/<id>`) —
+ * genau der Link, den ein Agent zu einem Bild mitschickt. Das Geraet oeffnet ihn mit
+ * seinem eigenen Token, deshalb steht in der URL nichts, was man weitergeben duerfte.
+ */
+export function AttachmentRouteView({ attachmentId, onClose }: { attachmentId: string; onClose: () => void }) {
+  const api = useApi();
+  const [ref, setRef] = useState<AttachmentRef | "fehler" | null>(null);
+  useEffect(() => {
+    let lebt = true;
+    void api.attachment(attachmentId).then(
+      (a) => {
+        if (!lebt) return;
+        setRef({ id: a.id, name: a.name, mimeType: a.mimeType, kind: a.kind, bytes: a.bytes });
+      },
+      () => {
+        if (lebt) setRef("fehler");
+      },
+    );
+    return () => {
+      lebt = false;
+    };
+  }, [attachmentId, api]);
+  if (ref === "fehler") {
+    return (
+      <LightboxShell title={attachmentId} onClose={onClose}>
+        <div class="attachment-lightbox-note">{t("attachments.image_failed")}</div>
+      </LightboxShell>
+    );
+  }
+  if (!ref) {
+    return (
+      <LightboxShell title={t("common.loading_dots")} onClose={onClose}>
+        <div class="dim">{t("common.loading_dots")}</div>
+      </LightboxShell>
+    );
+  }
+  return ref.kind === "image" ? <ImageLightbox attachment={ref} onClose={onClose} /> : <AttachmentViewer attachment={ref} onClose={onClose} />;
 }
 
 function AttachmentViewer({ attachment, onClose }: { attachment: AttachmentRef; onClose: () => void }) {
