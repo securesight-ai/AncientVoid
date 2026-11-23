@@ -48,7 +48,13 @@ dieses Hubs und das Markdown der Projekte unter `projectRoots`. Ein anderer Hub
    Antwortfelder `docProjects` / `docTruncated` sagen, was tatsächlich scannte
    (Grenze: 12 Projekte, 2,5 s).
 
-5. **Anderer Rechner = anderer Fundus.** Seit PR #307 gibt es den Kreuz
+5. **Vertippung.** „tokdek“ findet „tokdeck“ weder als Präfix noch als Teilwort.
+   Seit der vierten Stufe läuft dann die Wortliste des Index (`transcript_vocab`,
+   `fts5vocab`) als Kandidatenquelle: Edit-Distanz 1 (ab 8 Zeichen 2) oder
+   Teilfolge. Prüfen: `mode` in der Antwort ist `typo`, `corrected` listet das
+   gesuchte Wort. Begriffe unter 5 Zeichen werden bewusst nicht geraten.
+
+6. **Anderer Rechner = anderer Fundus.** Seit PR #307 gibt es den Kreuz
    „andere Rechner einbeziehen" (`hubs=1`): der Hub fragt seine Fleet-Peers über
    `/api/search` und meldet pro Rechner `ok / offline / denied / unsupported /
    skipped`. Ohne diesen Kreuz bleibt die Antwort lokal — die Frage nach einem

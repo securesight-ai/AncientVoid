@@ -307,6 +307,9 @@ export function SearchPane({
       {res && <div class="search-index dim mono">{indexLine}</div>}
       {res && res.mode === "teil" && <div class="dim search-note">{t("search.mode_part")}</div>}
       {res && res.mode === "or" && <div class="dim search-note">{t("search.mode_or")}</div>}
+      {res && res.mode === "typo" && (
+        <div class="dim search-note">{t("search.mode_typo", { terms: (res.corrected ?? []).join(", ") })}</div>
+      )}
       {/* Auf dem Handy verschwindet die Doku hinter hunderten Sitzungs-Karten.
           Die drei Fundorte oben sind die Antwort auf „wo wohnt dieser Name?". */}
       {res && scope !== "sessions" && res.docs.length > 0 && (

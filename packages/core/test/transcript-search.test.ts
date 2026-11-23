@@ -4,7 +4,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { NormalizedEvent } from "@ancientvoid/contracts";
 import { SNIPPET_MARK_OPEN } from "@ancientvoid/contracts";
-import { EventStore, HubDatabase, SessionTextIndex, buildFtsQuery, eventText, scanSnippet } from "../src/index.ts";
+import {
+  EventStore,
+  HubDatabase,
+  SessionTextIndex,
+  buildFtsQuery,
+  editDistance,
+  eventText,
+  isSubsequence,
+  rankCandidates,
+  scanSnippet,
+} from "../src/index.ts";
 
 /**
  * Suche (Nachschärfe 2026-11-22): der Sessiontext-Index. Er ist der einzige
@@ -383,4 +393,41 @@ describe("query-Bau und Snippet des Durchlaufs", () => {
     expect(snip.split(SNIPPET_MARK_OPEN).length - 1).toBe(2);
     expect(scanSnippet("ganz ohne Fund", ["fehit"]).includes(SNIPPET_MARK_OPEN)).toBe(false);
   });
+
+  it("rätselt nicht, sondern berichtigt gegen die Wörter des Index", () => {
+    expect(editDistance("tokdek", "tokdeck", 1)).toBe(1);
+    expect(editDistance("tokdek", "token", 1)).toBeGreaterThan(1);
+    expect(isSubsequence("tokdek", "tokdeck")).toBe(true);
+    expect(isSubsequence("tokdek", "decktok")).toBe(false);
+    // Ein Zeichen Unterschied, gleiche Länge: Kandidat. Völlig anderes Wort: nicht.
+    expect(rankCandidates("tokdek", ["tokdeck", "token", "tokenses"])).toEqual(["tokdeck"]);
+    // Kurze Begriffe werden nicht geraten — „und“ findet sonst „undd“.
+    expect(rankCandidates("undd", ["und", "uns", "under"])).toEqual([]);
+    // Ab acht Zeichen sind zwei Tippfehler erlaubt.
+    expect(rankCandidates("sessiontextt", ["sessiontext", "session"])).toEqual(["sessiontext"]);
+  });
+
+  it("findet einen vertippten Begriff und sagt, welches Wort gemeint war", async () => {
+    addSessionRow("stypo", "/home/kaib/repos/tokdeck", "Token-Widget");
+    await seed("stypo", [
+      { seq: 1, type: "user", payload: { kind: "session.prompt", text: "Wie heißt das Widget für Token-Tempo?" } },
+      { seq: 2, type: "assistant", payload: { kind: "message", text: "Es heißt tokdeck und läuft auf 127.0.0.1:7474." } },
+    ]);
+    const index = idx();
+    await index.refresh();
+    // „tokdek“ ist Präfix von nichts und Teilwort von nichts: ohne die vierte
+    // Stufe wäre das ein stiller Null-Treffer, obwohl jede Zeile „tokdeck“ kennt.
+    const res = await index.search({ q: "tokdek" });
+    expect(res.mode).toBe("typo");
+    expect(res.total).toBe(1);
+    expect(res.hits[0]?.seq).toBe(2);
+    expect(res.corrected).toContain("tokdeck");
+    // Ein Wort, das im Index nirgends vorkommt, bleibt leer — die vierte Stufe
+    // erfindet keine Funde.
+    const none = await index.search({ q: "zwerchfellpumpe" });
+    expect(none.total).toBe(0);
+    expect(none.mode).toBe("and");
+    expect(none.corrected).toBeUndefined();
+  });
+
 });
