@@ -37,7 +37,7 @@ export const FLEET_TOKEN_PREFIX = "fleet:";
  * The only paths a fleet token may use on a peer, and the only ones a home
  * hub forwards (ADR-0017). Never: tokens, WebAuthn, metrics, fleet admin.
  */
-const FLEET_ROUTABLE = /^\/api\/(code\/(tree|meta|range|raw|find|line|archive|office)|sessions|events|adapters|approvals|attachments|discovery|inventory|notifications|projects|search|skills|prompt-enhance|prompt-recommendation|prompt-optimizer|aimetrics)(\/|$)/;
+const FLEET_ROUTABLE = /^\/api\/(code\/(tree|meta|range|raw|find|line|archive|office)|sessions|events|adapters|approvals|attachments|discovery|inventory|notifications|projects|search|skills|prompt-enhance|prompt-recommendation|prompt-optimizer|aimetrics|hostmetrics)(\/|$)/;
 
 export function isFleetRoutable(path: string): boolean {
   const bare = path.split("?")[0] ?? path;

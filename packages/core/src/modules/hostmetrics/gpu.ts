@@ -1,6 +1,6 @@
 import type { HostMetricPoint } from "@ancientvoid/contracts";
-import { join } from "node:path";
-import { deviceName, list, readNumber, readText } from "./files.ts";
+import { posix } from "node:path";
+import { readNumber, readText } from "./files.ts";
 import { point, type SourceContext } from "./types.ts";
 
 const AMD_FIELDS: readonly [file: string, label: string, unit: string][] = [
@@ -13,14 +13,14 @@ const AMD_FIELDS: readonly [file: string, label: string, unit: string][] = [
 ];
 
 export async function collectAmdGpu({ deps }: SourceContext): Promise<HostMetricPoint[]> {
-  const base = join(deps.root, "sys/class/drm");
+  const base = "sys/class/drm";
   const out: HostMetricPoint[] = [];
-  for (const card of (await list(base)).filter((c) => /^card\d+$/.test(c))) {
-    const dir = join(base, card, "device");
-    if ((await readNumber(join(dir, "mem_info_vram_total"))) === null) continue;
-    const address = (await deviceName(dir)) ?? card;
+  for (const card of (await deps.files.list(base)).filter((c) => /^card\d+$/.test(c))) {
+    const dir = posix.join(base, card, "device");
+    if ((await readNumber(deps.files, posix.join(dir, "mem_info_vram_total"))) === null) continue;
+    const address = (await deps.files.linkName(dir)) ?? card;
     for (const [file, label, unit] of AMD_FIELDS) {
-      out.push(point({ key: `amdgpu:${address}:${file}`, group: "gpu", device: `amdgpu ${address}`, label, unit, value: await readNumber(join(dir, file)), source: "sysfs" }));
+      out.push(point({ key: `amdgpu:${address}:${file}`, group: "gpu", device: `amdgpu ${address}`, label, unit, value: await readNumber(deps.files, posix.join(dir, file)), source: "sysfs" }));
     }
   }
   return out;
@@ -38,17 +38,17 @@ const NVIDIA_FIELDS: readonly [query: string, group: string, label: string, unit
 ];
 
 /** Display-Klasse (0x03…) von NVIDIA: ohne Karte wäre ein installiertes nvidia-smi ein Dauerfehler. */
-async function hasNvidiaCard(root: string): Promise<boolean> {
-  const base = join(root, "sys/bus/pci/devices");
-  for (const dev of await list(base)) {
-    if ((await readText(join(base, dev, "vendor"))) !== "0x10de") continue;
-    if ((await readText(join(base, dev, "class")))?.startsWith("0x03")) return true;
+async function hasNvidiaCard(deps: SourceContext["deps"]): Promise<boolean> {
+  const base = "sys/bus/pci/devices";
+  for (const dev of await deps.files.list(base)) {
+    if ((await readText(deps.files, posix.join(base, dev, "vendor"))) !== "0x10de") continue;
+    if ((await readText(deps.files, posix.join(base, dev, "class")))?.startsWith("0x03")) return true;
   }
   return false;
 }
 
 export async function collectNvidia({ deps }: SourceContext): Promise<HostMetricPoint[]> {
-  if (!(await hasNvidiaCard(deps.root))) return [];
+  if (!(await hasNvidiaCard(deps))) return [];
   const csv = await deps.nvidiaSmi([`--query-gpu=pci.bus_id,name,${NVIDIA_FIELDS.map((f) => f[0]).join(",")}`, "--format=csv,noheader,nounits"]);
   if (csv === null) return [];
   const out: HostMetricPoint[] = [];

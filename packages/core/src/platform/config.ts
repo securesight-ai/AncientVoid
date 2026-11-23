@@ -274,6 +274,32 @@ export const HubConfig = z.object({
     .prefault({}),
   /** EPIC-P59 (ADR-0078): Metrik-Seite — Sampler im Hub, Poll nur konfiguierter
    * Quellen; ohne Abschnitt kein Sampler, aber ein leerer Report. */
+  /**
+   * EPIC-P81 (ADR-0117): Host-Monitoring. Ohne Abschnitt misst der Hub seinen
+   * eigenen Host; `sshHosts` sind Hosts ohne Hub (z. B. ein NAS), deren Schlüssel
+   * dort per `command=` auf das feste Lese-Kommando beschränkt ist.
+   */
+  hostMetrics: z
+    .object({
+      enabled: z.boolean().default(true),
+      intervalSec: z.number().int().min(2).max(300).default(5),
+      mergePeers: z.boolean().default(true),
+      sshHosts: z
+        .array(
+          z.object({
+            id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,62}$/),
+            label: z.string().min(1).max(60).optional(),
+            /** `user@host` oder ein Alias; nie eine Option (kein führendes „-“). */
+            target: z.string().regex(/^[A-Za-z0-9_][A-Za-z0-9_.@:-]{0,200}$/),
+            /** Pfad zum privaten Schlüssel, nie der Schlüssel selbst (ADR-0011). */
+            identityFile: z.string().min(1).optional(),
+            intervalSec: z.number().int().min(15).max(3600).default(60),
+          }),
+        )
+        .max(16)
+        .default([]),
+    })
+    .prefault({}),
   aiMetrics: z
     .object({
       intervalSec: z.number().int().min(2).max(3600).default(10),

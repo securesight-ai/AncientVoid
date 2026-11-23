@@ -1,5 +1,4 @@
 import type { HostMetricPoint } from "@ancientvoid/contracts";
-import { join } from "node:path";
 import { readText } from "./files.ts";
 import { point, type SourceContext } from "./types.ts";
 
@@ -8,7 +7,7 @@ import { point, type SourceContext } from "./types.ts";
  * FUSE-Laufwerken kann hängen. Je Gerät zählt der erste Einhängepunkt.
  */
 export async function collectFilesystems({ deps }: SourceContext): Promise<HostMetricPoint[]> {
-  const mounts = await readText(join(deps.root, "proc/mounts"));
+  const mounts = await readText(deps.files, "proc/mounts");
   if (mounts === null) throw new Error("/proc/mounts nicht lesbar");
   const seen = new Set<string>();
   const out: HostMetricPoint[] = [];

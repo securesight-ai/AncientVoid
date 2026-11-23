@@ -1,9 +1,9 @@
 import type { HostMetricPoint } from "@ancientvoid/contracts";
+import type { HostFiles } from "./files.ts";
 import type { Rates } from "./rates.ts";
 
 export interface HostCollectorDeps {
-  /** Dateisystem-Wurzel; Tests zeigen auf einen Fixture-Baum. */
-  root: string;
+  files: HostFiles;
   nowMs(): number;
   /** stdout von `nvidia-smi` mit diesen Argumenten; null = nicht installiert. */
   nvidiaSmi(args: readonly string[]): Promise<string | null>;

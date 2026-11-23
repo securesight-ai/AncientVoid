@@ -1,6 +1,6 @@
 # EPIC-P81 — Host-Monitoring und Strom: alle Werte aller Hosts, schick und ehrlich
 
-**Status:** in Umsetzung seit 23.11.2026 (T81.1–T81.4 liegen), Rest offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
+**Status:** in Umsetzung seit 23.11.2026 (T81.1–T81.8 liegen), Rest offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
 
 ## 1. Ziel & Entscheidung
 
@@ -99,7 +99,7 @@ Sampler-Konfiguration beider Hubs war nicht einsehbar.
   (§3.2), nie Summanden. Ein PPT ohne eindeutige Zuordnung zählt nicht. Summen tragen ihre Bestandteile und das Wort „gemessene Komponenten“;
   sie sind keine Steckdosenwerte. Ein Netzteil-Wirkungsgrad ist nur optional und als
   „geschätzt“ markiert; feste „Rest“-Watt gibt es nicht.
-- **RAPL (D2):** `tmpfiles.d`-Regel für die Gruppe `hostmetrics`, Modus 0440, nur
+- **RAPL (D2):** udev-Regel für die Gruppe `hostmetrics`, Modus 0440, nur
   `energy_uj`. Der Nutzer führt sie je Host mit sudo aus; der Hub erhöht keine Rechte.
   Das Restrisiko (PLATYPUS-Seitenkanal für Prozesse dieser Gruppe, also auch für Agenten
   unter demselben Nutzer) steht im ADR.
@@ -143,11 +143,11 @@ Jeder Hub speichert nur sich selbst, der Home-Hub zusätzlich das NAS.
 - [x] **T81.3** ADR-0117 (Vertrag, Verlauf/K7, NAS-SSH, RAPL) und Contracts mit Tests. **K5/K7**
 - [x] **T81.4** Core-Modul `hostmetrics`: `/proc`, hwmon, AMD, NVIDIA, Platten, Netz gegen
   Fixture-Bäume (anonymisiert: keine Seriennummern, MACs, IPs). **K9**
-- [ ] **T81.5** RAPL-Regel mit Installations- und Rückbauanleitung; Zählerüberlauf-Test.
-- [ ] **T81.6** Verlaufsspeicher mit Verdichtung, Aufräumen, Recovery. **K7**
-- [ ] **T81.7** Routen, `FLEET_ROUTABLE`, Peer-Zusammenführung; Alt-Hub meldet sich als
+- [x] **T81.5** RAPL-Regel mit Installations- und Rückbauanleitung; Zählerüberlauf-Test.
+- [x] **T81.6** Verlaufsspeicher mit Verdichtung, Aufräumen, Recovery. **K7**
+- [x] **T81.7** Routen, `FLEET_ROUTABLE`, Peer-Zusammenführung; Alt-Hub meldet sich als
   „Version zu alt“ statt leer. **K5/K9**
-- [ ] **T81.8** NAS-Sammler per SSH. **K9**
+- [x] **T81.8** NAS-Sammler per SSH. **K9**
 - [ ] **T81.9** Chart-Bausteine und Tokens, Design-System-Doku.
 - [ ] **T81.10** Reiter „Hosts“ mit Detailseite, E2E `host-monitoring.spec.ts`. **K10**
 - [ ] **T81.11** Reiter Metriken und Inferenz auf die Bausteine; bestehende Specs grün.

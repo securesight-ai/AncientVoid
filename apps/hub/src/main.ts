@@ -77,7 +77,8 @@ import { createHubApp } from "./app.ts";
 import { ForgeService } from "./modules/forge/forge-service.ts";
 import { createHubAutomationService } from "./modules/automations/automations-service.ts";
 import { ExternalJobsService } from "./modules/automations/external-jobs.ts";
-import { createAiMetricsSampler, createInferenceTracker, createPforte, type AiMetricsSamplerServer, type InferenceEngineConfig, type InferenceTracker } from "@ancientvoid/core";
+import { nvidiaSmi, sshProbe, statfsBytes } from "./modules/hostmetrics/probes.ts";
+import { createAiMetricsSampler, createHostCollector, createHostMetricsService, createSshHostCollector, HostMetricsHistoryStore, localFiles, createInferenceTracker, type HostMetricsService, createPforte, type AiMetricsSamplerServer, type InferenceEngineConfig, type InferenceTracker } from "@ancientvoid/core";
 import { StatisticsService } from "./modules/statistics/statistics.service.ts";
 import { createPermissionBridge } from "./modules/approvals/permission-bridge.ts";
 import { detectLocalShells, mergeLocalShells } from "./modules/terminal/local-shells.ts";
@@ -420,6 +421,42 @@ async function main(): Promise<void> {
   // dem Hub bekannten Modell-Server; Secrets nur als Dateireferenz (ADR-0011).
   const keyFile = (file: string | undefined) => (file ? resolve(file.replace(/^~(?=\/)/, homedir())) : undefined);
   let aimetrics: ReturnType<typeof createAiMetricsSampler> | undefined;
+  // EPIC-P81 (ADR-0117): Host-Metriken — eigener Host plus Hosts ohne Hub.
+  const hostMetrics = config.hostMetrics.enabled ? startableHostMetrics() : undefined;
+  function startableHostMetrics(): HostMetricsService | undefined {
+    const path = resolve(dataDir, "hostmetrics.db");
+    let history: HostMetricsHistoryStore;
+    try {
+      history = new HostMetricsHistoryStore(path);
+    } catch (err) {
+      // Monitoring darf den Hub nicht am Start hindern (AC-P81-4).
+      logger.error("host metrics disabled: history unavailable", { path, error: String(err) });
+      return undefined;
+    }
+    if (history.recoveredFrom) logger.error("host metrics history was corrupt and has been set aside", { path: history.recoveredFrom });
+    const nowMs = () => Date.now();
+    return createHostMetricsService({
+      history,
+      nowMs,
+      logger,
+      sources: [
+        {
+          id: config.hostId ?? toHostId(hostname()),
+          label: config.hostLabel ?? hostname(),
+          kind: "hub",
+          intervalSec: config.hostMetrics.intervalSec,
+          collector: createHostCollector({ files: localFiles(), nowMs, nvidiaSmi, statfs: statfsBytes }),
+        },
+        ...config.hostMetrics.sshHosts.map((h) => ({
+          id: h.id,
+          label: h.label ?? h.id,
+          kind: "ssh" as const,
+          intervalSec: h.intervalSec,
+          collector: createSshHostCollector({ nowMs, run: () => sshProbe(h.target, keyFile(h.identityFile)) }),
+        })),
+      ],
+    });
+  }
   let inference: InferenceTracker | undefined;
   if (config.aiMetrics) {
     const servers: AiMetricsSamplerServer[] = config.aiMetrics.servers.map((s) => ({
@@ -577,6 +614,8 @@ async function main(): Promise<void> {
     },
     team,
     ...(aimetrics ? { aimetrics, aimetricsMergePeers: config.aiMetrics?.mergePeers !== false } : {}),
+    ...(hostMetrics ? { hostMetrics } : {}),
+    hostMetricsMergePeers: config.hostMetrics.mergePeers,
     ...(inference ? { inference } : {}),
     ...(config.inference?.gate ? { inferenzPforte } : {}),
     search: { transcript },
@@ -606,6 +645,7 @@ async function main(): Promise<void> {
   automations.start();
   issueBridge?.start();
   aimetrics?.start();
+  hostMetrics?.start();
   // EPIC-P67 T67.5/T67.6: laufende Main-Synchronisation — ein Fetch je Projekt
   // je Takt (K8). Meldungen werden persistente Benachrichtigungen (mit
   // Aktionsknopf im ask-Modus) und gehen über onNotification an Web-Push.
@@ -675,6 +715,7 @@ async function main(): Promise<void> {
     automations.stop();
     issueBridge?.stop();
     aimetrics?.stop();
+    hostMetrics?.stop();
   inference?.stop();
     mainSyncScheduler.stop();
     logger.info("shutting down", { signal: sig });

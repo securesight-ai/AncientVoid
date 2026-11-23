@@ -88,6 +88,10 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `discovery.codexDir` | string | — |
 | `discovery.hermesDir` | string | — |
 | `discovery.copilotDir` | string | — |
+| `hostMetrics.enabled` | boolean | true |
+| `hostMetrics.intervalSec` | integer | 5 |
+| `hostMetrics.mergePeers` | boolean | true |
+| `hostMetrics.sshHosts` | array<object> | [] |
 | `aiMetrics.intervalSec` | integer | 10 |
 | `aiMetrics.windowSec` | integer | 900 |
 | `aiMetrics.retentionSamples` | integer | 5400 |

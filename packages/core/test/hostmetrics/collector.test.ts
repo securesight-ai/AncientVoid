@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { HostMetricsSample } from "@ancientvoid/contracts";
-import { createHostCollector, sumComponentPower, type HostCollectorDeps } from "../../src/modules/hostmetrics/index.ts";
+import { createHostCollector, localFiles, sumComponentPower, type HostCollectorDeps } from "../../src/modules/hostmetrics/index.ts";
 
 /** EPIC-P81 T81.4 (ADR-0117): Sammler gegen einen Fixture-Baum, ohne echte Gerätedaten. */
 
@@ -27,7 +27,7 @@ beforeEach(async () => {
   root = await mkdtemp(join(tmpdir(), "hostmetrics-"));
   now = 1_000_000;
   deps = {
-    root,
+    files: localFiles(root),
     nowMs: () => now,
     nvidiaSmi: async () => null,
     statfs: async () => ({ totalBytes: 1000, freeBytes: 200, availableBytes: 100 }),

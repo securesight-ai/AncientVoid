@@ -34,6 +34,7 @@ import { registerDeviceRoutes } from "./modules/devices/device.routes.ts";
 import { registerClientReportRoutes } from "./modules/diagnostics/client-report.routes.ts";
 
 import { registerAiMetricsRoutes } from "./modules/aimetrics/aimetrics.routes.ts";
+import { registerHostMetricsRoutes } from "./modules/hostmetrics/hostmetrics.routes.ts";
 import { registerInferenceRoutes } from "./modules/inference/inference.routes.ts";
 import { registerStatisticsRoutes } from "./modules/statistics/statistics.routes.ts";
 
@@ -72,6 +73,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
   registerClientReportRoutes(app, ctx);
 
   registerAiMetricsRoutes(app, ctx);
+  registerHostMetricsRoutes(app, ctx);
   registerInferenceRoutes(app, ctx);
   registerStatisticsRoutes(app, ctx);
   registerConnectionRoutes(app, ctx);
