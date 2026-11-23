@@ -1,6 +1,6 @@
 # EPIC-P73 — Issue-Session-Bridge und sichtbare Auto-Jobs
 
-**Status:** abgeschlossen 21.11.2026 (Status-Sync; Belege an den Tasks, Live-Beleg AC-P73-1 nachgetragen; das formale Retro folgt auf Zuruf) · **Phase:** P73 · **Dauer:** ~1 Agenten-Tag · **Abhängigkeit:** keine blockierende — Quer-Epic wie P58–P72; P71 (Issue-Lebenszyklus) umgesetzt, liefert die Label/Triage-Basis. P30/P31 bleiben On hold und unberührt. ADR: [docs/adr/0094](../docs/adr/0094-issue-session-bridge-outbound-poll.md).
+**Status:** abgeschlossen 21.11.2026 (Status-Sync, Live-Beleg und Retro-Fazit am Dateiende) · **Phase:** P73 · **Dauer:** ~1 Agenten-Tag · **Abhängigkeit:** keine blockierende — Quer-Epic wie P58–P72; P71 (Issue-Lebenszyklus) umgesetzt, liefert die Label/Triage-Basis. P30/P31 bleiben On hold und unberührt. ADR: [docs/adr/0094](../docs/adr/0094-issue-session-bridge-outbound-poll.md).
 
 ## 1. Ziel
 

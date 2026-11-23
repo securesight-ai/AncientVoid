@@ -1,6 +1,6 @@
 # EPIC-P46 — Rechte Projekt-Sidebar, vollständige Dateiansicht und Diagnosen
 
-**Status:** in Umsetzung seit 2026-11-09 (P38 umgesetzt) — gebaut: T46.2–T46.7, Feedback-Paket aus T46.8 (ADR-0058), Popout-Rest aus T46.8 in EPIC-P48 umgesetzt (2026-11-10, Session-Roots; Projekt-Roots offen); offen: Pixel-/Geräte-Abnahme (T46.1/T46.9), Offline-Bereichsstatus (T46.8), Remote-Projektliste · **Phase:** P46
+**Status:** in Umsetzung (Remote-Projektliste T46.3, Projekt-Root-Popout und Offline-Bereichsstatus T46.8) — Geräteanteile nach P000 verschoben (T000.20) · **Phase:** P46
 **Dauer:** 3–5 Agenten-Wochen (grobe Schätzung, ohne Vorgänger-Restarbeit)
 **Abhängigkeit:** P38-Exit nachweislich grün; fachlich P3/P7 Codeansicht, P34/P35 Fenster und P36 Feedback geprüft. Auf Folgeauftrag vom 08.11.2026 zwischen P38 und P39 eingeplant; P39 wartet auf P46. Nummern bestehender Epics bleiben stabil.
 

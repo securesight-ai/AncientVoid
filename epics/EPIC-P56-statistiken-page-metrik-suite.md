@@ -1,6 +1,6 @@
 # EPIC-P56 — Statistiken-Page: Modell-, Provider- und Session-Kennzahlen
 
-**Status:** in Umsetzung (Grundlage T56.1a, 15.11.2026) · **Umsetzung:** unabhängiger Grundlagenteil beauftragt; P31-/P55-Anbindungen weiter gesperrt · **Phase:** P56
+**Status:** Code steht (Statistik-Grundumfang), Exit offen (Orchestrator-Vergleich und Anbindungen) · **Phase:** P56
 **Dauer:** 2 Agenten-Wochen (grobe Schätzung)
 **Abhängigkeit:** Die Grundlage nutzt bestehende Session-/Zug-/Team-Fakten (P21/P40/P60). T56.5, Katalognormalisierung und EUR-Kosten warten auf P31; Compression und AC-P56-6 auf P55. P30/P31 bleiben ausdrücklich On hold.
 

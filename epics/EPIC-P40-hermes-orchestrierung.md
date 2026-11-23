@@ -1,6 +1,6 @@
 # EPIC-P40 — Hermes-Orchestrator für gemischte Harnesses und Provider
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · umgesetzt 2026-11-10 (T40.1–T40.7, ADR-0064; Gate grün) — Live-Lauf mit echtem Hermes-Koordinator am Gerät offen (P39-Endabnahme-Block) · **Umsetzung:** freigegeben durch Nutzer (P39-Exit grün, MR !357) · **Phase:** P40
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Umsetzung:** freigegeben durch Nutzer (P39-Exit grün, MR !357) · **Phase:** P40
 **Dauer:** 3–5 Agenten-Wochen (grobe Schätzung, ohne Vorgänger-Restarbeit)
 **Abhängigkeit:** P39 mit nachweislich grünen Exit-Kriterien; wirksame Vorgänger-Abnahmen bleiben bindend.
 

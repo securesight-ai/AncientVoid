@@ -1,6 +1,6 @@
 # EPIC-P59 — Metrik-Seite: Auslastung des lokalen KI-Servers
 
-**Status:** abgeschlossen 2026-11-15 — Live-Abnahme gpubox nach P000 verschoben (gpubox war nicht erreichbar) · **Phase:** P59 · **Dauer:** 1–2 Agenten-Wochen (grobe Schätzung)
+**Status:** abgeschlossen 2026-11-15 — Live-Abnahme an gpubox nach P000 verschoben (T000.23) · **Phase:** P59 · **Dauer:** 1–2 Agenten-Wochen (grobe Schätzung)
 **Abhängigkeit:** keine fachliche offene (Quer-Epic, Präzedenz P50–P53, P47–P52; Vorgänger-Phase P57 abgeschlossen 13.11.2026). Datenbasis auf bestehendem Betrieb (docs/local-llm.md, ADR-0010, ADR-0023); P56 bleibt der Aggregationsort — Abgrenzung §3.4.
 
 Quelle: Nutzerauftrag vom 14.11.2026; Recherche mit Bestand:

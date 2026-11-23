@@ -1,6 +1,6 @@
 # EPIC-P4 — Brain-Integration, gpubox/Windows, MCP-Gateway, Veröffentlichungs-Aufbereitung (source-available)
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · offen mit externen Punkten (T35.13/T35.14) — Rückstufung 2026-11-09 (Abnahme-Retro); vormals „abgeschlossen“ · mit Externalen in [EPIC-P35 Endabnahme-Block](EPIC-P35-harness-paritaet-fortsetzen-provider.md) (2026-11-07) — autonom umsetzbar war grün: T4.1/T4.2/T4.6/T4.7/T4.9/T4.10. Die fünf bewusst offenen Punkte laufen dort gebündelt: T4.3/T4.4 (agent-hub-Skill, Gengar — externer Zugang) → T35.13, T4.5 (WSL2, Host noch unbestimmt, **kein bmax** — Trading-Maschine, Nutzentscheid 2026-11-07) → T35.13, T4.8 (Lizenz) und T4.11 (v0.1-Tag/Changelog) → T35.14. AC-P4-6s „Secret-Scan des gesamten Repos" ist seit MR !319 als wiederholtes CI-Gate real (`npm run check:secrets`, aktuell 0 Treffer über 1039 getrackte Dateien). · **Phase:** P4 · **Dauer:** 1–2
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P4 · **Dauer:** 1–2
 Agenten-Wochen · **Abhängigkeit:** P3 grün
 
 ---

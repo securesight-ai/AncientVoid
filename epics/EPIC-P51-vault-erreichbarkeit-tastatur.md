@@ -1,6 +1,6 @@
 # EPIC-P51 — Vault-Erreichbarkeit & Tastatur-first
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · Code abgeschlossen 14.11.2026 (T51.1–T51.9, T51.11; Gate-Ergebnis siehe T51.10-Abschluss unten) — offen: Live-Abnahme am Gerät durch Jan (Vault-Pfad außerhalb der Startpunkte, Alt-Kürzel in Firefox/Omarchy live, Handy-Glocke) · **Phase:** P51 · **Dauer:** 2–3 Agenten-Wochen (grobe Schätzung)
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P51 · **Dauer:** 2–3 Agenten-Wochen (grobe Schätzung)
 **Abhängigkeit:** keine fachliche offene — Nutzerauftrag vom 11.11.2026, quer zur
 Kette (Präzedenz P47–P50). Baut auf P49 (Vault), P18/P34 (Kachel-Kürzel,
 Arbeitsfläche) auf; hebt keine offenen Abnahmen auf.

@@ -1,6 +1,6 @@
 # EPIC-P79 — Token-Tempo lokaler Inferenz in der PWA (eigener Menüpunkt)
 
-**Status:** offen · **Messlatten:** K5 (Antwortgrößen), K7 (Rekonstruktion aus JSONL),
+**Status:** Code steht (T79.1–T79.5, PR #264), Exit offen (T79.6 Betriebsdoku und Geräteprüfung) · **Messlatten:** K5 (Antwortgrößen), K7 (Rekonstruktion aus JSONL),
 K9 (Ausfall sichtbar), ADR-0023 (`null` ≠ 0), ADR-0011 (Secrets nur als Dateireferenz),
 ADR-0020 (Vertical Slices) · **Vertrag:** `@ancientvoid/contracts` → `inference/`
 (ADR-0102)
