@@ -27,6 +27,15 @@ keine Facetten, las sich also wie „nichts im Hub“, obwohl 162 Fundstellen in
 Denken/Werkzeug lagen — jetzt Zahl plus Einschalt-Knopf. Nebenbei: der
 Nyx-Schwebeknopf lag auf dem Handy auf dem „Sitzung öffnen“-Knopf der Fundkarte.
 
+Nachweis danach am **laufenden** Hub (sha `d72024c5`, health 200 nach 2 s):
+„Tokdeck“ → Sitzungen 20 Fundstellen; mit „Doku in allen Projekten“ → 7
+Fundstellen aus 7 Projekten, oben als Fundorte (`tokdeck/README.md`,
+`tokdeck/PROGRESS.md`); „tokdeck.env.key“ → Hinweisle „208 Fundstellen liegen in
+Denken, Werkzeug“, nach einem Klick 208 Fundstellen. Gate: #302 `pass 3m0s`,
+#303 `pass 3m23s` (erster Versuch von `activity-register.test.ts` verlaufen,
+lokal 13/13 — einmal neu angestoßen). Diagnose-Rezept liegt als Skill
+`.agents/skills/ancientvoid-hub-suche`.
+
 ## Erledigt (verifiziert)
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
   plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die
