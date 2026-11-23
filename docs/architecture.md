@@ -2,11 +2,14 @@
 
 **Art:** erklaerung
 
-Stand: 2026-11-21. Basis: PRD §4 und `epics/EPIC-P0-hub-kern.md` ff.; Epics
+Stand: 2026-11-23. Basis: PRD §4 und `epics/EPIC-P0-hub-kern.md` ff.; Epics
 bis P56 (Statistik) und strukturrelevante Nachfolger (u. a. Teams P60,
-Live-Deltas ADR-0083) sind eingearbeitet, soweit sie Struktur verändern —
-fachliche Details und Verlauf leben in `epics/` (Index: `epics/README.md`).
-Diese Doku beschreibt den umgesetzten Stand; Abweichungen = ADR-Pflicht. Der
+Live-Deltas ADR-0083, Host-Metriken P81) sind eingearbeitet, soweit sie
+Struktur verändern — fachliche Details und Verlauf leben in `epics/`
+(Index: `epics/README.md`). Nachgetragen 2026-11-23: Notification-Feed mit
+Horizont/Retention im Core (BUG-0226), `RunEstimate` trägt additiv den
+Session-Median (BUG-0167), fastify wieder ungebunden. Abweichungen =
+ADR-Pflicht. Der
 P0-Grundriss gilt weiterhin, die Abschnitte „Erweiterungen“ fassen zusammen,
 was seitdem dazugekommen ist, ohne den Grundriss neu zu schreiben.
 
