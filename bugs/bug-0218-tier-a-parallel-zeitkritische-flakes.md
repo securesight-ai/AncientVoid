@@ -1,7 +1,7 @@
 ---
 id: BUG-0218
 slug: tier-a-parallel-zeitkritische-flakes
-status: open
+status: done
 severity: S3
 area: tests
 instance: dev
@@ -79,4 +79,24 @@ BUG-0217/#83 (Zeitrennen auf Hosted-Runnern).
 
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue vorhanden ([#85](https://github.com/securesight-ai/AncientVoid/issues/85), SSOT nachgezogen EPIC-P71 T71.6)
-- [ ] `bugfix` oder offen lassen
+- [x] `bugfix` oder offen lassen
+
+## Fix (2026-11-23)
+
+Linux-Stressreproduktion: die drei Dateien plus BUG-0217-Datei liefen 5× grün
+(8 Forks) und im vollen `packages/core`-Lauf (16 Forks) grün — der Flake ist an
+die Windows-/BUG-0170-Umgebung gebunden, nicht auf Linux reproduzierbar.
+Slow-List entfällt (Dauern isoliert 0,9/1,1/3,0 s — Schwelle 10 s; der Commit
+nennt die Messwerte). Gehärtet wurde die belegbare Einmalmess-Race:
+
+- `turn-state.test.ts` „a planned shutdown …": `working` nach `create()` ist
+  jetzt ein begrenztes `waitFor` statt einmaligem Lesen — unter Fork-Last kann
+  die Working-Markierung noch anstehen.
+- `activity-register.test.ts` (BUG-0217): Warten auf die Ereignisse statt auf
+  den Status — dasselbe Muster, das `turn-state` Test 1 bereits nutzt
+  („idle is set just before the turn_end event is written").
+- `handover.test.ts` und `steer-wait-timeout.test.ts` unverändert: das Parken
+  wird in `handover()` awaited; der Occupant-Pinning-Fall prüft eine negative
+  Aussage in einem festen Fenster und skipt auf Hosted-Runnern.
+
+Grün: sessions+handover 202/202 (8 Forks), 3× Stress 27/27, lint + typecheck.
