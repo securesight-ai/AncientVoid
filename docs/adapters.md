@@ -222,27 +222,25 @@ als nächster Prompt) und die Übergabe an eine andere Session.
 
 ## Slash-Commands deklarieren (`commands`, ADR-0042)
 
-`capabilities().commands?: readonly SlashCommand[]` listet die Commands,
-die die CLI **im getriebenen Modus** ausführt — gesendet als normaler
-Prompt-Text über `start`/`steer`, kein eigener Kanal. Shape:
-`{ name: "/compact", description, scope: "start"|"steer"|"both" }`;
-`scope` folgt den Fähigkeiten des Adapters (aider ohne followUp → nur
-`start`). Der Composer bietet genau diese an (scope-gefiltert) und meldet
-alles andere sichtbar als normalen Text — Fail loud statt stiller
-Fehlleitung. Beleg-Regel wie bei `resume`: deklariert wird nur, was die
-Harness-Doku für den getriebenen Modus zusagt oder was live verifiziert
-wurde; Picker-Commands nie. Der Testkit prüft die Form. Aktueller Stand:
+Die [Harness-Matrix](harness-matrix.md) zeigt die deklarierten Commands und
+ihren Geltungsbereich. `npm run check:adapter-matrix` prüft beides gegen die
+Adapter-Factorys, einschließlich Codex Exec, ACP-Presets und Direktadapter.
 
-| Adapter/Harness | Commands | Evidenz |
-|---|---|---|
-| claude | /clear, /compact (both) | documented (headless: Slash-Prompts in `-p`, Picker ausgenommen) — Live-Check T25.6 offen |
-| aider | /clear, /reset, /add, /tokens (start) | documented (`--message` führt In-Chat-/Commands) |
-| acp copilot | /compact, /usage (both) | documented (ACP-Server führt Built-ins als Prompt-Text) |
-| acp omp | /new, /compact (both) | documented (Internals: Dispatch auch im ACP-Modus) |
-| dummy | /compact (both) | Testdouble fürs Testkit/E2E |
-| codex, cursor, pi, hermes, acp dsh | — (nichts deklariert) | kein getriebener Beleg — Verifikation T25.6; PWA zeigt „keine /Commands" (dsh: Probe am fehlenden Key gescheitert, BUG-0192) |
-| acp opencode | /init, /review, /compact (both) | **live geprüft 17.11.2026** ([BUG-0192](../bugs/bug-0192-slash-commands-nicht-bei-allen-anbietern.md)): opencode 2.1.4 advertised /init,/review,/compact per `available_commands_update`; „/compact" als Prompt-Text lief als Command (`_meta.opencode/compaction` started→completed, reason „manual", kein Modellturn); ACP-Spec definiert Command-Ausführung als Command-Text im normalen Prompt. „/new" ist opencodes Client-Command, kein Agent-Command → nie deklarierbar |
-| acp maki | nur mit `bridgeCommands: true` | **live geprüft 2026-10-29**: nativ hat maki 25 Built-ins, aber `-p`/`maki acp` senden "/…" als Chat-Text (Stub-Beweis, [Analyse-Nachtrag](slash-commands-analyse-2026-10-29.md)). Mit installierter init.lua-Brücke + `bridgeCommands: true` in der Registration: /compact, /new, /rename (beide Scopes); ein ausgeführter Command endet als `refusal` → Adapter-Event „über die Brücke ausgeführt". Ohne Flag: nichts deklariert (fail loud) |
+| Adapter/Harness | Evidenz für den getriebenen Modus |
+|---|---|
+| Claude | `/clear` und `/compact` sind für Headless dokumentiert. Der Browser-Test prüft den Dispatch mit der Claude-Attrappe. |
+| Codex App Server | `thread/compact/start` und `contextCompaction` sind im App-Server-Protokoll deklariert. Der Browser-Test prüft Aufruf, Abschluss und den folgenden Prompt. |
+| Pi | Pi 1.6.0 hat über RPC mit synthetischer Historie und lokalem Testendpunkt eine Compaction in der verifizierten Session-Datei persistiert. |
+| Aider | Aider 0.86.2 hat `/clear`, `/reset`, `/tokens` und `/add` mit `--message` ausgeführt. Der Versuch nutzte eine synthetische Datei und einen lokalen Dummy-Endpunkt. |
+| ACP Copilot und OMP | Die jeweiligen ACP-Modi dokumentieren den Dispatch über Prompt-Text. |
+| ACP OpenCode | OpenCode 2.1.4 hat `/compact` live ausgeführt und dabei Start und Abschluss gemeldet ([BUG-0192](../bugs/bug-0192-slash-commands-nicht-bei-allen-anbietern.md)). |
+| ACP Maki | `bridgeCommands: true` aktiviert ausschließlich `/new` über einen neuen ACP-Session-Start. Die frühere init.lua-Brücke setzt ACP-Kommandos nicht zuverlässig um. |
+| Direktadapter | `/compact` kürzt die nächste Anfrage. [ADR-0114](adr/0114-nativer-compact-und-direktadapter.md) beschreibt den Settings-Schalter und die Messung. |
+
+Der Composer filtert Vorschläge nach dem Geltungsbereich. Der Hub lehnt
+`/compact` bei fehlender Unterstützung ab. Andere unbekannte Slash-Eingaben
+können mit einem Hinweis als Prompt gesendet werden. Für zusätzliche native
+Befehle ist ein Nachweis im tatsächlich getriebenen Modus erforderlich.
 
 ## Skill-/Agent-Übergabe (`SessionSpec.args`, ADR-0005)
 
