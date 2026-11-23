@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { isProjectPathAllowed } from "@ancientvoid/core";
+import { isProjectPathAllowed, discoverProjects } from "@ancientvoid/core";
 import {
   TranscriptQueryLimits,
   type DocSearchHit,
@@ -22,6 +22,13 @@ import {
 import type { RouteContext } from "../../route-context.ts";
 
 const ALL_ROLES: readonly TranscriptRole[] = ["user", "assistant", "thinking", "tool", "system"];
+
+/** Grenzen der Doku-Seite bei „alle Projekte“: ein Hub kann Dutzend Repos
+ * haben, und ein Suchfeld darf nicht minutenlang hängen. Beides wird
+ * berichtet (`docTruncated`), damit die Oberfläche nicht so tut, als hätte
+ * sie den ganzen Bestand gesehen. */
+const DOC_PROJECT_CAP = 12;
+const DOC_TIME_BUDGET_MS = 2_500;
 
 /** Rollen aus einem Query-Parameter. Unbekannte Namen fallen weg — ein
  * Tippfehler soll weder eine 500 erzeugen noch heimlich die ganze Liste
@@ -123,7 +130,7 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
   /** Ein Suchfeld, beide Körper in einer Antwort — die PWA muss nicht zweimal
    * warten und die Zahlen der beiden Bereiche passen zueinander. */
   app.get("/api/search/all", async (req, reply) => {
-    const p = req.query as { q?: string; project?: string; sessionProject?: string; scope?: string; roles?: string; limit?: string; offset?: string; session?: string };
+    const p = req.query as { q?: string; project?: string; sessionProject?: string; scope?: string; roles?: string; limit?: string; offset?: string; session?: string; allProjects?: string };
     const q = p.q?.trim() ?? "";
     if (!q) return reply.code(400).send({ error: "q query param required" });
     if (q.length > TranscriptQueryLimits.maxChars) return reply.code(400).send({ error: `q is longer than ${TranscriptQueryLimits.maxChars} characters` });
@@ -170,9 +177,33 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
     let docs: DocSearchHit[] = [];
     let docStatus: "ready" | "indexing" | "unavailable" | "skipped" | "error" = "skipped";
     let docEngine: "qmd" | "local" | "none" = "none";
+    let docProjects: string[] | undefined;
+    let docTruncated: boolean | undefined;
     if (scope !== "sessions") {
       const project = p.project;
-      if (!project) {
+      if (!project && p.allProjects === "1") {
+        // Doku über alle Projekte des Hubs — ein Suchfeld muss auch das Tool
+        // finden, an dem man gerade nicht arbeitet. qmd indexiert pro Projekt
+        // und müsste für jedes erst gebaut werden; deshalb bewusst der lokale
+        // Markdown-Durchlauf, dafür mit ehrlicher Projekt-Zuordnung.
+        const { projects } = await discoverProjects(projectRoots);
+        const scanned = projects.slice(0, DOC_PROJECT_CAP);
+        docProjects = scanned.map((pr) => pr.path);
+        docTruncated = projects.length > scanned.length;
+        const deadline = Date.now() + DOC_TIME_BUDGET_MS;
+        for (const pr of scanned) {
+          const excl = deps.dataDir ? [relativeDataDir(pr.path, deps.dataDir)].filter((d): d is string => d !== undefined) : [];
+          for (const hit of await searchProjectLocal(pr.path, q, limit, excl)) docs.push({ ...hit, project: pr.path });
+          if (Date.now() > deadline) {
+            docTruncated = true;
+            break;
+          }
+        }
+        docs.sort((a, b) => b.score - a.score);
+        docs = docs.slice(0, limit);
+        docEngine = "local";
+        docStatus = "ready";
+      } else if (!project) {
         docStatus = "unavailable";
       } else {
         const excludeRelDirs = deps.dataDir ? [relativeDataDir(project, deps.dataDir)].filter((d): d is string => d !== undefined) : [];
@@ -217,6 +248,8 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       docTotal: docs.length,
       docEngine,
       docStatus,
+      ...(docProjects ? { docProjects } : {}),
+      ...(docTruncated === undefined ? {} : { docTruncated }),
     } satisfies UnifiedSearchResponse;
   });
 

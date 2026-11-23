@@ -106,6 +106,9 @@ export const DocSearchHit = z.object({
   title: z.string(),
   snippet: z.string(),
   score: z.number(),
+  /** gesetzt, wenn die Doku-Seite über mehrere Projekte lief: zu welchem Projekt
+   * die Datei gehört. Ohne dieses Feld weiß die Oberfläche nicht, wo der Fund herkommt. */
+  project: z.string().optional(),
 });
 export type DocSearchHit = z.infer<typeof DocSearchHit>;
 
@@ -140,5 +143,10 @@ export const UnifiedSearchResponse = z.object({
   docEngine: DocSearchEngine,
   /** `null` = Doku wurde nicht angefragt (Scope „nur Sessions“). */
   docStatus: z.enum(["ready", "indexing", "unavailable", "skipped", "error"]).nullable(),
+  /** Welche Projekte die Doku-Seite durchsucht hat — nur bei „alle Projekte“ gesetzt. */
+  docProjects: z.array(z.string()).optional(),
+  /** `true` = mehr Projekte im Hub, als die Suche pro Runde anfasst: die Doku-Seite
+   * ist bewusst unvollständig und sagt das auch. */
+  docTruncated: z.boolean().optional(),
 });
 export type UnifiedSearchResponse = z.infer<typeof UnifiedSearchResponse>;
