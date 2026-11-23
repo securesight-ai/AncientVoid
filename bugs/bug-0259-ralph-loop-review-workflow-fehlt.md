@@ -1,7 +1,7 @@
 ---
 id: BUG-0259
 slug: ralph-loop-review-workflow-fehlt
-status: open
+status: done
 severity: S2
 area: loops
 instance: prod

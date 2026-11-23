@@ -1,7 +1,7 @@
 ---
 id: BUG-0255
 slug: sidebar-tooltips-tablet
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
