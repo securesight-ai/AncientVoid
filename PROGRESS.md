@@ -448,6 +448,23 @@ inkl. Zeitspalte), Typecheck/Lint/i18n/arch/context grün, Screenshots 1280/710/
 - Wachhund: `/tmp/hub-neustart.sh` (Rückfall auf den zuletzt gesunden Stand, danach
   `git checkout main`).
 
+## Terminal-Tab live genommen (23.11., verifiziert)
+- PR #348 gemerged (`5dcd2525`; danach #349–#355 bis `a25ff1bf`), Hub live auf
+  genau diesem Stand: `version.json` == HEAD, `dirty:false`, health 200 nach 2 s
+  (Wachhund `/tmp/hub-sicher-neustart.sh`, Rückfall-Stand `9cde7892` nicht gebraucht).
+- K7 nach dem Neustart: `recovery finished, recovered:6, failed:0`; laufende
+  Session schreibt weiter (events.jsonl 1663 → 1665 Zeilen in 6 s).
+- Live-PWA (Chromium, Service-Worker + Caches vorher entfernt, Gerätetoken
+  danach widerrufen, Route ohne Token wieder 401): Terminal-Tab listet die
+  Allowlist (evox2, Hub-Host) **plus** automatisch erkannte Shells des Hub-Hosts
+  (sh, git-shell, rbash, systemd-home-fallback-shell — zsh/fish nicht installiert,
+  bash vom Config-Ziel belegt); „Einfügen“/„Kopieren“-Knöpfe vorhanden, Verbindung
+  auf lokalem bash steht, Puffer ohne ^V-Artefakte. Tastatur-Paste ist per
+  Playwright-E2E belegt („Ctrl+V fügt ein und Enter führt aus“, rot ohne Fix);
+  Headless-Chromium verweigert ohne Clipboard-Rechte den Systemclipboard-Weg —
+  dort läuft der Knopf-Pfad auf den ehrlichen Fehlerhinweis.
+- BUG-0273 (Strg+V wirkungslos) damit erledigt; Issue #347 vom Merge geschlossen.
+
 ## Wiederaufnahme nach Hub-Neustart (falls diese Antwort abbricht)
 - Der Hub ist ein systemd-User-Service (`ancientvoid-hub.service`, `Restart=always`,
   `KillMode=process`) — Session-Worker überleben, der Hub kommt von allein hoch.

@@ -1,7 +1,7 @@
 ---
 id: BUG-0273
 slug: terminal-paste-shortcuts
-status: in-progress
+status: done
 severity: S2
 area: pwa
 instance: dev
