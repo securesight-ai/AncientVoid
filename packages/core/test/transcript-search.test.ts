@@ -333,6 +333,49 @@ describe("query-Bau und Snippet des Durchlaufs", () => {
     expect(buildFtsQuery("—")).toBeNull();
     // FTS5-Syntax aus einer Eingabe darf nicht als Syntax wirken.
     expect(buildFtsQuery("or (und) NOT")?.match).toBe('"or"* "und"* "NOT"*');
+    // Trenner sind keine Wortbestandteile: der Index zerlegt `tokdeck.env.key`
+    // in vier Tokens, also muss auch die Suche als Phrase dieser Tokens laufen.
+    expect(buildFtsQuery("tokdeck.env.key")).toEqual({ match: '"tokdeck env key"*', terms: ["tokdeck.env.key"] });
+    expect(buildFtsQuery("EPIC-P75")?.match).toBe('"EPIC P75"*');
+    // Pfade bleiben suchbar, auch mitten im Begriff.
+    expect(buildFtsQuery("repos/tokdeck/README.md")?.match).toBe('"repos tokdeck README md"*');
+  });
+
+  it("findet einen Begriff mit Punkten und Schrägstrichen (Toolnamen, Pfade)", async () => {
+    addSessionRow("spath", "/home/kaib/repos/tokdeck", "Token-Widget");
+    await seed("spath", [
+      { seq: 1, type: "user", payload: { kind: "session.prompt", text: "Wo liegt der Schlüssel für tokdeck?" } },
+      { seq: 2, type: "assistant", payload: { kind: "message", text: "Der Schlüssel liegt in tokdeck.env.key im Repo." } },
+    ]);
+    const index = idx();
+    await index.refresh();
+    const res = await index.search({ q: "tokdeck.env.key" });
+    expect(res.mode).toBe("and");
+    expect(res.total).toBe(1);
+    expect(res.hits[0]?.seq).toBe(2);
+    // Auch der Pfad eines Dokuments ist ein Suchbegriff.
+    const path = await index.search({ q: "repos/tokdeck/README.md" });
+    expect(path.total).toBe(0);
+    const other = await index.search({ q: "env.key" });
+    expect(other.total).toBe(1);
+  });
+
+  it("sagt auch ohne Treffer, in welcher Rolle es läge", async () => {
+    addSessionRow("srolle", "/home/kaib/repos/tokdeck", "Rollen");
+    await seed("srolle", [
+      { seq: 1, type: "user", payload: { kind: "session.prompt", text: "Wie heißt das Widget?" } },
+      { seq: 2, type: "tool_result", payload: { name: "bash", input: { command: "cat tokdeck.env.key" }, text: "ergab vier Zeilen" } },
+    ]);
+    const index = idx();
+    await index.refresh();
+    // Standardrollen sind Frage und Antwort: hier liegt nichts — aber die Facetten
+    // sagen, wo es liegt, sonst liest sich die leere Liste wie „nichts im Hub“.
+    const empty = await index.search({ q: "tokdeck.env.key" });
+    expect(empty.total).toBe(0);
+    expect(empty.facets).toEqual([{ role: "tool", count: 1 }]);
+    // Mit der Rolle an: derselbe Fund.
+    const found = await index.search({ q: "tokdeck.env.key", roles: ["tool"] });
+    expect(found.total).toBe(1);
   });
 
   it("markiert jeden Fund im Fensterausschnitt", () => {

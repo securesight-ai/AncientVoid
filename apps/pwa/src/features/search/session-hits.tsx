@@ -49,6 +49,17 @@ export function toggleRole(roles: readonly TranscriptRole[], role: TranscriptRol
   return roles.filter((r) => r !== role);
 }
 
+/** Facetten, die Treffer haben, aber abgeschaltet sind. Ohne diese Zahl
+ * behauptet eine leere Ergebnisliste, der Hub wisse nichts — dabei liegen die
+ * Funde in Denk- und Werkzeugspuren, die standardmäßig aus sind. */
+export function hiddenFacetRoles(
+  facets: readonly { role: TranscriptRole; count: number }[],
+  roles: readonly TranscriptRole[],
+): { roles: TranscriptRole[]; count: number } {
+  const off = facets.filter((f) => f.count > 0 && !roles.includes(f.role));
+  return { roles: off.map((f) => f.role), count: off.reduce((sum, f) => sum + f.count, 0) };
+}
+
 export interface SnippetPiece {
   text: string;
   hit: boolean;

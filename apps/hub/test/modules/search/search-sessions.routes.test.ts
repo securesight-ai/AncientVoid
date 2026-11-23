@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AdapterRegistry, EventStore, HubDatabase, SessionManager, SessionTextIndex, TokenService, type HubDatabase as HubDb } from "@ancientvoid/core";
@@ -74,7 +74,9 @@ interface SearchBody {
   sessionTotal?: number;
   hits: { sessionId: string; role: string; seq: number; snippet: string; sessionTitle: string | null; project: string; sessionHits: number }[];
   sessions: { sessionId: string; role: string; sessionTitle: string | null }[];
-  docs: unknown[];
+  docs: { file: string; project?: string }[];
+  docProjects?: string[];
+  docTruncated?: boolean;
   facets: { role: string; count: number }[];
   index: { engine: string; lines: number };
 }
@@ -234,6 +236,33 @@ describe("GET /api/search/all", () => {
     const app = await buildApp({ transcript: new SessionTextIndex(db, dataDir) });
     expect((await get(app, "/api/search/all")).code).toBe(400);
     expect((await get(app, `/api/search/all?q=x&project=${encodeURIComponent("/etc")}`)).code).toBe(422);
+    await app.close();
+  });
+
+  it(" findet die Doku eines anderen Projekts und nennt das Projekt dazu", async () => {
+    // Der Fall, der in der Oberfläche wehtut: man sucht ein Tool, an dem man
+    // gerade nicht arbeitet. Ohne „alle Projekte“ ist die Doku-Seile leer, weil
+    // sie ans Projekt der laufenden Sitzung gebunden ist.
+    await mkdir(join(projectDir, "tokdeck"), { recursive: true });
+    await mkdir(join(projectDir, "powermeter"), { recursive: true });
+    await writeFile(join(projectDir, "tokdeck", "README.md"), "# tokdeck\n\nDer Wächter über dem Strata-Server.\n", "utf8");
+    await writeFile(join(projectDir, "powermeter", "PROGRESS.md"), "# powermeter\n\nMisst Strom. Die GPU steht bei tokdeck.\n", "utf8");
+    const app = await buildApp({ transcript: new SessionTextIndex(db, dataDir) });
+
+    const wide = await get(app, `/api/search/all?q=${encodeURIComponent("tokdeck")}&scope=docs&allProjects=1`);
+    expect(wide.code).toBe(200);
+    expect(wide.body.docStatus).toBe("ready");
+    expect(wide.body.docEngine).toBe("local");
+    expect(wide.body.docProjects?.length).toBe(2);
+    expect(wide.body.docs.length).toBeGreaterThanOrEqual(2);
+    expect(wide.body.docs.every((h) => typeof h.project === "string")).toBe(true);
+    expect(wide.body.docs.some((h) => h.project?.endsWith("/tokdeck") && h.file === "README.md")).toBe(true);
+
+    // Ohne das Kreuz bleibt die Doku ans Projekt gebunden; ohne Projekt ist sie
+    // nicht verfügbar — und sagt das, statt eine leere Liste zu erfinden.
+    const narrow = await get(app, `/api/search/all?q=${encodeURIComponent("tokdeck")}&scope=docs`);
+    expect(narrow.body.docStatus).toBe("unavailable");
+    expect(narrow.body.docProjects).toBeUndefined();
     await app.close();
   });
 });

@@ -148,6 +148,9 @@ export interface SearchInput {
   sessionProject?: string;
   projectUnder?: string;
   session?: string;
+  /** Doku über alle Projekte des Hubs statt nur das aktuelle. Zusammen mit
+   * `project` senden wäre widersprüchlich — die Hub-Route ignoriert dann `project`. */
+  allProjects?: boolean;
   scope?: "all" | "docs" | "sessions";
   roles?: TranscriptRole[];
   limit?: number;
@@ -160,6 +163,7 @@ function searchQuery(input: SearchInput): string {
   if (input.project) p.set("project", input.project);
   if (input.sessionProject) p.set("sessionProject", input.sessionProject);
   if (input.projectUnder) p.set("projectUnder", input.projectUnder);
+  if (input.allProjects) p.set("allProjects", "1");
   if (input.session) p.set("session", input.session);
   if (input.scope && input.scope !== "all") p.set("scope", input.scope);
   if (input.roles && input.roles.length) p.set("roles", input.roles.join(","));
