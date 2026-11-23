@@ -156,6 +156,16 @@ describe("Layout fixieren und Session-Reuse", () => {
     expect(ws.focus).toBe(1);
   });
 
+  it("holt ein verdecktes Werkzeug in die sichtbare Kachel, ohne die Sitzung zu verlieren", () => {
+    const settings = { sessionId: "", content: { kind: "page", page: "settings" } } as const;
+    let ws = openInNewTile(openSession(setLayout(emptyWorkspace(), "2v"), a), settings);
+    ws = openInNewTile(setLayout(ws, "1"), settings);
+    expect(ws.layout).toBe("1");
+    expect(ws.focus).toBe(0);
+    expect(visibleTiles(ws)).toEqual([settings]);
+    expect(ws.slots[1]).toEqual(a);
+  });
+
   it("fixiert: anderer Tab derselben Session aktualisiert die Karte statt neu zu öffnen", () => {
     let ws = openInNewTile(emptyWorkspace(), { sessionId: "a", content: { kind: "session", tab: "chat" } });
     ws = openInNewTile(ws, { sessionId: "a", content: { kind: "session", tab: "graph" } });

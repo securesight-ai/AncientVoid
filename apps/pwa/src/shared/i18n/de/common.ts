@@ -63,6 +63,8 @@ export const de = {
   "common.media": "Medien",
   "common.metrics": "Metrik",
   "common.n_sessions": "{n} sessions",
+  "common.day_today": "Heute",
+  "common.day_yesterday": "Gestern",
   "common.never": "nie",
   "common.new": "neu",
   "common.new_session": "Neue Session",

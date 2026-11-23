@@ -120,6 +120,34 @@
   padding-top: 4px;
 }
 
+/* Tagesabschnitt im Chat: ohne ihn wäre nur die Uhrzeit zu sehen (Nutzerfund 23.11.2026).
+   Das Datum steht als eigene Zeile — nicht an jeder Uhrzeit, das wäre Rauschen. */
+.day-sep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+
+.day-sep::before,
+.day-sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in oklab, var(--fg-dim) 35%, transparent);
+}
+
+.day-sep span {
+  padding: 2px 8px;
+  border: 1px solid color-mix(in oklab, var(--fg-dim) 30%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-chip);
+}
+
 .new-jump {
   margin: 4px 0;
 }

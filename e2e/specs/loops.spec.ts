@@ -145,7 +145,7 @@ test.describe("Loop / Dark Factory im Start-Formular", () => {
     const pfad = app.getByLabel("Projektpfad");
     // Der Pfad des oben gewählten Projekts steht sofort da — kein Tippen.
     await expect(pfad).toHaveValue(hub.alpha);
-    const projekt = app.locator(".form-grid > label").first().locator("select");
+    const projekt = app.getByRole("combobox", { name: "Projekt", exact: true });
     // Ein Wechsel der Projektauswahl oben zieht das Feld mit, solange unberührt.
     await projekt.selectOption(hub.beta);
     await expect(pfad).toHaveValue(hub.beta);

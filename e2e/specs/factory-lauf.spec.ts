@@ -33,7 +33,7 @@ const setProgress = (project: string, value: Record<string, unknown>) => writeFi
 test.describe("Factory-Onboarding (AC-P26-1)", () => {
   async function openForm(app: Page, project: string) {
     await app.getByRole("button", { name: "Neue Session" }).click();
-    await app.locator(".form-grid > label").first().locator("select").selectOption(project);
+    await app.getByRole("combobox", { name: "Projekt", exact: true }).selectOption(project);
     await app.getByLabel("Loop", { exact: true }).selectOption("securesight-factory");
     await app.getByLabel("Anbindung").selectOption("+neu");
     await expect(app.locator(".loop-onboard")).toBeVisible();

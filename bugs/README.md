@@ -295,9 +295,15 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 
 | [BUG-0261](bug-0261-pi-zweite-laeufe-auf-derselben-sitzung.md) | Pi sicherte `midTurnInput: true` zu, `steer` startet aber einen zweiten `pi -p --session`-Prozess — drei Läufe auf einer Sitzung, `session.turn_end reason:"error"` + `adapter.down` | done | S1 | harness | [#300](https://github.com/securesight-ai/AncientVoid/issues/300) · [PR #301](https://github.com/securesight-ai/AncientVoid/pull/301) |
 | [BUG-0262](bug-0262-seitenkachel-popout-ohne-ziel.md) | Seiten-Kachel (z. B. Notizen) als eigenes Fenster: Ziel wird immer als Session gebaut — Popup `#/sessions/` zeigt „Dieses Fenster hat kein Ziel." und löst die Kachel ab | fixed | S2 | pwa | [#312](https://github.com/securesight-ai/AncientVoid/issues/312) |
+| [BUG-0263](bug-0263-tmux-log-fehlt-beim-start.md) | Der Worker-Logwatcher startet vor der tmux-Pipe | fixed | S2 | workers | [#104](https://github.com/securesight-ai/AncientVoid/issues/104) |
+| [BUG-0264](bug-0264-verdeckte-kachel-wird-nicht-gezeigt.md) | Ein erneut geöffnetes Werkzeug bleibt hinter dem fixierten Raster unsichtbar | fixed | S2 | pwa | [#104](https://github.com/securesight-ai/AncientVoid/issues/104) |
+| [BUG-0265](bug-0265-kontextueberlauf-meldet-anmeldeproblem.md) | Kontextüberlauf („prompt exceeds the context window") fällt in die auth-Regel — Banner verlangt Neuanmeldung, ADR-0115 | fixed | S2 | core | — |
+| [BUG-0266](bug-0266-bild-auslese-ohne-ocr-werkzeug-schickt-zum-schluessel.md) | Bild ohne OCR-Werkzeug auf dem Hub meldet „Kein Text gefunden … Gemini-Schlüssel" — und die Eingabezeile bietet keine Vorschau | fixed | S2 | core | — |
+| [BUG-0267](bug-0267-eingefuegtes-bild-ohne-ocr-hinweis-bleibt-liegend.md) | Eingefügtes Bild endet im Agenten-Prompt bei „(kein Text auslesbar)" — der Pfad war da, der Hinweis, das Bild zu oeffnen, nicht | fixed | S2 | core | — |
 
-| [BUG-0263](bug-0263-strg-klick-ersetzt-kachel.md) | Strg-/Cmd-Klick auf eine Session-Karte ersetzt im fixierten Raster die fokussierte Kachel statt eine zweite zu öffnen (`openFromList` verwirft `newTile` seit dabe85d5, E2E „Kachelfokus fragt neu" rot) | open | S3 | pwa | [#322](https://github.com/securesight-ai/AncientVoid/issues/322) |
-Die nächste freie Nummer ist **0263** (gemerged, 0260 mit PR #297 gemerged,
+| [BUG-0268](bug-0268-strg-klick-ersetzt-kachel.md) | Strg-/Cmd-Klick auf eine Session-Karte ersetzt im fixierten Raster die fokussierte Kachel statt eine zweite zu öffnen (`openFromList` verwirft `newTile` seit dabe85d5, E2E „Kachelfokus fragt neu" rot) | open | S3 | pwa | [#322](https://github.com/securesight-ai/AncientVoid/issues/322) |
+
+Die nächste freie Nummer ist **0269** (0268 Strg-Klick-Regression — zuerst als 0263 angelegt, nach Kollision mit tmux-Log umnummeriert; 0265 Kontextüberlauf als Anmeldepleite — ADR-0115, 0266 Bild-Auslese ohne OCR-Werkzeug, 0267 eingefügtes Bild ohne Oeffnen-Hinweis im Prompt; gemerged, 0260 mit PR #297 gemerged,
 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
 0183 mit PR #50, 0184 mit PR #48 und 0185 mit dem Nightly-Fix aus den Issues #54–#57 gemerged,
 0180 mit PR #40; 0186 ist das eingemauerte Manifest auf dem Handy; 0187 sind die Geister-Tokens

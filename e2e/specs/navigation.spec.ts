@@ -42,8 +42,12 @@ test.describe("Navigation, Status und Einstellungen (P1.6)", () => {
 
   // EPIC-P34 T34.1 (AC-P34-1): Voice außerhalb einer Session entfällt, Medien rückt ins Dock, PC in die Einstellungen.
   // Das Voice-Sheet in der Session deckt weiter workspace.spec.ts ab („Sprache“).
-  test("AC-P34-1: das Dock führt Medien statt Voice, die Kopfzeile nur Befehl und Status @desktop", async ({ app }) => {
-    await expect(app.locator(".dock .lb")).toHaveText(["Start", "Suchen", "Teams", "Mehr", "Medien", "Notizen", "Automationen", "Einstellungen", "Metrik", "Statistik", "Terminal", "Release-Notes", "Dateibaum"]);
+  test("AC-P34-1: das Dock führt Medien statt Voice, die Kopfzeile nur Befehl und Status @desktop", async ({ app, isMobile }) => {
+    const tools = ["Medien", "Notizen", "Automationen", "Einstellungen", "Statistik", "Terminal", "Release-Notes"];
+    const labels = isMobile
+      ? ["Start", "Suchen", "Teams", "Mehr", ...tools, "Dateibaum"]
+      : ["Start", "Suchen", "Projektansicht", "Session", "Teams", ...tools];
+    await expect(app.locator(".dock .lb")).toHaveText(labels);
     await expect(app.locator(".dock").getByRole("button", { name: "Voice" })).toHaveCount(0);
     const head = app.locator(".topbar").first();
     await expect(head.getByRole("button", { name: "Medien" })).toHaveCount(0);

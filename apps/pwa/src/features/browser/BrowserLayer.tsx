@@ -2,6 +2,7 @@ import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { BrowserPick, BrowserStatus, BrowserTestRun, BrowserViewportName } from "@ancientvoid/contracts";
 import { hubApi, remoteHost } from "../../shared/api.ts";
+import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { openPopout } from "../windows/windows.ts";
 import { getHubStatus } from "../shell/hub-status.ts";
 import { onLayerOpen } from "../../shared/layers.ts";
@@ -130,7 +131,7 @@ export function BrowserPanel({ sessionId, label, hostId, onClose }: { sessionId:
           </Chip>
         ))}
       </div>
-      {tab === "view" && <Viewport sessionId={sessionId} status={status} online={online} busy={busy} onStatus={setStatus} onError={setError} />}
+      {tab === "view" && <Viewport sessionId={sessionId} hostId={remoteHost(hostId)} status={status} online={online} busy={busy} onStatus={setStatus} onError={setError} />}
       {tab === "tests" && <Tests sessionId={sessionId} online={online} />}
       {tab === "log" && (
         <ul class="browser-log" data-testid="browser-log">
@@ -153,7 +154,7 @@ function UrlBar({ status, disabled, onOpen, onNavigate }: { status: BrowserStatu
   );
 }
 
-function Viewport({ sessionId, status, online, busy, onStatus, onError }: { sessionId: string; status: BrowserStatus | null; online: boolean; busy: boolean; onStatus: (s: BrowserStatus) => void; onError: (m: string) => void }) {
+function Viewport({ sessionId, hostId, status, online, busy, onStatus, onError }: { sessionId: string; hostId: string | null; status: BrowserStatus | null; online: boolean; busy: boolean; onStatus: (s: BrowserStatus) => void; onError: (m: string) => void }) {
   const [frame, setFrame] = useState<{ url: string; at: Date } | null>(null);
   const [mode, setMode] = useState<"operate" | "pick">("operate");
   const [pick, setPick] = useState<BrowserPick | null>(null);
@@ -214,12 +215,12 @@ function Viewport({ sessionId, status, online, busy, onStatus, onError }: { sess
         <img ref={img} class={mode === "pick" ? "browser-frame picking" : "browser-frame"} data-testid="browser-frame" src={frame.url} alt={`Browser: ${status?.title ?? status?.url ?? ""}`} onClick={onImageClick} draggable={false} />
       ) : <div class="ui-empty">{t("browser.image_loading")}</div>}
       {frame && <div class="dim" data-testid="browser-frame-time">{t("browser.as_of")} {frame.at.toLocaleTimeString("de-DE")}{!online ? " (offline)" : ""}</div>}
-      {pick && <PickCard sessionId={sessionId} pick={pick} onDone={() => setPick(null)} />}
+      {pick && <PickCard sessionId={sessionId} pick={pick} hostId={hostId} onDone={() => setPick(null)} />}
     </div>
   );
 }
 
-function PickCard({ sessionId, pick, onDone }: { sessionId: string; pick: BrowserPick; onDone: () => void }) {
+function PickCard({ sessionId, pick, hostId, onDone }: { sessionId: string; pick: BrowserPick; hostId: string | null; onDone: () => void }) {
   const [note, setNote] = useState("");
   const [shot, setShot] = useState(true);
   const [preview, setPreview] = useState<string | null>(null);
@@ -227,7 +228,7 @@ function PickCard({ sessionId, pick, onDone }: { sessionId: string; pick: Browse
   const input = { pick, note, includeScreenshot: shot };
   return (
     <div class="browser-pick" data-testid="browser-pick">
-      <div><strong>{t("browser.lt")}{pick.tag}{t("browser.gt")}</strong> <span class="mono">{pick.selector}</span></div>
+      <div><strong>{`<${pick.tag}>`}</strong> <span class="mono">{pick.selector}</span></div>
       {pick.masked && <div class="files-stale" role="status">{t("browser.secret_field")}</div>}
       {pick.frame === "iframe" && <div class="dim">{t("browser.frame_only")}</div>}
       {pick.inShadowDom && <div class="dim">{t("browser.shadow_dom")}</div>}
@@ -250,6 +251,7 @@ function PickCard({ sessionId, pick, onDone }: { sessionId: string; pick: Browse
             });
             setMsg("Als Quelle im Composer — dort prüfen und mit dem nächsten Absenden mitgeben.");
             onDone();
+            openWorkspaceContent({ sessionId, ...(hostId ? { hostId } : {}), content: { kind: "session", tab: "chat" } });
           }}
         >
           {t("browser.into_composer")}

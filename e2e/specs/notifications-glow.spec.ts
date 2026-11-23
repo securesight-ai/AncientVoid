@@ -88,7 +88,7 @@ test.describe("Tablet-Split: Panel folgt der Glocke an den Fensterrand (EPIC-P64
     // @tablet läuft zusätzlich im mobile-Projekt — Viewport wie tablet-layout.spec erzwingen.
     await app.setViewportSize({ width: 800, height: 1280 });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
-    await expect(app.locator(".tablet-split")).toBeVisible();
+    await expect(app.locator(".split")).toBeVisible();
     await expect(app.locator(".notif-bell")).toBeVisible();
     const vw = await app.evaluate(() => window.innerWidth);
     const bell = (await app.locator(".notif-bell").boundingBox())!;

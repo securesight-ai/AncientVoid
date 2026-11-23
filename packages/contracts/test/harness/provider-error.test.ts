@@ -80,3 +80,43 @@ describe("BUG-0102 maki-Verbindungsfehler", () => {
     expect(classifyProviderError("Internal error: could not connect, check the server is running and the base URL is correct").category).toBe("network");
   });
 });
+
+describe("BUG-0265 Kontextüberlauf ist keine Anmeldefrage", () => {
+  const roh = [
+    '400: {"type":"invalid_request_error","message":"request exceeds the context window: prompt (237428 tokens) leaves no room to answer in the context (204800); requests are never truncated"}',
+    '400: {"error":{"code":"context_length_exceeded","message":"This model maximum context length is 204800 tokens. However, your messages resulted in 237428 tokens."}}',
+    "prompt is too long: 237428 tokens > 204800 maximum",
+    "Der Kontext dieses Modells ist erschöpft — input is too long for the model",
+  ];
+  it.each(roh)("klassifiziert Kontextüberlauf als Kontext, nicht als Anmeldung: %s", (raw) => {
+    const info = classifyProviderError(raw);
+    expect(info.category).toBe("context");
+    expect(info.title).toContain("Kontext");
+    expect(info.detail).not.toMatch(/angemeldet|Schlüssel/);
+  });
+
+  it("nenennt die Tokenzahlen der Meldung", () => {
+    const info = classifyProviderError(
+      '400: {"type":"invalid_request_error","message":"request exceeds the context window: prompt (237428 tokens) leaves no room to answer in the context (204800); requests are never truncated"}',
+    );
+    expect(info.detail).toContain("237428");
+    expect(info.detail).toContain("204800");
+    expect(info.detail).toContain("Übergabe");
+  });
+
+  it.each(["401 Unauthorized", "invalid api key provided", "Not logged in · Please run /login", "authentication failure", "403 forbidden"])(
+    "laesst echte Anmeldefehler bei auth: %s",
+    (raw) => expect(classifyProviderError(raw).category).toBe("auth"),
+  );
+
+  it("liefert die Kontext-Pleite als handlungsfähige failure", () => {
+    const failure = currentProviderFailureFromEvents([
+      {
+        type: "system",
+        summary: "pi: Kontext des Modells reicht nicht",
+        payload: { kind: "provider.error", category: "context", title: "Kontext des Modells reicht nicht", detail: "x" },
+      },
+    ]);
+    expect(failure?.category).toBe("context");
+  });
+});

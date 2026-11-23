@@ -6,15 +6,14 @@ import { test, expect } from "../support/fixtures.ts";
 
 test("Sprache: Umschalten auf Englisch, Persistenz über Reload, offline gleich", async ({ app, hub }, info) => {
   test.setTimeout(90_000);
-  await app.evaluate(() => localStorage.setItem("ancientvoid.i18n-dev", "1")); // Englisch während der Migration wählbar (frei ab T61.6)
-  await app.reload();
   await app.goto(`${hub.origin}/#/einstellungen`);
-  await expect(app.getByRole("group", { name: "Sprache" }).getByRole("button", { name: "Deutsch" })).toHaveAttribute("aria-pressed", "true");
-  await app.getByRole("group", { name: "Sprache" }).getByRole("button", { name: "English" }).click(); // lädt neu (ADR-0101)
+  const appearance = app.locator(".settings-section").filter({ has: app.getByRole("heading", { name: /^(Darstellung|Appearance)$/ }) });
+  await expect(appearance.getByRole("group", { name: "Sprache", exact: true }).getByRole("button", { name: "Deutsch" })).toHaveAttribute("aria-pressed", "true");
+  await appearance.getByRole("group", { name: "Sprache", exact: true }).getByRole("button", { name: "English" }).click(); // lädt neu (ADR-0101)
   await app.waitForLoadState("load");
   await app.reload(); // Persistenz über Reload — Sprache bleibt Englisch
   await app.goto(`${hub.origin}/#/einstellungen`); // Reload landet auf der Übersicht — neu hineinnavigieren
-  await expect(app.getByRole("group", { name: "Language" }).getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(appearance.getByRole("group", { name: "Language", exact: true }).getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
   // Migrierte Bereiche schalten mit: Dock (Mobile-Leiste) über das Mehr-Sheet.
   await app.getByRole("navigation", { name: "Navigation" }).getByRole("button", { name: "More" }).click();
   await expect(app.getByRole("button", { name: "Settings" })).toBeVisible();
@@ -22,8 +21,8 @@ test("Sprache: Umschalten auf Englisch, Persistenz über Reload, offline gleich"
   // Offline ohne Reload (der Runner blocket Service Workers): bestehender
   // Zustand bleibt ohne Netz korrekt — Kataloge sind im Bundle, AC-P61-4.
   await app.context().setOffline(true);
-  await expect(app.getByRole("group", { name: "Language" }).getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(appearance.getByRole("group", { name: "Language", exact: true }).getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
   await app.getByRole("button", { name: "Settings" }).click(); // im Mehr-Sheet geöffnet bleiben
-  await expect(app.getByRole("group", { name: "Language" }).getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(appearance.getByRole("group", { name: "Language", exact: true }).getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
   await app.context().setOffline(false);
 });

@@ -45,6 +45,28 @@
   height: 100%;
   object-fit: contain;
 }
+/* Vorschau in der Eingabezeile: kleiner, Name steht daneben statt darunter —
+   der volle Lese-Grund bleibt als title der Zeile erhalten. */
+.attachment-chip.rich {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attachment-chip.rich .attachment-thumb {
+  flex: 0 0 auto;
+  width: 76px; /* kleiner als die Chat-Vorschau, aber auf dem Handy noch erkennbar */
+}
+
+.attachment-chip.rich .attachment-thumb-frame {
+  height: 54px;
+}
+
+.attachment-meta {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .attachment-thumb-ph {
   color: var(--fg-faint);
   font-size: var(--text-sm);

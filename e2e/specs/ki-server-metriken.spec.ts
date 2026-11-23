@@ -2,7 +2,7 @@ import { createServer, type Server } from "node:http";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { test, expect } from "../support/fixtures.ts";
+import { test, expect, dockGo } from "../support/fixtures.ts";
 import type { Page } from "@playwright/test";
 import { freePort } from "../support/ports.ts";
 
@@ -99,9 +99,8 @@ test.use({
 async function openMetrics(page: Page) {
   await page.setViewportSize({ width: 412, height: 850 });
   await page.reload();
-  await page.getByRole("button", { name: /Mehr/ }).first().click();
   // BUG-0257: Metriken ist ein Reiter der Analyse-Seite — ein Menüpunkt, dann der Reiter.
-  await page.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "Statistik" }).click();
+  await dockGo(page, "Statistik");
   await page.getByRole("tab", { name: "Metrik" }).click();
   await expect(page).toHaveURL(/#\/statistik\/metriken$/);
 }

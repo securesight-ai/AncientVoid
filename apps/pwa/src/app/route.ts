@@ -1,6 +1,8 @@
-/** Hash routes for the same session after reload (AC-P5-5), per host (EPIC-P6). */
-export function sessionHash(sessionId: string, hostId?: string | null): string {
-  const session = `sessions/${encodeURIComponent(sessionId)}`;
+/** Hash routes for the same session after reload (AC-P5-5), per host (EPIC-P6).
+ * `seq` hängt eine Fundstelle an: `#/sessions/<id>/seq/474` öffnet die Sitzung und
+ * springt an diese Nachricht — der Weg aus der Suche und aus dem Sitzungsfilter. */
+export function sessionHash(sessionId: string, hostId?: string | null, seq?: number | null): string {
+  const session = `sessions/${encodeURIComponent(sessionId)}${seq !== undefined && seq !== null ? `/seq/${seq}` : ""}`;
   return hostId ? `#/hosts/${encodeURIComponent(hostId)}/${session}` : `#/${session}`;
 }
 
@@ -113,7 +115,7 @@ export function redirectLegacyStatHash(hash: string): string | null {
 
 export type AppRoute =
   | { view: "list"; page: ListPage; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" }
-  | { view: "tail"; sessionId: string; hostId?: string; code?: CodeTarget; tab?: TailTab; file?: string; browser?: true; attachment?: string }
+  | { view: "tail"; sessionId: string; hostId?: string; code?: CodeTarget; tab?: TailTab; file?: string; browser?: true; attachment?: string; seq?: number }
   | { view: "attachment"; attachmentId: string }
   | { view: "devices" }
   | { view: "filetree" };
@@ -156,7 +158,7 @@ export function parseAppHash(hash: string): AppRoute {
     const page = (Object.keys(PAGE_SLUG) as ListPage[]).find((p) => PAGE_SLUG[p] === slug);
     return { view: "list", page: page ?? "dashboard" };
   }
-  const hosted = /^#\/hosts\/([^/?#]+)\/sessions\/([^/?#]+)(?:\/code\/(.+))?(?:\/(graph|git|datei)(?:\/(.+))?)?(?:\/anhang\/([^/?#]+))?(\/browser)?$/.exec(hash);
+  const hosted = /^#\/hosts\/([^/?#]+)\/sessions\/([^/?#]+)(?:\/code\/(.+))?(?:\/(graph|git|datei)(?:\/(.+))?)?(?:\/anhang\/([^/?#]+))?(\/browser)?(?:\/seq\/(\d+))?$/.exec(hash);
   if (hosted?.[1] && hosted[2]) {
     const code = codeTarget(hosted[3]);
     const file = hosted[4] === "datei" ? fileTarget(hosted[5]) : undefined;
@@ -169,9 +171,10 @@ export function parseAppHash(hash: string): AppRoute {
       ...(file !== undefined ? { tab: "datei" as const, file } : {}),
       ...(hosted[6] !== undefined ? { attachment: decodeURIComponent(hosted[6]) } : {}),
       ...(hosted[7] ? { browser: true as const } : {}),
+      ...(hosted[8] ? { seq: Number(hosted[8]) } : {}),
     };
   }
-  const match = /^#\/sessions\/([^/?#]+)(?:\/code\/(.+))?(?:\/(graph|git|datei)(?:\/(.+))?)?(?:\/anhang\/([^/?#]+))?(\/browser)?$/.exec(hash);
+  const match = /^#\/sessions\/([^/?#]+)(?:\/code\/(.+))?(?:\/(graph|git|datei)(?:\/(.+))?)?(?:\/anhang\/([^/?#]+))?(\/browser)?(?:\/seq\/(\d+))?$/.exec(hash);
   const raw = match?.[1];
   if (!raw) return { view: "list", page: "dashboard" };
   const code = codeTarget(match[2]);
@@ -184,5 +187,6 @@ export function parseAppHash(hash: string): AppRoute {
     ...(file !== undefined ? { tab: "datei" as const, file } : {}),
     ...(match[5] !== undefined ? { attachment: decodeURIComponent(match[5]) } : {}),
     ...(match[6] ? { browser: true as const } : {}),
+    ...(match[7] ? { seq: Number(match[7]) } : {}),
   };
 }

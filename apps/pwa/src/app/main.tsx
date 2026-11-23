@@ -38,7 +38,7 @@ import { RestoreBar } from "../features/windows/RestoreBar.tsx";
 import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
-import { detachTile, focusOpenSession, focusTile, forgetDetached, openInNewTile, openInTile, parseWorkspace, reattach, restoreTile, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
+import { detachTile, focusOpenSession, focusTile, forgetDetached, isLayoutFixed, openInNewTile, openInTile, parseWorkspace, reattach, restoreTile, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
 import { targetKey, tileWindowTarget } from "../features/windows/protocol.ts";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
@@ -187,7 +187,7 @@ function Main() {
       .catch(() => setSelfHostId(null));
   };
   const [route, setRoute] = useState<
-    { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string }
+    { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string; seq?: number }
   >({ view: "list", page: "dashboard" });
 
   // Ein Anhang-Deep-Link (`#/anhang/<id>` oder `…/sessions/<id>/anhang/<id>`) liegt UEBER
@@ -316,7 +316,7 @@ function Main() {
       hostApi(parsed.hostId)
         .session(parsed.sessionId)
         .then((session) =>
-          setRoute({ view: "tail", session, ...(parsed.code ? { code: parsed.code } : {}), ...(parsed.tab ? { tab: parsed.tab } : {}), ...(parsed.file ? { file: parsed.file } : {}) }),
+          setRoute({ view: "tail", session, ...(parsed.code ? { code: parsed.code } : {}), ...(parsed.tab ? { tab: parsed.tab } : {}), ...(parsed.file ? { file: parsed.file } : {}), ...(parsed.seq !== undefined ? { seq: parsed.seq } : {}) }),
         )
         .catch(() => setRoute({ view: "list", page: "dashboard" }));
     };
@@ -461,7 +461,14 @@ function Main() {
     if (result === "opened") latest.current.changeWorkspace(detachTile(latest.current.ws, index));
   };
   // Opening a session adds a card; already detached sessions retain their explicit window.
-  const openFromList = (session: SessionRecord) => {
+  const openFromList = (session: SessionRecord, opts?: { newTile?: boolean; seq?: number }) => {
+    // Mit Fundstelle: über die Adresse öffnen, damit die Sitzung **an der
+    // Fundstelle** aufgeht (der Anker steckt in der Adresse, nicht in der Kachel).
+    if (opts?.seq !== undefined) {
+      rememberSession(tileRefOf(session));
+      location.hash = sessionHash(session.id, remoteHost(session.hostId), opts.seq);
+      return;
+    }
     const ref = tileRefOf(session);
     // EPIC-P34 T34.10: läuft die Session in einem eigenen Fenster, kommt dieses nach vorn — kein zweiter Composer.
     if (focusWindowFor({ kind: "session", sessionId: ref.sessionId, ...(ref.hostId ? { hostId: ref.hostId } : {}) })) return;
@@ -478,8 +485,8 @@ function Main() {
     const current = latest.current.ws;
     let ref: TileRef;
     if (route.view === "tail") {
-      const deep = !!(route.tab || route.code);
-      ref = { ...tileRefOf(route.session), ...(deep ? { content: { kind: "session" as const, tab: route.code ? "code" as const : route.tab!, ...(route.file ? { file: route.file } : {}), ...(route.code ? { code: route.code } : {}) } } : {}) };
+      const deep = !!(route.tab || route.code || route.seq !== undefined);
+      ref = { ...tileRefOf(route.session), ...(deep ? { content: { kind: "session" as const, tab: route.code ? "code" as const : route.tab ?? "chat", ...(route.file ? { file: route.file } : {}), ...(route.code ? { code: route.code } : {}), ...(route.seq !== undefined ? { seq: route.seq } : {}) } } : {}) };
       // Listen-/Session-Wechsel: schon offene Karte fokussieren, statt Tab-Default als neue Kachel.
       if (!deep) {
         const focused = focusOpenSession(current, ref);
@@ -503,10 +510,15 @@ function Main() {
     if (!wide) return;
     const open = (ref: TileRef) => {
       const current = latest.current.ws;
+      const search = ref.content?.kind === "search";
+      const tiles = visibleTiles(current);
+      if (search && isLayoutFixed(current) && tiles.every(Boolean) &&
+          !tiles.some((tile) => tile?.content?.kind === "search")) return false;
       const next = openInNewTile(current, ref);
       // Search operates on the current card's command fields, just as the phone dialog does.
-      latest.current.changeWorkspace(ref.content?.kind === "search" ? { ...next, focus: current.focus } : next);
-      if (ref.content?.kind === "search") document.querySelector<HTMLInputElement>(".command-card input")?.focus();
+      latest.current.changeWorkspace(search ? { ...next, focus: current.focus } : next);
+      if (search) document.querySelector<HTMLInputElement>(".command-card input")?.focus();
+      return true;
     };
     const off = onWorkspaceOpen(open);
     const layer = (kind: "browser" | "devices") => onLayerOpen(kind, () => {
@@ -551,10 +563,9 @@ function Main() {
   return (
     <>
       <TooltipLayer />
-      {/* EPIC-P64 T64.4: am PC mit sichtbarer Liste sitzt die Glocke im Kopf
-       * der Listenspalte (App bell-Prop) — die globale Eck-Glocke gilt nur
-       * noch für zugeklappte Liste (T51.4) und schmale Layouts. */}
-      {wide ? (listCollapsed ? <NotificationCenter corner /> : null) : <NotificationCenter />}
+      {/* EPIC-P64: die Desktop-Liste hat ihre eigene Glocke. Am Tablet und
+       * bei eingeklappter Liste sitzt sie in der Fensterecke. */}
+      {wide ? (!filesWide || listCollapsed ? <NotificationCenter corner /> : null) : <NotificationCenter />}
       {staleAt && (
         <div class="topbar">
           {/* K10: tippen lädt neu — der Service Worker holt dann wieder Netz-zuerst. */}
@@ -602,7 +613,7 @@ function Main() {
         // T8.5 (AC-P8-6): from 1280 px list and session side by side.
         <div class={`split${listCollapsed ? " list-collapsed" : ""}`}>
           <aside class="split-list">
-            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={!listCollapsed} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
+            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={filesWide && !listCollapsed} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
           </aside>
           <section class="split-detail">
             {/* EPIC-P18: up to four sessions as tiles. */}
@@ -631,8 +642,14 @@ function Main() {
         </div>
       ) : route.view === "list" ? (
         <App
-          onOpen={(session) => {
+          onOpen={(session, opts) => {
             rememberSession(tileRefOf(session));
+            // Mit Fundstelle: die Adresse trägt den Anker, die Sitzung geht dort
+            // auf — der Sitzungsfilter in der Übersicht öffnet so nach Inhalt.
+            if (opts?.seq !== undefined) {
+              location.hash = sessionHash(session.id, remoteHost(session.hostId), opts.seq);
+              return;
+            }
             location.hash = sessionHash(session.id, remoteHost(session.hostId));
             setRoute({ view: "tail", session });
           }}
@@ -653,6 +670,7 @@ function Main() {
             key={route.session.id}
             session={route.session}
             {...(route.code ? { initialCode: route.code } : {})}
+            {...(route.view === "tail" && route.seq !== undefined ? { initialSeq: route.seq } : {})}
             {...(route.view === "tail" && route.tab ? { initialTab: route.tab, ...(route.file ? { initialFile: route.file } : {}) } : {})}
             onNavigate={(page) => {
               location.hash = pageHash(page);

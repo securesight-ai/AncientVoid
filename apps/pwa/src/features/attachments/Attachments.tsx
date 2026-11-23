@@ -27,6 +27,23 @@ function extractionLabel(a: Pick<AttachmentRecord, "extraction">): string {
   return e.error ?? "kein Text";
 }
 
+/**
+ * Kurzform fuer die Eingabezeile: der Hub-Grund kann ein ganzer Satz sein und
+ * presst die Zeile. Der volle Grund bleibt als title/aria erhalten.
+ */
+function extractionKurz(a: Pick<AttachmentRecord, "extraction">): string {
+  const e = a.extraction;
+  if (e.status === "pending") return "wird gelesen…";
+  if (e.status === "done") return `${e.chars.toLocaleString("de-DE")} Zeichen · ${METHOD[e.method ?? ""] ?? e.method}`;
+  return "kein Text gelesen";
+}
+
+function extractionGrund(a: Pick<AttachmentRecord, "extraction">): string {
+  const e = a.extraction;
+  if (e.status === "failed") return e.error ?? "Kein Text gelesen.";
+  return extractionKurz(a);
+}
+
 type Item = AttachmentRecord | { id: string; name: string; uploading: true; error?: string };
 
 /** The paperclip: pick, upload, watch the extraction, remove. */
@@ -34,6 +51,7 @@ export function AttachmentPicker({ attachments, onChange, disabled }: { attachme
   const api = useApi();
   const input = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState<Item[]>([]);
+  const [vorschau, setVorschau] = useState<AttachmentRef | null>(null);
   const latest = useRef(attachments);
   latest.current = attachments;
 
@@ -77,8 +95,17 @@ export function AttachmentPicker({ attachments, onChange, disabled }: { attachme
       {(attachments.length > 0 || uploading.length > 0) && (
         <div class="attachment-chips">
           {attachments.map((a) => (
-            <span key={a.id} class={`attachment-chip ${a.extraction.status}`} data-testid="attachment-chip">
-              <strong>{a.name}</strong> <span class="dim">{size(a.bytes)} · {extractionLabel(a)}</span>
+            <span key={a.id} class={`attachment-chip ${a.extraction.status}${a.kind === "image" ? " rich" : ""}`} data-testid="attachment-chip" title={extractionGrund(a)}>
+              {a.kind === "image" && (
+                <AttachmentThumb
+                  compact
+                  attachment={{ id: a.id, name: a.name, mimeType: a.mimeType, kind: a.kind, bytes: a.bytes }}
+                  onOpen={() => setVorschau(a)}
+                />
+              )}
+              <span class="attachment-meta">
+                <strong>{a.name}</strong> <span class="dim">{size(a.bytes)} · {extractionKurz(a)}</span>
+              </span>
               <button type="button" class="attachment-remove" aria-label={`${a.name} entfernen`} onClick={() => onChange(attachments.filter((x) => x.id !== a.id))}>
                 ×
               </button>
@@ -96,6 +123,7 @@ export function AttachmentPicker({ attachments, onChange, disabled }: { attachme
           ))}
         </div>
       )}
+      {vorschau && <ImageLightbox attachment={vorschau} onClose={() => setVorschau(null)} />}
     </>
   );
 }
@@ -166,16 +194,18 @@ function useObjectUrl(attachmentId: string): { url: string | null; fehlgeschlage
  * das Vollbild. Die Vorschau haelt eine feste Hohe — der Chat springt nicht, wenn die
  * Bytes eintreffen.
  */
-function AttachmentThumb({ attachment, onOpen }: { attachment: AttachmentRef; onOpen: () => void }) {
+function AttachmentThumb({ attachment, onOpen, compact }: { attachment: AttachmentRef; onOpen: () => void; compact?: boolean }) {
   const { url, fehlgeschlagen } = useObjectUrl(attachment.id);
   return (
     <button type="button" class="attachment-thumb" onClick={onOpen} data-testid="attachment-thumb" aria-label={`${t("attachments.open_image")}: ${attachment.name}`}>
       <span class="attachment-thumb-frame">
         {url ? <img src={url} alt="" loading="lazy" /> : <span class="attachment-thumb-ph">{fehlgeschlagen ? "⚠︎" : "…"}</span>}
       </span>
-      <span class="attachment-thumb-meta">
-        <strong>{attachment.name}</strong> <span class="dim">{size(attachment.bytes)}</span>
-      </span>
+      {!compact && (
+        <span class="attachment-thumb-meta">
+          <strong>{attachment.name}</strong> <span class="dim">{size(attachment.bytes)}</span>
+        </span>
+      )}
     </button>
   );
 }

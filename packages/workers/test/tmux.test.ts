@@ -79,8 +79,9 @@ describe("TmuxRunner", () => {
     expect(lines).toEqual(["it's a test"]);
   });
 
-  itTmux("spawns a command and streams stdout lines", async () => {
-    const proc = await runner.spawn({
+  itTmux("spawns a command and streams stdout lines from a log directory with spaces", async () => {
+    const spacedRunner = new TmuxRunner(join(dir, "worker logs"));
+    const proc = await spacedRunner.spawn({
       name: "test-stdout",
       cwd: dir,
       cmd: ["bash", "-c", "for i in 1 2 3; do echo line-$i; done; sleep 0.2"],

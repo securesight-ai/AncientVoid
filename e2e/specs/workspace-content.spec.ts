@@ -1,10 +1,11 @@
-import { test, expect } from "../support/fixtures.ts";
+import { test, expect, enableAutoTiling } from "../support/fixtures.ts";
 
 const gridTags = "@desktop @tablet";
 test(`Inhalte bleiben als eigene Karten erhalten, auch nach Reload ${gridTags}`, async ({ app, hub }, info) => {
   test.skip(info.project.name === "mobile", "PC-/Tablet-Grid");
   await hub.createSession({ adapter: "opencode", prompt: "Karte bleibt" });
   await app.locator(".split-list .session-card").filter({ hasText: "Karte bleibt" }).locator(".session-open").click();
+  await enableAutoTiling(app);
   const first = app.locator('.tile[data-tile="1"]');
   await expect(first.locator(".session-top-title")).toHaveText("Karte bleibt");
   await first.getByPlaceholder("Antworten…").fill("Entwurf bleibt erhalten");
@@ -30,6 +31,7 @@ test(`Session, Graph und Datei öffnen eigene Karten ${gridTags}`, async ({ app,
   test.skip(info.project.name === "mobile", "PC-/Tablet-Grid");
   const id = await hub.createSession({ adapter: "opencode", prompt: "Ansichten bleiben" });
   await app.locator(".split-list .session-card").filter({ hasText: "Ansichten bleiben" }).locator(".session-open").click();
+  await enableAutoTiling(app);
   const first = app.locator('.tile[data-tile="1"]');
   const originalTab = await first.locator(".session-live").getAttribute("data-tab");
   await first.locator(".subtabs-more-wrap > button").click();

@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { test, expect } from "../support/fixtures.ts";
+import type { Page } from "@playwright/test";
 
 const beispiel = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
@@ -83,6 +84,59 @@ test.describe("Bild einfügen, Bild öffnen, Bild-Link", () => {
     await app.keyboard.press("Escape");
     await expect(app.locator("[data-testid=attachment-lightbox]")).toHaveCount(0);
     expect(app.url()).toContain(`#/sessions/${id}`);
+  });
+
+/** Screenshot in die Zwischenablage des Eingabefelds legen (kein echter Paste-Dialog). */
+async function bildEinfuegen(app: Page) {
+  return app.evaluate(async () => {
+    const feld = document.querySelector(".composer-input");
+    if (!(feld instanceof HTMLTextAreaElement)) return { fehler: "kein Eingabefeld" as const };
+    const leinwand = document.createElement("canvas");
+    leinwand.width = 260;
+    leinwand.height = 160;
+    const stift = leinwand.getContext("2d");
+    if (!stift) return { fehler: "kein Zeichenkontext" as const };
+    stift.fillStyle = "#f59e0b";
+    stift.fillRect(0, 0, 260, 160);
+    const blob = await new Promise<Blob | null>((loesung) => leinwand.toBlob(loesung, "image/png"));
+    if (!blob) return { fehler: "kein PNG" as const };
+    const datei = new File([blob], "vor-dem-sendens.png", { type: "image/png" });
+    const transfer = new DataTransfer();
+    transfer.items.add(datei);
+    feld.dispatchEvent(new ClipboardEvent("paste", { clipboardData: transfer, bubbles: true, cancelable: true }));
+    return { groesse: datei.size };
+  });
+}
+
+  test("das Bild ist auch VOR dem Senden oeffnbar — Vorschau in der Eingabezeile", async ({ app, hub }) => {
+    const id = await hub.createSession({ adapter: "opencode", prompt: "Start" });
+    await hub.until(async () => (await hub.events(id)).some((e) => e.type === "assistant"), "first answer");
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await app.getByRole("button", { name: "Chat" }).click();
+    const Beweis = await bildEinfuegen(app);
+    expect(Beweis.fehler).toBeUndefined();
+
+    const zeile = app.locator(".composer .attachment-chip");
+    await expect(zeile).toHaveCount(1);
+    // Kurzes Label statt Ganzer Satz — die Zeile bleibt einzeilig, der Grund bleibt als title.
+    await expect(zeile.locator(".attachment-meta")).toContainText(/KB · (wird gelesen…|kein Text gelesen|.*Zeichen)/);
+    await expect(zeile.first()).toHaveAttribute("title", /./);
+
+    // Das Bild selbst ist schon hier oeffnbar, nicht erst in der Chat-Zeile.
+    const vorschau = app.locator(".composer .attachment-thumb");
+    await expect(vorschau).toHaveCount(1);
+    await expect(vorschau.locator("img")).toBeVisible();
+    await app.screenshot({ path: "data/tmp-debug/anhang-eingabe-chip.png" });
+    await vorschau.first().click();
+    const vollbild = app.locator(".attachment-lightbox");
+    await expect(vollbild).toHaveCount(1);
+    const rahmen = await vollbild.locator("img").boundingBox();
+    expect(rahmen !== null && rahmen.width > 200).toBe(true);
+    await app.screenshot({ path: "data/tmp-debug/anhang-eingabezeile.png" });
+    await app.keyboard.press("Escape");
+    await expect(vollbild).toHaveCount(0);
+    // Oeffnen loescht nichts: der Anhang haengt weiter an der Nachricht.
+    await expect(app.locator(".composer .attachment-chip")).toHaveCount(1);
   });
 
   test("ein Dokument bleibt ein Chip und oeffnet die Text-Ansicht (kein Vorschaubild)", async ({ app, hub }) => {

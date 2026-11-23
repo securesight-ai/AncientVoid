@@ -22,7 +22,7 @@ test.describe("Dokumentübersicht in der Suchansicht", () => {
     await expect(app.locator(".file-viewer .markdown").getByText("Das Handbuch beschreibt den Handoff zwischen PC und Handy.")).toBeVisible();
     await expect(app.locator(".file-gutter, .file-code, .file-code-grid")).toHaveCount(0);
 
-    await app.getByRole("button", { name: "Schließen" }).click();
+    await app.getByRole("button", { name: "Schließen", exact: true }).click();
     await expect(app.locator(".file-viewer")).toHaveCount(0);
   });
 });

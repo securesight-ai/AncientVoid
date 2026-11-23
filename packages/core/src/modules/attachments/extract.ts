@@ -19,6 +19,12 @@ export interface ExtractOptions {
   gemini?: { apiKey: string; model: string; fetch?: typeof fetch } | undefined;
   /** tesseract languages; default "deu+eng" when both are installed. */
   tesseractLangs?: string;
+  /**
+   * Probe for an external tool. Injectable for tests; the default asks the
+   * PATH. Needed because "no text" and "no OCR tool on this machine" are
+   * different findings and the user must not be sent down the wrong path.
+   */
+  hasTool?: (cmd: string) => Promise<boolean>;
   tessdataDir?: string | undefined;
 }
 
@@ -151,17 +157,18 @@ export async function geminiExtract(bytes: Uint8Array, mimeType: string, gemini:
 
 export async function extractText(kind: AttachmentKind, file: string, name: string, mimeType: string, opts: ExtractOptions = {}): Promise<Extracted> {
   const bytes = new Uint8Array(await readFile(file));
+  const hasTool = opts.hasTool ?? has;
   let local: Extracted = { text: "", method: null, error: null };
   try {
     if (kind === "text") local = { text: Buffer.from(bytes).toString("utf8"), method: "text", error: null };
     else if (kind === "office") local = { text: officeText(bytes, name), method: "office", error: null };
     else if (kind === "pdf") {
-      if (await has("pdftotext")) {
+      if (await hasTool("pdftotext")) {
         const text = await pdfText(file);
         local = text.replace(/\s/g, "").length >= MIN_USEFUL_CHARS ? { text, method: "pdftotext", error: null } : { text: "", method: null, error: null };
-        if (!local.method && (await has("pdftoppm")) && (await has("tesseract"))) local = { text: await pdfOcr(file, opts), method: "tesseract", error: null };
+        if (!local.method && (await hasTool("pdftoppm")) && (await hasTool("tesseract"))) local = { text: await pdfOcr(file, opts), method: "tesseract", error: null };
       }
-    } else if (kind === "image" && (await has("tesseract"))) {
+    } else if (kind === "image" && (await hasTool("tesseract"))) {
       local = { text: await tesseract(file, opts), method: "tesseract", error: null };
     }
   } catch (err) {
@@ -179,11 +186,21 @@ export async function extractText(kind: AttachmentKind, file: string, name: stri
     }
   }
   if (local.text.trim()) return { text: local.text.trim(), method: local.method, error: null };
-  const hint =
-    kind === "image" || kind === "pdf"
-      ? "Kein Text gefunden. Mit einem Gemini-Schlüssel in den Einstellungen wird das Bild zusätzlich beschrieben."
-      : kind === "other" || kind === "audio" || kind === "video"
-        ? "Für diesen Dateityp gibt es (noch) keine Auslese."
-        : "Kein Text gefunden.";
+  // „Kein Text gefunden" und „hier fehlt das Werkzeug" sind verschiedene
+  // Befunde. Wer ohne tesseract nach einem Schlüssel schickt, jagt einer
+  // Fährte hinterher (Nutzerfund 23.11.2026: „kein Text gefunden …
+  // Gemini-Schlüssel", obwohl der Hub kein OCR-Werkzeug hat).
+  let hint: string;
+  if (kind === "image" || kind === "pdf") {
+    const ocrFehlt = !(await hasTool("tesseract"));
+    hint = ocrFehlt
+      ? "Der Hub-Rechner hat kein OCR-Werkzeug (tesseract nicht installiert) — der Text im Bild wurde nie gelesen. Das Bild selbst ist unverändert in voller Größe zu sehen."
+      : "Kein Text im Bild erkannt.";
+    if (!opts.gemini) hint += " Ein eingeschaltetes Vision-Modell in den Einstellungen könnte das Bild zusätzlich beschreiben.";
+  } else if (kind === "other" || kind === "audio" || kind === "video") {
+    hint = "Für diesen Dateityp gibt es (noch) keine Auslese.";
+  } else {
+    hint = "Kein Text gefunden.";
+  }
   return { text: "", method: null, error: local.error ?? hint };
 }

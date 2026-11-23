@@ -34,6 +34,21 @@ test.describe("Chat in Zügen (EPIC-P43 T43.4)", () => {
     await expect(app.locator(".turn-work")).toHaveClass(/open/);
   });
 
+  test("der Chat verankert den Tag — Uhrzeit allein reicht nicht @mobile", async ({ app, hub }) => {
+    const id = await hub.createSession({ adapter: "opencode", prompt: "Datum im Chat" });
+    await hub.until(async () => (await hub.sessions()).every((s) => s.status === "idle"), "Zug fertig");
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await sessionTab(app, "Chat");
+    // Ein Tages-Anker fuer einen tagesfrischen Verlauf — nicht an jeder Zeile.
+    const tag = app.locator('[data-testid="day-sep"]');
+    await expect(tag).toHaveCount(1);
+    await expect(tag).toHaveText("Heute");
+    // Die Uhrzeit bleibt daneben stehen: der Tag ergaenzt sie, er ersetzt sie nicht.
+    await expect(app.locator(".tail-scroll").first()).toContainText(/\d{2}:\d{2}:\d{2}/);
+    // Und der Anker ist lesbar, nicht nur farbig: eigene Zeile mit Text.
+    await expect(tag.locator("span")).toBeVisible();
+  });
+
   test("Statuszeile nur mit Gemessenem; das Unbekannte steht im Bericht @desktop", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "Statuszeile" });
     await hub.until(async () => (await hub.sessions()).every((s) => s.status === "idle"), "Zug fertig");

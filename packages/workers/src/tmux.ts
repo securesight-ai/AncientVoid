@@ -308,8 +308,9 @@ ${wrapperBody}
       await execTmux(["set-environment", "-t", full, "ANCIENTVOID_WORKER_ID", workerId]);
       // 2. Keep the pane after exit so pipe-pane can flush the tail reliably.
       await execTmux(["set-option", "-t", full, "remain-on-exit", "on"]);
-      // 3. Capture pane output (stdout+stderr interleaved) into the log file.
-      await execTmux(["pipe-pane", "-t", full, "-o", `cat >> ${logPath}`]);
+      // Create the log before the asynchronous pipe and the filesystem watcher start.
+      await writeFile(logPath, "", { flag: "a" });
+      await execTmux(["pipe-pane", "-t", full, "-o", `cat >> ${shellQuote(logPath)}`]);
       // 4. Swap the placeholder for the real command.
       await execTmux(["respawn-pane", "-k", "-t", full, "-c", spec.cwd, shellCmd]);
       // Latest-Symlink für den bisherigen Diagnosepfad (`<name>.log`).

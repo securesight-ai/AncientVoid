@@ -4,8 +4,8 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
   test("eine neue Session startet aus der UI und öffnet sich per Link @desktop", async ({ app, hub }) => {
     await app.getByRole("button", { name: "Neue Session" }).click();
     await app.getByLabel("Adapter").selectOption("opencode");
-    await expect(app.getByLabel("Projekt")).toContainText("alpha (main)");
-    await expect(app.getByLabel("Projekt")).toContainText("beta (main)");
+    await expect(app.getByRole("combobox", { name: "Projekt", exact: true })).toContainText("alpha (main)");
+    await expect(app.getByRole("combobox", { name: "Projekt", exact: true })).toContainText("beta (main)");
     await app.getByPlaceholder("Refactore den Auth-Flow…").fill("Fasse die README zusammen");
     await app.getByRole("button", { name: "Starten" }).click();
 
@@ -30,14 +30,14 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
 
   test("Projektauswahl zuerst: Pfad wird vorbelegt, folgt der Auswahl und bleibt überschreibbar @desktop", async ({ app, hub }) => {
     await app.getByRole("button", { name: "Neue Session" }).click();
-    // Die Projektauswahl ist das erste Feld des Formulars — vor Loop und Adapter.
-    const first = app.locator(".form-grid > label").first();
-    await expect(first).toContainText("Projekt");
+    // Ohne Host-Auswahl kommt das Projekt vor Loop und Adapter, auch im zweispaltigen Formular.
+    const project = app.getByRole("combobox", { name: "Projekt", exact: true });
+    await expect(app.locator(".new-session-form label").first()).toContainText("Projekt");
     // Das vorausgewählte Projekt füllt den Pfad automatisch: Start ohne jede Pfad-Eingabe.
     const pfad = app.getByLabel("Pfad");
     await expect(pfad).toHaveValue(hub.alpha);
     // Anderes Projekt gewählt: der Pfad folgt der Auswahl.
-    await app.getByLabel("Projekt").selectOption(hub.beta);
+    await project.selectOption(hub.beta);
     await expect(pfad).toHaveValue(hub.beta);
     // Manueller Override bleibt möglich — der eigene Pfad wird zur Session.
     await pfad.fill(hub.projectsDir);
@@ -334,10 +334,12 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
 
   test("die Suche findet Text in der Projekt-Doku und öffnet die Datei", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "dummy" });
+    const search = `/api/search?project=${encodeURIComponent(hub.alpha)}&q=Handbuch`;
+    await expect.poll(async () => (await hub.api(search)).status).toBe(200);
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await sessionTab(app, "Suche");
-    await app.getByPlaceholder("Doku durchsuchen (Markdown)…").fill("Handbuch");
-    await app.getByRole("button", { name: "Suchen" }).click();
+    await app.getByRole("button", { name: "Doku", exact: true }).click();
+    await app.getByRole("searchbox").fill("Handbuch");
     const hit = app.locator(".search-result-card").filter({ hasText: "README.md" });
     await expect(hit).toBeVisible({ timeout: 20_000 });
     await hit.click();

@@ -1,4 +1,4 @@
-import { test, expect } from "../support/fixtures.ts";
+import { test, expect, enableAutoTiling } from "../support/fixtures.ts";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { writeFile } from "node:fs/promises";
@@ -161,6 +161,7 @@ test.describe("Session: Main-Sync-Indikator und Menü (EPIC-P67 T67.8)", () => {
     await app.goto(`${hub.origin}/#/sessions/${idB}`);
     const betaBadge = app.locator('[data-tile="1"]').getByTestId("mainsync-behind");
     await expect(betaBadge).toHaveText(/3 hinter main/);
+    await enableAutoTiling(app);
     // Anderes Projekt auswählen: alpha in einer zweiten Kachel (Strg-Klick)
     await app.locator(".session-card", { hasText: "alpha" }).first().locator(".session-open").click({ modifiers: ["Control"] });
     await expect(app.locator('[data-tile="2"]').getByTestId("mainsync-behind")).toHaveText(/1 hinter main/);

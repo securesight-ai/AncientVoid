@@ -21,6 +21,11 @@ describe("Browser-Route (EPIC-P39 T39.3)", () => {
     expect(parseAppHash(browserHash("s2", "h2"))).toEqual({ view: "tail", sessionId: "s2", hostId: "h2", browser: true });
     expect(parseAppHash("#/sessions/s1")).toEqual({ view: "tail", sessionId: "s1" });
     expect(parseAppHash("#/sessions/s1/graph")).toEqual({ view: "tail", sessionId: "s1", tab: "graph" });
+    // Fundstelle in der Adresse: der Sitzungsfilter und die Suche hängen /seq/<n>
+    // an, damit die Sitzung an der richtigen Nachricht aufgeht.
+    expect(parseAppHash("#/sessions/s1/seq/474")).toEqual({ view: "tail", sessionId: "s1", seq: 474 });
+    expect(parseAppHash("#/hosts/h1/sessions/s1/seq/12")).toEqual({ view: "tail", hostId: "h1", sessionId: "s1", seq: 12 });
+    expect(parseAppHash("#/hosts/h1/sessions/s1/seq/12")).toEqual({ view: "tail", hostId: "h1", sessionId: "s1", seq: 12 });
   });
 });
 

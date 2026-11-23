@@ -1,5 +1,5 @@
 ---
-id: BUG-0263
+id: BUG-0268
 slug: strg-klick-ersetzt-kachel
 status: open
 severity: S3
@@ -12,7 +12,7 @@ created: 2026-11-23
 reporter: "Agent (Task PWA Navigationshistorie/Main-Sync/Modal)"
 ---
 
-# BUG-0263 — Strg-Klick auf eine Session-Karte ersetzt im fixierten Raster die fokussierte Kachel statt eine zweite zu öffnen
+# BUG-0268 — Strg-Klick auf eine Session-Karte ersetzt im fixierten Raster die fokussierte Kachel statt eine zweite zu öffnen
 
 ## Gesehen
 

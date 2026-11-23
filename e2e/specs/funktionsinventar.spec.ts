@@ -62,7 +62,7 @@ const menu = (c: Ctx) => c.s.locator(".session-menu summary");
  * unter 700 px (Handy) bleibt der Dialog. */
 const auftragOderSuchkarte = (c: Ctx) => c.page.getByRole("dialog", { name: "Auftrag in Worten" }).or(c.page.locator(".command-card"));
 /** dabe85d5: Ab 700 px öffnen Session-Ansichten eigene Karten — die fokussierte Karte ist das Ziel. */
-const card = (c: Ctx) => c.page.locator(".tile.focused");
+const card = (c: Ctx) => c.wide ? c.page.locator(".tile.focused, .tile-grid.layout-1 > .tile") : c.s;
 /** EPIC-P43 T43.5 (Regel 3): Kartenaktion — mit Maus beim Überfahren, auf Touch über das Menü „⋯“. */
 const cardDo = async (c: Ctx, card: Locator, name: string) => {
   const inline = card.locator(".session-card-actions").getByRole("button", { name, exact: true });
@@ -305,11 +305,10 @@ test.describe("Funktionsinventar (EPIC-P43 T43.0, AC-P43-1)", () => {
           // Jeder Eintrag beginnt mit frischem Gerätezustand (Filter, Layout, offene Seitenleisten). Geleert wird
           // erst im neuen Dokument (Init-Skript oben): die alte Seite kann sonst noch nachspeichern, etwa die
           // Dateibaum-Quelle des vorigen Eintrags, und der Drawer stünde wieder offen.
-          await app.goto(`${hub.origin}/${hash}`);
           await app.evaluate(() => {
             window.name = "inventar-reset";
           });
-          await app.reload();
+          await app.goto(`${hub.origin}/?inventar=${entry.id}${hash}`);
           if (entry.from === "session") await expect(c.s.locator(".session-topbar")).toBeVisible();
           else if (entry.from === "start") await expect(app.locator(".dashboard")).toBeVisible();
           // Sammeln statt beim ersten Abbruch enden: der Lauf nennt jede fehlende Funktion.
