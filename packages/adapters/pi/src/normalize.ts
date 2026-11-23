@@ -24,9 +24,13 @@ const IGNORED = new Set([
   "turn_start",
   "turn_end",
   "message_start",
+  // RPC-Modus (`pi --mode rpc`): die Gegenstelle fragt UI-Interaktionen ihrer
+  // Erweiterungen an. Der Hub beantwortet sie bewusst nicht (Pi-Lauf ohne
+  // Rückfrage, `toolGate: "bypass"`); ungeantwortet stehen zu lassen ist nachgemessen
+  // folgenlos, aber als `pi.unknown` im Chat wäre es nur Rauschen.
+  "extension_ui_request",
   "tool_execution_start",
   "tool_execution_update",
-  "queue_update",
   "session_info_changed",
   "thinking_level_changed",
   "entry_appended",
@@ -127,6 +131,24 @@ function normalize(rec: Record_, live?: LivePump): EmittedEvent[] {
       const content = resultText(rec.result);
       const isError = rec.isError === true;
       return [{ type: "tool_result", summary: summarize(content) || (isError ? "tool error" : "tool result"), payload: { toolUseId: rec.toolCallId, isError, content } }];
+    }
+    case "queue_update": {
+      // Lenken mitten im Zug (BUG-0261-Fix): pi meldet die vorgemerkten Meldungen.
+      // Ohne diese Zeile wäre der Lenker blind — er sähe nur, dass nichts passiert.
+      const steering = Array.isArray(rec.steering) ? rec.steering.length : typeof rec.steeringCount === "number" ? rec.steeringCount : undefined;
+      const followUp = Array.isArray(rec.followUp) ? rec.followUp.length : typeof rec.followUpCount === "number" ? rec.followUpCount : undefined;
+      if (!steering && !followUp) return [];
+      const teile = [
+        ...(steering ? [`${steering} Lenkung`] : []),
+        ...(followUp ? [`${followUp} Nachzügler`] : []),
+      ];
+      return [
+        {
+          type: "system",
+          summary: summarize(`pi: vorgemerkt — ${teile.join(", ")} (Lenkung wirkt nach dem laufenden Tool-Aufruf)`),
+          payload: { kind: "pi.queue", ...(steering !== undefined ? { steering } : {}), ...(followUp !== undefined ? { followUp } : {}) },
+        },
+      ];
     }
     case "auto_retry_start":
     case "auto_retry_end":
