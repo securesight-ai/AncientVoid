@@ -47,6 +47,7 @@ export function totalCostText(sessions: SessionRecord[], format: (n: number) => 
  */
 export function formatMetricValue(value: number | null, unit: string): string {
   if (value === null) return "nicht gemeldet";
+  if (unit === "bool") return value ? "ja" : "nein";
   const abs = Math.abs(value);
   // Kleine Werte behalten zwei gültige Stellen: 0,02 s/token ist keine 0.
   const text =
