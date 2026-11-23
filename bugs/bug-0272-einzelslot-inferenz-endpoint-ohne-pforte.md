@@ -1,7 +1,7 @@
 ---
 id: BUG-0272
 slug: einzelslot-inferenz-endpoint-ohne-pforte
-status: offen
+status: in Arbeit
 severity: S1
 area: core
 instance: prod
