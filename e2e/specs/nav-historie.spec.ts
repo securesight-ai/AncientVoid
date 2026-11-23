@@ -30,12 +30,13 @@ test.describe("Navigations-Historie für überlagernde Ansichten", () => {
 });
 
 test.describe("Navigations-Historie am Handy", () => {
-  test("Zurück-Knopf der Session stellt die Ansicht davor wieder her (Übersicht ohne Vorgeschichte)", async ({ app, hub }) => {
+  // BUG-0279: Der Knopf ist kein Historie-Rücksprung mehr, sondern führt
+  // deterministisch in die Übersicht — popView pendelte zwischen Sessions,
+  // statt heimzukehren. Der Ping-Pong-Fall liegt in session.spec.ts.
+  test("Zurück-Knopf der Session führt immer in die Übersicht", async ({ app, hub }) => {
     await hub.createSession({ adapter: "dummy", prompt: "Zurueck Historie" });
     await app.locator(".session-card").filter({ hasText: "Zurueck Historie" }).locator(".session-open").click();
     await expect(app.locator(".session-top-title")).toContainText("Zurueck Historie");
-    // Kein „davor“ über der Übersicht: der Zurück-Knopf fällt darauf zurück —
-    // gleiches Ziel wie vorher, aber über die Historie (pop), nicht hart codiert.
     await app.locator(".back-btn").click();
     await expect(app).toHaveURL(/#\/$/);
     await expect(app.locator(".session-card").filter({ hasText: "Zurueck Historie" })).toBeVisible();

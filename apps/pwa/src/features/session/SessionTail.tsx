@@ -7,8 +7,7 @@ import type { ComponentChildren } from "preact";
 import { InterruptedBanner } from "./InterruptedBanner.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 import { readTailScroll, writeTailScroll } from "./tail-scroll.ts";
-import { sessionHash, fileHash, pageHash } from "../../app/route.ts";
-import { popView } from "../../shared/nav-history.ts";
+import { sessionHash, fileHash } from "../../app/route.ts";
 import { registerShortcut } from "../../shared/shortcuts/registry.ts";
 import {
   sourcesBlock,
@@ -1853,20 +1852,19 @@ export function SessionTail({
           </div>
         )}
         <div>
-          {/* T8.5: back, what this is, Stop apart from Senden, the rest in ⋯ */}
+          {/* T8.5: Kopf — Übersicht-Knopf, Titel, Stop abseits von Senden,
+           * Rest in ⋯. BUG-0279: statt Historie-Rücksprung (popView) führt
+           * der Knopf am Handy deterministisch in die Übersicht; der Stack
+           * pendelte sonst zwischen Sessions. */}
           <div class={`topbar session-topbar${tile ? " tile-top" : ""}`}>
             {tile?.head?.start}
             <Button
               aria-label={t("app.to_overview")}
               title={t("app.to_overview")}
-              onClick={() => {
-                // Navigations-Historie: exakt die zuvor sichtbare Ansicht
-                // wiederherstellen; ohne Vorgeschichte die Übersicht.
-                location.hash = popView() ?? pageHash("dashboard");
-              }}
+              onClick={() => onNavigate("dashboard")}
               class="back-btn"
             >
-              ←
+              <TabIcon name="uebersicht" />
             </Button>
             <div class="session-top-main">
               {renaming ? (

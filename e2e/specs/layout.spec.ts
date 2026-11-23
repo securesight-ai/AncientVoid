@@ -34,8 +34,8 @@ test.describe("Layout (T8.5, AC-P8-5)", () => {
   });
 
   // BUG-0234: ab 700 px ist die Session-Liste dauerhaft sichtbar (TabletSplit/Split) —
-  // der Zurück-Pfeil neben dem Titel gehört nur auf das Handy.
-  test("Zurück-Pfeil nur unter 700 px — darüber ist die Liste der Weg zurück", async ({ app, hub }) => {
+  // der Übersicht-Knopf neben dem Titel gehört nur auf das Handy (BUG-0279: Icon statt Pfeil).
+  test("Übersicht-Knopf nur unter 700 px — darüber ist die Liste der Weg zurück", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "dummy", prompt: "Zurück-Pfeil" });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await expect(app.getByLabel("Zur Übersicht")).toBeVisible();

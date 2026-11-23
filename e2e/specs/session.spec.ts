@@ -150,6 +150,28 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
     await expect(app.locator(".dashboard")).toBeVisible();
   });
 
+  // BUG-0279: Am Handy führt der Übersicht-Knopf immer in die Übersicht. Der
+  // alte popView-Rückschritt merkte sich beim Zurückkehren die verlassene
+  // Ansicht selbst wieder (main.tsx rememberView) und pendelte nach einem
+  // In-Session-Sprung (Suche-Treffer, Forge-Link) zwischen den Sessions,
+  // statt heimzukehren.
+  test("BUG-0279: Übersicht-Knopf nach In-Session-Sprung zurück in die Übersicht", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "dummy", prompt: "Nadel Alpha" });
+    await hub.createSession({ adapter: "dummy", prompt: "Nadel Beta" });
+    await expect(app.locator(".session-card")).toHaveCount(2);
+    await app.locator(".session-card").filter({ hasText: "Nadel Alpha" }).locator(".session-open").click();
+    await expect(app.locator(".session-topbar")).toContainText("Nadel Alpha");
+    const overviewBtn = app.getByLabel("Zur Übersicht");
+    await expect(overviewBtn.locator(".tab-icon")).toBeVisible();
+    await sessionTab(app, "Suche");
+    await app.locator(".search-input").fill("Nadel Beta");
+    await app.locator(".search-form button[type=submit]").click();
+    await app.locator(".hit-group-title").filter({ hasText: "Nadel Beta" }).click();
+    await expect(app.locator(".session-topbar")).toContainText("Nadel Beta");
+    await overviewBtn.click();
+    await expect(app.locator(".dashboard")).toBeVisible();
+  });
+
   test("T8.6: anheften und umbenennen gilt auf allen Geräten", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "dummy", prompt: "Erster Auftrag" });
     await hub.api(`/api/sessions/${id}/stop`, { body: {} });
