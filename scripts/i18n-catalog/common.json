@@ -1059,6 +1059,11 @@
       "key": "common.inference_title",
       "de": "Token-Tempo der Inferenz-Engines: Decode, Vorbehandlung, KV-Reuse",
       "en": "Token tempo of the inference engines: decode, prefill, KV reuse"
+    },
+    {
+      "key": "common.confirm_title",
+      "de": "Bestätigen",
+      "en": "Confirm"
     }
   ]
 }

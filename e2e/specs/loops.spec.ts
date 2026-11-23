@@ -77,12 +77,13 @@ test.describe("Loop / Dark Factory im Start-Formular", () => {
     await app.getByRole("button", { name: "Weiter" }).click();
     await expect(app.getByRole("button", { name: "Pausieren" })).toBeVisible();
 
-    // Betriebsart mit Außenwirkung: ohne Bestätigung bleibt sie, wie sie war.
-    app.once("dialog", (d) => void d.dismiss());
+    // Betriebsart mit Außenwirkung: ohne Bestätigung bleibt sie, wie sie war
+    // (Rückfrage im Base-Modal statt Browser-Dialog).
     await app.getByLabel("Betriebsart des Loops").selectOption("scharf");
+    await app.getByTestId("modal").getByRole("button", { name: "Abbrechen" }).click();
     await expect(app.locator(".session-top-meta .loop-badge")).toHaveText("Loop · fake-loop · ruhig");
-    app.once("dialog", (d) => void d.accept());
     await app.getByLabel("Betriebsart des Loops").selectOption("scharf");
+    await app.getByTestId("modal").getByRole("button", { name: "OK" }).click();
     await expect(app.locator(".session-top-meta .loop-badge")).toHaveText("Loop · fake-loop · scharf");
   });
 

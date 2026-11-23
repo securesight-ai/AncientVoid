@@ -26,6 +26,7 @@ export const en = {
   "common.change_failed": "Change failed.",
   "common.clear_selection": "Clear selection",
   "common.close": "Close",
+  "common.confirm_title": "Confirm",
   "common.close_combo": "{label} ({combo})",
   "common.confirm_name_message": "{name}: {message}",
   "common.connect": "Connect",

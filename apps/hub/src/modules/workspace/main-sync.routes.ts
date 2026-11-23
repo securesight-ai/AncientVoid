@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { MainSyncProjectOverride, MainSyncSettings, mainSyncSettingsPath } from "@ancientvoid/contracts";
+import { MainSyncApplyRequest, MainSyncProjectOverride, MainSyncSettings, mainSyncSettingsPath } from "@ancientvoid/contracts";
 import type { RouteContext } from "../../route-context.ts";
 
 const PutBody = z
@@ -62,8 +62,14 @@ export function registerMainSyncSettingsRoutes(app: FastifyInstance, ctx: RouteC
   app.post("/api/sessions/:id/main-sync", async (req, reply) => {
     const { id } = req.params as { id: string };
     if (!deps.sessions.get(id)) return reply.code(404).send({ error: "unknown session" });
+    // ADR-0102: `conflictStrategy` `favor-session` löst Konflikte automatisch
+    // gunsten des Session-Branchs; Default (auch leerer Body) bleibt `abort`.
+    const body = MainSyncApplyRequest.safeParse(req.body ?? {});
+    if (!body.success) {
+      return reply.code(400).send({ error: "invalid main-sync apply request", issues: body.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`) });
+    }
     try {
-      const result = await deps.sessions.mainSyncApply(id);
+      const result = await deps.sessions.mainSyncApply(id, ...(body.data.conflictStrategy ? [{ conflictStrategy: body.data.conflictStrategy }] : []));
       return reply.header("cache-control", "no-store").send(result);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

@@ -25,6 +25,7 @@ export const de = {
   "common.change_failed": "Änderung fehlgeschlagen.",
   "common.clear_selection": "Auswahl aufheben",
   "common.close": "Schließen",
+  "common.confirm_title": "Bestätigen",
   "common.close_combo": "{label} ({combo})",
   "common.confirm_name_message": "{name}: {message}",
   "common.connect": "Verbinden",

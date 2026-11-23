@@ -304,6 +304,8 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 | [BUG-0267](bug-0267-eingefuegtes-bild-ohne-ocr-hinweis-bleibt-liegend.md) | Eingefügtes Bild endet im Agenten-Prompt bei „(kein Text auslesbar)" — der Pfad war da, der Hinweis, das Bild zu oeffnen, nicht | fixed | S2 | core | — |
 | [BUG-0269](bug-0269-statistik-schnitt-reload-race.md) | Statistik-Schnitt (Projekt) überlebt sofortiges Reload nicht — passive Persistenz + Remount-Rennen durch `setReport(null)` bei jedem Schnittwechsel (zuerst als 0263 angelegt, nach Kollision mit tmux-Log und offenem 0268 umnummeriert) | fixed | S3 | pwa | [#319](https://github.com/securesight-ai/AncientVoid/issues/319) |
 
+| [BUG-0268](bug-0268-strg-klick-ersetzt-kachel.md) | Strg-/Cmd-Klick auf eine Session-Karte ersetzt im fixierten Raster die fokussierte Kachel statt eine zweite zu öffnen (`openFromList` verwirft `newTile` seit dabe85d5, E2E „Kachelfokus fragt neu" rot) | open | S3 | pwa | [#322](https://github.com/securesight-ai/AncientVoid/issues/322) |
+
 Die nächste freie Nummer ist **0270** (0269 Statistik-Schnitt-Reload — zuerst als 0263, 0268 parallel in PR #327 für Strg-Klick; 0265 Kontextüberlauf als Anmeldepleite — ADR-0115, 0266 Bild-Auslese ohne OCR-Werkzeug, 0267 eingefügtes Bild ohne Oeffnen-Hinweis im Prompt; gemerged, 0260 mit PR #297 gemerged,
 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
 0183 mit PR #50, 0184 mit PR #48 und 0185 mit dem Nightly-Fix aus den Issues #54–#57 gemerged,

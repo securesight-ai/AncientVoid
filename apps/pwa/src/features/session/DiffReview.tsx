@@ -9,7 +9,7 @@ import {
   type SessionDiffResult,
   type SessionRecord,
 } from "../../shared/api.ts";
-import { Sheet, Button } from "../../shared/ui/index.ts";
+import { Sheet, Button, PromptDialog } from "../../shared/ui/index.ts";
 import { DiffPane, type LinePick, type ReviewHooks } from "./DiffPane.tsx";
 import { mapHunkLines } from "./diff-lines.ts";
 import { addSource } from "../../shared/sources.ts";
@@ -222,6 +222,9 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
 
   const hooks: ReviewHooks = { pickEnabled, picked, onLinePick: pickEnabled ? onLinePick : undefined, noteCount };
   const targetLabel = sessions?.find((s) => s.id === targetSessionId);
+  // window.prompt ist durch das Base-Modal ersetzt: Notiz bearbeiten trägt
+  // den neuen Text ins Modal, leer lässt die Notiz unverändert.
+  const [editNote, setEditNote] = useState<{ id: string; text: string } | null>(null);
 
   return (
     <div data-testid="diff-review">
@@ -305,10 +308,7 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
                 <button onClick={() => void mutate(() => api.setReviewNoteStatus(session.id, note.id, "done"), { kind: "status", noteId: note.id, status: "done" })}>{t("session.done")}</button>
               )}
               <button
-                onClick={() => {
-                  const text = window.prompt(t("session.edit_note"), note.text);
-                  if (text && text.trim()) void mutate(() => api.updateReviewNote(session.id, note.id, text.trim()), { kind: "update", noteId: note.id, text: text.trim() });
-                }}
+                onClick={() => setEditNote({ id: note.id, text: note.text })}
               >
                 {t("common.edit_lower")}
               </button>
@@ -372,6 +372,19 @@ export function DiffReview({ diff, session }: { diff: SessionDiffResult | null; 
             </button>
           </div>
         </Sheet>
+      )}
+      {editNote && (
+        <PromptDialog
+          open
+          onClose={() => setEditNote(null)}
+          onSubmit={(text) => {
+            const target = editNote;
+            setEditNote(null);
+            if (target) void mutate(() => api.updateReviewNote(session.id, target.id, text), { kind: "update", noteId: target.id, text });
+          }}
+          title={t("session.edit_note")}
+          value={editNote.text}
+        />
       )}
     </div>
   );

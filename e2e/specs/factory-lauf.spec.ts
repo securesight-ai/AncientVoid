@@ -144,21 +144,20 @@ test.describe("Factory-Steuerung (AC-P26-5)", () => {
     await expect(factory).toBeVisible({ timeout: 15_000 });
     await factory.getByLabel("Betriebsart der Factory").selectOption("a");
 
-    app.once("dialog", (d) => {
-      expect(d.message()).toContain("merged automatisch");
-      void d.dismiss();
-    });
     await factory.getByRole("button", { name: "Betriebsart setzen" }).click();
+    // Rückfrage im Base-Modal (kein Browser-Dialog): Abbrechen ändert nichts.
+    await expect(app.getByTestId("modal")).toContainText("merged automatisch");
+    await app.getByTestId("modal").getByRole("button", { name: "Abbrechen" }).click();
     expect(JSON.parse(readFileSync(join(project, ".factory", "config.json"), "utf8"))).toMatchObject({ modus: "b" });
 
-    app.once("dialog", (d) => void d.accept());
     await factory.getByRole("button", { name: "Betriebsart setzen" }).click();
+    await app.getByTestId("modal").getByRole("button", { name: "OK" }).click();
     await expect.poll(() => JSON.parse(readFileSync(join(project, ".factory", "config.json"), "utf8")).modus, { timeout: 10_000 }).toBe("a");
     const audit = (await hub.events(observer)).filter((e) => e.payload.kind === "factory.command").map((e) => (e.payload as { factory: { command: string; outcome: string } }).factory);
     expect(audit).toEqual([expect.objectContaining({ command: "set_mode", outcome: "ok" })]);
 
-    app.once("dialog", (d) => void d.accept());
     await factory.getByRole("button", { name: "Lauf beenden" }).click();
+    await app.getByTestId("modal").getByRole("button", { name: "OK" }).click();
     await hub.until(async () => {
       const list = (await hub.api<{ id: string; status: string }[]>("/api/sessions")).body;
       return [driver, observer].every((id) => list.find((s) => s.id === id)?.status === "stopped");

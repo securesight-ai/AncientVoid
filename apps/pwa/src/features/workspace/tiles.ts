@@ -172,6 +172,28 @@ export function compactTiles(ws: Workspace): Workspace {
   return { ...ws, slots, layout, focus };
 }
 
+/** Schließen einer überlagernden Kachel: die gemerkte Ansicht (Ref inkl.
+ * Reiter/Tiefeninhalt) wieder einsetzen und fokussieren — exakt wie davor,
+ * nicht nur Kachel-Anzahl klemmen. Läuft sie schon, nur fokussieren. */
+export function restoreTile(ws: Workspace, ref: TileRef): Workspace {
+  const at = ws.slots.findIndex((t) => same(t, ref));
+  if (at >= 0) return { ...ws, focus: at };
+  const visible = COUNT[ws.layout];
+  const empty = ws.slots.slice(0, visible).indexOf(null);
+  if (empty >= 0) {
+    const slots = [...ws.slots];
+    slots[empty] = ref;
+    return { ...ws, slots, focus: empty };
+  }
+  if (isLayoutFixed(ws)) return ws;
+  const index = ws.slots.indexOf(null) >= 0 ? ws.slots.indexOf(null) : ws.slots.length;
+  const slots = [...ws.slots];
+  slots[index] = ref;
+  const needed = Math.max(index + 1, ws.slots.reduce((last, t, i) => (t === null ? last : i + 1), 0));
+  const layout = needed > visible ? (GROW[needed - 1] ?? "2x2") : ws.layout;
+  return { ...ws, slots, layout, focus: index };
+}
+
 export function setLayout(ws: Workspace, layout: Layout): Workspace {
   return { ...ws, layout, focus: Math.min(ws.focus, COUNT[layout] - 1) };
 }

@@ -7,7 +7,8 @@ import type { ComponentChildren } from "preact";
 import { InterruptedBanner } from "./InterruptedBanner.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 import { readTailScroll, writeTailScroll } from "./tail-scroll.ts";
-import { sessionHash, fileHash } from "../../app/route.ts";
+import { sessionHash, fileHash, pageHash } from "../../app/route.ts";
+import { popView } from "../../shared/nav-history.ts";
 import { registerShortcut } from "../../shared/shortcuts/registry.ts";
 import {
   sourcesBlock,
@@ -131,8 +132,8 @@ import { ForgePanel } from "../forge/ForgePanel.tsx";
 import { ReportPane } from "./ReportPane.tsx";
 import { SessionApprovals } from "./SessionApprovals.tsx";
 import { projectName } from "../../shared/project-name.ts";
-import { Button, Chip } from "../../shared/ui/index.ts";
-
+import { Button, Chip, ConfirmDialog } from "../../shared/ui/index.ts";
+import { MainSyncModal } from "./MainSyncModal.tsx";
 /** BUG-0053: below this window height (landscape) the dock is compacted and the controls start folded. */
 const SHORT_VIEWPORT_PX = 520;
 /** A tile without focus renders new events at most this often (K2 budget 200 ms). */
@@ -268,6 +269,8 @@ export function SessionTail({
   const [mainSync, setMainSync] = useState<MainSyncCheckDto | null>(null);
   const [mainSyncBusy, setMainSyncBusy] = useState(false);
   const [mainSyncResult, setMainSyncResult] = useState<string | null>(null);
+  const [mainSyncModalOpen, setMainSyncModalOpen] = useState(false);
+  const [deleteAsk, setDeleteAsk] = useState(false);
   // BUG-0219: Die Abfrage gehört zur Auswahl, nicht zum Mount. Generation und
   // In-Flight-Merker lassen nur die zuletzt gestellte Frage den Stand setzen —
   // eine späte Antwort kann nie einen neueren Stand überschreiben.
@@ -1820,7 +1823,11 @@ export function SessionTail({
             <Button
               aria-label={t("app.to_overview")}
               title={t("app.to_overview")}
-              onClick={() => onNavigate("dashboard")}
+              onClick={() => {
+                // Navigations-Historie: exakt die zuvor sichtbare Ansicht
+                // wiederherstellen; ohne Vorgeschichte die Übersicht.
+                location.hash = popView() ?? pageHash("dashboard");
+              }}
               class="back-btn"
             >
               ←
@@ -1855,9 +1862,17 @@ export function SessionTail({
               <div class="dim session-top-meta">
                 {mainSync && mainSync.behind > 0 && (
                   <>
-                    <span class="mainsync-badge" data-testid="mainsync-behind" title={t("session.main_moved_ahead")}>
+                    {/* ADR-0102: Der Hinweis ist der Knopf — Klick pullt main und mischt
+                     * ihn ein (Konflikte gunsten der Session), der Ablauf im Modal. */}
+                    <button
+                      type="button"
+                      class="mainsync-badge"
+                      data-testid="mainsync-behind"
+                      title={t("session.main_sync_badge_action")}
+                      onClick={() => setMainSyncModalOpen(true)}
+                    >
                       {mainSync.behind} {t("session.behind_main")}
-                    </span>
+                    </button>
                     {" · "}
                   </>
                 )}
@@ -2003,24 +2018,7 @@ export function SessionTail({
                     type="button"
                     class="danger"
                     onClick={() =>
-                      menuDo(() => {
-                        if (
-                          !confirm(
-                            t("session.delete_forever_q"),
-                          )
-                        )
-                          return;
-                        void api
-                          .deleteSession(session.id)
-                          .then(leaveArchived)
-                          .catch((err) =>
-                            setReplyError(
-                              err instanceof Error
-                                ? err.message
-                                : t("session.delete_failed"),
-                            ),
-                          );
-                      })
+                      menuDo(() => setDeleteAsk(true))
                     }
                   >
                     {t("common.delete")}
@@ -2889,6 +2887,35 @@ export function SessionTail({
           )}
         </div>
       </div>
+      <MainSyncModal
+        open={mainSyncModalOpen}
+        onClose={() => setMainSyncModalOpen(false)}
+        api={api}
+        sessionId={session.id}
+        initial={mainSync}
+        onDone={() => void refreshMainSync()}
+      />
+      <ConfirmDialog
+        open={deleteAsk}
+        onClose={() => setDeleteAsk(false)}
+        onConfirm={() => {
+          setDeleteAsk(false);
+          void api
+            .deleteSession(session.id)
+            .then(leaveArchived)
+            .catch((err) =>
+              setReplyError(
+                err instanceof Error
+                  ? err.message
+                  : t("session.delete_failed"),
+              ),
+            );
+        }}
+        title={t("common.delete")}
+        body={t("session.delete_forever_q")}
+        danger
+        confirmLabel={t("common.delete")}
+      />
     </ApiContext.Provider>
   );
 }

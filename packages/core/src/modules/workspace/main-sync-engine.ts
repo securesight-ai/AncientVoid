@@ -20,7 +20,7 @@ export interface MainSyncDryRun {
 }
 
 export type MainSyncApplyOutcome =
-  | { outcome: "applied"; from: string; to: string; files: string[] }
+  | { outcome: "applied"; from: string; to: string; files: string[]; autoResolved?: string[] }
   | { outcome: "conflict"; files: string[] }
   | { outcome: "skipped"; reason: "dirty-worktree" | "up-to-date"; detail?: string };
 
@@ -102,8 +102,13 @@ export class MainSyncEngine {
    * Fast-Forward bleibt Fast-Forward (kein leerer Merge-Knoten); echte
    * Merges tragen die notation-konforme Nachricht. Bei Konflikt/Fehler
    * sofort `--abort` — der Worktree steht danach wieder auf `from`.
+   *
+   * ADR-0102: `conflictStrategy: "favor-session"` löst Konflikt-Hunks
+   * automatisch gunsten des Session-Branchs (`git merge -X ours`) und nennt
+   * die betroffenen Dateien im Ergebnis (`autoResolved`) — der Default
+   * `abort` bleibt bei AC-P67-7: abbrechen, nichts verändern.
    */
-  async apply(worktreePath: string, branch: string, opts: { message?: string; allowDirty?: boolean } = {}): Promise<MainSyncApplyOutcome> {
+  async apply(worktreePath: string, branch: string, opts: { message?: string; allowDirty?: boolean; conflictStrategy?: "abort" | "favor-session" } = {}): Promise<MainSyncApplyOutcome> {
     const ref = `refs/remotes/origin/${branch}`;
     const from = await this.revParse(worktreePath, "HEAD");
     const { stdout: dirty } = await this.git(worktreePath, "status", "--porcelain");
@@ -113,9 +118,14 @@ export class MainSyncEngine {
     const behind = await this.git(worktreePath, "rev-list", "--count", `HEAD..${ref}`).then((r) => Number.parseInt(r.stdout.trim(), 10));
     if (!Number.isFinite(behind) || behind === 0) return { outcome: "skipped", reason: "up-to-date" };
 
+    // favor-session: der Probelauf entscheidet, ob -X ours nötig ist (und
+    // nennt hinterher ehrlich, welche Dateien automatisch gelöst wurden).
+    const favorSession = opts.conflictStrategy === "favor-session";
+    const dry = favorSession ? await this.dryRun(worktreePath, branch) : null;
+    const autoResolved = dry !== null && !dry.clean ? dry.conflicts : [];
     const identity = await this.git(worktreePath, "config", "user.email").then(() => [] as string[]).catch(() => ["-c", "user.name=AncientVoid", "-c", "user.email=hub@ancientvoid.local"]);
     try {
-      await execFileAsync("git", ["-C", worktreePath, ...identity, "merge", ref, "-m", opts.message ?? MAIN_SYNC_MERGE_MESSAGE]);
+      await execFileAsync("git", ["-C", worktreePath, ...identity, "merge", ...(autoResolved.length > 0 ? ["-X", "ours"] : []), ref, "-m", opts.message ?? MAIN_SYNC_MERGE_MESSAGE]);
     } catch {
       const { stdout: conflicts } = await this.git(worktreePath, "diff", "--name-only", "--diff-filter=U").catch(() => ({ stdout: "" }));
       await this.git(worktreePath, "merge", "--abort").catch(() => undefined);
@@ -125,7 +135,7 @@ export class MainSyncEngine {
     }
     const to = await this.revParse(worktreePath, "HEAD");
     const { stdout: changed } = await this.git(worktreePath, "diff", "--name-only", `${from}..${to}`);
-    return { outcome: "applied", from: short(from), to: short(to), files: cap(changed.trim().split("\n").filter(Boolean)) };
+    return { outcome: "applied", from: short(from), to: short(to), files: cap(changed.trim().split("\n").filter(Boolean)), ...(autoResolved.length > 0 ? { autoResolved } : {}) };
   }
 }
 

@@ -8,8 +8,7 @@ import { StatusDot } from "../../shared/StatusDot.tsx";
 import type { DisplayInput } from "../../shared/display-state.ts";
 import { ago } from "../../shared/status.ts";
 import { readTeamSnapshot, teamCacheKey, writeTeamSnapshot } from "./team-cache.ts";
-import { Button, Card } from "../../shared/ui/index.ts";
-
+import { Button, Card, ConfirmDialog } from "../../shared/ui/index.ts";
 /**
  * EPIC-P40/EPIC-P60 (ADR-0064, ADR-0077): Agenten-Teams in der P43-Sprache —
  * Karten je Worker-Task (T60.6), Rückfragen als auffällige Karten über dem
@@ -355,9 +354,14 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
     }
   };
 
-  const cancel = async () => {
+  const [stopAsk, setStopAsk] = useState(false);
+  const cancel = () => {
     if (!selected) return;
-    if (!confirm("Dieses Team wirklich stoppen?")) return;
+    setStopAsk(true);
+  };
+  const stopTeam = async () => {
+    setStopAsk(false);
+    if (!selected) return;
     setBusy(true);
     try {
       const team = await api.teamCancel(selected.id, "Vom Nutzer gestoppt");
@@ -425,6 +429,15 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
         )}
       </div>
       {selected && <TeamDetail team={selected} onAnswer={answer} onCancel={cancel} busy={busy} offline={offline} />}
+      <ConfirmDialog
+        open={stopAsk}
+        onClose={() => setStopAsk(false)}
+        onConfirm={() => void stopTeam()}
+        title={t("team.stop_team")}
+        body={t("team.stop_team_q")}
+        danger
+        confirmLabel={t("team.stop_team")}
+      />
     </div>
   );
 }

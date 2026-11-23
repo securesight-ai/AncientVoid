@@ -25,8 +25,9 @@ test.describe("Archiv (P5 §9)", () => {
     await expect(card).toHaveCount(1);
     // Der Löschen-Button steht nur im Archiv — aktive Karten haben ihn nicht.
     await expect(app.locator(".session-card .session-card-actions").getByRole("button", { name: "Löschen", includeHidden: true })).toHaveCount(1);
-    app.on("dialog", (dialog) => void dialog.accept());
     await cardAction(card, "Löschen");
+    // Rückfrage im Base-Modal (kein Browser-Dialog) — bestätigen löscht.
+    await app.getByTestId("modal").getByRole("button", { name: "Löschen" }).click();
     await expect(card).toHaveCount(0);
     await hub.until(async () => !(await hub.sessions()).some((s) => s.id === id), "archiv delete");
     expect((await hub.api(`/api/sessions/${id}/events`)).status).toBe(404);
@@ -37,8 +38,8 @@ test.describe("Archiv (P5 §9)", () => {
     await hub.until(async () => (await hub.api<{ status: string }>(`/api/sessions/${id}`)).body.status === "idle", "idle");
     expect((await hub.api(`/api/sessions/${id}/archive`, { body: { archived: true } })).status).toBe(200);
     await app.getByRole("button", { name: "Archiv (1)" }).click();
-    app.on("dialog", (dialog) => void dialog.accept());
     await cardAction(app.locator(".session-card"), "Löschen");
+    await app.getByTestId("modal").getByRole("button", { name: "Löschen" }).click();
     await expect.poll(async () => (await hub.api(`/api/sessions/${id}/events`)).status).toBe(404);
     await expect(app.locator(".session-card")).toHaveCount(0);
   });
@@ -59,22 +60,25 @@ test.describe("Archiv (P5 §9)", () => {
     await app.getByRole("checkbox", { name: "Archiv A auswählen" }).check();
     await app.getByRole("checkbox", { name: "Archiv B auswählen" }).check();
     const remove = app.getByRole("button", { name: "2 Sessions löschen" });
-    app.once("dialog", (dialog) => void dialog.dismiss());
     await remove.click();
+    // Abbrechen im Base-Modal lässt alles stehen.
+    await app.getByTestId("modal").getByRole("button", { name: "Abbrechen" }).click();
     await expect(app.locator(".session-card")).toHaveCount(3);
-    app.on("dialog", (dialog) => void dialog.accept());
     const blocked = `**/api/sessions/${ids[1]}`;
     await app.route(blocked, (route) => route.fulfill({ status: 409, json: { error: "Workspace belegt" } }), { times: 1 });
     await remove.click();
+    await app.getByTestId("modal").getByRole("button", { name: "Löschen" }).click();
     await expect(app.getByRole("alert")).toContainText("1 von 2 nicht gelöscht. Archiv B: Workspace belegt");
     await expect(app.locator(".session-card")).toHaveCount(2);
     await expect(app.getByRole("checkbox", { name: "Archiv B auswählen" })).toBeChecked();
     await app.getByRole("button", { name: "1 Session löschen" }).click();
+    await app.getByTestId("modal").getByRole("button", { name: "Löschen" }).click();
     await expect(app.locator(".session-card")).toHaveCount(1);
     expect((await hub.sessions()).map((s) => s.id).sort()).toEqual([ids[2], ...active].sort());
     await search.clear();
     await app.getByRole("button", { name: "Alle sichtbaren auswählen" }).click();
     await app.getByRole("button", { name: "1 Session löschen" }).click();
+    await app.getByTestId("modal").getByRole("button", { name: "Löschen" }).click();
     await expect(app.locator(".session-card")).toHaveCount(0);
     expect((await hub.sessions()).map((s) => s.id).sort()).toEqual(active);
   });
@@ -93,9 +97,10 @@ test.describe("Archiv (P5 §9)", () => {
     const id = await hub.createSession({ adapter: "dummy" });
     await hub.api(`/api/sessions/${id}/stop`, { body: {} });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
-    app.on("dialog", (dialog) => void dialog.accept());
     await app.getByLabel("Weitere Aktionen").click();
     await app.locator(".session-menu").getByRole("button", { name: "Löschen" }).click();
+    // Rückfrage im Base-Modal, nicht mehr der Browser-Dialog.
+    await app.getByTestId("modal").getByRole("button", { name: "Löschen" }).click();
     await expect(app).toHaveURL(/#\/$/);
     expect((await hub.sessions()).some((s) => s.id === id)).toBe(false);
     const gone = await hub.api(`/api/sessions/${id}/events`);

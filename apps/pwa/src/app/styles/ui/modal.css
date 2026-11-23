@@ -1,0 +1,41 @@
+/* Base-Modal (shared/ui/Modal.tsx): zentrierte Karte über Sheet --modal.
+ * ConfirmDialog/PromptDialog ersetzen die Browser-Standard-Dialoge. */
+.ui-modal-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  margin: 0;
+}
+
+.ui-modal-body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.ui-modal-text {
+  margin: 0;
+  color: var(--fg-dim);
+  overflow-wrap: anywhere;
+}
+
+.ui-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.ui-modal-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.ui-modal-field {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}
+
+.ui-modal-input {
+  width: 100%;
+}

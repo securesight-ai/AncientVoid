@@ -342,17 +342,23 @@
 .graph-pane-tools { display: flex; justify-content: flex-end; gap: 6px; padding: 2px 6px; }
 
 /* EPIC-P67 T67.8: Hinweis „N hinter main“ im Session-Kopf + Menüpunkte.
- * Der Hinweis steht am Zeilenanfang (vor dem Projektellipsis) und ist rein
- * anzeigend — Aktionen liegen im ⋯-Menü (44-px-Ziel, P63). */
+ * ADR-0102: Der Hinweis ist der Knopf — Klick öffnet das Merge-Modal
+ * (Pull + Einmischen mit Konfliktgunst der Session). */
 .mainsync-badge {
   display: inline-block;
   border: 1px solid var(--warn);
   border-radius: 999px;
   color: var(--warn);
+  background: var(--bg-elev);
+  cursor: pointer;
+  font: inherit;
   font-size: var(--text-sm);
   line-height: 1.5;
   padding: 0 6px;
   white-space: nowrap;
+}
+.mainsync-badge:hover {
+  border-color: var(--accent);
 }
 .mainsync-menu {
   display: grid;
@@ -365,4 +371,38 @@
 .mainsync-result {
   font-size: var(--text-sm);
   margin: 0;
+}
+
+/* ADR-0102: Merge-Ablauf im Modal — Schritte mit Zustand, Fehler bleibt stehen. */
+.mainsync-steps {
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+.mainsync-step {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+.mainsync-step-marker {
+  flex: none;
+  width: 1.4em;
+  text-align: center;
+}
+.mainsync-step.ok .mainsync-step-marker { color: var(--ok); }
+.mainsync-step.error .mainsync-step-marker { color: var(--err); }
+.mainsync-step.active .mainsync-step-marker { color: var(--accent); }
+.mainsync-step.todo { color: var(--fg-dim); }
+.mainsync-step-label {
+  overflow-wrap: anywhere;
+}
+.mainsync-modal-result,
+.mainsync-modal-error {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mainsync-modal-error {
+  color: var(--err);
 }

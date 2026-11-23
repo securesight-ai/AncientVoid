@@ -1,6 +1,6 @@
 import { fmtTime } from "../../shared/i18n/format.ts";
 import { t } from "../../shared/i18n/index.ts";
-import { Sheet, Button, Chip, EmptyState, Card } from "../../shared/ui/index.ts";
+import { Sheet, Button, Chip, ConfirmDialog, EmptyState, Card } from "../../shared/ui/index.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { registerField } from "../../shared/command-context.ts";
 import { registerShortcut } from "../../shared/shortcuts/registry.ts";
@@ -311,10 +311,17 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
   };
   const archive = (s: SessionRecord) => change(s, { archived: !s.archived }, () => hostApi(s.hostId).setArchived(s.id, !s.archived));
   const pin = (s: SessionRecord) => change(s, { pinned: !s.pinned }, () => hostApi(s.hostId).setSessionMeta(s.id, { pinned: !s.pinned }));
-  const remove = async (targets: SessionRecord[]) => {
+  // Löschen fragt im Base-Modal nach (kein Browser-confirm): die Auswahl
+  // bleibt bis zur Antwort liegen, Abbrechen lässt alles wie es war.
+  const [deleteAsk, setDeleteAsk] = useState<SessionRecord[] | null>(null);
+  const remove = (targets: SessionRecord[]) => {
     if (deleteInFlight.current || targets.length === 0) return;
-    const label = targets.length === 1 ? t("common.one_session") : t("common.n_sessions", { "n": targets.length });
-    if (!confirm(t("common.delete_forever", { "label": label }))) return;
+    setDeleteAsk(targets);
+  };
+  const removeConfirmed = async () => {
+    const targets = deleteAsk ?? [];
+    setDeleteAsk(null);
+    if (deleteInFlight.current || targets.length === 0) return;
     deleteInFlight.current = true;
     setDeleting(true);
     setActionError("");
@@ -521,6 +528,16 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
           )}
         </>
       )}
+      <ConfirmDialog
+        open={deleteAsk !== null}
+        onClose={() => setDeleteAsk(null)}
+        onConfirm={() => void removeConfirmed()}
+        title={t("common.delete")}
+        body={t("common.delete_forever", { "label": deleteAsk === null ? "" : deleteAsk.length === 1 ? t("common.one_session") : t("common.n_sessions", { "n": deleteAsk.length }) })}
+        danger
+        confirmLabel={t("common.delete")}
+        busy={deleting}
+      />
     </div>
   );
 }

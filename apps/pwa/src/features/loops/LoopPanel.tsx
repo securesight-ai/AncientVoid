@@ -4,8 +4,7 @@ import type { LoopInfo } from "@ancientvoid/contracts";
 import type { hubApi } from "../../shared/api.ts";
 import type { LoopView } from "./loop-view.ts";
 import { loopBadge } from "./loop-view.ts";
-import { Button } from "../../shared/ui/index.ts";
-
+import { Button, ConfirmDialog } from "../../shared/ui/index.ts";
 const GATE_STATE: Record<string, string> = { running: "läuft", passed: "bestanden", pass: "bestanden", failed: "fehlgeschlagen", fail: "fehlgeschlagen" };
 
 /** Kopf-Abzeichen der Session: Loop, Name, Betriebsart — Störung und Halt fallen sofort auf. */
@@ -71,8 +70,17 @@ export function LoopPanel({
   const [modus, setModus] = useState<"a" | "b">("b");
   const [provider, setProvider] = useState<"anthropic" | "zai">("anthropic");
   const [busy, setBusy] = useState(false);
+  // Bestätigungs-Modal statt Browser-confirm(): die ausstehende Aktion wartet
+  // auf die Antwort (question für Factory-Befehle, Betriebsart für risky Modes).
+  const [ask, setAsk] = useState<{ body: string; title: string; run: () => void } | null>(null);
   const command = async (body: Parameters<typeof api.factoryCommand>[1], question?: string) => {
-    if (question && !confirm(question)) return;
+    if (question) {
+      setAsk({ body: question, title: t("common.confirm_title"), run: () => void doCommand(body) });
+      return;
+    }
+    await doCommand(body);
+  };
+  const doCommand = async (body: Parameters<typeof api.factoryCommand>[1]) => {
     setBusy(true);
     const ack = await api.factoryCommand(sessionId, body);
     setBusy(false);
@@ -87,7 +95,10 @@ export function LoopPanel({
     }
   };
   const changeMode = (mode: string) => {
-    if (caps?.riskyModes.includes(mode) && !confirm(`Betriebsart „${mode}“ hat Außenwirkung (z. B. Merge ohne Mensch). Wirklich wechseln?`)) return;
+    if (caps?.riskyModes.includes(mode)) {
+      setAsk({ body: t("loops.risky_mode_q", { "mode": mode }), title: t("common.confirm_title"), run: () => void send({ kind: "configure", permissionMode: mode }) });
+      return;
+    }
     void send({ kind: "configure", permissionMode: mode });
   };
 
@@ -253,6 +264,17 @@ export function LoopPanel({
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={ask !== null}
+        onClose={() => setAsk(null)}
+        onConfirm={() => {
+          const run = ask?.run;
+          setAsk(null);
+          run?.();
+        }}
+        title={ask?.title ?? ""}
+        body={ask?.body ?? ""}
+      />
     </section>
   );
 }

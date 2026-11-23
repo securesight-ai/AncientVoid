@@ -128,6 +128,37 @@ describe("EPIC-P67 T67.4 — MainSyncEngine: messen, probelaufen, anwenden", () 
     expect(status.trim()).toBe(""); // keine Konfliktmarker, nichts halb angewendet
   });
 
+  it("ADR-0102 — favor-session: Konflikt-Hunks gewinnen die Session, autoResolved nennt die Datei, Hash bewegt sich", async () => {
+    const { repo, origin } = await mkProject(base, "gunst");
+    const wt = await mkWorktree(repo, out, "gunst-session");
+    await commit(wt, "session-seite", "gemeinsam.txt", "session\n");
+    await advanceOrigin(origin, base, "gunst", "origin-seite", "gemeinsam.txt");
+    await fetchOrigin(repo);
+    const engine = new MainSyncEngine();
+    const before = await headSha(wt);
+    const result = await engine.apply(wt, "main", { conflictStrategy: "favor-session" });
+    expect(result).toMatchObject({ outcome: "applied", autoResolved: ["gemeinsam.txt"] });
+    expect(await headSha(wt)).not.toBe(before);
+    // Session gewinnt den Konflikt-Hunk; main-Änderungen fehlender Dateien kommen an.
+    const { stdout: inhalt } = await execFileAsync("git", ["-C", wt, "show", "HEAD:gemeinsam.txt"]);
+    expect(inhalt).toBe("session\n");
+    const { stdout: status } = await execFileAsync("git", ["-C", wt, "status", "--porcelain"]);
+    expect(status.trim()).toBe(""); // kein Konfliktmarker, sauber angewendet
+  });
+
+  it("ADR-0102 — favor-session ohne Konflikt bleibt ein gewöhnlicher Merge (kein -X nötig)", async () => {
+    const { repo, origin } = await mkProject(base, "gunst-sauber");
+    const wt = await mkWorktree(repo, out, "gunst-sauber-session");
+    await commit(wt, "session-arbeit", "session.txt");
+    await advanceOrigin(origin, base, "gunst-sauber", "origin-arbeit");
+    await fetchOrigin(repo);
+    const engine = new MainSyncEngine();
+    const result = await engine.apply(wt, "main", { conflictStrategy: "favor-session" });
+    expect(result).toMatchObject({ outcome: "applied", files: ["origin-arbeit.txt"] });
+    if (result.outcome !== "applied") throw new Error("unreachable");
+    expect(result.autoResolved).toBeUndefined();
+  });
+
   it("Dirty Worktree: Apply wird übersprungen, nichts angewendet", async () => {
     const { repo, origin } = await mkProject(base, "dirty");
     const wt = await mkWorktree(repo, out, "dirty-session");

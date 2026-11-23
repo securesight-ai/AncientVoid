@@ -3,6 +3,7 @@ import { loadFilter } from "../features/session/event-filter.ts";
 import { contentHash } from "../features/workspace/content.ts";
 import { onWorkspaceOpen } from "../features/workspace/open-content.ts";
 import { onLayerOpen } from "../shared/layers.ts";
+import { peekView, popEntry, popView, rememberView } from "../shared/nav-history.ts";
 import { initPresentation, type DevicePreset } from "../features/settings/presets.ts";
 import { TooltipLayer } from "../shared/Tooltip.tsx";
 import { render } from "preact";
@@ -37,7 +38,7 @@ import { RestoreBar } from "../features/windows/RestoreBar.tsx";
 import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
-import { detachTile, focusOpenSession, forgetDetached, isLayoutFixed, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
+import { detachTile, focusOpenSession, focusTile, forgetDetached, isLayoutFixed, openInNewTile, openInTile, parseWorkspace, reattach, restoreTile, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
 import { targetKey, tileWindowTarget } from "../features/windows/protocol.ts";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
@@ -191,9 +192,12 @@ function Main() {
 
   // Ein Anhang-Deep-Link (`#/anhang/<id>` oder `…/sessions/<id>/anhang/<id>`) liegt UEBER
   // der jeweiligen Seite — der Link aus einer Agent-Nachricht oeffnet das Bild, Schliessen
-  // fuehrt dorthin zurueck, wo man war.
-  const [attachmentView, setAttachmentView] = useState<{ attachmentId: string; back: string } | null>(null);
+  // fuehrt dorthin zurueck, wo man war (Navigations-Historie, shared/nav-history.ts).
+  const [attachmentView, setAttachmentView] = useState<{ attachmentId: string } | null>(null);
   const letzterHash = useRef("#/");
+  // Route-Referenz für den hashchange-Handler (der laeuft aus einem Effekt
+  // mit [ready]-Deps und wuerde sonst einen veralteten Stand sehen).
+  const routeRef = useRef<{ view: "list"; page: Page } | { view: "tail"; sessionId: string } | null>(null);
 
   useEffect(() => {
     // BUG-0006 (part 2): /api/health is deliberately open (tailnet
@@ -257,7 +261,18 @@ function Main() {
 
   useEffect(() => {
     if (!ready) return;
+    // Browser-Zurück/-Vorwärts trägt die Historie schon selbst: Führt der
+    // Schritt genau auf den gemerkten Zustand zurück, spiegelt die Historie
+    // das (pop statt neuem Eintrag) — sonst dupliziert der Zurück-Knopf der
+    // Session den Browser-Schritt.
+    let fromPopstate = false;
+    const onPop = () => {
+      fromPopstate = true;
+    };
+    window.addEventListener("popstate", onPop);
     const openFromHash = () => {
+      const navigated = fromPopstate;
+      fromPopstate = false;
       // EPIC-P60 (AC-P60-1): alte `#/runs…`-Links permanent auf `#/teams…`
       // umleiten — der Hash-Replace löst einen neuen hashchange aus.
       const redirected = redirectLegacyRunHash(location.hash) ?? redirectLegacyStatHash(location.hash);
@@ -266,17 +281,23 @@ function Main() {
         return;
       }
       const parsed = parseAppHash(location.hash);
-      if (parsed.view === "attachment") {
-        setAttachmentView({ attachmentId: parsed.attachmentId, back: letzterHash.current });
+      if (parsed.view === "attachment" || (parsed.view === "tail" && parsed.attachment)) {
+        // Anhang ueber der Seite: der Zustand davor wird gemerkt (inkl.
+        // Reiter/Tiefen-Hash), Schließen stellt exakt ihn wieder her.
+        rememberView(letzterHash.current || "#/");
+        setAttachmentView({ attachmentId: parsed.view === "attachment" ? parsed.attachmentId : parsed.attachment! });
         return;
       }
-      if (parsed.view === "tail" && parsed.attachment) {
-        letzterHash.current = sessionHash(parsed.sessionId, parsed.hostId ?? null);
-        setAttachmentView({ attachmentId: parsed.attachment, back: letzterHash.current });
-      } else {
-        setAttachmentView(null);
-        letzterHash.current = location.hash || "#/";
-      }
+      setAttachmentView(null);
+      // Navigations-Historie: der Wechsel in eine andere Ansicht (Session
+      // ueber Seite, Seite ueber Session, Session ueber Session) merkt die
+      // zuvor sichtbare — Zurueck-Knopf und Kachel-Schließen stellen sie wieder her.
+      const newKey = parsed.view === "list" ? `page:${parsed.page}` : parsed.view === "tail" ? `tail:${parsed.sessionId}` : parsed.view;
+      const prev = routeRef.current;
+      const prevKey = prev === null ? null : prev.view === "list" ? `page:${prev.page}` : `tail:${prev.sessionId}`;
+      if (navigated && peekView() === (location.hash || "#/")) popView();
+      else if (prevKey !== newKey) rememberView(letzterHash.current || "#/");
+      letzterHash.current = location.hash || "#/";
       if (parsed.view === "devices") {
         // EPIC-P42: `#/geraete` ist die Fenster-Route des Popouts; im Hauptfenster geht es zur Übersicht
         // (das Panel öffnet sich über den Geräte-Knopf).
@@ -301,8 +322,15 @@ function Main() {
     };
     openFromHash();
     window.addEventListener("hashchange", openFromHash);
-    return () => window.removeEventListener("hashchange", openFromHash);
+    return () => {
+      window.removeEventListener("hashchange", openFromHash);
+      window.removeEventListener("popstate", onPop);
+    };
   }, [ready]);
+  // Route-Referenz für den hashchange-Handler aktuell halten (siehe oben).
+  useEffect(() => {
+    routeRef.current = route.view === "list" ? { view: "list", page: route.page } : { view: "tail", sessionId: route.session.id };
+  }, [route]);
 
   const [staleAt, setStaleAt] = useState<Date | null>(null);
   const wide = useMedia(WIDE);
@@ -316,13 +344,41 @@ function Main() {
     return { ...stored, slots: stored.slots.map((ref) => ref ? defaultSessionRef(ref) : null) };
   });
   const changeWorkspace = (next: Workspace) => {
-    setWs(next);
-    localStorage.setItem(WORKSPACE_KEY, serializeWorkspace(next));
-    const focused = visibleTiles(next)[next.focus];
+    // Navigations-Historie: Jeder Wechsel der sichtbaren Ansicht merkt den
+    // Zustand davor (Hash + Kachel-Referenz). Schließen/Lösen einer Kachel
+    // stellt genau ihn wieder her — auch den Fall, in dem eine überlagernde
+    // Seite (z. B. Notizen) im fixierten Raster die Session-Kachel ersetzt
+    // hat: deren Referenz inkl. Reiter kommt zurück in den freien Slot.
+    const before = ws.slots.filter(Boolean).length;
+    const after = next.slots.filter(Boolean).length;
+    let restored = next;
+    if (after < before) {
+      for (let guard = 0; guard < 8; guard++) {
+        const entry = popEntry();
+        if (entry === null) break;
+        const ref = entry.tileRef as TileRef | undefined;
+        const at = visibleTiles(restored).findIndex((t) => t !== null && contentHash(t) === entry.hash);
+        if (at >= 0) {
+          if (at !== restored.focus) restored = focusTile(restored, at);
+          break;
+        }
+        if (ref !== undefined) {
+          restored = restoreTile(restored, ref);
+          break;
+        }
+        // gemerkte Ansicht ist selbst zu — weiter zurueck
+      }
+    } else if (contentHash(visibleTiles(restored)[restored.focus]) !== contentHash(visibleTiles(ws)[ws.focus])) {
+      rememberView(contentHash(visibleTiles(ws)[ws.focus]), visibleTiles(ws)[ws.focus] ?? undefined);
+    }
+    setWs(restored);
+    localStorage.setItem(WORKSPACE_KEY, serializeWorkspace(restored));
+    const focused = visibleTiles(restored)[restored.focus];
     rememberSession(focused?.sessionId ? focused : null);
     const hash = contentHash(focused);
     // Each card owns its target, so focusing a chat must also clear another card's file suffix.
     if (location.hash !== hash) history.replaceState(null, "", hash);
+    letzterHash.current = hash;
   };
   // EPIC-P34 T34.10: eigene Fenster. Der Kanal-Handler läuft über Referenzen, damit er immer den neuesten Stand sieht.
   const latest = useRef({ ws, changeWorkspace });
@@ -626,7 +682,7 @@ function Main() {
       {!wide && <BrowserLayer focusedSessionId={route.view === "tail" ? route.session.id : null} />}
       {!wide && <DeviceLayer focusedSessionId={route.view === "tail" ? route.session.id : null} />}
       {attachmentView && (
-        <AttachmentRouteView key={attachmentView.attachmentId} attachmentId={attachmentView.attachmentId} onClose={() => (location.hash = attachmentView.back)} />
+        <AttachmentRouteView key={attachmentView.attachmentId} attachmentId={attachmentView.attachmentId} onClose={() => (location.hash = popView() ?? "#/")} />
       )}
       <NyxFab />
     </>
