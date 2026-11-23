@@ -1,7 +1,7 @@
 ---
 id: BUG-0278
 slug: halogen-live-daten-fehlen
-status: fixed
+status: done
 severity: S3
 area: server
 instance: live
@@ -53,3 +53,10 @@ Optional `metricsUrl` (Zähler), `/health` zusätzlich, Tempo je gerechneter Sek
 
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue #391
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `metricsUrl`-Zähler und `/health` im Sampler
+(`packages/core/src/modules/aimetrics/sampler.ts:35,77,271`).
+`npx vitest run packages/core/test/aimetrics/halogen.test.ts` → 9 passed.
+Fix im Stand (ADR-0078 Nachtrag).

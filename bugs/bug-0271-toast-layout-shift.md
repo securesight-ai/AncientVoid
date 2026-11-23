@@ -1,7 +1,7 @@
 ---
 id: BUG-0271
 slug: toast-layout-shift
-status: in-progress
+status: done
 severity: S3
 area: pwa
 instance: local
@@ -53,3 +53,10 @@ Layout-Shift; nach kurzer Zeit automatisch weg.
 
 `position: fixed` + `z-index: var(--z-toast)`; kürzere `TOAST_MS`. Test:
 `apps/pwa/test/features/notifications/toast-overlay.test.ts`.
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `.toast-stack` ist `position: fixed` mit `z-index: var(--z-toast)`
+(`apps/pwa/src/app/styles/14-notifications.css:96-107`). Fix-Commit 9cde7892
+im Stand. `npx vitest run apps/pwa/test/features/notifications/toast-overlay.test.ts`
+→ 2 passed.

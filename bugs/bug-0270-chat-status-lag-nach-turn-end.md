@@ -1,7 +1,7 @@
 ---
 id: BUG-0270
 slug: chat-status-lag-nach-turn-end
-status: in-progress
+status: done
 severity: S3
 area: pwa
 instance: local
@@ -71,3 +71,11 @@ aber nicht `status`; `live = status === "working"` hält den Zug-Mark offen und
 - [x] Datei im Index `bugs/README.md`
 - [ ] GitHub-Issue
 - [ ] Fix-PR
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `statusFromEvents` existiert und wird in `SessionTail.tsx`
+genutzt (Zeile 830 verwirft den Rückschritt, wenn `turn_end` den Status schon
+auf idle gesetzt hat). Fix-Commit 791ebf81 (PR #335) im Stand.
+`npx vitest run apps/pwa/test/features/session/status-from-events.test.ts` →
+7 passed.

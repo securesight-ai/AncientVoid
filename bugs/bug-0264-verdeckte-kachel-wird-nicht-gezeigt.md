@@ -1,7 +1,7 @@
 ---
 id: BUG-0264
 slug: verdeckte-kachel-wird-nicht-gezeigt
-status: fixed
+status: done
 severity: S2
 area: pwa
 instance: dev
@@ -37,3 +37,10 @@ dem fixierten Raster. Der korrigierte Pfad verwendet denselben Tausch wie
 `focusOpenSession`. Der Unit-Test prüft die erhaltene Session und die
 sichtbare Werkzeugkarte. Die Spezifikation prüft die Wiederherstellung des
 Layouts samt Session im Browser.
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `openInNewTile` deckt verdeckte Karten über `revealFixedTile`
+auf (`apps/pwa/src/features/workspace/tiles.ts:118-121`).
+`npx vitest run apps/pwa/test/features/workspace/tiles.test.ts
+apps/pwa/test/features/workspace/open-content.test.ts` → 34 passed. Fix im Stand.

@@ -1,7 +1,7 @@
 ---
 id: BUG-0214
 slug: stt-verfuegbarkeit-geschwindelt-kein-browser-rueckfall
-status: open
+status: done
 severity: S2
 area: pwa
 instance: dev
@@ -72,3 +72,13 @@ Hub: `GET /api/stt` prüft die Erreichbarkeit (kurz gecacht) und meldet `false` 
 `streaming` wird nur gemeldet, wenn die Erkennung erreichbar ist. App: Auskunft lässt sich
 erneuern (`refreshSttStatus()`), nach einem lokalen Ausfall wird sie erneuert, und der nächste
 Druck nimmt die Browser-Erkennung mit klarer Meldung.
+
+## Abschluss (2026-11-24)
+
+Im Stand vorhanden und belegt: `sttHealthUrl()`/`makeSttProbe()` in
+`apps/hub/src/modules/voice/stt.routes.ts` (4-s-Cache, `/health`-Probe; Commit
+e7e907de), `refreshSttStatus()` in `apps/pwa/src/shared/local-stt.ts:19` mit
+Neuholen nach Ausfall (`apps/pwa/src/features/stt/use-push-to-talk.ts:191`),
+Quellenwahl Automatisch/Lokal/Browser (4346d032).
+`npx vitest run apps/hub/test/stt-availability.test.ts` → 4 passed;
+`e2e/specs/stt-ausfall-rueckfall.spec.ts` existiert und hält den Rückfall fest.

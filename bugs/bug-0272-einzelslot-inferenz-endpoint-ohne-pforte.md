@@ -1,7 +1,7 @@
 ---
 id: BUG-0272
 slug: einzelslot-inferenz-endpoint-ohne-pforte
-status: in Arbeit
+status: done
 severity: S1
 area: core
 instance: prod
@@ -134,3 +134,25 @@ konfiguriert und die Titel-KI nicht gesetzt, deshalb heute kein zweiter Druck ge
 * Pforte gilt für hub-interne Nutzer (Gatekeeper/Titel) und Adapter-Züge gleichermaßen.
 * `npm run check:arch`, `typecheck`, `lint` + die betroffene Spec; ADR für den
   neuen Contract-Anteil (Pforte ist geteilter Zustand → Contracts-Regel 1).
+
+## Abschluss des offenen Rests (2026-11-24)
+
+Die hub-internen Kurzanfragen laufen jetzt durch dieselbe Pforte — als
+`hintergrund`, hinter laufenden Zügen:
+
+- `hintergrundAnfrage()` in `packages/core/src/modules/inference/pforte.ts:421`
+  (Endpoint-Erkennung wie bei Zügen: Modellangabe, sonst Basis-URL; ohne
+  Pforten-Eintrag direkt).
+- Durchgeschleift: Gatekeeper (`gatekeeper/model.ts`), Sitzungstitel
+  (`session-title.ts`), Befehle/Planer (`commands/model.ts`), Text-Umformulieren
+  (`commands.routes.ts`), Analyse/Bild (`media/models.ts`). Verdrahtet in
+  `apps/hub/src/main.ts:275,285` (assistantModel + Gatekeeper-Modell).
+- Rot-vor-grün: `packages/core/test/modules/inference/pforte.test.ts` — 4 neue
+  Fälle (12 passed): Hintergrund wartet hinter Zug mit `inference.slot_wait`,
+  ohne Pforte direkt, `askGatekeeperModel` feuert den Fetch nicht, solange der
+  Zug den Platz hält, URL-Erkennung als Fallback. Nachbarn: gatekeeper/
+  commands/titel/hub-commands 37 passed, media 16 passed; typecheck, Lint,
+  `check:arch` grün.
+
+Der Bug ist damit vollständig abgeschlossen: Pforte (PR #343, live bewiesen),
+Kontextbudget, Lease und Priorisierung der internen Anfragen.

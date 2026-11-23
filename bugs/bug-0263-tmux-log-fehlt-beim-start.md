@@ -1,7 +1,7 @@
 ---
 id: BUG-0263
 slug: tmux-log-fehlt-beim-start
-status: fixed
+status: done
 severity: S2
 area: workers
 instance: dev
@@ -22,3 +22,9 @@ denselben Fehler im vorhandenen Stdout-Test, weil die Shell den Pfad trennte.
 Der Runner legt das Generationslog vor der Pipe an und übergibt den Pfad als
 ein Shell-Argument. `packages/workers/test/tmux.test.ts` prüft den Logstart
 mit Leerzeichen, die vollständige Ausgabe und aufeinanderfolgende Worker.
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `npx vitest run packages/workers/test/tmux.test.ts` → 16 passed
+(tmux vorhanden, kein Skip) — deckt Logstart mit Leerzeichen, vollständige
+Ausgabe und aufeinanderfolgende Worker ab. Fix im Stand.

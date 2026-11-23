@@ -1,7 +1,7 @@
 ---
 id: BUG-0267
 slug: eingefuegtes-bild-ohne-ocr-hinweis-bleibt-liegend
-status: fixed
+status: done
 severity: S2
 area: core
 instance: dev
@@ -74,3 +74,11 @@ weiterhin als echtes Bild.
 Zusammenhang mit BUG-0266 (fehlendes OCR-Werkzeug) und EPIC-P7 (Anhänge). Wer
 Bild**beschreibung** im Hub selbst will (ohne Agenten), braucht einen Vision-
 Endpoint — eigene Funktion, nicht dieses Ticket.
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `promptWithAttachments` kündigt Bilder ohne OCR-Text mit
+Datei-/Bild-Werkzeug-Hinweis an
+(`packages/contracts/src/attachments/attachment.ts:82`).
+`npx vitest run packages/contracts/test/attachments/prompt-with-attachments.test.ts`
+→ 5 passed. Fix im Stand.

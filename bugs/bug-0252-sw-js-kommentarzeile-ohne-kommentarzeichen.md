@@ -1,7 +1,7 @@
 ---
 id: BUG-0252
 slug: sw-js-kommentarzeile-ohne-kommentarzeichen
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev
@@ -72,3 +72,9 @@ Build-Härtung — Datei vorschlagen, nicht schreiben.
 - [x] Datei im Index [`README.md`](README.md)
 - [ ] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`)
 - [x] Fix im Branch `feat/p61-migration-welle-2` (Commit mit `BUG-0252`)
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `node --check apps/pwa/public/sw.js` → Syntaxfehlerfrei, beide
+Kommentarzeilen tragen `//` (apps/pwa/public/sw.js:173-174). Fix-Commit fbf0f939
+im aktuellen Stand enthalten.
