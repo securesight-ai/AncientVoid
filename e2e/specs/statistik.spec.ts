@@ -186,11 +186,20 @@ test.describe("Statistik-Zentrale (EPIC-P56/P66)", () => {
     await hub.until(async () => (await hub.api<{ status: string }>(`/api/sessions/${id}`)).body.status === "idle", "idle");
 
     await openStatistics(app);
+    // Nach dem Zeitraum-Wechsel lädt die Seite den Schnitt neu — währenddessen
+    // ist die Projekt-Select kurz ohne Optionen/disabled. Erst den Refetch
+    // abwarten, dann wählen; der Projekt-Request belegt, dass die Wahl im
+    // Zustand ankam (erst dann kann der Reload ehrlich prüfen).
+    const weekFetch = app.waitForRequest(r => r.url().includes("/api/statistics") && r.url().includes("since="), { timeout: 10_000 });
     await app.getByRole("group", { name: "Zeitraum", exact: true }).getByRole("button", { name: "Woche" }).click();
+    await weekFetch;
     const projekt = app.getByLabel("Projekt");
+    await expect(projekt.locator("option").filter({ hasNotText: "alle Projekte" }).first()).toBeAttached();
     const options = await projekt.locator("option").allTextContents();
     const eigenes = options.find(o => !o.includes("alle Projekte")) ?? options[0]!;
+    const projectFetch = app.waitForRequest(r => r.url().includes("/api/statistics") && r.url().includes("project="), { timeout: 10_000 });
     await projekt.selectOption({ label: eigenes });
+    await projectFetch;
 
     await app.reload();
     await expect(app).toHaveURL(/#\/statistik$/);
