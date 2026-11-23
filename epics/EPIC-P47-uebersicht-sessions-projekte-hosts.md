@@ -1,6 +1,6 @@
 # EPIC-P47 — Übersicht: Sessions/Projekte/Hosts statt Host-Chips, Zahnrad weg
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · umgesetzt 2026-11-14 (T47.1–T47.6; `npm run gate` inkl. E2E grün, PWA-Build grün; Live-Abnahme am echten Gerät offen)
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben
 **Abhängigkeit:** keine fachliche offene — baut auf P6-Fleet-Übersicht, P34/P35-Arbeitsfläche und P46-Projekterkennung auf. Auftrag 2026-11-10 erlaubt Umsetzung vor den offenen Live-Abnahmen (AC-P34-13/AC-P35-7 im Endabnahme-Block T35.16 bleiben unberührt; Präzedenz P36).
 
 Quelle: Nutzerauftrag vom 10.11.2026 (Übersicht zwischen Sessions, Projekten und Hosts wechseln; Host-Buttons entfernen; doppelte Einstellungen-Schaltfläche aus dem Header entfernen).

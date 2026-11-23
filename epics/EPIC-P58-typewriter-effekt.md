@@ -1,6 +1,6 @@
 # EPIC-P58 — Typewriter-Effekt: Chat und Thinking werden getippt
 
-**Status:** umgesetzt 2026-11-14 · **Phase:** P58 · **Dauer:** ~1 Agenten-Woche (grobe Schätzung)
+**Status:** abgeschlossen 2026-11-14 · **Phase:** P58 · **Dauer:** ~1 Agenten-Woche (grobe Schätzung)
 **Abhängigkeit:** keine fachliche offene (Quer-Epic, Präzedenz P50–P53; Vorgänger-Phase P57 abgeschlossen 13.11.2026). Baut auf P1.6/P43-Bewegungssprache und P8/P18-Rendering auf, ändert deren Verträge nicht.
 
 Quelle: Nutzerauftrag vom 14.11.2026; Recherche mit Bestand:

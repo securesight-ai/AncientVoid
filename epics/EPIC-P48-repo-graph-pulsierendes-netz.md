@@ -1,6 +1,6 @@
 # EPIC-P48 — Repo-Graph: verknüpfte Dateien als pulsierendes Netz im Chat-Fenster
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · umgesetzt 2026-11-10 (T48.1–T48.8, Gate grün; Live-Abnahme am echten Gerät offen) · **Phase:** P48 · **Dauer:** 2–3 Agenten-Wochen (grobe Schätzung)
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P48 · **Dauer:** 2–3 Agenten-Wochen (grobe Schätzung)
 **Abhängigkeit:** keine fachliche offene — baut auf P46-Dateizugriff/Diagnosen (T46.2–T46.7 umgesetzt), P34/P35-Fensterprotokoll (ADR-0053) und P47 auf. Auftrag 2026-11-10 erlaubt Umsetzung vor den offenen Live-Abnahmen; offene P46-Reste (T46.1/T46.9 Geräteabnahme, Remote-Hosts) bleiben unberührt. Der offene Popout-Rest aus T46.8 (Datei-Tabs herauslösen) ist hier mitgebaut und in EPIC-P46 nachgetragen.
 
 Quelle: Nutzerauftrag vom 10.11.2026: Icon-Button unten links auf den Übersichtskarten; im Chat-Fenster ein Graph aller Dateien mit Verknüpfungen, pulsierende Knoten in Akzentfarbe, Lichtpulse auf Kanten in unregelmäßigen Abständen (Neuronen-/Universums-Anmutung); getrennte Farbgruppen für Kontext-/Markdown-, Code- und Konfigurations-/Restdateien; tote Dateien sichtbar; Dateien mit Compiler-/Lint-Fehlern rot; Knoten klickbar → Datei im Chat-Fenster; Graph und Dateifenster wie der Chat in eigene Fenster herauslösbar.

@@ -1,6 +1,6 @@
 # EPIC-P36 — Diff-Review mit gesammeltem Agenten-Feedback
 
-**Status:** umgesetzt 2026-11-08 (T36.1–T36.6, Gate grün; Live-Journey am echten Gerät → Endabnahme-Block T35.16) · **Phase:** P36
+**Status:** abgeschlossen 2026-11-08 (T36.1–T36.6, Gate grün) — Live-Abnahme nach P000 verschoben (T000.7, zuvor T35.16) · **Phase:** P36
 **Technische Reste verifiziert 2026-11-12:** e2e `review-feedback.spec.ts` 2/2 grün, Live-Suite `e2e/live` 6/6 grün gegen laufenden Hub :7373, tsc-Build + PWA-Build grün, Funktionsinventar S47 registriert (spec:review-feedback.spec.ts). Offen bleibt allein das menschliche Gate: Live-Endabnahme am Gerät (T35.16-Block).
 **Dauer:** 1–2 Agenten-Wochen (grobe Schätzung, ohne Vorgänger-Restarbeit)
 **Abhängigkeit:** P33 (nach ausdrücklich gültigem P32-/P33-Evaluations-/Umsetzungs-Exit) mit nachweislich grünen Exit-Kriterien; wirksame Vorgänger-Abnahmen bleiben bindend. — *Erfüllt 08.11.2026: P32- und P33-Evaluations-Exit „vertagt" ausdrücklich dokumentiert und abgenommen (MR !324/!325, jeweils [Entscheidungsdokument](../docs/2026-11-08_p32-evaluations-exit.md) bzw. EPIC-P33 §8); P30/P31-Umpriorisierung nach P36 im Index. Vor T36.1 wurde der Bestand frisch geprüft (Queue/Ack/Interrupted-Mechanik am Code, nicht an historischen Überschriften).*

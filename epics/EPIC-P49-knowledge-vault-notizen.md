@@ -1,6 +1,6 @@
 # EPIC-P49 — Knowledge Vault: Notizen-Tab mit Ordnerwahl und Markdown-Editor
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · umgesetzt 2026-11-10 (T49.1–T49.7, Gate grün; Live-Abnahme am echten Gerät offen) · **Phase:** P49 · **Dauer:** 1–2 Agenten-Wochen (grobe Schätzung)
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P49 · **Dauer:** 1–2 Agenten-Wochen (grobe Schätzung)
 **Abhängigkeit:** keine fachliche offene — baut auf P47 (Dock-/Übersichtsfläche) und P48 (Popout-Ziel-Muster, ADR-0053/0062) auf; nutzt SettingsStore (SQLite, kein Restart) statt `hub.config.json`. Auftrag 2026-11-10 erlaubt Umsetzung vor den offenen Live-Abnahmen.
 
 Quelle: Nutzerauftrag vom 10.11.2026: neuer Tab im Seitenmenü zum Organisieren von Notizen (Knowledge Vault); beim ersten Öffnen Zielordner wählen lassen, falls in den Einstellungen noch keiner gesetzt ist; neue Dateien anlegen (nur .md); alle Dokumente sehen und anschauen; Auswahl öffnet die Datei im Chat-Fenster, editierbar sofern .md; Fenster herauslösbar.

@@ -1,6 +1,6 @@
 # EPIC-P67 — Main-Sync: frischer Main beim Start, laufende Synchronisation, einstellbar
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · umgesetzt (T67.1–T67.9 auf main, PRs #149/#151/#152/#153/#154/#155/#157/#158, alle mit grünem `verify`) · **T67.10 Abnahme offen (Nutzeraufgabe)** · **Phase:** P67 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** keine fachliche offene (Quer-Epic wie P58–P66; P63 abgeschlossen, P29 Workspace-Manifest umgesetzt); P30/P31 bleiben On hold und sind unberührt
+**Status:** umgesetzt (T67.1–T67.9, PRs #149–#158, `verify` grün) — T67.10 Abnahme nach P000 · **Phase:** P67
 
 Quelle: Nutzerauftrag vom 18.11.2026 (Folge der Qwen-Nacht, BUG-0209). Der
 Haupt-Checkout stand 178 Commits hinter `origin/main`; jede neue Session

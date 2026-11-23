@@ -1,6 +1,6 @@
 # EPIC-P1.6 — Futuristisches UI-System: Bottom-Dock, Bericht, Design-System-Referenz
 
-**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · Code abgeschlossen, Handy-Test offen (T35.10/T35.11) — Rückstufung 2026-11-09 (Abnahme-Retro); vormals „abgeschlossen“ · (2026-11-07) — alle 9 Aufgaben und 9 ACs grün; der offene DoD-Punkt „gemeinsamer Live-Handy-Test" (schließt AC-P1.5-1/AC-P1.5-8 mit) ist als T35.10/T35.11 an [EPIC-P35 Endabnahme-Block](EPIC-P35-harness-paritaet-fortsetzen-provider.md) verwiesen · **Phase:** P1.6 (zwischen P1.5 und P2 eingeschoben) · **Dauer:** 1 Agenten-Woche · **Abhängigkeit:** P1.5 funktional grün (siehe Vorbemerkung)
+**Status:** abgeschlossen 2026-11-18 (Code + automatisierte Tests grün) — Menschen-Abnahme nach P000 verschoben · **Phase:** P1.6 (zwischen P1.5 und P2 eingeschoben) · **Dauer:** 1 Agenten-Woche · **Abhängigkeit:** P1.5 funktional grün (siehe Vorbemerkung)
 
 ---
 

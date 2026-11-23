@@ -1,6 +1,6 @@
 # EPIC-P35 — Harness-Parität: Fortsetzen, Erkennung, Provider-Modularität
 
-**Status:** abgeschlossen 2026-11-18 — Endabnahme-Block §8 nach P000 überführt (führbare Liste: EPIC-P000) · umgesetzt 07.11.2026 — T35.1–T35.8 abgeschlossen, Gate grün (1350 Unit, 368 E2E), alle Live-Belege außer AC-P35-7 eingefahren; **seit 2026-11-07 hängt der Endabnahme-Block (T35.10–T35.17) an diesem Epic** — P35 bleibt offen, bis der Block abgenommen ist; AC-P35-7 läuft dort als Teil von T35.16 · **Phase:** P35 · **Dauer:** 2–3 Agenten-Wochen + Abnahme-Termine · **Abhängigkeit:** P34-Implementierungs-Exit grün (T34.1–T34.12, Gate 07.11.2026). Die offene Live-Abnahme AC-P34-13 wird gemeinsam mit der P35-Abnahme in einem Termin gemacht (Präzedenz P1.5/P1.6: nicht zwei Abnahmen auf Oberflächen, die sich gerade ändern). P30 wartet damit zusätzlich auf P35.
+**Status:** abgeschlossen 07.11.2026 (T35.1–T35.8, Gate grün) — Live-Abnahmen nach P000 verschoben · **Phase:** P35 · **Dauer:** 2–3 Agenten-Wochen + Abnahme-Termine · **Abhängigkeit:** P34-Implementierungs-Exit grün (T34.1–T34.12, Gate 07.11.2026). Die offene Live-Abnahme AC-P34-13 wird gemeinsam mit der P35-Abnahme in einem Termin gemacht (Präzedenz P1.5/P1.6: nicht zwei Abnahmen auf Oberflächen, die sich gerade ändern). P30 wartet damit zusätzlich auf P35.
 
 **Auftrag:** Jan, 07.11.2026 (Nutzermeldung mit Screenshot): „Session fortsetzen
 macht immer noch regelmäßig Probleme"; Popout-Fenster „nimmt nicht die ganze
