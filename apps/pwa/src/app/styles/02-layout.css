@@ -243,20 +243,18 @@ a {
   max-width: none;
   /* The split fills the window by itself (100dvh); the phone's bottom padding made the page scroll by 24 px. */
   padding-bottom: 0;
-  /* EPIC-P51 T51.4: the bell moved to the window corner, its toasts sit in
-   * the flow above the split. Fixed flex height lets them push the split
-   * together instead of scrolling the window (P50: html/body never scroll). */
+  /* Flex-Spalte hält das Split auf Viewport-Höhe (P50: html/body never
+   * scroll). Toasts sind seit 2026-11-23 fixed overlay (.toast-stack), sie
+   * brauchen keinen Platz im Flow mehr. */
   display: flex;
   flex-direction: column;
   height: calc(100dvh / var(--ui-zoom));
   box-sizing: border-box;
 }
 
-/* EPIC-P51 T51.4: schrumpft, wenn Toasts/RestoreBar darüber Platz brauchen
- * (P50: Fenster scrollt nie) — wächst aber nie über die Höhenformeln hinaus
- * (02-layout Basis, 21-icon-rail Desktop-28px) hinaus. */
+/* Split füllt die Spalte; min-height:0 lässt innere Scrollflächen schrumpfen. */
 #app:has(.split) .split {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-height: 0;
 }
 

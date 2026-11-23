@@ -18,10 +18,14 @@ const POLL_MS = 4000;
 /** BUG-0049: a short blip (a few seconds) is no outage — announce "nicht erreichbar" (and later "wieder da") only after this many failed polls in a row. */
 const HUB_DOWN_AFTER = 3;
 const PEERS_REFRESH_MS = 60_000;
-/** Errors stay longer — they usually need an action. Warnings too: a warning
- * that vanishes before it is read (observed 2026-10-24, 8 s) is noise, not a
- * notification. Success/info stay short. */
-const TOAST_MS: Record<HubNotification["level"], number> = { error: 30_000, warning: 25_000, success: 6000, info: 8000 };
+/** Auto-Dismiss: Overlay-Toasts sollen kurz bleiben (Nutzerwunsch 2026-11-23).
+ * Fehler etwas länger — oft Aktion nötig; Erfolg/Info kurz. */
+export const TOAST_MS: Record<HubNotification["level"], number> = {
+  error: 12_000,
+  warning: 8_000,
+  success: 4_000,
+  info: 4_000,
+};
 
 interface Toast {
   key: string;
