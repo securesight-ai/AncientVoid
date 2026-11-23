@@ -5,9 +5,9 @@ status: in Arbeit
 severity: S1
 area: core
 instance: prod
-commit: ""
+commit: "5e71d1e0"
 forge: "https://github.com/securesight-ai/AncientVoid/issues/340"
-epic: "EPIC-P79 (Inferenz-Token-Tempo) — Pforte fehlt; ADR nötig"
+epic: "EPIC-P79 (Inferenz-Token-Tempo) — Pforte gebaut (ADR-0116)"
 created: 2026-11-23
 numbering: "zuerst als 0268 angelegt; auf main war 0268 schon von PR #327 (Strg-Klick) belegt — deshalb 0272"
 reporter: kai
@@ -107,6 +107,22 @@ Zwei ADRs tragen dieselbe Nummer:
 `docs/adr/0115-kontextueberlauf-eigene-fehlerkategorie.md` und
 `docs/adr/0115-nativer-compact-und-direktadapter.md`. `check:context` moniert das
 nicht.
+
+## Auslieferung (23.11.2026)
+
+Pforte gebaut (ADR-0116, PR #343, Merge `5e71d1e0`), in den Live-Zweig gemerged und der
+Hub neu gestartet. Live bewiesen: `GET /api/inference/gate` liefert
+
+    {"endpoint":"strata","slots":1,"maxContext":262144,
+     "plaetze":[{"inhaber":"943797b3-…","priorität":"interaktiv","warum":"Zug"}]}
+
+— der Platz gehört in diesem Moment der Session, die den Zug gerade laufen hat.
+
+**Offener Rest (eigentliche Folgeaufgabe):** hub-interne Kurz Anfragen (Gatekeeper,
+Sitzungstitel, Übersetzen, Enhance, Analyse-Antworten) laufen noch *ohne* `durchlassen()`
+— die Pforte unterstützt Warteschlange und Priorität bereits, die Aufrufstellen müssen
+nur durchgeschleift werden. Auf diesem Rechner ist der Gatekeeper ohne Modell-URL
+konfiguriert und die Titel-KI nicht gesetzt, deshalb heute kein zweiter Druck gemessen.
 
 ## Reziprozität der Prüfung (für den Fix)
 
