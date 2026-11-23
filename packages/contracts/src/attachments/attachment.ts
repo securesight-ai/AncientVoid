@@ -74,7 +74,14 @@ export function promptWithAttachments(text: string, attachments: readonly Prompt
   const parts = attachments.map((a, i) => {
     const head = `[Anhang ${i + 1}: ${a.name} (${a.mimeType}, ${Math.max(1, Math.round(a.bytes / 1024))} KB) — Datei: ${a.path}]`;
     if (native.has(a.id)) return `${head}\n(als Datei übergeben)`;
-    if (!a.text) return `${head}\n(kein Text auslesbar)`;
+    if (!a.text) {
+      // Ein Agent mit Datei-Werkzeug kann das Bild selbst oeffnen — der Pfad steht
+      // oben. Ohne diesen Hinweis ist ein eingefuegter Screenshot nur ein Vermerk
+      // ("kein Text auslesbar") und wird uebergangen (Nutzerfund 23.11.2026).
+      return a.kind === "image" || a.mimeType.startsWith("image/")
+        ? `${head}\n(kein OCR-Text — das Bild liegt als Datei unter dem Pfad oben; mit dem Datei-/Bild-Werkzeug ansehen)`
+        : `${head}\n(kein Text auslesbar)`;
+    }
     const body = a.text.length > MAX_ATTACHMENT_TEXT_CHARS ? `${a.text.slice(0, MAX_ATTACHMENT_TEXT_CHARS)}\n… (gekürzt, ganze Datei unter dem Pfad oben)` : a.text;
     return `${head}\nInhalt (${a.method ?? "?"}):\n${body}`;
   });

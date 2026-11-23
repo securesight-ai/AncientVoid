@@ -21,6 +21,21 @@ test.describe("Antworten, Stop und Weiter (T1.5-6, T5.4, T5.5)", () => {
     expect(new Set(natives).size, "same provider session across turns").toBe(1);
   });
 
+  test("Codex verarbeitet /compact nativ und nimmt danach wieder Prompts an @desktop", async ({ app, hub }) => {
+    const id = await hub.createSession({ adapter: "codex", prompt: "Erster Zug" });
+    await hub.until(async () => (await hub.api<{ status: string }>(`/api/sessions/${id}`)).body.status === "idle", "first turn over");
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await app.getByRole("button", { name: "Chat" }).click();
+    await app.getByPlaceholder("Antworten…").fill("/compact");
+    await app.getByRole("button", { name: "Senden" }).click();
+    await hub.until(async () => (await hub.events(id)).some((event) => event.payload.kind === "codex.compaction_end"), "native compaction end");
+    await expect(statusPill(app)).toHaveAttribute("data-status", "idle");
+    expect((await hub.events(id)).filter((event) => event.type === "assistant")).toHaveLength(1);
+    await app.getByPlaceholder("Antworten…").fill("Nach Compaction");
+    await app.getByRole("button", { name: "Senden" }).click();
+    await expect(app.locator(".tail-scroll").getByText("Antwort auf: Nach Compaction · Codex")).toBeVisible();
+  });
+
   test("Stop beendet die Session, Weiter setzt dieselbe Provider-Session fort", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "Vor dem Stopp" });
     await answered(hub, id, 1);

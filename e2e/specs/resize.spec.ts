@@ -1,4 +1,4 @@
-import { test, expect } from "../support/fixtures.ts";
+import { test, expect, enableAutoTiling } from "../support/fixtures.ts";
 
 /**
  * QoL 2026-10-29 (Nutzerwunsch): Eingaben ganz lesbar und Kacheln/Session-
@@ -66,6 +66,7 @@ test.describe("Kachel-Trenner (QoL 2026-10-29)", () => {
     await hub.createSession({ adapter: "opencode", prompt: "Erste Aufgabe" });
     await hub.createSession({ adapter: "opencode", project: hub.beta, prompt: "Zweite Aufgabe" });
     await app.locator(".split-list .session-card").filter({ hasText: "Erste Aufgabe" }).locator(".session-open").click();
+    await enableAutoTiling(app);
     // Strg-Klick: zweite Session in einer eigenen Kachel (2v, T18.2).
     await app.locator(".split-list .session-card").filter({ hasText: "Zweite Aufgabe" }).locator(".session-open").click({ modifiers: ["Control"] });
     await expect(app.locator(".tile")).toHaveCount(2);

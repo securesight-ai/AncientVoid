@@ -174,13 +174,13 @@ function StatistikTab() {
   const since = useMemo(() => sinceOf(period), [period]);
 
   // Zustand persistieren (T66.1/T66.3): ein versionierter Schlüssel. Der passive Effect
-  // gleicht ab, darf aber nicht der einzige Schreiber sein — BUG-0263: gewinnt ein
+  // gleicht ab, darf aber nicht der einzige Schreiber sein — BUG-0269: gewinnt ein
   // sofortiges Reload die Race gegen den Effect, war die letzte Auswahl nie gespeichert.
   useEffect(() => {
     writeState({ collapsed, filter: { period, project, host, harness } });
   }, [collapsed, period, project, host, harness]);
 
-  /** BUG-0263: synchron mit der Änderung festschreiben — ein Reload im selben Tick findet den Schnitt. */
+  /** BUG-0269: synchron mit der Änderung festschreiben — ein Reload im selben Tick findet den Schnitt. */
   const changeFilter = (patch: Partial<StatistikState["filter"]>) => {
     if (patch.period !== undefined) setPeriod(patch.period);
     if (patch.project !== undefined) setProject(patch.project);
@@ -191,7 +191,7 @@ function StatistikTab() {
 
   useEffect(() => {
     let alive = true;
-    // BUG-0263: den vorigen Report halten — `setReport(null)` nahm bei jedem Schnittwechsel
+    // BUG-0269: den vorigen Report halten — `setReport(null)` nahm bei jedem Schnittwechsel
     // die ganze Seite vom Baum (Loading-Flackern), und im Remount-Rennen ging soeben
     // getroffene Auswahl verloren. Laden ohne Netz bleibt beim Fehler-EmptyState.
     hubApi

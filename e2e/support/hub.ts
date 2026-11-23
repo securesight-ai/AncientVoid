@@ -108,8 +108,10 @@ function makeProject(root: string, name: string, readme: string, extra: Record<s
     writeFileSync(join(dir, path), content);
   }
   git(dir, "init", "-q", "-b", "main");
-  git(dir, "-c", "user.email=e2e@ancientvoid.local", "-c", "user.name=e2e", "add", "-A");
-  git(dir, "-c", "user.email=e2e@ancientvoid.local", "-c", "user.name=e2e", "commit", "-q", "-m", "init");
+  git(dir, "config", "--local", "user.email", "e2e@ancientvoid.local");
+  git(dir, "config", "--local", "user.name", "e2e");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-q", "-m", "init");
   return dir;
 }
 

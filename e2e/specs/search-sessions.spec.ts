@@ -26,6 +26,60 @@ test.describe("Suche über Sessiontexte", () => {
     await expect(app.locator(".hit-card")).toHaveCount(2);
   });
 
+  test("der Sitzungsfilter findet nach Inhalt und springt hin @tablet @desktop", async ({ app, hub }) => {
+    // Kai sucht Sitzungen nach ihrem Inhalt, nicht nach ihrem Titel: die Sitzung
+    // heißt anders, der Begriff steckt nur im Text.
+    const target = await hub.createSession({ adapter: "opencode", prompt: "Vergleich das Messwerk mit dem Wächter über dem Strata-Server" });
+    await hub.createSession({ adapter: "opencode", prompt: "richte die Jalousie am Südfenster ein" });
+    // Das Filterfeld erscheint ab fünf Sitzungen — so ist es in einer echten
+    // Übersicht auch da.
+    for (const prompt of ["mähe den Rasen", "sortiere die Schraubenkästen", "lade das Handbuch nach"]) {
+      await hub.createSession({ adapter: "opencode", prompt });
+    }
+    await hub.until(async () => (await hub.sessions()).every((s) => s.status === "idle"), "Züge fertig");
+
+    await app.goto(`${hub.origin}/#/`);
+    const filter = app.locator(".dashboard-search");
+    await expect(filter).toBeVisible();
+    await filter.fill("Strata-Server");
+
+    // Kachel zeigt, was sie an Inhalt trägt — und die passende Sitzung ist dabei,
+    // obwohl ihr Titel nichts von Strata weiß.
+    await expect(app.locator(".session-hit-chip").first()).toBeVisible();
+    await expect(app.locator(".dash-content-note")).toContainText("Fundstellen");
+
+    // Ein Tipp auf die Kachel: die Sitzung geht an der Fundstelle auf, nicht am Ende.
+    await app.locator(".session-card", { has: app.locator(".session-hit-chip") }).first().locator(".session-open").click();
+    await app.waitForFunction(
+      () => !!document.querySelector(".hit-target") || !location.hash.includes("/seq/"),
+      undefined,
+      { timeout: 20_000 },
+    );
+    const at = await app.evaluate(async () => {
+      const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      let seq: string | null = null;
+      for (let i = 0; i < 60; i++) {
+        const hitEl = document.querySelector(".hit-target");
+        if (hitEl) {
+          seq = hitEl.getAttribute("data-seq");
+          break;
+        }
+        await wait(250);
+      }
+      const node = seq ? document.querySelector(`.tail-scroll [data-seq="${seq}"]`) : null;
+      const box = document.querySelector(".tail-scroll")?.getBoundingClientRect();
+      const r = node?.getBoundingClientRect();
+      return {
+        seq,
+        inView: !!box && !!r && r.top >= box.top - 40 && r.top <= box.bottom,
+        hash: location.hash,
+      };
+    });
+    expect(at.seq).not.toBeNull();
+    expect(at.inView).toBe(true);
+    expect(target.length).toBeGreaterThan(0);
+  });
+
   test("trifft der Vertipper nur die eigene Frage, kommt der Vorschlag @tablet @desktop", async ({ app, hub }) => {
     // Der häufigere Fall: der falsch geschriebene Begriff steckt im Bestand — in
     // der Frage selbst. Die Liste ist dann technically richtig und nutzlos.

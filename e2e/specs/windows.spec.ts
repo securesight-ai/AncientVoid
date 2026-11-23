@@ -111,6 +111,7 @@ test.describe("Eigene Fenster (EPIC-P34)", () => {
     await popup.keyboard.press("Escape");
     await expect(popup.locator(".settings-page")).toBeVisible();
     await clickClosing(popup, popup.getByRole("button", { name: "In die App zurück" }));
+    await expect(app.locator(".settings-page")).toBeVisible();
   });
 
   test("BUG-0262: die Notizen-Kachel löst sich als Notizen-Fenster, nicht als leeres Session-Fenster @desktop", async ({ app, context }) => {

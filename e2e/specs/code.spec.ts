@@ -1,4 +1,4 @@
-import { test, expect, sessionTab } from "../support/fixtures.ts";
+import { test, expect, enableAutoTiling, sessionTab } from "../support/fixtures.ts";
 
 test.describe("Code und Aktionen (T7.6, AC-P7-6)", () => {
   test("eine bekannte Funktion in .ts und .py finden, mit Zeilenanker öffnen — auch nach dem Neuladen", async ({ app, hub }) => {
@@ -55,6 +55,7 @@ test("Code-Suchergebnisse öffnen zusätzliche Karten; Hintergrundkarten überne
   test.skip(info.project.name === "mobile", "PC-/Tablet-Grid");
   const id = await hub.createSession({ adapter: "opencode", prompt: "Codekarten" });
   await app.goto(`${hub.origin}/#/sessions/${id}`);
+  await enableAutoTiling(app);
   const first = app.locator('.tile[data-tile="1"]');
   await first.getByRole("button", { name: "Befehle", exact: true }).click();
   const search = app.locator('.tile[data-tile="2"]');

@@ -148,7 +148,8 @@ Legend: ✓ supported · — verified absent · `~` partial. Quota means
 ([ADR-0004](docs/adr/0004-account-level-usage-quota.md)) that is never guessed.
 **Honesty clause:** an adapter only becomes "proven" after its contract tests
 pass. `npm run check:adapter-matrix` checks the Reasoning to Quota columns
-against each adapter's real `capabilities()`.
+against each adapter's real `capabilities()` and checks the harness matrix
+for feature declarations and command scopes.
 
 </details>
 

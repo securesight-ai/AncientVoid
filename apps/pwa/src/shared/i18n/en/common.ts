@@ -63,6 +63,8 @@ export const en = {
   "common.media": "Media",
   "common.metrics": "Metrics",
   "common.n_sessions": "{n} sessions",
+  "common.day_today": "Today",
+  "common.day_yesterday": "Yesterday",
   "common.never": "never",
   "common.new": "new",
   "common.new_session": "New session",

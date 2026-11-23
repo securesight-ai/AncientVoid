@@ -113,6 +113,20 @@ async function handle(msg) {
       send({ id, result: { turn: { id: turnId, status: "inProgress", items: [] } } });
       return void turn(params.threadId, turnId, text);
     }
+    case "thread/compact/start": {
+      if (process.env.ANCIENTVOID_FAKE_COMPACT_REJECT === "1") {
+        return send({ id, error: { code: -32000, message: "Provider rejected compaction" } });
+      }
+      send({ id, result: {} });
+      const threadId = params.threadId;
+      const turnId = randomUUID();
+      const item = { type: "contextCompaction", id: randomUUID() };
+      notify("turn/started", { threadId, turn: { id: turnId, status: "inProgress" } });
+      notify("item/started", { threadId, turnId, item });
+      await sleep(150);
+      notify("item/completed", { threadId, turnId, item });
+      return notify("turn/completed", { threadId, turn: { id: turnId, status: "completed" } });
+    }
     case "turn/interrupt":
       interrupted.add(params.turnId);
       return send({ id, result: {} });

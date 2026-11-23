@@ -60,6 +60,28 @@ describe("attachment extraction (T7.10)", () => {
     expect((await extractText("text", file("tabelle.csv"), "tabelle.csv", "text/csv")).text).toContain("Maus;19,90");
   });
 
+  it("says when the OCR tool is missing instead of sending the user after a key (BUG-0266)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "ancientvoid-ocr-fehlt-"));
+    const bild = join(dir, "bild.png");
+    await copyFile(file("bild-mit-text.png"), bild);
+    // Werkzeug gezielt abgesagt: der Befund muss auf allen Rechnern gleich sein.
+    const ohneWerkzeug = await extractText("image", bild, "bild.png", "image/png", { ...opts, hasTool: async () => false });
+    expect(ohneWerkzeug.text).toBe("");
+    expect(ohneWerkzeug.error).toContain("tesseract");
+    expect(ohneWerkzeug.error).toContain("voller Größe");
+    expect(ohneWerkzeug.error).not.toMatch(/Schlüssel/);
+    expect(ohneWerkzeug.error).toContain("Vision-Modell");
+    // Mit eingeschaltetem Vision-Modell fällt der Hinweis darauf weg.
+    const mitVision = await extractText("image", bild, "bild.png", "image/png", {
+      ...opts,
+      hasTool: async () => false,
+      gemini: { apiKey: "test-key-123456", model: "gemini-test", fetch: (async () => new Response("{}")) as unknown as typeof fetch },
+    });
+    expect(mitVision.error).toContain("tesseract");
+    expect(mitVision.error).not.toContain("Vision-Modell");
+    await rm(dir, { recursive: true, force: true });
+  });
+
   it.skipIf(!hasMagick || !hasOcr)("an image without text says what would help — Gemini only with a key", async () => {
     const dir = await mkdtemp(join(tmpdir(), "ancientvoid-blank-"));
     const { execFileSync } = await import("node:child_process");

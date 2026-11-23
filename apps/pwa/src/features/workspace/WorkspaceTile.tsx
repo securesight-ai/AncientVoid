@@ -121,7 +121,7 @@ export function WorkspaceTile({
           </Button>
         </div>
       ) : session ? (
-        <SessionTail key={JSON.stringify(tileRef)} session={session} onNavigate={onNavigate} onArchived={onClose} {...(tileRef?.content?.kind === "session" ? { workspaceTab: tileRef.content.tab, ...(tileRef.content.file ? { initialFile: tileRef.content.file } : {}), ...(tileRef.content.code ? { initialCode: tileRef.content.code } : {}) } : {})} tile={{ active, compact, head: { start: headStart, end: headEnd } }} />
+        <SessionTail key={`${tileRef.sessionId}@${tileRef.hostId ?? ""}`} session={session} onNavigate={onNavigate} onArchived={onClose} {...(tileRef?.content?.kind === "session" ? { workspaceTab: tileRef.content.tab, ...(tileRef.content.file ? { initialFile: tileRef.content.file } : {}), ...(tileRef.content.code ? { initialCode: tileRef.content.code } : {}), ...(tileRef.content.seq !== undefined ? { initialSeq: tileRef.content.seq, ...(tileRef.content.seqAt !== undefined ? { seqAt: tileRef.content.seqAt } : {}) } : {}) } : {})} tile={{ active, compact, head: { start: headStart, end: headEnd } }} />
       ) : (
         <EmptyState class="tile-empty dim" text={t("common.loading_dots")} />
       )}

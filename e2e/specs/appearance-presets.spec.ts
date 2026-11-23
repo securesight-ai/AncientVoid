@@ -1,4 +1,4 @@
-import { test, expect, sessionTab, hostedRunner } from "../support/fixtures.ts";
+import { test, expect, sessionTab, hostedRunner, dockGo } from "../support/fixtures.ts";
 
 test("Presets: speichern, offline importieren, unsichere Daten ablehnen und zurücksetzen @desktop", async ({ app, hub, context }, info) => {
   await app.goto(`${hub.origin}/#/einstellungen`);
@@ -138,12 +138,13 @@ test("Benanntes Kachel-Layout stellt Größen wieder her und behält Sessions @d
   const id = await hub.createSession({ adapter: "opencode", prompt: "Layout behalten" });
   await app.goto(`${hub.origin}/#/sessions/${id}`);
   await app.getByRole("button", { name: "Zwei nebeneinander", exact: true }).click();
-  await app.goto(`${hub.origin}/#/einstellungen`);
+  await dockGo(app, "Einstellungen");
   await app.getByLabel("Preset-Name", { exact: true }).fill("Zwei Spalten");
   await app.getByRole("button", { name: "Darstellung und Layout speichern", exact: true }).click();
+  await expect(app.getByRole("button", { name: "Preset anwenden: Zwei Spalten", exact: true })).toBeVisible();
   await app.goto(`${hub.origin}/#/sessions/${id}`);
   await app.getByRole("button", { name: "Eine Kachel", exact: true }).click();
-  await app.goto(`${hub.origin}/#/einstellungen`);
+  await dockGo(app, "Einstellungen");
   await app.getByRole("button", { name: "Preset anwenden: Zwei Spalten", exact: true }).click();
   await app.goto(`${hub.origin}/#/sessions/${id}`);
   await expect(app.getByRole("button", { name: "Zwei nebeneinander", exact: true })).toHaveAttribute("aria-pressed", "true");

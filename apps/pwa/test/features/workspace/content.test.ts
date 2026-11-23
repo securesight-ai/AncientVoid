@@ -22,8 +22,9 @@ describe("Karten-Ziele", () => {
     vi.stubGlobal("window", new EventTarget());
     const ref = { sessionId: "a" };
     expect(openWorkspaceContent(ref)).toBe(false);
-    const open = vi.fn();
+    const open = vi.fn().mockReturnValueOnce(false).mockReturnValue(true);
     const dispose = onWorkspaceOpen(open);
+    expect(openWorkspaceContent(ref)).toBe(false);
     expect(openWorkspaceContent(ref)).toBe(true);
     expect(open).toHaveBeenCalledWith(ref);
     dispose();

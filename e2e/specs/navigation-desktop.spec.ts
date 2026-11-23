@@ -18,7 +18,7 @@ test.describe("Desktop-Navigation (EPIC-P23)", () => {
     await expect(marked).toContainText("Erste Aufgabe");
     // wer eine andere Session fokussiert, ändert die Markierung
     await app.locator(".split-list .session-card").filter({ hasText: "Zweite Aufgabe" }).locator(".session-open").click();
-    await expect(app.locator(".split-detail .session-top-title")).toHaveText(["Erste Aufgabe", "Zweite Aufgabe"]);
+    await expect(app.getByRole("status", { name: "Statusleiste" })).toContainText("Zweite Aufgabe · opencode");
     await app.getByRole("button", { name: "AncientVoid", exact: true }).click();
     await expect(app.locator(".split-list .session-card[aria-current]")).toContainText("Zweite Aufgabe");
     await app.reload();

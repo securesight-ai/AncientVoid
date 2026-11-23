@@ -101,6 +101,12 @@ export async function dockGo(page: Page, name: string): Promise<void> {
   await page.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name, exact: true }).click();
 }
 
+/** Enable the workspace mode that adds a tile when a new target opens. */
+export async function enableAutoTiling(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Layout lösen", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Layout fixieren", exact: true })).toBeVisible();
+}
+
 /**
  * EPIC-P43 T43.3: die Freigabe-Warteschlange von Start aus öffnen — über „n Freigaben · alle zeigen“
  * bei „Du bist dran“, oder über das Banner, wenn die Freigabe an keiner Karte hängt.

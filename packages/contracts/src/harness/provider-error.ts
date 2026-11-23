@@ -5,7 +5,7 @@ import type { EmittedEvent } from "../sessions/event.ts";
  * matching over what the CLI printed — no guessing beyond it: an opaque
  * error stays "server"/"unknown" and says so.
  */
-export type ProviderErrorCategory = "quota" | "rate_limit" | "auth" | "network" | "server" | "unknown";
+export type ProviderErrorCategory = "quota" | "rate_limit" | "auth" | "network" | "server" | "context" | "unknown";
 
 export interface ProviderErrorInfo {
   category: ProviderErrorCategory;
@@ -35,9 +35,30 @@ function quotaInfo(text: string, refNote: string, window?: string): ProviderErro
   };
 }
 
+/**
+ * Kontextüberlauf (BUG-0265): das Modell fasst weniger Tokens, als die
+ * Sitzung gesammelt hat. Kein Anmeldeproblem, und „Weiter“ ändert nichts
+ * daran — deshalb steht diese Kategorie vor quota/auth und nennt die Zahlen.
+ */
+const CONTEXT_RE = /exceeds the context window|context_length_exceeded|context length is|maximum context|prompt is too long|input is too long|zu (?:viele|langer) (?:tokens?|eingabe)|kontext (?:ist|reicht)/i;
+
+function contextInfo(text: string, refNote: string): ProviderErrorInfo {
+  // Fuehrender HTTP-Status („400: …“) ist keine Tokenzahl — ohne ihn bleiben Gebraucht und Grenze uebrig.
+  // Führender HTTP-Status („400: …“) ist keine Tokenzahl — ohne ihn bleiben Gebraucht und Grenze übrig.
+  const numbers = text.replace(/^[0-9]{3}\s*:?\s*/, "").match(/[0-9]{3,}/g) ?? [];
+  const [gebraucht = "", grenze = ""] = numbers;
+  const masse = gebraucht && grenze ? ` Die Meldung nennt ${gebraucht} gebrauchte von ${grenze} Tokens.` : "";
+  return {
+    category: "context",
+    title: "Kontext des Modells reicht nicht",
+    detail: `Der Verlauf passt nicht mehr in das Modell.${masse} „Weiter“ ändert daran nichts — die Arbeit mit einer Übergabe in eine neue Session fortsetzen oder ein Modell mit größerem Kontext wählen. An- oder Abmeldung hilft hier nicht.${refNote}`,
+  };
+}
+
 export function classifyProviderError(raw: string, ref?: string): ProviderErrorInfo {
   const text = raw.trim();
   const refNote = ref ? ` Referenz: ${ref}.` : "";
+  if (CONTEXT_RE.test(text)) return contextInfo(text, refNote);
   const localizedQuota = LOCAL_QUOTA_RE.exec(text);
   if (localizedQuota) return quotaInfo(text, refNote, `${localizedQuota[1]} h`);
   const usage = /usage limit reached(?: for (\d+) (hour|day|week|month))?/i.exec(text);
@@ -59,7 +80,7 @@ export function classifyProviderError(raw: string, ref?: string): ProviderErrorI
   if (/\b429\b|rate.?limit|too many requests/i.test(text)) {
     return { category: "rate_limit", title: "Rate-Limit des Providers", detail: `Zu viele Anfragen in kurzer Zeit. Kurz warten und erneut senden.${refNote}` };
   }
-  if (/\b40[13]\b|unauthori[sz]ed|forbidden|invalid.*(api.?key|token)|authentication|not logged in|login required/i.test(text)) {
+  if (/\b40[13]\b|unauthori[sz]ed|forbidden|invalid.{0,24}?(api.?key|token|credential)|authentication|not logged in|login required/i.test(text)) {
     return { category: "auth", title: "Anmeldung beim Provider fehlgeschlagen", detail: `Die CLI ist nicht (mehr) angemeldet oder der Schlüssel ist ungültig. Am PC neu anmelden.${refNote}` };
   }
   if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|fetch failed|network|socket hang up|could not connect|connection refused/i.test(text)) {
@@ -96,7 +117,7 @@ export function providerFailureOf(
   if (payload.kind === "provider.error") {
     const category = payload.category;
     return {
-      category: category === "quota" || category === "rate_limit" || category === "auth" || category === "network" || category === "server" || category === "unknown" ? category : "unknown",
+      category: category === "quota" || category === "rate_limit" || category === "auth" || category === "network" || category === "server" || category === "context" || category === "unknown" ? category : "unknown",
       title: String(payload.title ?? summary),
       detail: String(payload.detail ?? ""),
     };

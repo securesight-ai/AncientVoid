@@ -56,7 +56,83 @@ hat (ok / offline / abgelehnt / zu alter Hub / übersprungen). Die PWA zeigt den
 Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile pro
 Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
 
+**Sitzungsfilter findet Inhalt, Sprung zur Fundstelle** (dieser PR): das
+Suchfeld der Übersicht war ein Titel-Filter — Kai sucht aber nach dem, was in
+einer Sitzung gesagt wurde. Ab zwei Zeichen sucht das Übersichtsfeld jetzt im
+Sessiontext-Index (`/api/search/all`, scope=sessions): Karten tragen eine
+Fundstellen-Marke, eine Zeile sagt, was gefunden wurde, und ein Tipp öffnet die
+Sitzung **an der Fundstelle** — Adressform `#/sessions/<id>/seq/<n>` (auch
+host-qualifiziert). Fundstelle ist die früheste Trefferstelle der Sitzung; liegt
+sie mitten in einem Zug, wird der Zug angesprungen (nur er liegt im DOM) und
+leuchtet 2,2 s nach. Im Probelauf auf dem echten Hub: Filter „Kurbelwelle“ →
+Treffer in der 4 800-Ereignisse-Sitzung, angesprungen bei seq 1639, dort
+sichtbar (`inView: true`, `hit-target` nachgewiesen).
+
 ## Erledigt (verifiziert)
+- **Eingefügte Bilder erreichen den Agenten jetzt als Bild, nicht als Vermerk
+  (BUG-0267).** Der Adapter `pi` sagt `images:false`, der Hub legte ihm deshalb
+  nur den ausgelesenen Text vor — und ohne OCR stand dort nur „(kein Text
+  auslesbar)" — der Pfad zur Bilddatei stand im Prompt, der Hinweis, sie zu
+  oeffnen, nicht. `promptWithAttachments` kuendigt Bilder ohne OCR-Text jetzt
+  als Bild mit Pfad und der Aufforderung, es mit dem Datei-/Bild-Werkzeug zu
+  ansehen; Nicht-Bilder bleiben kurz. Adapter mit Bild-Zusage (claude,
+  opencode, codex app-server) bekommen das Bild weiterhin nativ.
+  `prompt-with-attachments.test.ts` 5 passed (zuerst 2 failed, BUG-0267).
+- **Bild-Anhang: ehrlicher Auslese-Befund + Vorschau schon VOR dem Senden
+  (BUG-0266).** Der Hub meldete bei Bildern pauschal „Kein Text gefunden. Mit
+  einem Gemini-Schluessel …", obwohl auf dem Hub-Rechner **gar kein**
+  OCR-Werkzeug sitzt und kein Vision-Schluessel gewollt ist. `extractText`
+  meldet jetzt werkzeugabhaengig („tesseract nicht installiert — der Text wurde
+  nie gelesen; das Bild ist unveraendert in voller Groesse zu sehen“) und nennt
+  ein Vision-Modell nur, wenn keins eingeschaltet ist. Der alte Test war an
+  `tesseract`/`magick` gekoppelt und wurde ohne diese Werkzeuge
+  **uebersprungen** — deshalb fiel das nie auf. Neu: `hasTool` ist injizierbar,
+  der Fall laeuft determiniert auf jedem Rechner (`extract.test.ts`
+  **5 passed | 2 skipped**). Ausserdem zeigt die Eingabezeile jetzt ein echtes
+  Vorschaubild (ein Tipp = dasselbe Vollbild wie im Chat, Esc schliesst, Anhang
+  bleibt haengen) und nur noch ein Kurzlabel („1 KB · kein Text gelesen“); der
+  volle Grund bleibt als `title`. E2E `anhang-bilder.spec.ts` **3 passed**.
+
+- **Der Chat nennt jetzt den Tag, nicht nur die Uhrzeit (Nutzerfund 23.11.).**
+  Tages-Anker als eigene Zeile im Verlauf: „Heute“, „Gestern“, im selben Jahr
+  „Fr., 21.11.“, aeltere mit Jahr. Helfer `apps/pwa/src/shared/i18n/day-label.ts` —
+  `dayKey` rechnet **lokal**, der Trenner wechselt an der lokalen Mitternacht und
+  nicht um 00:00 UTC. Verdrahtet in den Chat-Zuegen (`ChatTurns`) und der
+  Verlaufsspalte (`SessionTail`); die Uhrzeiten bleiben daneben stehen. CSS
+  `.day-sep` nutzt nur Design-Token. Tests: `apps/pwa/test/shared/day-label.test.ts`
+  **8 passed** (Mitternacht, Monats-/Jahresgrenze, erster Eintrag, Sammelzeile ohne
+  Zeit), E2E `chat-zuege.spec.ts` **1 passed** (Anker genau einmal, Text „Heute“,
+  Uhrzeit bleibt als `HH:MM:SS` stehen).
+- **Kontextüberlauf ist keine Anmeldepleite mehr (BUG-0265, ADR-0115).** Vier
+  identische Rohfehler in Sitzung `943797b3` („prompt (237428 tokens) … context
+  (204800)") liefen als „Die CLI ist nicht (mehr) angemeldet" ins Banner — die
+  gierige auth-Regel `invalid.*(api.?key|token)` fing „invalid_request_error" plus
+  späteres „tokens". Neue Kategorie `context` prüft vor quota/auth, nennt die
+  Tokenzahlen und den gangbaren Weg (Übergabe/großeres Modell); auth-Regel scharf
+  (`invalid.{0,24}?(api.?key|token|credential)`). Rot-vor-gruen: 6 failed →
+  **24 passed** in `provider-error.test.ts`. Runbook hat jetzt eine
+  Kategorien-Tabelle (setzt den Frischhalte-Wecker von `operations-runbook.md`).
+
+
+- **Bilder im Chat: einfügen, ansehen, verlinken (S82, 23.11.)** — Einfügen oder Ablegen im
+  Eingabefeld haengt Screenshots an die Nachricht (`shared/paste-images.ts`,
+  `composer/Composer.tsx`); die Chat-Zeile zeigt ein echtes Vorschaubild mit Oeffnen-Ecke
+  (`features/attachments/Attachments.tsx`, `app/styles/58-attachment-viewer.css`); ein Tipp —
+  oder der Bild-Link eines Agenten (`#/anhang/<id>`, session-intern `…/anhang/<id>` in
+  `app/route.ts` + `app/main.tsx`) — oeffnet dasselbe Vollbild, als `body`-Portal (z 400,
+  Fokusfalle, Esc/Tipp am Rand/✕ schliesst). Bewiesen in `e2e/specs/anhang-bilder.spec.ts`
+  (2 passed, mobile): natuerliche Bildmasse 320×200 im Vorschaubild, Vollbild-BBox
+  > 200×100, Deep-Link oeffnet und fuehrt session-intern zurueck; Dokument-Chips bleiben die
+  Text-Ansicht („4711“). Agenten-Rezept: `docs/bild-links-fuer-agenten.md`, Leitplanke in
+  `AGENTS.md` (kein Bild als Dateipfad abliefern).
+  **Live bewiesen am produktiven Hub** (23.11., Bundel `assets/index-7aVYSFO8.js`,
+  `version.json` sha `1034942f`, kein Hub-Neustart nötig — nur Static): Upload ueber
+  `POST /api/attachments` (163 270 Byte, `kind=image`), Link `#/anhang/<id>` oeffnet das
+  Vollbild (Ebene 300, Name „selbsttest-vollbild.png 159 KB“ vordergrund-, ✕-Trefferzone
+  frei, Esc schliesst), Einfuegen auf `#/neu` haengt das Bild an (Chip „wird gelesen…“ →
+  „Kein Text gefunden“) und der Anhang ist nach dem Entfernen wieder weg (Chips 0).
+  css-tokens-Ratchet zuerst rot (z-index 400, eigener Breakpoint) → auf die Leiter gezogen
+  (`--z-lightbox: 300`, `(max-height: 520px)`), danach 14 passed.
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
   plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die
   echten `events.jsonl` **inkl. Blob-Payloads** (K5-Offload — ohne Blob-Read

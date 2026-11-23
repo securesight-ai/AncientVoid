@@ -79,8 +79,18 @@ test("Quellensprung per Tastatur bewahrt Entwurf und Verbindung, Popout teilt Qu
   await app.getByRole("combobox", { name: "Auftrag" }).fill("README");
   const source = app.getByRole("option").filter({ hasText: "Quelle ansehen" });
   await expect(source).toBeVisible();
-  await app.getByRole("combobox", { name: "Auftrag" }).press("ArrowDown");
-  await app.getByRole("combobox", { name: "Auftrag" }).press("Enter");
+  const command = app.getByRole("combobox", { name: "Auftrag" });
+  const options = app.getByRole("listbox", { name: "Springen zu" }).getByRole("option");
+  const sourceIndex = (await options.allTextContents()).findIndex((text) => text.includes("Quelle ansehen"));
+  for (let i = 0; i <= sourceIndex; i++) await command.press("ArrowDown");
+  await expect(source).toHaveAttribute("aria-selected", "true");
+  await command.press("Enter");
+  // EPIC-P20 T20.1: Der Sprung wechselt auf den Code-Lesetab — dessen Steuerung
+  // startet eingeklappt. Erst den Sprung selbst abwarten (URL), dann für den
+  // Entwurf aufklappen; einmalige isVisible-Proben liefen sonst in den Umstieg.
+  await expect(app).toHaveURL(/\/code\/README\.md/);
+  await expect(showControls).toBeVisible();
+  await showControls.click();
   await expect(reply).toHaveValue("Entwurf behalten");
   expect(connections).toBe(before);
   await expect(app.getByTestId("source-chips")).toBeVisible();
@@ -97,7 +107,7 @@ test("Composer maximiert als kompakter Icon-Button mit Mindestziel @desktop @tab
   const id = await hub.createSession({ adapter: "opencode", prompt: "Kurz" });
   await app.goto(`${hub.origin}/#/sessions/${id}`);
   const expand = app.getByRole("button", { name: "Eingabe maximieren", exact: true });
-  await expect(expand).toHaveClass(/icon-btn/);
+  await expect(expand).toHaveClass(/ui-button--icon/);
   const box = (await expand.boundingBox())!;
   expect(box.width).toBeGreaterThanOrEqual(40);
   expect(box.width).toBeLessThan(80);

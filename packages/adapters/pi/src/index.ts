@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  isCompactionCommand,
   providerErrorEvent,
   type Adapter,
   type AdapterCapabilities,
@@ -14,6 +15,7 @@ import {
 } from "@ancientvoid/contracts";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { contextWindowFor, modelsFromCommand, parseModelTable } from "@ancientvoid/models";
 import { createPiStream } from "./normalize.ts";
 import { createLivePump } from "@ancientvoid/contracts"; // ADR-0083
@@ -160,6 +162,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
         // gegenseitig überschrieben. Was ADR-0074 für Claude & Co. verbietet, galt bei
         // Pi nur wegen einer falschen Zusicherung. Lenken heißt bei Pi: im nächsten Zug.
         midTurnInput: false,
+        commands: [{ name: "/compact", description: "Pi-Kontext der aktuellen Session komprimieren", scope: "steer" }],
         reasoning: true,
         tools: true,
         cost: false,
@@ -190,6 +193,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
     },
 
     async start(spec: SessionSpec, ctx: AdapterContext): Promise<SessionHandle> {
+      if (spec.prompt && isCompactionCommand(spec.prompt)) throw new Error("pi: /compact erfordert eine gestartete Session");
       const args = PiSessionArgs.safeParse(spec.args);
       const resumeId = args.success ? args.data?.resumeSessionId : undefined;
       if (resumeId) {
@@ -248,20 +252,39 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       switch (input.kind) {
         case "prompt": {
           const meta = sessions.get(handle.sessionId);
-          // BUG-0261: keine zwei Läufe auf derselben nativen Sitzung — egal wer ruft
-          // (Hub, hubctl, Schlaufe). Zwei Pi-Prozesse auf derselben JSONL und im
-          // selben Arbeitsverzeichnis überschreiben sich gegenseitig.
-          if (procs.has(handle.sessionId)) {
+          if (!meta) return { ok: false, detail: "pi: unbekannte Session" };
+          // BUG-0261: reserve the session before awaiting a process spawn.
+          if (meta.busy) {
             ctx.log("warn", "pi: Prompt abgelehnt — ein Lauf läuft bereits", { sessionId: handle.sessionId });
             return { ok: false, detail: "ein pi-Lauf läuft bereits — Meldung bitte vormerken" };
           }
-          if (meta) meta.busy = true;
-          const proc = await ctx.spawnWorker(
-            buildArgs(input.text, sessionModels.get(handle.sessionId), false, resumes.get(handle.sessionId)),
-            undefined,
-          );
-          settleFork(handle.sessionId);
-          attach(ctx, proc, meta ?? { healthy: true, busy: true });
+          const model = sessionModels.get(handle.sessionId);
+          const resume = resumes.get(handle.sessionId);
+          const compact = isCompactionCommand(input.text);
+          let args: string[];
+          let file: string | null = null;
+          if (compact) {
+            if (input.text.trim() !== "/compact" || input.attachments?.length) {
+              return { ok: false, detail: "pi: /compact nimmt keine Argumente oder Anhänge an" };
+            }
+            if (resume?.fork) return { ok: false, detail: "pi: vor /compact erst die Session-Kopie mit einem Prompt anlegen" };
+            file = resume?.file ?? (ctx.nativeSessionId ? findSessionFile(sessionsDir, ctx.nativeSessionId) : null);
+            if (!file) return { ok: false, detail: "pi: native Session-Datei für /compact fehlt" };
+            args = [process.execPath, fileURLToPath(new URL("./compact-worker.ts", import.meta.url)), cfg.command, file, ...cfg.extraArgs];
+            if (model) args.push("--model", model);
+          } else {
+            args = buildArgs(input.text, model, false, resume);
+          }
+          meta.busy = true;
+          try {
+            const proc = await ctx.spawnWorker(args);
+            if (file) resumes.set(handle.sessionId, { file, fork: false });
+            settleFork(handle.sessionId);
+            attach(ctx, proc, meta);
+          } catch (err) {
+            meta.busy = false;
+            throw err;
+          }
           return { ok: true };
         }
         case "stop":

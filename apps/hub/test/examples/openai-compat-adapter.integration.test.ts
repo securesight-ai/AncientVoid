@@ -12,7 +12,6 @@ import { createHubApp } from "../../src/app.ts";
  * Antworten und Endpoint-Fehler als Events — auch beim Folgeprompt.
  */
 const REPO = resolve(import.meta.dirname, "../../../..");
-const sse = (body: string) => new Response(new Blob([body]).stream(), { status: 200, headers: { "content-type": "text/event-stream" } });
 
 describe("examples/openai-compat im Hub (BUG-0131, BUG-0144)", () => {
   let dir: string;
@@ -56,19 +55,38 @@ describe("examples/openai-compat im Hub (BUG-0131, BUG-0144)", () => {
   }
 
   it("Antwort, unlesbare Zeile und Folgeprompt-Fehler landen im Ereignisstrom", async () => {
-    vi.stubGlobal("fetch", async () => sse(`data: INVALID\n\ndata: {"choices":[{"delta":{"content":"hallo"}}]}\n\ndata: [DONE]\n\n`));
+    let stream!: ReadableStreamDefaultController<Uint8Array>;
+    vi.stubGlobal("fetch", async () => new Response(new ReadableStream<Uint8Array>({
+      start(controller) {
+        stream = controller;
+        stream.enqueue(new TextEncoder().encode('data: INVALID\n\ndata: {"choices":[{"delta":{"content":"hallo"}}]}\n\n'));
+      },
+    }), { headers: { "content-type": "text/event-stream" } }));
     const res = await app.inject({ method: "POST", url: "/api/sessions", headers: auth, payload: { adapter: "local-llm", project: dir, prompt: "hi" } });
     expect(res.statusCode).toBe(201);
     const id = (res.json() as { id: string }).id;
-    const first = await until(id, (evs) => evs.some((e) => e.summary === "completion finished"));
-    expect(first.some((e) => e.type === "assistant" && e.summary === "hallo")).toBe(true);
-    expect(first.some((e) => e.type === "error" && /unlesbare Antwortzeile/.test(e.summary))).toBe(true);
+    try {
+      const first = await until(id, (evs) => evs.some((e) => e.type === "assistant" && e.summary === "hallo"));
+      expect(first.some((e) => e.type === "system" && /unlesbare Antwortzeile/.test(e.summary))).toBe(true);
 
-    vi.stubGlobal("fetch", async () => {
-      throw new Error("synthetic offline");
-    });
-    const steer = await app.inject({ method: "POST", url: `/api/sessions/${id}/steer`, headers: auth, payload: { kind: "prompt", text: "weiter" } });
-    expect(steer.statusCode).toBeLessThan(300);
+      vi.stubGlobal("fetch", async () => {
+        throw new Error("synthetic offline");
+      });
+      const steer = await app.inject({ method: "POST", url: `/api/sessions/${id}/steer`, headers: auth, payload: { kind: "prompt", text: "weiter" } });
+      expect(steer.statusCode).toBeLessThan(300);
+      expect(steer.json()).toMatchObject({ ok: true, detail: "queued" });
+      stream.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+    } finally {
+      stream.close();
+    }
     await until(id, (evs) => evs.some((e) => e.type === "error" && /synthetic offline/.test(e.summary)));
+  });
+
+  it("meldet einen vollständig unlesbaren Stream als Fehler", async () => {
+    vi.stubGlobal("fetch", async () => new Response("data: INVALID\n\ndata: [DONE]\n\n"));
+    const res = await app.inject({ method: "POST", url: "/api/sessions", headers: auth, payload: { adapter: "local-llm", project: dir, prompt: "hi" } });
+    expect(res.statusCode).toBe(201);
+    const id = (res.json() as { id: string }).id;
+    await until(id, (evs) => evs.some((e) => e.type === "error" && e.summary === "Endpoint-Stream ohne verwertbare Antwort"));
   });
 });

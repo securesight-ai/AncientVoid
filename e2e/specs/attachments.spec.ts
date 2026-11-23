@@ -18,11 +18,18 @@ test.describe("Anhänge (T7.10)", () => {
     // opencode takes the image as a file (-f); the DOCX rides as its text
     await expect(app.locator(".tail-scroll").getByText(/Antwort auf: Was steht in den Anhängen\? .* Dateien: 1 · Texte: office: Rechnung Nr\. 4711/)).toBeVisible();
     const own = app.locator(".event.own").first();
-    await expect(own.locator(".attachment-chip")).toHaveCount(2);
-    await own.getByRole("button", { name: /bild-mit-text\.png/ }).click();
+    // Ein Bild in der Chat-Zeile ist ein Vorschaubild, kein Chip; Dokumente bleiben Chips.
+    await expect(own.locator(".attachment-chip")).toHaveCount(1);
+    await expect(own.locator(".attachment-thumb")).toHaveCount(1);
+    await own.locator(".attachment-thumb").click();
+    const licht = app.locator("[data-testid=attachment-lightbox]");
+    await expect(licht.locator("img")).toBeVisible();
+    await app.keyboard.press("Escape");
+    await expect(licht).toHaveCount(0);
+    await own.getByRole("button", { name: /dokument\.docx/ }).click();
     const viewer = app.locator("[data-testid=attachment-viewer]");
-    await expect(viewer.locator("img.attachment-preview")).toBeVisible();
     await expect(viewer.locator(".attachment-text")).toContainText("4711");
+    await app.keyboard.press("Escape");
     const id = decodeURIComponent(app.url().split("#/sessions/")[1]!);
     const prompt = (await hub.events(id)).find((e) => e.payload.kind === "session.prompt")!;
     // K5: the event carries references, never the bytes or the text

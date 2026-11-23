@@ -1,4 +1,4 @@
-import { test, expect, dockGo } from "../support/fixtures.ts";
+import { test, expect, enableAutoTiling, dockGo } from "../support/fixtures.ts";
 import type { Page } from "@playwright/test";
 
 /** EPIC-P34 T34.2: Werkzeugseiten nutzen am Desktop die Detailspalte; jede Seite erhält eine eigene Kachel. */
@@ -9,6 +9,7 @@ test.describe("Werkzeugfläche am Desktop (EPIC-P34)", () => {
 
   test("AC-P34-2: Einstellungen, Medien, PC und Status erhalten eigene Karten, die Liste bleibt die Sessionliste; Entdeckt ist seit EPIC-P47 ein Übersichtszustand @desktop", async ({ app, hub }) => {
     await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Eins" });
+    await enableAutoTiling(app);
     for (const [dock, marker] of [
       ["Einstellungen", ".settings-page"],
       ["Medien", ".media-caps"],
@@ -51,6 +52,7 @@ test.describe("Werkzeugfläche am Desktop (EPIC-P34)", () => {
     const before = await app.evaluate(() => (window as unknown as { __ws: number }).__ws);
     expect(before).toBeGreaterThan(0);
 
+    await enableAutoTiling(app);
     await dockGo(app, "Einstellungen");
     await expect(app.locator(".tool-pane")).toBeVisible();
     // Die bisherige Kachel bleibt gemountet und bedienbar.
@@ -65,6 +67,7 @@ test.describe("Werkzeugfläche am Desktop (EPIC-P34)", () => {
 
   test("Esc schließt die aktive Werkzeugkarte; Session-Öffnen behält andere Karten @desktop", async ({ app, hub }) => {
     await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Eins" });
+    await enableAutoTiling(app);
     await dockGo(app, "Einstellungen");
     await expect(app.locator(".tool-pane")).toBeVisible();
     await app.keyboard.press("Escape");

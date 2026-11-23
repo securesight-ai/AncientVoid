@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { spawnArgv } from "@ancientvoid/contracts";
+import { isCompactionCommand, spawnArgv } from "@ancientvoid/contracts";
 import {
   basicFeatures,
   promptWithAttachments,
@@ -45,6 +45,8 @@ interface ServerSession {
   items: Map<string, CodexItem>;
   syncing?: Promise<void>;
   turnRevision: number;
+  startingTurn?: boolean;
+  compactPending?: boolean;
 }
 
 export function createAppServerAdapter(cfg: AppServerConfig): Adapter {
@@ -148,6 +150,7 @@ export function createAppServerAdapter(cfg: AppServerConfig): Adapter {
             ctx.emit({ type: "system", summary: `codex: Zug beendet (${turn.status ?? "?"})`, payload: { kind: "codex.turn_end", status: turn.status ?? null } });
             if (turn.status === "failed" && turn.error?.message) ctx.emit(providerErrorEvent("codex", turn.error.message));
             state.turnId = null;
+            state.compactPending = false;
             ctx.turn?.("idle");
             break;
           }
@@ -187,6 +190,7 @@ export function createAppServerAdapter(cfg: AppServerConfig): Adapter {
   }
 
   async function startTurn(state: ServerSession, ctx: AdapterContext, text: string, attachments?: readonly PromptAttachment[]): Promise<Ack> {
+    state.startingTurn = true;
     ctx.turn?.("working");
     try {
       const revision = state.turnRevision;
@@ -197,6 +201,27 @@ export function createAppServerAdapter(cfg: AppServerConfig): Adapter {
       const detail = rejectDetail("turn/start", err);
       ctx.emit(providerErrorEvent("codex", err instanceof Error ? err.message : String(err)));
       ctx.turn?.("idle");
+      return { ok: false, detail };
+    } finally {
+      state.startingTurn = false;
+    }
+  }
+
+  async function compact(state: ServerSession, ctx: AdapterContext): Promise<Ack> {
+    state.compactPending = true;
+    const revision = state.turnRevision;
+    ctx.turn?.("working");
+    try {
+      await state.conn.request("thread/compact/start", { threadId: state.threadId }, 15_000);
+      return { ok: true };
+    } catch (err) {
+      const detail = rejectDetail("thread/compact/start", err);
+      ctx.emit(providerErrorEvent("codex", detail));
+      // A lost response may still be followed by turn/completed.
+      if (state.turnRevision === revision && !detail.includes("Ergebnis unbekannt")) {
+        state.compactPending = false;
+        ctx.turn?.("idle");
+      }
       return { ok: false, detail };
     }
   }
@@ -221,6 +246,8 @@ export function createAppServerAdapter(cfg: AppServerConfig): Adapter {
         tools: true,
         cost: true,
         steer: true,
+        promptlessStartIdle: true,
+        commands: [{ name: "/compact", description: "Codex-Kontext komprimieren", scope: "steer" }],
         usage: true,
         nativeDiscovery: "none",
         nativeResume: "native",
@@ -241,6 +268,7 @@ export function createAppServerAdapter(cfg: AppServerConfig): Adapter {
     },
 
     async start(spec: SessionSpec, ctx: AdapterContext): Promise<SessionHandle> {
+      if (spec.prompt && isCompactionCommand(spec.prompt)) throw new Error("codex: /compact erfordert einen gestarteten Thread");
       const proc = await ctx.spawnWorker(command, { stdin: "pipe", persistent: true, ...(spec.env ? { env: spec.env } : {}) });
       const state = connect(ctx.sessionId, proc, ctx, spec.model ?? cfg.model);
       try {
@@ -271,6 +299,15 @@ export function createAppServerAdapter(cfg: AppServerConfig): Adapter {
         case "prompt":
           if (state?.syncing) await state.syncing;
           if (!state?.healthy || !state.threadId) return { ok: false, detail: "codex: app-server läuft nicht mehr — Session neu starten" };
+          if (state.compactPending) return { ok: false, detail: "codex: Compaction läuft oder ihr Ergebnis steht noch aus" };
+          if (isCompactionCommand(input.text)) {
+            if (input.text.trim() !== "/compact" || input.attachments?.length) {
+              return { ok: false, detail: "codex: /compact nimmt keine Argumente oder Anhänge an" };
+            }
+            if (state.turnId || state.startingTurn) return { ok: false, detail: "codex: /compact erfordert einen wartenden Thread" };
+            return compact(state, ctx);
+          }
+          if (state.startingTurn && !state.turnId) return { ok: false, detail: "codex: Zug wird gerade gestartet" };
           if (state.turnId) {
             // A running turn takes the text as steering input.
             try {

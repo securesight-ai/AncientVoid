@@ -1,5 +1,5 @@
 ---
-id: BUG-0263
+id: BUG-0269
 slug: statistik-schnitt-reload-race
 status: fixed
 severity: S3
@@ -12,7 +12,7 @@ created: 2026-11-23
 reporter: "E2E T66.3 (mobile), solide rot seit Merge e046e54d (PR #298); davor flaky"
 ---
 
-# BUG-0263 — Projekt-Schnitt überlebt ein sofortiges Reload nicht (Effekt-Rennen)
+# BUG-0269 — Projekt-Schnitt überlebt ein sofortiges Reload nicht (Effekt-Rennen)
 
 ## Gesehen
 
