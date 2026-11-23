@@ -169,7 +169,7 @@
   border-bottom: 2px solid transparent;
 }
 
-@media (pointer: coarse) and (700px <= width < 1280px) {
+@media (hover: none) and (min-width: 700px) {
   .tile-tabs button {
     width: 44px;
     min-height: 44px;
