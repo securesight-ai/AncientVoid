@@ -2,9 +2,9 @@ import { test, expect, dockGo } from "../support/fixtures.ts";
 import type { Page } from "@playwright/test";
 
 /** EPIC-P34 T34.3: Einstellungen als feste Gruppen in einem symmetrischen Raster.
- * „Töne“ kam mit EPIC-P65, „Main-Synchronisation“ mit EPIC-P67, „Wissensquellen“ mit EPIC-P74 — die Liste
+ * „Töne“ kam mit EPIC-P65, „Main-Synchronisation“ mit EPIC-P67, „Wissensquellen“ mit EPIC-P74 und „Sprachausgabe“ mit EPIC-P75 — die Liste
  * ist die Ordnung, die das Handy zeigt (DOM-Reihenfolge). */
-const GROUPS = ["Darstellung", "Sidebar", "Schrift", "Darstellungs- und Layout-Presets", "Vorschau", "Benachrichtigungen", "Töne", "Spracheingabe", "Geräte", "Flotte", "Verbindungen", "Wissensquellen", "Main-Synchronisation", "Dienste", "Sicherheit & Verbindung"];
+const GROUPS = ["Darstellung", "Sidebar", "Schrift", "Darstellungs- und Layout-Presets", "Vorschau", "Benachrichtigungen", "Töne", "Spracheingabe", "Sprachausgabe", "Geräte", "Flotte", "Verbindungen", "Wissensquellen", "Main-Synchronisation", "Dienste", "Sicherheit & Verbindung"];
 
 async function openSettings(app: Page): Promise<void> {
   await dockGo(app, "Einstellungen");

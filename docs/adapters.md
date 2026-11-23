@@ -228,7 +228,7 @@ Adapter-Factorys, einschließlich Codex Exec, ACP-Presets und Direktadapter.
 
 | Adapter/Harness | Evidenz für den getriebenen Modus |
 |---|---|
-| Claude | `/clear` und `/compact` sind für Headless dokumentiert. Der Browser-Test prüft den Dispatch mit der Claude-Attrappe. |
+| Claude | `/clear` und `/compact` sind für Headless dokumentiert. Claude Code 2.1.330 hat beide Befehle im Stream-JSON-Modus in einer leeren Session ohne Modellzug akzeptiert. Der Browser-Test prüft den Dispatch mit der Claude-Attrappe. |
 | Codex App Server | `thread/compact/start` und `contextCompaction` sind im App-Server-Protokoll deklariert. Der Browser-Test prüft Aufruf, Abschluss und den folgenden Prompt. |
 | Pi | Pi 1.6.0 hat über RPC mit synthetischer Historie und lokalem Testendpunkt eine Compaction in der verifizierten Session-Datei persistiert. |
 | Aider | Aider 0.86.2 hat `/clear`, `/reset`, `/tokens` und `/add` mit `--message` ausgeführt. Der Versuch nutzte eine synthetische Datei und einen lokalen Dummy-Endpunkt. |
