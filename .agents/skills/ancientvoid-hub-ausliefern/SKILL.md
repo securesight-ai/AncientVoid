@@ -64,3 +64,31 @@ schreiben — sonst ist nach dem Neustart unklar, wer was warum getan hat.
   `runtimeDirty` true und die Auslieferung nicht belegbar. Erst PR mergen, dann main.
 - PWA nicht gebaut lassen: der Hub liefert `apps/pwa/dist` aus, der Browser merkt
   sich die Bundle-Datei — ohne Neubau bleibt die alte Oberfläche trotz Neustart.
+
+## Kratz-Hub für Nachweise (parallel zum Live-Hub)
+
+Adapter- und Protokolländerungen an der echten Sitzungssitzung beweisen, ohne Kais
+Sitzung anzufassen: zweiter Hub auf eigener Config, eigener Port, eigene DB.
+
+```bash
+# /tmp/av-kratze/config.json  (Port 7399, dataDir /tmp/av-kratze/data)
+#   "workerRunner": "tmux"        — "process" überlebt keinen Hub-Neustart, "child" ist ungültig (Hub startet nicht)
+#   "adapters": [ { "id": "pi", "module": "@ancientvoid/adapter-pi",
+#                   "config": { "mode": "rpc" } } ]
+ANCIENTVOID_CONFIG=/tmp/av-kratze/config.json setsid nohup node apps/hub/src/main.ts >/tmp/av-kratze/hub.log 2>&1 &
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:7399/api/health
+npm run --silent hubctl -- token issue kratz --db /tmp/av-kratze/data/hub.db
+```
+
+- **`--db` ist Pflicht:** ohne den Schalter schreibt `hubctl token issue/revoke/list`
+  in die **Live-DB** `data/hub.db`. 2026-11-23 sind dabei drei Scratch-Tokens am
+  Live-Hub gelandet (`scratch-rpc`, `scratch-live`, `scratch-ui`) — widerrufen.
+- Neustart-Übergabe testen: `kill` auf die Hub-PID (Port suchen, nie `pkill node`),
+  Hub neu starten, dann `GET /api/sessions/:id` → `persistentWorker: true`, und mitten
+  im nächsten Zug lenken. tmux-Worker überleben den Hub-Kill (`tmux ls`).
+- pi putzt seine Prozesszeile: `pgrep -f 'pi --mode rpc'` findet nichts. Nachweis über
+  Verhalten (ereignis `pi.worker_end` ausbleiben, Gedächtnis über Züge) oder
+  `tmux ls`, nicht über `ps`.
+- RPC-Rahmen sind **LF-only**: ein Test-Fake, der sein Ereignis ohne `\n` einspeist,
+  lässt im Adapter zwei Datensätze zu einer ungültigen Zeile verschmelzen — der
+  Rahmen wird verworfen und ein Befehl hängt bis zum Timeout.
