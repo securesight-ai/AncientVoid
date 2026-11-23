@@ -1,7 +1,29 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
 
-## 23.11.2026 Nacht — Lenken mitten im Zug: pi läuft jetzt als RPC-Prozess (PR #357)
+## 23.11.2026 Nacht — Bildvorschau auch für Dateinamen aus Shell-Ausgaben (PR #359)
+
+**Fund.** Kai zeigte auf ein `tool_result` mit `neonsunset_shot1.png 200 65140 …`:
+die Bilder lagen im Arbeitsverzeichnis, aber im Chat führte **kein** Link hin — die
+Vorschau (PR #350/#354/#355) hing allein am `read`-Werkzeug, Pfad in der Eingabe.
+
+**Umsetzung.** `apps/pwa/src/features/session/tool-image.ts`: `toolImageHits()` trennt
+`direkt` (gelesenes Bild) von `vorschlaege` (Bildnamen im Ausgabe-Text von Schalen-
+Werkzeugen). Relative Pfade gehen über die Sitzungsroute (Wurzel = Arbeitsverzeichnis —
+genau da liegen sie), absolute über die Projektroute; URLs, `.git`-Ordner, `..` und der
+siebte Vorschlag fallen weg. `EventRow` und `ChatTurns` zeigen eine Chip-Kette, Bilder
+werden erst auf Zuruf geladen. Tests 12/12.
+
+**Layout-Fallstricke, gemessen statt geraten.** (1) Der Chat-Ausschnitt ist niedrig
+(246 px) und hat oben einen **klebenden Tagesabschnitt**: Chips landeten darunter und
+waren nicht anklickbar (`elementFromPoint` traf die Leiste). (2) `scrollIntoView` mit
+`scroll-margin` konnte beide Ränder nicht halten — die Bildunterschrift hing bei
+y 457 während das Ausschnittende bei 436 lag, also unter dem Eingabefeld. Deshalb
+hängt `zeigeBlockVollstaendig()` den Block selbst ein (Zentrieren, wenn es passt, sonst
+am unteren Rand) und die Vorschaubilder sind auf 240×128 px begrenzt. Nachher: Block
+y 220–428 im Ausschnitt 190–436, alle Chips/Bilder/Links erreichbar.
+
+## ## 23.11.2026 Nacht — Lenken mitten im Zug: pi läuft jetzt als RPC-Prozess (PR #357)
 
 **Warum das vorher zu war (BUG-0261).** pi wurde pro Nachricht als eigener Prozess
 gebracht; Lenken mitten im Zug hätte einen *zweiten* pi-Prozess auf derselben Sitzung

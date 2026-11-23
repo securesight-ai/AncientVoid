@@ -16,6 +16,26 @@ export type ToolImageRef = {
 const BILD_ENDUNG = /\.(png|jpe?g|gif|webp|bmp|avif)$/i;
 
 /**
+ * Bildpfade, die ein Werkzeug nur als **Text** nennt (Nutzerfund 2026-11-23: ein
+ * `bash`-Lauf gab `neonsunset_shot1.png 200 65140 …` zurück — die Dateien waren da,
+ * aber im Chat führte kein Weg hin). Pfade ohne Leerzeichen; alles mit `://` oder
+ * `..` wird bewusst verworfen, weil der Hub es nicht ausliefern würde.
+ */
+const BILD_PFAD_IN_TEXT = /\/?[A-Za-z0-9_.+@%-]*(?:\/[A-Za-z0-9_.+@%-]+)*\.(?:png|jpe?g|gif|webp|bmp|avif)(?![A-Za-z0-9])/g;
+
+/** Unbrauchbar: URLs, Verstecke, Sprünge über die Wurzel hinaus. */
+function untauglicherPfad(pfad: string): boolean {
+  if (!pfad || pfad.includes("//")) return true;
+  return pfad.split("/").some((segment) => segment === ".." || (segment.length > 1 && segment.startsWith(".")));
+}
+
+/** Werkzeuge, deren Ausgabe Dateinamen im Text nennt (Shell-Schale aller Adapter). */
+const SCHALEN_WERKZEUGE = new Set(["bash", "shell", "exec", "exec_command", "local_shell_call", "container.exec"]);
+
+/** Hochstens so viele Vorschläge pro Werkzeugausgabe — sonst zugemüllte Chats. */
+const MAX_VORSCHLAEGE = 6;
+
+/**
  * Welche Sitzung darf eine Vorschau bekommen? Nur die eigene des laufenden Hubs.
  * Sitzungsdatensatz **und** fremder Rechner werden getrennt betrachtet: jeder
  * Datensatz trägt eine `hostId`, auch der eigene Hub (Nachweis live: Sitzung
@@ -44,6 +64,22 @@ function pfadAusEingabe(input: unknown): string {
 }
 
 /**
+ * Ein Pfad → das, was der Hub ausliefern kann: absolute Pfade nur innerhalb der
+ * Projektwurzel (Projekt-Route), relative relativ zum Arbeitsverzeichnis der
+ * Sitzung (Sitzungs-Route). Alles andere bewusst `null`.
+ */
+function refFuerPfad(pfad: string, ref: SessionRef): ToolImageRef | null {
+  if (untauglicherPfad(pfad)) return null;
+  const name = pfad.split("/").pop() ?? pfad;
+  if (pfad.startsWith("/")) {
+    const wurzel = ref.project.endsWith("/") ? ref.project : `${ref.project}/`;
+    if (!pfad.startsWith(wurzel)) return null;
+    return { target: `project=${encodeURIComponent(ref.project)}`, path: pfad.slice(wurzel.length), name };
+  }
+  return { target: `session=${encodeURIComponent(ref.id)}`, path: pfad, name };
+}
+
+/**
  * Nutzerfund 2026-11-23: ein Bild-Lesevorgang erschien im Chat als
  * `Read image file [image/png][image]` — der reine Hinweis, das Bild selbst war
  * nirgends zu sehen oder zu öffnen. Der Werkzeug-Aufruf trägt aber den Pfad, und
@@ -65,11 +101,52 @@ export function toolImageRef(event: NormalizedEvent, result: NormalizedEvent | u
   // Ein fehlgeschlagenes Lesen hat kein Bild — die Fehlerzeile bleibt stehen.
   if (result && (result.payload as { isError?: boolean }).isError === true) return null;
 
-  const name = pfad.split("/").pop() ?? pfad;
-  if (pfad.startsWith("/")) {
-    const wurzel = ref.project.endsWith("/") ? ref.project : `${ref.project}/`;
-    if (!pfad.startsWith(wurzel)) return null;
-    return { target: `project=${encodeURIComponent(ref.project)}`, path: pfad.slice(wurzel.length), name };
+  return refFuerPfad(pfad, ref);
+}
+
+/** Text einer Werkzeugausgabe — Inhalte sind String oder Blöcke. */
+function werkzeugText(event: NormalizedEvent): string {
+  const payload = event.payload as { content?: unknown; summary?: unknown };
+  if (typeof payload.content === "string") return payload.content;
+  if (Array.isArray(payload.content)) {
+    return payload.content
+      .map((block) => (typeof block === "string" ? block : typeof (block as { text?: unknown })?.text === "string" ? String((block as { text: string }).text) : ""))
+      .join("\n");
   }
-  return { target: `session=${encodeURIComponent(ref.id)}`, path: pfad, name };
+  return typeof payload.summary === "string" ? payload.summary : "";
+}
+
+/**
+ * Bilder, die ein Werkzeug **erfolgreich gelesen** hat (direkt, als Vorschau) und
+ * solche, die es nur im Ausgabe-Text erwähnt (Vorschlag als Chip-Kette). Die
+ * Vorschläge holen erst Bytes, wenn der Nutzer sie öffnet — eine Liste aus 30
+ * Dateinamen in einer `ls`-Ausgabe lädt also nicht 30 Bilder.
+ */
+export function toolImageHits(
+  event: NormalizedEvent,
+  result: NormalizedEvent | undefined,
+  ref: SessionRef | undefined,
+): { direkt: ToolImageRef[]; vorschlaege: ToolImageRef[] } {
+  const direkt: ToolImageRef[] = [];
+  const vorschlaege: ToolImageRef[] = [];
+  if (!ref) return { direkt, vorschlaege };
+  const gelesen = toolImageRef(event, result, ref);
+  if (gelesen) direkt.push(gelesen);
+  if (!result) return { direkt, vorschlaege };
+
+  const nutzung = event.type === "tool_use" ? (event.payload as { name?: unknown }) : undefined;
+  const werkzeug = typeof nutzung?.name === "string" ? nutzung.name.toLowerCase() : "";
+  if (!SCHALEN_WERKZEUGE.has(werkzeug)) return { direkt, vorschlaege };
+
+  const schon = new Set(direkt.map((b) => `${b.target}\u0000${b.path}`));
+  for (const kandidat of werkzeugText(result).match(BILD_PFAD_IN_TEXT) ?? []) {
+    const bild = refFuerPfad(kandidat, ref);
+    if (!bild) continue;
+    const schluessel = `${bild.target}\u0000${bild.path}`;
+    if (schon.has(schluessel)) continue;
+    schon.add(schluessel);
+    vorschlaege.push(bild);
+    if (vorschlaege.length >= MAX_VORSCHLAEGE) break;
+  }
+  return { direkt, vorschlaege };
 }

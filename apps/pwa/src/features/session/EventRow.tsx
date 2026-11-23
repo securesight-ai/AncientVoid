@@ -2,7 +2,7 @@ import { t } from "../../shared/i18n/index.ts";
 import { fmtDateTime, fmtTime, fmtNumber } from "../../shared/i18n/format.ts";
 import { stampLabel } from "../../shared/i18n/day-label.ts";
 import { memo } from "preact/compat";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
 import { fetchEventBlob, useFullEvent } from "./event-blobs.ts";
 import { type NormalizedEvent } from "../../shared/ws.ts";
@@ -12,7 +12,77 @@ import { Markdown } from "../../shared/Markdown.tsx";
 import { AttachmentChips, type AttachmentRef } from "../attachments/Attachments.tsx";
 import { SpeakButton } from "../../shared/SpeakButton.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
-import { toolImageRef, type SessionRef, type ToolImageRef } from "./tool-image.ts";
+import { toolImageHits, type SessionRef, type ToolImageRef } from "./tool-image.ts";
+
+/**
+ * Den Vorschau-Block mitten in den sichtbaren Ausschnitt holen. `scrollIntoView`
+ * scheitert hier subtil: der Chat-Ausschnitt ist niedrig, oben klebt der
+ * Tagesabschnitt, unten das Eingabefeld — mit Randabstanden kann der Browser nie
+ * beide Grenzen halten, und die Bildunterschrift verschwand unter dem
+ * Eingabefeld (gemessen: Unterschrift y 457 bei Ausschnittende 436). Also selbst
+ * rechnen: zentrieren, wenn es passt; sonst oben unter den klebenden Kopf rücken.
+ */
+function zeigeBlockVollstaendig(block: HTMLElement | null): void {
+  if (!block) return;
+  let rahmen: HTMLElement | null = block.parentElement;
+  while (rahmen && rahmen.scrollHeight <= rahmen.clientHeight + 2) rahmen = rahmen.parentElement;
+  if (!rahmen) return;
+  const r = rahmen.getBoundingClientRect();
+  const b = block.getBoundingClientRect();
+  const obenGrenze = r.top + 34; // Platz für den klebenden Tagesabschnitt
+  const platz = r.bottom - 8 - obenGrenze;
+  // Passt der Block zwischen Kopf und Eingabefeld, oben einhängen; sonst am
+  // unteren Rand — die Bildunterschrift ist wichtiger als die dritte Zeile Chips.
+  const ziel = b.height <= platz ? obenGrenze : r.bottom - 8 - b.height;
+  rahmen.scrollTop += b.top - ziel;
+}
+
+/**
+ * Dateien, die ein Werkzeug nur im Ausgabe-Text nennt (Shell-Ausgabe mit
+ * Dateinamen). Erst Chips, das Bild holt der Hub erst auf Zuruf — eine `ls` mit
+ * 30 Namen lädt nicht 30 Bilder.
+ */
+export function ToolImageScan({ bilder }: { bilder: ToolImageRef[] }) {
+  const [offen, setOffen] = useState<string[]>([]);
+  const block = useRef<HTMLDivElement>(null);
+  if (bilder.length === 0) return null;
+  const offenPfade = bilder.filter((b) => offen.includes(b.path)).map((b) => b.path);
+  // Chips und Bilder zusammen im Ausschnitt: sonst rutscht entweder das
+  // Steuerbrett oder die halbe Vorschau aus dem Bild.
+  const umschalten = (pfad: string, auf: boolean) => {
+    setOffen((vorher) => (auf ? vorher.filter((p) => p !== pfad) : [...vorher, pfad]));
+    zeigeBlockVollstaendig(block.current);
+  };
+  return (
+    <div class="tool-image-scan" ref={block}>
+      <div class="tool-image-scan-row">
+        <span class="tool-image-scan-note dim">{t("session.tool_image_note")}</span>
+        {bilder.map((bild) => {
+          const auf = offen.includes(bild.path);
+          return (
+            <button
+              key={`${bild.target}/${bild.path}`}
+              class="link-btn tool-image-chip"
+              aria-expanded={auf}
+              onClick={() => umschalten(bild.path, auf)}
+            >
+              {bild.name} <span class="dim">{auf ? t("session.tool_image_hide") : t("session.tool_image_show")}</span>
+            </button>
+          );
+        })}
+      </div>
+      {offenPfade.length > 0 ? (
+        <div class="tool-image-scan-bilder">
+          {bilder
+            .filter((bild) => offenPfade.includes(bild.path))
+            .map((bild) => (
+              <ToolImageView key={`vorschau-${bild.path}`} image={bild} />
+            ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 /** Bildvorschau zu einem gelesenen Bild — Bytes vom Hub, Token im Header. */
 export function ToolImageView({ image }: { image: ToolImageRef }) {
@@ -180,8 +250,16 @@ function EventRowView({
         </div>
         <div class="summary">{event.summary}</div>
         {(() => {
-          const bild = toolImageRef(event, toolResult, sessionRef);
-          return bild ? <ToolImageView image={bild} /> : null;
+          const treffer = toolImageHits(event, toolResult, sessionRef);
+          if (treffer.direkt.length === 0 && treffer.vorschlaege.length === 0) return null;
+          return (
+            <>
+              {treffer.direkt.map((bild) => (
+                <ToolImageView key={bild.path} image={bild} />
+              ))}
+              <ToolImageScan bilder={treffer.vorschlaege} />
+            </>
+          );
         })()}
         <CopyButton text={copyText(event)} />
         {expanded && <EventDetail event={rowEvent} />}

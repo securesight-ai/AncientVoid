@@ -2,10 +2,10 @@ import { t } from "../../shared/i18n/index.ts";
 import { Fragment, type ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import type { NormalizedEvent } from "../../shared/ws.ts";
-import { EventDetail, EventRow, ToolImageView } from "./EventRow.tsx";
+import { EventDetail, EventRow, ToolImageView, ToolImageScan } from "./EventRow.tsx";
 import { currentStep, itemTs, stepsOf, workSummary, type ChatItem, type Step, type Work } from "./turns.ts";
 import { dayLabel, needsDaySeparator } from "../../shared/i18n/day-label.ts";
-import { toolImageRef, type SessionRef } from "./tool-image.ts";
+import { toolImageHits, type SessionRef } from "./tool-image.ts";
 
 /**
  * EPIC-P43 T43.4: der Chat in Zügen (turns.ts). Laufende Arbeit steht offen, der laufende Schritt
@@ -187,7 +187,7 @@ function StepRow({ step, current, sessionRef }: { step: Step; current: boolean; 
   // Nutzerfund 23.11.2026: in der Zug-Ansicht (der üblichen Chat-Ansicht) war ein
   // gelesenes Bild gar nicht zu sehen — die Vorschau hing nur an der flachen
   // Ereignisliste. Also hier dasselbe Bild zeigen, am selben Schritt.
-  const bild = step.use ? toolImageRef(step.use, step.result ?? undefined, sessionRef) : null;
+  const treffer = step.use ? toolImageHits(step.use, step.result ?? undefined, sessionRef) : { direkt: [], vorschlaege: [] };
   return (
     <li class={`turn-step ${step.state}`} data-seq={step.key}>
       <button type="button" class={`turn-step-head${current ? " mv-shimmer" : ""}`} aria-expanded={detail} onClick={() => setDetail((on) => !on)}>
@@ -196,7 +196,10 @@ function StepRow({ step, current, sessionRef }: { step: Step; current: boolean; 
         <span class="turn-step-target mono">{step.target}</span>
         {step.short && <span class="turn-step-short dim">{step.short}</span>}
       </button>
-      {bild ? <ToolImageView image={bild} /> : null}
+      {treffer.direkt.map((bild) => (
+        <ToolImageView key={bild.path} image={bild} />
+      ))}
+      <ToolImageScan bilder={treffer.vorschlaege} />
       {detail && (
         <div class="turn-step-io">
           {step.use && <StepPart label={t("composer.input")} event={step.use} />}

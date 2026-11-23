@@ -528,6 +528,51 @@
   font-size: var(--text-sm);
 }
 
+/* Dateienvorschläge aus einer Shell-Ausgabe: Chips, Bild erst auf Zuruf. */
+.tool-image-scan {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0 2px;
+  font-size: var(--text-sm);
+  /* Der Tagesabschnitt klebt oben (z-index über dem Inhalt): ohne Rückstand
+     landeten die Chips unter seinem Balken und wären nicht anklickbar. */
+  scroll-margin: 36px 0 12px;
+}
+/* Chips über den Bildern: die Zahl der Dateien bleibt sichtbar, egal wie
+   viele Vorschaubilder geöffnet sind — ein großes Bild verdrängt keine Chips. */
+.tool-image-scan-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.tool-image-scan-note {
+  margin-right: 2px;
+}
+.tool-image-chip {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-chip);
+  padding: 2px 8px;
+  font-size: var(--text-sm);
+}
+.tool-image-scan-bilder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+.tool-image-scan-bilder .tool-image {
+  margin: 0;
+}
+/* Klein genug, dass Chips + Bild + Unterschrift zusammen in den niedrigen
+   Chat-Ausschnitt passen (Ausschnitt 246 px, oben klebt der Tageskopf). */
+.tool-image-scan-bilder .tool-image img {
+  max-width: 240px;
+  max-height: 128px;
+}
+
 /* Kein Knopf, der nur scheitern kann: Grund statt Fehler (Nutzerfund 23.11.2026). */
 .queue-wait {
   align-self: center;
