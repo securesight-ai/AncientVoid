@@ -36,6 +36,13 @@ Denken, Werkzeug“, nach einem Klick 208 Fundstellen. Gate: #302 `pass 3m0s`,
 lokal 13/13 — einmal neu angestoßen). Diagnose-Rezept liegt als Skill
 `.agents/skills/ancientvoid-hub-suche`.
 
+**Vierte Suchstufe `typo`**: „tokdek“ ist weder Wortanfang noch Teilwort von
+„tokdeck“, blieb also ein stiller Null-Treffer. Die Wortliste des Index
+(`fts5vocab`) hält Kandidaten gegen die vorhandenen Wörter — Edit-Distanz 1
+(ab acht Zeichen 2) oder Teilfolge — und die Antwort nennt `corrected`. Kurze
+Begriffe (< 5 Zeichen) werden nicht geraten, und was keinen Kandidaten hat,
+bleibt leer.
+
 **Cross-Hub-Suche** (dieser Zweig/PR): `hubs=1` fragt die gekoppelten Hub-Rechner über
 die bestehende Fleet-Tür (`/api/search` ist fleet-routable, kein neues Recht),
 funde tragen `hub`/`hubUrl`, und pro Rechner steht in `hubs`, wie er mitgemacht

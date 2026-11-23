@@ -11,6 +11,21 @@ import { test, expect, sessionTab } from "../support/fixtures.ts";
  * qmd findet, prüft apps/hub/test/modules/search/docs-local.test.ts.
  */
 test.describe("Suche über Sessiontexte", () => {
+  test("ein Vertipper findet das Wort des Index und sagt es dazu @tablet @desktop", async ({ app, hub }) => {
+    // „Kurbelwellenträger“ mit einem fehlenden Buchstaben in der Mitte: weder
+    // Wortanfang noch Teilwort — ohne die vierte Stufe wäre das ein Null-Treffer.
+    const id = await hub.createSession({ adapter: "opencode", prompt: "Bestell den Kurbelwellenträger nach Maß" });
+    await hub.until(async () => (await hub.sessions()).every((s) => s.status === "idle"), "Zug fertig");
+
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await sessionTab(app, "Suche");
+    await app.locator(".search-input").fill("kurbelwellentrger");
+
+    await expect(app.locator(".search-note")).toContainText("gefunden nach ähnlichem Wort");
+    await expect(app.locator(".search-note")).toContainText("kurbelwellentrager");
+    await expect(app.locator(".hit-card")).toHaveCount(2);
+  });
+
   test("Fundstellen aus Frage und Antwort, markiertes Fundwort, Sprung zur Nachricht @tablet @desktop", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "Bestell den Kurbelwellenträger nach Maß" });
     await hub.until(async () => (await hub.sessions()).every((s) => s.status === "idle"), "Zug fertig");
