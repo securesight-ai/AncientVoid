@@ -1,5 +1,6 @@
 import { fmtDateTime } from "../../shared/i18n/format.ts";
 import { t } from "../../shared/i18n/index.ts";
+import { dayLabel, needsDaySeparator } from "../../shared/i18n/day-label.ts";
 import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { StatusNote } from "./StatusNote.tsx";
 import type { ComponentChildren } from "preact";
@@ -2452,6 +2453,11 @@ export function SessionTail({
                   );
                   return (
                     <Fragment key={e.seq}>
+                      {needsDaySeparator(visible[i - 1]?.ts, e.ts) && (
+                        <div class="day-sep" data-testid="day-sep">
+                          <span>{dayLabel(e.ts)}</span>
+                        </div>
+                      )}
                       {e.seq === firstNew?.seq && (
                         <div class="new-divider" id="seit-letztem-besuch">
                           {t("session.new_since_last_visit_cap")}
