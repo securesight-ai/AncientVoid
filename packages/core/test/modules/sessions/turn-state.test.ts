@@ -112,12 +112,14 @@ describe("turn state (T5.4)", () => {
     registry.register("turns", () => ({ ...oneProcessPerTurn(), stop: async () => void stops++ }));
     const manager = new SessionManager(db, new EventStore(dir), registry, new ProcessRunner());
     try {
-      const record = await manager.create({ adapter: "turns", project: dir, prompt: "eins" });
-      expect(manager.get(record.id)?.status).toBe("working");
-      await manager.shutdown({ keepWorkers: true });
-      expect(manager.get(record.id)?.status).toBe("working");
-      expect(stops).toBe(0);
-      expect((await manager.tail(record.id, 0)).some((e) => (e.payload as { kind?: string }).kind === "session.stopped")).toBe(false);
+    const record = await manager.create({ adapter: "turns", project: dir, prompt: "eins" });
+    // BUG-0218: unter parallelen Forks kann die Working-Markierung nach
+    // create() noch anstehen — warten statt einmalig lesen.
+    await waitFor(() => manager.get(record.id)?.status === "working", "working nach create");
+    await manager.shutdown({ keepWorkers: true });
+    expect(manager.get(record.id)?.status).toBe("working");
+    expect(stops).toBe(0);
+    expect((await manager.tail(record.id, 0)).some((e) => (e.payload as { kind?: string }).kind === "session.stopped")).toBe(false);
     } finally {
       db.close();
       await rm(dir, { recursive: true, force: true });

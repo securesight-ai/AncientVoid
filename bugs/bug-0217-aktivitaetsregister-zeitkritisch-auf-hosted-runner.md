@@ -1,7 +1,7 @@
 ---
 id: BUG-0217
 slug: aktivitaetsregister-zeitkritisch-auf-hosted-runner
-status: open
+status: done
 severity: S3
 area: tests
 instance: ci
@@ -79,4 +79,17 @@ und nennt den Messwert im Commit.
 
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue vorhanden ([#83](https://github.com/securesight-ai/AncientVoid/issues/83), SSOT nachgezogen EPIC-P71 T71.6)
-- [ ] `bugfix` oder offen lassen
+- [x] `bugfix` oder offen lassen
+
+## Fix (2026-11-23)
+
+Root cause: `settle()` setzt den Status `idle` **vor** dem `session.turn_end`-Event
+(`setStatus(...).then(emit)`) — der Test wartete auf den Status und las danach
+einmalig die Events. Auf einem gedrosselten Hosted-Runner liegt der Schreibvorgang
+nach dem Lesen (Issue-Beobachtung: Länge 0 statt 1). Der Test wartet jetzt auf die
+Ereignisse selbst (turn_end, main_turn_end, Notification) und behält die
+„genau einmal"-Asserts; `waitFor` nimmt zusätzlich asynchrone Prüffunktionen.
+Slow-List entfällt: Datei misst isoliert 1,3 s (Schwelle 10 s).
+
+Grün: Datei 8/8, sessions+handover 202/202 (8 Forks), 3× Stress 27/27,
+lint + typecheck.

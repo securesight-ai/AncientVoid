@@ -113,9 +113,9 @@ function heartbeatAdapter(id: string, repeats: number, out: { ctx?: Parameters<A
   };
 }
 
-async function waitFor(check: () => boolean, what: string): Promise<void> {
+async function waitFor(check: () => boolean | Promise<boolean>, what: string): Promise<void> {
   const deadline = Date.now() + 5000;
-  while (!check()) {
+  while (!(await check())) {
     if (Date.now() > deadline) throw new Error(`timed out: ${what}`);
     await new Promise((r) => setTimeout(r, 20));
   }
@@ -294,10 +294,15 @@ describe("Aktivitätsregister (ADR-0074, BUG-0155)", () => {
       expect(manager.get(record.id)?.status, "Hauptzug läuft — Session bleibt working").toBe("working");
       expect((await kinds(manager, record.id)).filter((k) => k === "session.turn_end")).toHaveLength(0);
       // Das echte Zugende meldet genau ein turn_end — mit allem, was dazugehört.
-      await waitFor(() => manager.get(record.id)?.status === "idle", "idle am echten Zugende");
+      // BUG-0217: settle() setzt idle VOR dem turn_end-Event (Promise.then) —
+      // auf das Ereignis warten, nicht auf den Status, sonst liest der Lauf
+      // der Events zu früh (Hosted-Runner-Flake: Länge 0 statt 1).
+      await waitFor(async () => (await kinds(manager, record.id)).some((k) => k === "session.turn_end"), "turn_end am echten Zugende");
+      await waitFor(async () => (await kinds(manager, record.id)).some((k) => k === "session.main_turn_end"), "main_turn_end vorhanden");
       const all = await kinds(manager, record.id);
       expect(all.filter((k) => k === "session.turn_end")).toHaveLength(1);
       expect(all.indexOf("session.main_turn_end")).toBeLessThan(all.lastIndexOf("session.turn_end"));
+      await waitFor(async () => manager.notifications().items.some((n) => n.kind === "session.turn_end"), "turn_end-Notification vorhanden");
       expect(manager.notifications().items.filter((n) => n.kind === "session.turn_end")).toHaveLength(1);
     } finally {
       await manager.shutdown();
