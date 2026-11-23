@@ -97,9 +97,10 @@ test.describe("Archiv (P5 §9)", () => {
     const id = await hub.createSession({ adapter: "dummy" });
     await hub.api(`/api/sessions/${id}/stop`, { body: {} });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
-    app.on("dialog", (dialog) => void dialog.accept());
     await app.getByLabel("Weitere Aktionen").click();
     await app.locator(".session-menu").getByRole("button", { name: "Löschen" }).click();
+    // Rückfrage im Base-Modal, nicht mehr der Browser-Dialog.
+    await app.getByTestId("modal").getByRole("button", { name: "Löschen" }).click();
     await expect(app).toHaveURL(/#\/$/);
     expect((await hub.sessions()).some((s) => s.id === id)).toBe(false);
     const gone = await hub.api(`/api/sessions/${id}/events`);

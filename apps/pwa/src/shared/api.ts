@@ -458,6 +458,18 @@ export interface MainSyncCheckDto {
   lastSyncedAt: string | null;
 }
 
+/** POST-Ergebnis des Anwendens (ADR-0088/0102): `autoResolved` nennt die
+ * Dateien, deren Konflikte `favor-session` automatisch gelöst hat. */
+export interface MainSyncApplyDto {
+  outcome: "applied" | "conflict" | "skipped" | "failed";
+  from?: string;
+  to?: string;
+  files?: string[];
+  autoResolved?: string[];
+  reason?: string;
+  detail?: string;
+}
+
 /** ADR-0011 — one session found by the hub or a read-only provider scan. */
 export interface DiscoveredSession {
   hubSessionId: string | null;
@@ -1138,8 +1150,9 @@ function createHubApi(P: (path: string) => string) {
   /** EPIC-P67 T67.8: Messung + Probelauf je Session (K10-Stand: lastSyncedAt offline lesbar). */
   mainSyncCheck: (sessionId: string) =>
     api<MainSyncCheckDto>(P(`/api/sessions/${encodeURIComponent(sessionId)}/main-sync`)),
-  mainSyncApply: (sessionId: string) =>
-    api<{ outcome: string; reason?: string; detail?: string; from?: string; to?: string; files?: string[] }>(P(`/api/sessions/${encodeURIComponent(sessionId)}/main-sync`), { method: "POST", body: "{}" }),
+  /** ADR-0102: `conflictStrategy: "favor-session"` löst Konflikte gunsten der Session; Default bleibt abort. */
+  mainSyncApply: (sessionId: string, opts: { conflictStrategy?: "abort" | "favor-session" } = {}) =>
+    api<MainSyncApplyDto>(P(`/api/sessions/${encodeURIComponent(sessionId)}/main-sync`), { method: "POST", body: JSON.stringify(opts) }),
   sessionDiff: (id: string) => api<SessionDiffResult>(P(`/api/sessions/${id}/diff`)),
   /** EPIC-P36: Review-Notizen zur Diff-Ansicht (ADR-0055). */
   /** EPIC-P37: Forge (GitLab) im Session-Kontext. */

@@ -1,6 +1,7 @@
 import { test, expect } from "../support/fixtures.ts";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { writeFile } from "node:fs/promises";
 import type { TestHub } from "../support/hub.ts";
 import { join, dirname } from "node:path";
 
@@ -57,6 +58,45 @@ test.describe("Session: Main-Sync-Indikator und Menü (EPIC-P67 T67.8)", () => {
     await expect(app.getByTestId("mainsync-result")).toHaveText(/eingemischt/);
     await expect(badge).toHaveCount(0);
     await expect(menu.getByText(/zuletzt abgeglichen:/)).not.toHaveText(/nie/);
+  });
+
+  test("ADR-0102: Badge-Klick mischt main ein — Konflikt gunsten der Session gelöst, im Modal sichtbar", async ({ app, hub }) => {
+    const { advance } = await withOrigin(hub.alpha, "mainsyncbadge");
+    const id = await hub.createSession({ adapter: "dummy", project: hub.alpha, prompt: "arbeite", workspaceMode: "worktree" });
+    await idleSession(hub, id);
+    // Session-Seite der gemeinsamen Datei committen — der spätere Vorlauf von
+    // origin/main auf dieselbe Datei ergibt einen echten Konflikt.
+    const wt = join(hub.dataDir, "worktrees", id);
+    await execFileAsync("git", ["-C", wt, "config", "user.email", "e2e@ancientvoid.local"]);
+    await execFileAsync("git", ["-C", wt, "config", "user.name", "ancientvoid e2e"]);
+    await writeFile(join(wt, "gemeinsam.txt"), "session\n");
+    await execFileAsync("git", ["-C", wt, "add", "-A"]);
+    await execFileAsync("git", ["-C", wt, "commit", "-q", "-m", "session-seite"]);
+    await advance("origin-seite");
+    // origin hat die Datei anders geändert — Konflikt beim Einmischen.
+    const other = join(dirname(hub.alpha), "mainsyncbadge-konflikt");
+    const origin = join(dirname(hub.alpha), "mainsyncbadge-origin.git");
+    await execFileAsync("git", ["clone", "-q", origin, other]);
+    await writeFile(join(other, "gemeinsam.txt"), "origin\n");
+    await execFileAsync("git", ["-C", other, "add", "-A"]);
+    await execFileAsync("git", ["-C", other, "commit", "-q", "-m", "origin-seite-datei"]);
+    await execFileAsync("git", ["-C", other, "push", "-q", "origin", "main"]);
+    await execFileAsync("rm", ["-rf", other]);
+
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await app.getByTestId("mainsync-behind").click();
+    const modal = app.getByTestId("mainsync-modal");
+    await expect(modal).toBeVisible();
+    await expect(app.getByTestId("mainsync-steps")).toBeVisible();
+    // Erfolg: eingemischt, Konflikt automatisch gunsten der Session gelöst und benannt.
+    await expect(app.getByTestId("mainsync-modal-result")).toContainText(/eingemischt/);
+    await expect(app.getByTestId("mainsync-modal-result")).toContainText(/Automatisch gunsten der Session gelöst: gemeinsam\.txt/);
+    await modal.getByRole("button", { name: "Schließen" }).click();
+    await expect(app.getByTestId("mainsync-modal")).toHaveCount(0);
+    // Der Rückstand ist weg — die Session gewinnt den Konflikt-Hunk.
+    await expect(app.getByTestId("mainsync-behind")).toHaveCount(0);
+    const { stdout: inhalt } = await execFileAsync("git", ["-C", wt, "show", "HEAD:gemeinsam.txt"]);
+    expect(inhalt).toBe("session\n");
   });
 
   test("Layout-Beweis mobil (390 px): Hinweis überdeckt weder Titel noch Status, alles im Kopf-Rand", async ({ app, hub }) => {

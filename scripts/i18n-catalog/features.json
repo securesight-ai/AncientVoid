@@ -10266,6 +10266,51 @@
       "key": "workspace.tile_layout",
       "de": "Kachel-Layout",
       "en": "Tile layout"
+    },
+    {
+      "key": "session.main_sync_badge_action",
+      "de": "main einmischen — Konflikte gunsten der Session lösen",
+      "en": "Merge from main — resolve conflicts in favor of the session"
+    },
+    {
+      "key": "session.main_sync_modal_title",
+      "de": "main einmischen",
+      "en": "Merge from main"
+    },
+    {
+      "key": "session.main_sync_step_check",
+      "de": "Stand prüfen",
+      "en": "Check state"
+    },
+    {
+      "key": "session.main_sync_step_merge",
+      "de": "main holen und einmischen",
+      "en": "Pull and merge main"
+    },
+    {
+      "key": "session.main_sync_step_done",
+      "de": "Fertig",
+      "en": "Done"
+    },
+    {
+      "key": "session.main_sync_autoresolved",
+      "de": "Automatisch gunsten der Session gelöst: {files}",
+      "en": "Auto-resolved in favor of the session: {files}"
+    },
+    {
+      "key": "session.main_sync_conflicts_hint",
+      "de": "Konflikte in {files} — sie werden gunsten dieser Session gelöst.",
+      "en": "Conflicts in {files} — they will be resolved in favor of this session."
+    },
+    {
+      "key": "loops.risky_mode_q",
+      "de": "Betriebsart „{mode}“ hat Außenwirkung (z. B. Merge ohne Mensch). Wirklich wechseln?",
+      "en": "Mode “{mode}” has external effects (e.g. merge without a human). Switch anyway?"
+    },
+    {
+      "key": "team.stop_team_q",
+      "de": "Dieses Team wirklich stoppen?",
+      "en": "Really stop this team?"
     }
   ]
 }
