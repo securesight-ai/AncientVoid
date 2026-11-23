@@ -4,8 +4,10 @@ export const SESSION_TABS = ["chat", "verlauf", "bericht", "diff", "graph", "git
 export type SessionTab = (typeof SESSION_TABS)[number];
 export type WorkspaceContent =
   | { kind: "page"; page: Exclude<ListPage, "dashboard">; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz"; hash?: string }
-  /** `seq`: Fundstelle, an der die Sitzung aufgehen soll (Sitzungsfilter/Suche). */
-  | { kind: "session"; tab: SessionTab; file?: string; code?: CodeTarget; seq?: number }
+  /** `seq`: Fundstelle, an der die Sitzung aufgehen soll (Sitzungsfilter/Suche);
+   * `seqAt` macht dieselbe Fundstelle als *neue* Bitte erkennbar — sonst fällt der
+   * zweite Tipp auf dieselbe Karte stumm aus. */
+  | { kind: "session"; tab: SessionTab; file?: string; code?: CodeTarget; seq?: number; seqAt?: number }
   | { kind: "file"; target: string; path: string; sha?: string }
   | { kind: "search" }
   | { kind: "browser" }
@@ -22,7 +24,8 @@ export function parseContent(raw: unknown): WorkspaceContent | undefined {
   if (c.kind === "session" && SESSION_TABS.includes(c.tab as SessionTab)) {
     const code = c.code as CodeTarget | undefined;
     const seq = typeof c.seq === "number" && Number.isInteger(c.seq) && c.seq >= 0 ? c.seq : undefined;
-    return { kind: "session", tab: c.tab as SessionTab, ...(str("file") ? { file: str("file")! } : {}), ...(code && typeof code.path === "string" && (code.line === null || Number.isInteger(code.line)) ? { code: { path: code.path, line: code.line } } : {}), ...(seq !== undefined ? { seq } : {}) };
+    const seqAt = typeof c.seqAt === "number" && Number.isFinite(c.seqAt) ? c.seqAt : undefined;
+    return { kind: "session", tab: c.tab as SessionTab, ...(str("file") ? { file: str("file")! } : {}), ...(code && typeof code.path === "string" && (code.line === null || Number.isInteger(code.line)) ? { code: { path: code.path, line: code.line } } : {}), ...(seq !== undefined ? { seq, ...(seqAt !== undefined ? { seqAt } : {}) } : {}) };
   }
   if (c.kind === "file" && str("target") && str("path")) return { kind: "file", target: str("target")!, path: str("path")!, ...(str("sha") ? { sha: str("sha")! } : {}) };
   if (c.kind === "search" || c.kind === "browser" || c.kind === "devices") return { kind: c.kind };
