@@ -2,10 +2,10 @@ import { t } from "../../shared/i18n/index.ts";
 import { Fragment, type ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import type { NormalizedEvent } from "../../shared/ws.ts";
-import { EventDetail, EventRow } from "./EventRow.tsx";
+import { EventDetail, EventRow, ToolImageView } from "./EventRow.tsx";
 import { currentStep, itemTs, stepsOf, workSummary, type ChatItem, type Step, type Work } from "./turns.ts";
 import { dayLabel, needsDaySeparator } from "../../shared/i18n/day-label.ts";
-import type { SessionRef } from "./tool-image.ts";
+import { toolImageRef, type SessionRef } from "./tool-image.ts";
 
 /**
  * EPIC-P43 T43.4: der Chat in Zügen (turns.ts). Laufende Arbeit steht offen, der laufende Schritt
@@ -114,7 +114,7 @@ export function ChatTurns({
               </button>
             </div>
           ) : (
-            <WorkBlock work={item} open={choices[item.key] ?? item.running} onToggle={(open) => toggle(item.key, open)} />
+            <WorkBlock work={item} open={choices[item.key] ?? item.running} onToggle={(open) => toggle(item.key, open)} sessionRef={sessionRef} />
           )}
           {after(item, items[i + 1])}
         </Fragment>
@@ -143,7 +143,7 @@ export function ChatTurns({
   );
 }
 
-function WorkBlock({ work, open, onToggle }: { work: Work; open: boolean; onToggle: (open: boolean) => void }) {
+function WorkBlock({ work, open, onToggle, sessionRef }: { work: Work; open: boolean; onToggle: (open: boolean) => void; sessionRef: SessionRef | undefined }) {
   const steps = stepsOf(work);
   const running = currentStep(work);
   const failed = steps.some((s) => s.state === "error");
@@ -163,7 +163,7 @@ function WorkBlock({ work, open, onToggle }: { work: Work; open: boolean; onTogg
                 <WorkNote event={entry.event} />
               </li>
             ) : (
-              <StepRow key={entry.step.key} step={entry.step} current={entry.step === running} />
+              <StepRow key={entry.step.key} step={entry.step} current={entry.step === running} sessionRef={sessionRef} />
             ),
           )}
         </ol>
@@ -182,8 +182,12 @@ function WorkNote({ event }: { event: NormalizedEvent }) {
 
 const STATE_LABEL: Record<Step["state"], string> = { running: t("session.running"), ok: "fertig", error: t("notifications.section_errors"), open: t("session.no_result") };
 
-function StepRow({ step, current }: { step: Step; current: boolean }) {
+function StepRow({ step, current, sessionRef }: { step: Step; current: boolean; sessionRef: SessionRef | undefined }) {
   const [detail, setDetail] = useState(false);
+  // Nutzerfund 23.11.2026: in der Zug-Ansicht (der üblichen Chat-Ansicht) war ein
+  // gelesenes Bild gar nicht zu sehen — die Vorschau hing nur an der flachen
+  // Ereignisliste. Also hier dasselbe Bild zeigen, am selben Schritt.
+  const bild = step.use ? toolImageRef(step.use, step.result ?? undefined, sessionRef) : null;
   return (
     <li class={`turn-step ${step.state}`} data-seq={step.key}>
       <button type="button" class={`turn-step-head${current ? " mv-shimmer" : ""}`} aria-expanded={detail} onClick={() => setDetail((on) => !on)}>
@@ -192,6 +196,7 @@ function StepRow({ step, current }: { step: Step; current: boolean }) {
         <span class="turn-step-target mono">{step.target}</span>
         {step.short && <span class="turn-step-short dim">{step.short}</span>}
       </button>
+      {bild ? <ToolImageView image={bild} /> : null}
       {detail && (
         <div class="turn-step-io">
           {step.use && <StepPart label={t("composer.input")} event={step.use} />}
