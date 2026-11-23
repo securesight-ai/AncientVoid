@@ -69,6 +69,14 @@ Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen
   > 200×100, Deep-Link oeffnet und fuehrt session-intern zurueck; Dokument-Chips bleiben die
   Text-Ansicht („4711“). Agenten-Rezept: `docs/bild-links-fuer-agenten.md`, Leitplanke in
   `AGENTS.md` (kein Bild als Dateipfad abliefern).
+  **Live bewiesen am produktiven Hub** (23.11., Bundel `assets/index-7aVYSFO8.js`,
+  `version.json` sha `1034942f`, kein Hub-Neustart nötig — nur Static): Upload ueber
+  `POST /api/attachments` (163 270 Byte, `kind=image`), Link `#/anhang/<id>` oeffnet das
+  Vollbild (Ebene 300, Name „selbsttest-vollbild.png 159 KB“ vordergrund-, ✕-Trefferzone
+  frei, Esc schliesst), Einfuegen auf `#/neu` haengt das Bild an (Chip „wird gelesen…“ →
+  „Kein Text gefunden“) und der Anhang ist nach dem Entfernen wieder weg (Chips 0).
+  css-tokens-Ratchet zuerst rot (z-index 400, eigener Breakpoint) → auf die Leiter gezogen
+  (`--z-lightbox: 300`, `(max-height: 520px)`), danach 14 passed.
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
   plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die
   echten `events.jsonl` **inkl. Blob-Payloads** (K5-Offload — ohne Blob-Read
