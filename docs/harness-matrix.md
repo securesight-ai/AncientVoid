@@ -33,7 +33,7 @@ Deklarationen. Live-Belege stehen bei den jeweiligen Adapterpfaden.
 | acp · maki | 0.6.5 `maki acp` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | — |
 | codex · exec | `codex exec` | ✓ | ✓ | sandbox | — | ✓ | — | — | — | — | — | — | — | — |
 | cursor | `cursor-agent -p` | ✓ | ✓ | allowlist | — | ✓ | — | — | — | — | — | — | — | — |
-| acp · omp | `omp acp` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | `/new:both`, `/compact:both` |
+| acp · omp | 19.1.1 `omp acp` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | `/fresh:both`, `/compact:both` |
 | acp · maki mit Brücke | `bridgeCommands: true` | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | `/new:both` |
 | acp · eigener Befehl | generischer ACP-Adapter | ✓ | ✓ | native | — | ✓ | — | ✓ | ✓ | — | ✓ | — | — | — |
 | OpenAI-kompatibler Direktadapter | Chat Completions SSE | ✓ | — | none | — | — | — | — | — | — | — | — | — | `/compact:steer` |

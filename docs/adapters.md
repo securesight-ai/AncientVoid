@@ -232,7 +232,8 @@ Adapter-Factorys, einschließlich Codex Exec, ACP-Presets und Direktadapter.
 | Codex App Server | `thread/compact/start` und `contextCompaction` sind im App-Server-Protokoll deklariert. Der Browser-Test prüft Aufruf, Abschluss und den folgenden Prompt. |
 | Pi | Pi 1.6.0 hat über RPC mit synthetischer Historie und lokalem Testendpunkt eine Compaction in der verifizierten Session-Datei persistiert. |
 | Aider | Aider 0.86.2 hat `/clear`, `/reset`, `/tokens` und `/add` mit `--message` ausgeführt. Der Versuch nutzte eine synthetische Datei und einen lokalen Dummy-Endpunkt. |
-| ACP Copilot und OMP | Die jeweiligen ACP-Modi dokumentieren den Dispatch über Prompt-Text. |
+| ACP Copilot | 1.0.114 meldet `/compact` und `/usage` beim Start einer leeren ACP-Session. |
+| ACP OMP | 19.1.1 meldet und verarbeitet `/fresh` und `/compact`. `/fresh` startet einen neuen Provider-Kontext. `/compact` wurde ohne Modell aufgerufen und meldete den fehlenden Modellzugang. |
 | ACP OpenCode | OpenCode 2.1.4 hat `/compact` live ausgeführt und dabei Start und Abschluss gemeldet ([BUG-0192](../bugs/bug-0192-slash-commands-nicht-bei-allen-anbietern.md)). |
 | ACP Maki | `bridgeCommands: true` aktiviert ausschließlich `/new` über einen neuen ACP-Session-Start. Die frühere init.lua-Brücke setzt ACP-Kommandos nicht zuverlässig um. |
 | Direktadapter | `/compact` kürzt die nächste Anfrage. [ADR-0114](adr/0114-nativer-compact-und-direktadapter.md) beschreibt den Settings-Schalter und die Messung. |

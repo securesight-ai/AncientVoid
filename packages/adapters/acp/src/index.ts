@@ -105,7 +105,8 @@ const ACP_PRESET_COMMANDS: Record<string, readonly SlashCommand[]> = {
     { name: "/usage", description: "Gemessene Nutzung anzeigen", scope: "both" },
   ],
   omp: [
-    { name: "/new", description: "Neue Session mit frischem Kontext", scope: "both" },
+    // OMP 19.1.1 advertises and dispatches /fresh in ACP mode.
+    { name: "/fresh", description: "Frischen Provider-Kontext starten", scope: "both" },
     { name: "/compact", description: "Kontext komprimieren, optional mit Anleitung", scope: "both" },
   ],
   opencode: [
