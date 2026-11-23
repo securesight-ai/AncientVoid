@@ -153,9 +153,13 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
     capabilities(): AdapterCapabilities {
       return {
         promptDelivery: "next-turn",
-        // ADR-0085: Pi's steer ist ein eigener Lauf (kein zweiter Prozess auf dieselbe
-        // native Session) — daher ist Lenken mitten im Zug erlaubt und waehlbar.
-        midTurnInput: true,
+        // BUG-0261: Pi sicherte `midTurnInput: true` zu (ADR-0085) mit der Begruendung
+        // „jeder Lenk-Aufruf ist ein eigener Lauf“. Genau dieser eigene Lauf ist ein
+        // **zweiter Prozess auf dieselbe native Session** — gemessen 2026-11-23: drei
+        // `pi -p --session <dieselbe Datei>` gleichzeitig, die sich im Arbeitsverzeichnis
+        // gegenseitig überschrieben. Was ADR-0074 für Claude & Co. verbietet, galt bei
+        // Pi nur wegen einer falschen Zusicherung. Lenken heißt bei Pi: im nächsten Zug.
+        midTurnInput: false,
         reasoning: true,
         tools: true,
         cost: false,
@@ -244,6 +248,13 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       switch (input.kind) {
         case "prompt": {
           const meta = sessions.get(handle.sessionId);
+          // BUG-0261: keine zwei Läufe auf derselben nativen Sitzung — egal wer ruft
+          // (Hub, hubctl, Schlaufe). Zwei Pi-Prozesse auf derselben JSONL und im
+          // selben Arbeitsverzeichnis überschreiben sich gegenseitig.
+          if (procs.has(handle.sessionId)) {
+            ctx.log("warn", "pi: Prompt abgelehnt — ein Lauf läuft bereits", { sessionId: handle.sessionId });
+            return { ok: false, detail: "ein pi-Lauf läuft bereits — Meldung bitte vormerken" };
+          }
           if (meta) meta.busy = true;
           const proc = await ctx.spawnWorker(
             buildArgs(input.text, sessionModels.get(handle.sessionId), false, resumes.get(handle.sessionId)),
