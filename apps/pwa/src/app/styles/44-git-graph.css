@@ -22,13 +22,13 @@
   padding: 1px 8px;
   border-radius: 999px;
   color: var(--bg);
-  background: var(--lane, var(--accent));
+  background: var(--lane);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.git-graph-ref.remote { background: transparent; color: var(--lane, var(--accent)); border: 1px solid var(--lane, var(--accent)); font-weight: 500; }
+.git-graph-ref.remote { background: transparent; color: var(--lane); border: 1px solid var(--lane); font-weight: 500; }
 .git-graph-ref.session { font-weight: 500; opacity: 0.85; }
 .git-graph-sync { font-weight: 400; }
 .git-graph-head {
