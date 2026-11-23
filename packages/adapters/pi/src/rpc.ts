@@ -38,6 +38,14 @@ export function createPiRpc(proc: WorkerProcess, onRecord: (record: RpcRecord) =
         // stdout ist für Protokollsätze reserviert; alles andere hier nicht werten.
         continue;
       }
+      // Ein Echo der **eigenen** Zeile ist kein pi-Ereignis. Passiert real beim
+      // Übernehmen eines tmux-Workers nach einem Hub-Neustart: der Puffer enthält
+      // die vorher eingetippte Anfrage, und die landete als
+      // `pi: unbekannter Stream-Typ "get_state"` im Chat (Fund 2026-11-23, 21:16).
+      // Eigene Ids tragen das Präfix `av`; pi erzeugt UUIDs und `call_…`.
+      if (typeof datensatz.id === "string" && datensatz.id.startsWith("av") && datensatz.type !== "response") {
+        continue;
+      }
       if (datensatz.type === "response") {
         const id = typeof datensatz.id === "string" ? datensatz.id : "";
         const wartend = id ? offen.get(id) : undefined;

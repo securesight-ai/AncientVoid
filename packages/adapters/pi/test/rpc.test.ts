@@ -34,6 +34,20 @@ function fakeProc(): WorkerProcess & {
 }
 
 describe("pi rpc — JSONL-Gespräch", () => {
+  it("ein Echo der eigenen Anfrage ist kein Ereignis und stört nicht", async () => {
+    const proc = fakeProc();
+    const empfangen: RpcRecord[] = [];
+    const rpc = createPiRpc(proc, (satz) => empfangen.push(satz));
+    const offen = rpc.request("get_state", undefined, 500);
+    // Der tmux-Puffer spielt nach einem Hub-Neustart genau diese Zeile zurück.
+    proc.schreiben(`${JSON.stringify({ id: "av1", type: "get_state" })}\n`);
+    proc.schreiben(`${JSON.stringify({ type: "agent_start" })}\n`);
+    proc.schreiben(`${JSON.stringify({ id: "av1", type: "response", command: "get_state", success: true, data: { sessionId: "pi-1" } })}\n`);
+    const antwort = await offen;
+    expect(antwort.success).toBe(true);
+    expect(empfangen.map((s) => s.type)).toEqual(["agent_start"]);
+  });
+
   it("ordnet Antworten anhand der Id, auch in anderer Reihenfolge", async () => {
     const proc = fakeProc();
     const rpc = createPiRpc(proc, () => undefined);
