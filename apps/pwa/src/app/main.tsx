@@ -36,7 +36,7 @@ import { RestoreBar } from "../features/windows/RestoreBar.tsx";
 import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
-import { closeTile, detachTile, focusOpenSession, forgetDetached, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
+import { closeTile, detachTile, focusOpenSession, forgetDetached, isLayoutFixed, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
 import { targetKey } from "../features/windows/protocol.ts";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
@@ -430,10 +430,15 @@ function Main() {
     if (!wide) return;
     const open = (ref: TileRef) => {
       const current = latest.current.ws;
+      const search = ref.content?.kind === "search";
+      const tiles = visibleTiles(current);
+      if (search && isLayoutFixed(current) && tiles.every(Boolean) &&
+          !tiles.some((tile) => tile?.content?.kind === "search")) return false;
       const next = openInNewTile(current, ref);
       // Search operates on the current card's command fields, just as the phone dialog does.
-      latest.current.changeWorkspace(ref.content?.kind === "search" ? { ...next, focus: current.focus } : next);
-      if (ref.content?.kind === "search") document.querySelector<HTMLInputElement>(".command-card input")?.focus();
+      latest.current.changeWorkspace(search ? { ...next, focus: current.focus } : next);
+      if (search) document.querySelector<HTMLInputElement>(".command-card input")?.focus();
+      return true;
     };
     const off = onWorkspaceOpen(open);
     const layer = (kind: "browser" | "devices") => onLayerOpen(kind, () => {
