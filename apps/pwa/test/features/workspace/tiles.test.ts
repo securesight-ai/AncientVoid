@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { closeTile, compactTiles, detachTile, focusOpenSession, isDetached, isLayoutFixed, openInTile, reattach, cycleLayout, emptyWorkspace, focusTile, openInNewTile, openSession, parseWorkspace, serializeWorkspace, setLayout, setLayoutFixed, swapWith, tileCount, visibleTiles } from "../../../src/features/workspace/tiles.ts";
+import { closeTile, compactTiles, detachTile, focusOpenSession, isDetached, isLayoutFixed, openInTile, reattach, restoreTile, cycleLayout, emptyWorkspace, focusTile, openInNewTile, openSession, parseWorkspace, serializeWorkspace, setLayout, setLayoutFixed, swapWith, tileCount, visibleTiles } from "../../../src/features/workspace/tiles.ts";
 
 const a = { sessionId: "a" };
 const b = { sessionId: "b" };
@@ -108,6 +108,38 @@ describe("Kachel-Zustand (T18.2)", () => {
     ws = parseWorkspace(JSON.stringify({ layout: "2v", slots: [{ sessionId: "a" }, { sessionId: 5 }, null, null], focus: 1 }));
     expect(visibleTiles(ws)).toEqual([a, null]);
     expect(isLayoutFixed(ws)).toBe(true);
+  });
+});
+
+
+describe("restoreTile — Schließen einer überlagernden Ansicht", () => {
+  it("ersetzt eine Seite im fixierten Raster die Session-Kachel, kommt die Session-Referenz inkl. Reiter zurück", () => {
+    // Session auf dem Git-Reiter, fixiertes 1er-Raster.
+    const sessionRef = { sessionId: "a", content: { kind: "session" as const, tab: "git" as const } };
+    let ws = openInNewTile(emptyWorkspace(), sessionRef);
+    // Notizen-Seite überlagert: fixiert ersetzt sie die fokussierte Kachel.
+    ws = openInNewTile(ws, { sessionId: "", content: { kind: "page" as const, page: "vault" as const } });
+    expect(visibleTiles(ws)[0]?.content?.kind).toBe("page");
+    // Schließen der Seite: Slot leer …
+    ws = closeTile(ws, 0);
+    expect(visibleTiles(ws)[0]).toBeNull();
+    // … und die gemerkte Ansicht kehrt exakt zurück (Referenz + Reiter).
+    ws = restoreTile(ws, sessionRef);
+    expect(visibleTiles(ws)[0]).toEqual(sessionRef);
+    expect(ws.focus).toBe(0);
+  });
+
+  it("läuft die gemerkte Ansicht schon, wird sie nur fokussiert", () => {
+    let ws = openSession(setLayout(emptyWorkspace(), "2v"), a);
+    ws = openSession(ws, b);
+    ws = restoreTile(ws, a);
+    expect(visibleTiles(ws)).toEqual([a, b]);
+    expect(ws.focus).toBe(0);
+  });
+
+  it("kein freier Slot: Zustand bleibt unverändert", () => {
+    const ws = openSession(setLayout(emptyWorkspace(), "1"), a);
+    expect(restoreTile(ws, b)).toBe(ws);
   });
 });
 

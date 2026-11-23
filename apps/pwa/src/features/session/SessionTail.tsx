@@ -6,7 +6,8 @@ import type { ComponentChildren } from "preact";
 import { InterruptedBanner } from "./InterruptedBanner.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 import { readTailScroll, writeTailScroll } from "./tail-scroll.ts";
-import { sessionHash, fileHash } from "../../app/route.ts";
+import { sessionHash, fileHash, pageHash } from "../../app/route.ts";
+import { popView } from "../../shared/nav-history.ts";
 import { registerShortcut } from "../../shared/shortcuts/registry.ts";
 import {
   sourcesBlock,
@@ -1689,7 +1690,11 @@ export function SessionTail({
             <Button
               aria-label={t("app.to_overview")}
               title={t("app.to_overview")}
-              onClick={() => onNavigate("dashboard")}
+              onClick={() => {
+                // Navigations-Historie: exakt die zuvor sichtbare Ansicht
+                // wiederherstellen; ohne Vorgeschichte die Übersicht.
+                location.hash = popView() ?? pageHash("dashboard");
+              }}
               class="back-btn"
             >
               ←
