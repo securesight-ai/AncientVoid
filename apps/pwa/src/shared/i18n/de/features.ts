@@ -869,6 +869,7 @@ export const de = {
   "search.head_project_files": "Projektdateien",
   "search.mode_or": "kein Text enthielt alle Begriffe — gefunden nach einzelnen",
   "search.mode_typo": "kein Text enthielt das gesuchte Wort — gefunden nach ähnlichem Wort: {terms}",
+  "search.suggest": "meintest du {term}? {hits}",
   "search.mode_part": "kein Text enthält die Begriffe als ganzes Wort — gefunden in Teilwörtern (z. B. „Angebot“ in „Sonderangebot“)",
   "search.no_hits_any": "nichts gefunden — weder in Fragen und Antworten noch in der Doku",
   "search.only_this_project": "nur dieses Projekt",

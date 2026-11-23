@@ -314,6 +314,9 @@ export interface SessionTextSearchResult {
   mode: SessionSearchMode;
   /** Für die Stufe `typo`: die Wörter, nach denen tatsächlich gefunden wurde. */
   corrected?: string[];
+  /** Ähnliches Wort mit **mehr** Fundstellen: „tokdek“ trifft nur die eigene
+   * Tippfrage, „tokdeck“ zwanzig echte Stellen. Vorschlagen, nicht verstecken. */
+  suggest?: { term: string; count: number }[];
   facets: { role: TranscriptRole; count: number }[];
   index: SearchIndexState;
 }
@@ -628,15 +631,20 @@ export class SessionTextIndex {
     // sonst vermischt „mehr laden“ Wortfunde mit Teilwortfunden.
     const phrases = built.terms.map(ftsPhrase).filter((m): m is string => m !== null);
     const andMatch = phrases.join(" ");
+    // Ein Fund auf dem rohen Begriff ist nicht automatisch der gute Fund: wer
+    // „tokdek“ tippt, findet zuerst seine eigene Frage. Die Vorschlagsstufe hält
+    // dagegen, was der Index an ähnlichen Wörtern mit mehr Funden hat.
+    const withSuggest = (r: SessionTextSearchResult): SessionTextSearchResult =>
+      r.mode === "typo" ? r : { ...r, ...this.suggestFor(built.terms, opts, roles, r.total) };
     if (this.probeFts(andMatch, opts, roles)) {
-      return { ...this.runFts(andMatch, opts, limit, offset, roles), mode: "and", index };
+      return withSuggest({ ...this.runFts(andMatch, opts, limit, offset, roles), mode: "and", index });
     }
     const part = this.searchScan(opts, limit, offset, roles, index);
-    if (part.total > 0) return part;
+    if (part.total > 0) return withSuggest(part);
     if (phrases.length > 1) {
       const orMatch = phrases.join(" OR ");
       if (this.probeFts(orMatch, opts, roles)) {
-        return { ...this.runFts(orMatch, opts, limit, offset, roles), mode: "or", index };
+        return withSuggest({ ...this.runFts(orMatch, opts, limit, offset, roles), mode: "or", index });
       }
     }
     // Vierte Stufe: der Begriff ist nicht zu kurz geraten, er ist verschrieben.
@@ -678,6 +686,55 @@ export class SessionTextIndex {
     return (this.db
       .prepare("SELECT DISTINCT term FROM transcript_vocab WHERE term >= ? AND term < ? LIMIT ?")
       .all(prefix, upper, cap) as unknown as { term: string }[]).map((r) => r.term).filter((t) => typeof t === "string");
+  }
+
+  /** Wie viele Zeilen passen in diesen Ausdruck? Zählen, nicht seiteweise ziehen. */
+  private countFts(match: string, opts: SessionTextSearchOptions, roles: readonly TranscriptRole[]): number {
+    const filter = this.where(opts, roles);
+    const row = this.db
+      .prepare(
+        `SELECT count(*) AS c
+         FROM transcript_fts
+         CROSS JOIN transcript_lines l ON l.id = transcript_fts.rowid
+         LEFT JOIN sessions s ON s.id = l.session_id
+         WHERE transcript_fts MATCH ?${filter.sql}`,
+      )
+      .get(match, ...filter.params) as unknown as { c: number } | undefined;
+    return row?.c ?? 0;
+  }
+
+  /** Vorschlag, wenn ein ähnliches Wort **mehr** Fundstellen hat. Obergrenzen sind
+   * Absicht: sechs Zählungen pro Suche, drei Vorschläge — die Suche bleibt unter
+   * hundert Millisekunden und zählt nicht die halbe Wortliste durch. */
+  private suggestFor(
+    terms: readonly string[],
+    opts: SessionTextSearchOptions,
+    roles: readonly TranscriptRole[],
+    total: number,
+  ): { suggest?: { term: string; count: number }[] } {
+    if (!this.useFts || !terms.length) return {};
+    const seen = new Set<string>();
+    const found: { term: string; count: number }[] = [];
+    let probes = 0;
+    for (const raw of terms) {
+      const tokens = raw.toLowerCase().split(FTS_TOKEN_SPLIT).filter((t) => t.length >= 5);
+      if (tokens.length !== 1) continue;
+      const token = tokens[0] as string;
+      let candidates = rankCandidates(token, this.vocabTerms(token.slice(0, 3)));
+      if (!candidates.length) candidates = rankCandidates(token, this.vocabTerms(token.slice(0, 2)));
+      for (const c of candidates) {
+        if (seen.has(c) || probes >= 6) continue;
+        seen.add(c);
+        probes += 1;
+        const phrase = ftsPhrase(c);
+        if (!phrase) continue;
+        const count = this.countFts(phrase, opts, roles);
+        if (count > total) found.push({ term: c, count });
+      }
+    }
+    if (!found.length) return {};
+    found.sort((x, y) => y.count - x.count || (x.term < y.term ? -1 : 1));
+    return { suggest: found.slice(0, 3) };
   }
 
   /** Verschriebener Begriff → vorhandenes Wort → Suchausdruck. Leer, wenn einer

@@ -310,6 +310,18 @@ export function SearchPane({
       {res && res.mode === "typo" && (
         <div class="dim search-note">{t("search.mode_typo", { terms: (res.corrected ?? []).join(", ") })}</div>
       )}
+      {/* Der Fall, der am meisten wehtut: der getippte Begriff trifft bloß die
+          eigene Frage, das echte Wort hätte zwanzig Fundstellen. Vorschlagen und
+          mit einem Tippen nachsuchen — nicht das Ergebnis unterschlagen. */}
+      {res?.suggest?.length ? (
+        <div class="search-suggest">
+          {res.suggest.map((s) => (
+            <button key={s.term} type="button" class="search-suggest-chip" onClick={() => type(s.term)}>
+              {t("search.suggest", { term: s.term, hits: hitsLabel(s.count) })}
+            </button>
+          ))}
+        </div>
+      ) : null}
       {/* Auf dem Handy verschwindet die Doku hinter hunderten Sitzungs-Karten.
           Die drei Fundorte oben sind die Antwort auf „wo wohnt dieser Name?". */}
       {res && scope !== "sessions" && res.docs.length > 0 && (

@@ -43,6 +43,12 @@ lokal 13/13 — einmal neu angestoßen). Diagnose-Rezept liegt als Skill
 Begriffe (< 5 Zeichen) werden nicht geraten, und was keinen Kandidaten hat,
 bleibt leer.
 
+Der häufigere Fall ist der Widerhall: der vertippte Begriff steckt im Bestand —
+in der Frage selbst — und die Liste ist richtig und nutzlos zugleich. Darum läuft
+parallel die **Vorschlagsstufe**: sie zählt Fundstellen ähnlicher Wörter und zeigt
+einen Chip („meintest du tokdeck? 3 Fundstellen“), der neu sucht. Die Reihenfolge
+der eigenen Treffer wird nie heimlich verändert.
+
 **Cross-Hub-Suche** (dieser Zweig/PR): `hubs=1` fragt die gekoppelten Hub-Rechner über
 die bestehende Fleet-Tür (`/api/search` ist fleet-routable, kein neues Recht),
 funde tragen `hub`/`hubUrl`, und pro Rechner steht in `hubs`, wie er mitgemacht
