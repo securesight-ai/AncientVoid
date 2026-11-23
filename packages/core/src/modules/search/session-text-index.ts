@@ -203,6 +203,63 @@ export function buildFtsQuery(q: string): { match: string; terms: string[] } | n
   return { match: parts.join(" "), terms: raw };
 }
 
+/** Edit-Distanz mit Schnitt: ab `max` Unterschieden hört die Rechnung auf —
+ * die Wortliste des Index hat zehntausende Einträge, man vergleicht nicht zur
+ * Freude. Rückgabe: Distanz, oder `max + 1` wenn sie darüber liegt. */
+export function editDistance(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const prev: number[] = [];
+  for (let j = 0; j <= b.length; j++) prev.push(j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur: number[] = [i];
+    let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      const v = Math.min((prev[j] ?? 0) + 1, (cur[j - 1] ?? 0) + 1, (prev[j - 1] ?? 0) + cost);
+      cur.push(v);
+      if (v < best) best = v;
+    }
+    if (best > max) return max + 1;
+    prev.length = 0;
+    prev.push(...cur);
+  }
+  return prev[b.length] ?? max + 1;
+}
+
+/** „tokdek“ steckt Buchstabe für Buchstabe in „tokdeck“ (ein Zeichen fehlt).
+ * Tippen lässt Zeichen weg — das ist die häufigste deutsche Suchpanne neben
+ * der Vertipplung, und eine Teilfolge ist billiger als jede Rechtschreibprüfung. */
+export function isSubsequence(needle: string, hay: string): boolean {
+  let at = 0;
+  for (const ch of hay) {
+    if (ch === needle[at]) at++;
+    if (at === needle.length) return true;
+  }
+  return at === needle.length;
+}
+
+/** Kandidaten aus der Wortliste für einen vermutlich verschriebenen Begriff:
+ * gleiche Länge (±2), Edit-Distanz 1 (ab acht Zeichen 2), oder die Eingabe ist
+ * Teilfolge des Wortes. Kurze Begriffe (< 5) bleiben verschont — sonst findet
+ * „und“ plötzlich „undd“. */
+export function rankCandidates(term: string, candidates: Iterable<string>, limit = 3): string[] {
+  const q = term.toLowerCase();
+  if (q.length < 5) return [];
+  const max = q.length >= 8 ? 2 : 1;
+  const scored: { term: string; d: number }[] = [];
+  for (const c of candidates) {
+    if (c === q || Math.abs(c.length - q.length) > 2) continue;
+    const d = editDistance(q, c, max);
+    if (d <= max) {
+      scored.push({ term: c, d });
+      continue;
+    }
+    if (c.length > q.length && isSubsequence(q, c)) scored.push({ term: c, d: max + 1 });
+  }
+  scored.sort((x, y) => x.d - y.d || x.term.length - y.term.length || (x.term < y.term ? -1 : 1));
+  return scored.slice(0, limit).map((s) => s.term);
+}
+
 /** Snippet für den Scan-Fallback: Fenster um den ersten Fund, alle Fundwörter
  * darin markiert — dasselbe Markerpaar wie FTS5, die PWA unterscheidet nicht. */
 export function scanSnippet(text: string, terms: string[]): string {
@@ -255,6 +312,8 @@ export interface SessionTextSearchResult {
   /** Auf welcher Stufe gefunden wurde (`and` / `teil` / `or`) — die Oberfläche
    * sagt es dazu, sonst hält man eine Teilwort- oder ODER-Liste für Wortfunde. */
   mode: SessionSearchMode;
+  /** Für die Stufe `typo`: die Wörter, nach denen tatsächlich gefunden wurde. */
+  corrected?: string[];
   facets: { role: TranscriptRole; count: number }[];
   index: SearchIndexState;
 }
@@ -307,6 +366,13 @@ export class SessionTextIndex {
           CREATE TRIGGER IF NOT EXISTS transcript_lines_ad AFTER DELETE ON transcript_lines BEGIN
             INSERT INTO transcript_fts(transcript_fts, rowid, text) VALUES ('delete', old.id, old.text);
           END;
+          -- Wortliste des Index: nötig, um einen verschriebenen Begriff gegen
+          -- die vorhandenen Wörter zu halten („tokdek“ -> „tokdeck“). Sie wird
+          -- vom Index gepflegt, kostet also keine eigene Pflege.
+          CREATE VIRTUAL TABLE IF NOT EXISTS transcript_vocab USING fts5vocab(
+            transcript_fts,
+            instance
+          );
         `);
       } catch {
         // Doch kein FTS5 im Build: der Durchlauf übernimmt, der Hub bleibt
@@ -573,6 +639,13 @@ export class SessionTextIndex {
         return { ...this.runFts(orMatch, opts, limit, offset, roles), mode: "or", index };
       }
     }
+    // Vierte Stufe: der Begriff ist nicht zu kurz geraten, er ist verschrieben.
+    // „tokdeck“ tippt man schnell als „tokdek“ — ein Präfix findet das nie, weil
+    // die Lücke in der Mitte sitzt. Kandidaten sind die Wörter DIESES Index.
+    const typo = this.typoTier(built.terms, opts, roles);
+    if (typo) {
+      return { ...this.runFts(typo.match, opts, limit, offset, roles), mode: "typo", corrected: typo.terms, index };
+    }
     // Nichts in den gewählten Rollen — aber die Chips sollen trotzdem sagen,
     // wo es läge. Eine leere Liste ohne diese Zahl liest sich wie „der Hub weiß
     // nichts“, dabei liegt der Fund in Denk- oder Werkzeugspuren.
@@ -594,6 +667,52 @@ export class SessionTextIndex {
          GROUP BY l.role`,
       )
       .all(match, ...scope.params) as unknown as { role: TranscriptRole; c: number }[]).map((r) => ({ role: r.role, count: r.c }));
+  }
+
+  /** Wörter des Index, die mit dieser Zeichenfolge beginnen. Die Wortliste ist
+   * nach Begriff sortiert, das Intervall ist ein Index-Scan — kein Durchlauf
+   * durch 20 000 Zeilen. */
+  private vocabTerms(prefix: string, cap = 2000): string[] {
+    if (!prefix) return [];
+    const upper = prefix.slice(0, -1) + String.fromCharCode(prefix.charCodeAt(prefix.length - 1) + 1);
+    return (this.db
+      .prepare("SELECT DISTINCT term FROM transcript_vocab WHERE term >= ? AND term < ? LIMIT ?")
+      .all(prefix, upper, cap) as unknown as { term: string }[]).map((r) => r.term).filter((t) => typeof t === "string");
+  }
+
+  /** Verschriebener Begriff → vorhandenes Wort → Suchausdruck. Leer, wenn einer
+   * der Begriffe nicht ersetzbar ist; dann bleibt die leere Liste eine leere. */
+  private typoTier(terms: readonly string[], opts: SessionTextSearchOptions, roles: readonly TranscriptRole[]): { match: string; terms: string[] } | null {
+    if (!this.useFts || !terms.length) return null;
+    const groups: string[][] = [];
+    const used: string[] = [];
+    for (const raw of terms) {
+      // Punkt und Schrägstrich sind Trenner — berichtigt wird pro Token, sonst
+      // vergleicht man „tokdeck.env.key“ mit „tokdeck“ und findet nie etwas.
+      const tokens = raw.toLowerCase().split(FTS_TOKEN_SPLIT).filter((t) => t.length >= 5);
+      if (!tokens.length) return null; // kurze Wörter raten nicht
+      const candidates: string[] = [];
+      for (const token of tokens) {
+        let found = rankCandidates(token, this.vocabTerms(token.slice(0, 3)));
+        if (!found.length) found = rankCandidates(token, this.vocabTerms(token.slice(0, 2)));
+        if (!found.length) return null;
+        candidates.push(found[0] as string);
+        if (tokens.length === 1) used.push(...found);
+      }
+      if (tokens.length === 1) {
+        const phrases = candidates.map(ftsPhrase).filter((m): m is string => m !== null);
+        if (!phrases.length) return null;
+        groups.push(phrases);
+      } else {
+        const phrase = ftsPhrase(candidates.join(" "));
+        if (!phrase) return null;
+        groups.push([phrase]);
+        used.push(candidates.join(" "));
+      }
+    }
+    const match = groups.map((g) => (g.length > 1 ? `(${g.join(" OR ")})` : (g[0] as string))).join(" ");
+    if (!this.probeFts(match, opts, roles)) return null;
+    return { match, terms: used };
   }
 
   /** Kostet eine Zeile: gibt es überhaupt einen Treffer für diesen Ausdruck?
