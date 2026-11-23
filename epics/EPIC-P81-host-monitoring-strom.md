@@ -1,6 +1,6 @@
 # EPIC-P81 — Host-Monitoring und Strom: alle Werte aller Hosts, schick und ehrlich
 
-**Status:** Planungsentwurf (Nutzerauftrag 23.11.2026), Umsetzung offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
+**Status:** in Umsetzung seit 23.11.2026 (T81.2–T81.4 liegen), Rest offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
 
 ## 1. Ziel & Entscheidung
 
@@ -140,8 +140,8 @@ Jeder Hub speichert nur sich selbst, der Home-Hub zusätzlich das NAS.
   hwmon-Pfad mit Trennung Karte/Paket, alle Hub-Hosts in „System“; Nachtrag zu ADR-0078. Eigener PR, sofort nützlich. **K9**
 - [x] **T81.2** Spike (23.11.2026, Ergebnisse in §3.2): Bedeutung von PPT je Host,
   `nvidia-smi`-Kosten, NAS-Felder, Hub-Stand der Peers. `gpu_metrics` wird nicht gebraucht.
-- [ ] **T81.3** ADR-0117 (Vertrag, Verlauf/K7, NAS-SSH, RAPL) und Contracts mit Tests. **K5/K7**
-- [ ] **T81.4** Core-Modul `hostmetrics`: `/proc`, hwmon, AMD, NVIDIA, Platten, Netz gegen
+- [x] **T81.3** ADR-0117 (Vertrag, Verlauf/K7, NAS-SSH, RAPL) und Contracts mit Tests. **K5/K7**
+- [x] **T81.4** Core-Modul `hostmetrics`: `/proc`, hwmon, AMD, NVIDIA, Platten, Netz gegen
   Fixture-Bäume (anonymisiert: keine Seriennummern, MACs, IPs). **K9**
 - [ ] **T81.5** RAPL-Regel mit Installations- und Rückbauanleitung; Zählerüberlauf-Test.
 - [ ] **T81.6** Verlaufsspeicher mit Verdichtung, Aufräumen, Recovery. **K7**
