@@ -16,6 +16,17 @@ gelegtes Gerätetoken ist widerrufen (`token revoke`, Route antwortet danach 401
 Der Deploy bringt auch **P75 Sprachausgabe** auf den Hub (main enthielt es seit
 11:46; der Live-Hub stand vorher auf `5701180b`).
 
+**Nachzug 23.11. — „warum finde ich Tokdeck nicht?“** Die Suche fand Tokdeck
+(20 Fundstellen in Frage/Antwort, 1 062 mit Denken/Werkzeug), aber drei Lücken
+waren echt: (1) Begriffe mit Trennern (`tokdeck.env.key`, Pfade) suchte man als
+ein Wort und fanden sie nicht — FTS5 zerlegt sie in Tokens; jetzt Phrase-Suche.
+(2) Die Doku-Seite war an das Projekt der laufenden Sitzung gebunden, das Repo
+`tokdeck` war nie im Suchraum — jetzt `allProjects=1` mit Projekt an der
+Fundstelle und gemeldetem Umfang (12 Projekte / 2,5 s). (3) Eine leere Liste nannte
+keine Facetten, las sich also wie „nichts im Hub“, obwohl 162 Fundstellen in
+Denken/Werkzeug lagen — jetzt Zahl plus Einschalt-Knopf. Nebenbei: der
+Nyx-Schwebeknopf lag auf dem Handy auf dem „Sitzung öffnen“-Knopf der Fundkarte.
+
 ## Erledigt (verifiziert)
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
   plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die
