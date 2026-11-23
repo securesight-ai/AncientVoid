@@ -179,36 +179,114 @@
   max-width: 46vw;
 }
 
-/* EPIC-P15 T15.3: vorgemerkte Nachrichten über der Eingabe. */
+/* EPIC-P15 T15.3: vorgemerkte Nachrichten über der Eingabe.
+ * Nutzerfund 23.11.2026 (PC): die Zeile war ein Rahmen im Rahmen mit fünf
+ * frei schwebenden Symbolen — jetzt eine ruhige Zeile: Nummer, Text, Knöpfe
+ * bündig rechts, kein Rand, Hintergrund wie ein Chip. */
 .queue-list {
-  padding: 4px 8px;
+  padding: 6px 10px 2px;
   font-size: var(--text-sm);
   /* Große Symbol-Tasten machen Zeilen hoch — eine lange Warteschlange scrollt selbst statt den Dock zu sprengen (BUG-0098). */
   max-height: min(30vh, 240px);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.queue-title { margin: 0 0 2px; }
-.queue-pos { flex: none; }
+.queue-title {
+  margin: 0 0 4px;
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+}
 .queue-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 2px 6px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 2px 8px;
   align-items: center;
-  padding: 2px 0;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--bg-chip);
+}
+.queue-item + .queue-item { margin-top: 3px; }
+.queue-pos {
+  flex: none;
+  color: var(--fg-faint);
+  font-variant-numeric: tabular-nums;
 }
 .queue-item .queue-text {
   grid-column: 2;
   overflow-wrap: anywhere;
 }
-/* Die Aktionsknopfe bekommen eine eigene Zeile: auf dem Handy (390 px) blieb der
-   vorgemerkte Text sonst auf gut 15 Zeichen gekuerzt und war unlesbar. */
 .queue-actions {
-  grid-column: 1 / -1;
+  grid-column: 3;
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 0;
+}
+.queue-actions .icon-action {
+  color: var(--fg-dim);
+}
+.queue-actions .icon-action:hover:not(:disabled),
+.queue-actions .icon-action:focus-visible {
+  color: var(--fg);
+}
+.queue-actions .icon-action:disabled {
+  color: var(--fg-faint);
+  cursor: not-allowed;
+}
+.queue-actions .icon-action.danger {
+  color: var(--err);
+}
+/* „Jetzt senden“ ist die Hauptaktion der Zeile — sie darf nicht wie die
+ * übrigen Symbole wirken. */
+.queue-actions .queue-send:not(:disabled) {
+  color: var(--accent);
+}
+/* Wo ↑ bzw. ↓ die Reihe nicht ändern können, bleiben sie als Platzhalter
+ * unsichtbar: gleiche Geometrie über alle Zeilen statt wandender Symbole. */
+.queue-actions .queue-out {
+  display: none;
+}
+/* Statt eines Stift-Glyphs, der in der Systemschrift als Schrägstrich
+ * durchfällt: das Wort. Selbe Trefferfläche, aber eindeutig. */
+.queue-actions .queue-edit-word {
+  color: inherit;
+}
+.queue-actions .queue-edit-glyph {
+  min-width: 56px;
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+}
+/* Eine fehlgeschlagene Aktion nennt den Grund des Hubs (nicht eine Vermutung)
+ * und lässt dieselbe Aktion erneut auslösen. */
+.queue-error {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 2px 0 5px;
+  padding: 3px 6px;
+  border-left: 2px solid var(--err);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--err) 10%, transparent);
+  color: var(--err);
+  font-size: var(--text-xs);
+}
+.queue-retry {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.queue-retry:hover,
+.queue-retry:focus-visible {
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
 }
 
 /* ADR-0085: eine vorgemerkte Meldung nachträglich ändern — das Eingabefeld passt in die
@@ -250,6 +328,18 @@
 }
 /* Auf dem Handy teilt der Chip die Zeile mit Clip, Vollbild, Hauptknopf und sich — bei
    360 px bliebe sonst nichts uebrig (gemessen: 119 px Platz, Chip 129 px). */
+@media (max-width: 639px) {
+  .queue-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .queue-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    gap: 2px;
+  }
+}
+
 @media (max-width: 639px) {
   .delivery-choice {
     padding: 8px 8px;

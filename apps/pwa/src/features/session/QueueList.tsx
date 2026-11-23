@@ -23,6 +23,9 @@ export function queueOrder(items: QueuedPrompt[]): QueuedPrompt[] {
 export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; api: HubApi; refreshKey: number }) {
   const [items, setItems] = useState<QueuedPrompt[]>([]);
   const [error, setError] = useState("");
+  /** Fehlgeschlagene Aktion nachschlagen — der Nutzer sieht den Grund und kann
+   * dieselbe Aktion erneut auslosen, statt ratlos vor derselben Zeile zu sitzen. */
+  const [retry, setRetry] = useState<null | (() => void)>(null);
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
   useEffect(() => {
     let alive = true;
@@ -51,27 +54,42 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
   const replace = (list: QueuedPrompt[]) => setItems(list);
   const remove = (item: QueuedPrompt) => {
     setError("");
+    setRetry(null);
     setItems((prev) => prev.filter((i) => i.id !== item.id));
     void api.removeQueued(sessionId, item.id).catch((err: unknown) => {
       // 404 = schon weg (gesendet oder anderswo gestrichen) — alles andere ehrlich zurückstellen.
       if ((err as { status?: unknown })?.status === 404) return;
       setItems((prev) => (prev.some((i) => i.id === item.id) ? prev : [...prev, item].sort((a, b) => a.createdAt.localeCompare(b.createdAt))));
       setError(t("session.remove_failed_kept"));
+      setRetry(() => () => remove(item));
     });
   };
   const sendNow = (item: QueuedPrompt) => {
     setError("");
+    setRetry(null);
     void api
       .sendQueuedNow(sessionId, item.id)
       .then(() => setItems((prev) => prev.filter((i) => i.id !== item.id)))
       // 422 trägt den Ablehnungsgrund (Error-Message); der Hub hat die Nachricht dann wieder vorgemerkt.
-      .catch((err) =>
-        setError(`${err instanceof Error && err.message && !/^\d/.test(err.message) ? err.message : t("session.send_failed")} — die Nachricht bleibt vorgemerkt.`),
-      );
+      .catch((err) => {
+        const grund = err instanceof Error && err.message && !/^\d/.test(err.message) ? err.message : t("session.send_failed");
+        // Der Hub hat sie nicht mehr — dann zeigen wir sie auch nicht mehr als
+        // „vorgemerkt“ an (sonst steht eine tote Zeile mit einem Grund, der
+        // niemandem hilft).
+        if (grund.includes("nicht mehr in der Warteschlange")) {
+          setItems((prev) => prev.filter((q) => q.id !== item.id));
+          setError("");
+          setRetry(null);
+          return;
+        }
+        setError(`${grund} — die Nachricht bleibt vorgemerkt.`);
+        setRetry(() => () => sendNow(item));
+      });
   };
   /** ADR-0085: umhängen. Optimistisch, damit die Reihe sofort der gewählten folgt. */
   const move = (item: QueuedPrompt, where: "front" | "back") => {
     setError("");
+    setRetry(null);
     const idx = sorted.findIndex((q) => q.id === item.id);
     const to = where === "front" ? 0 : sorted.length - 1;
     if (idx === to) return;
@@ -81,27 +99,40 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
     replace(next.map((q, i) => ({ ...q, position: i })));
     void api.editQueued(sessionId, item.id, { move: where }).catch(() => {
       setError(t("session.requeue_failed"));
+      setRetry(() => () => move(item, where));
       void api.sessionQueue(sessionId).then((list) => replace(list)).catch(() => undefined);
     });
   };
   /** ADR-0085: Text nachträglich ändern. */
-  const saveEdit = () => {
-    if (!editing) return;
-    const text = editing.text.trim();
-    const original = items.find((q) => q.id === editing.id);
+  const saveEdit = (wiederholen?: { id: string; text: string }) => {
+    const bearbeitet = wiederholen ?? editing;
+    if (!bearbeitet) return;
+    const text = bearbeitet.text.trim();
+    const original = items.find((q) => q.id === bearbeitet.id);
     setEditing(null);
     if (!original || text === "" || text === original.text) return;
     setError("");
-    replace(items.map((q) => (q.id === editing.id ? { ...q, text } : q)));
-    void api.editQueued(sessionId, editing.id, { text }).catch(() => {
+    setRetry(null);
+    replace(items.map((q) => (q.id === bearbeitet.id ? { ...q, text } : q)));
+    void api.editQueued(sessionId, bearbeitet.id, { text }).catch(() => {
       setError(t("session.change_failed_kept"));
+      setRetry(() => () => saveEdit({ id: bearbeitet.id, text }));
       void api.sessionQueue(sessionId).then((list) => replace(list)).catch(() => undefined);
     });
   };
   return (
     <div class="queue-list" aria-label={t("session.preset")}>
       <div class="queue-title dim">{t("session.preset_open")}{sorted.length}{t("session.goes_out_when_turn_ends")}</div>
-      {error && <div class="reply-error" role="alert">{error}</div>}
+      {error && (
+        <div class="queue-error" role="alert">
+          <span>{error}</span>
+          {retry && (
+            <button class="queue-retry" type="button" data-testid="queue-retry" onClick={retry}>
+              {t("session.queue_retry")}
+            </button>
+          )}
+        </div>
+      )}
       {sorted.map((item, i) => (
         <div key={item.id} class="queue-item">
           <span class="queue-pos dim">{i + 1}.</span>
@@ -115,7 +146,7 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
                 onInput={(e) => setEditing({ id: item.id, text: (e.target as HTMLTextAreaElement).value })}
               />
               <div class="queue-edit-actions">
-                <Button variant="primary" data-testid="queue-edit-save" onClick={saveEdit}>
+                <Button variant="primary" data-testid="queue-edit-save" onClick={() => saveEdit()}>
                   {t("common.save")}
                 </Button>
                 <Button onClick={() => setEditing(null)}>
@@ -132,8 +163,9 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
               <span class="queue-actions">
                 <button
                   disabled={item.delivery === "unknown"}
-                  class="icon-action"
+                  class="icon-action queue-send"
                   type="button"
+                  data-testid="queue-send-now"
                   aria-label={t("session.queue_send_now", { "n": i + 1 })}
                   title={t("composer.send_into_running_turn")}
                   onClick={() => sendNow(item)}
@@ -143,9 +175,11 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
                 {/* ADR-0085: der Nächste in der Reihe werden — oder zurückfallen. */}
                 <button
                   disabled={i === 0 || item.delivery === "unknown" || !speaksQueueOrder}
-                  class="icon-action"
+                  class={`icon-action${i === 0 ? " queue-out" : ""}`}
                   type="button"
                   data-testid="queue-move-front"
+                  aria-hidden={i === 0 ? "true" : undefined}
+                  tabIndex={i === 0 ? -1 : undefined}
                   aria-label={t("session.queue_send_next", { "n": i + 1 })}
                   title={speaksQueueOrder ? t("session.send_next_now") : t("session.hub_cannot_queue")}
                   onClick={() => move(item, "front")}
@@ -154,9 +188,11 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
                 </button>
                 <button
                   disabled={i === sorted.length - 1 || item.delivery === "unknown" || !speaksQueueOrder}
-                  class="icon-action"
+                  class={`icon-action${i === sorted.length - 1 ? " queue-out" : ""}`}
                   type="button"
                   data-testid="queue-move-back"
+                  aria-hidden={i === sorted.length - 1 ? "true" : undefined}
+                  tabIndex={i === sorted.length - 1 ? -1 : undefined}
                   aria-label={t("session.queue_to_back", { "n": i + 1 })}
                   title={speaksQueueOrder ? t("session.to_back") : t("session.hub_cannot_queue")}
                   onClick={() => move(item, "back")}
@@ -165,14 +201,14 @@ export function QueueList({ sessionId, api, refreshKey }: { sessionId: string; a
                 </button>
                 <button
                   disabled={item.delivery === "unknown" || !speaksQueueOrder}
-                  class="icon-action"
+                  class="icon-action queue-edit-glyph"
                   type="button"
                   data-testid="queue-edit"
                   aria-label={t("session.queue_edit", { "n": i + 1 })}
                   title={speaksQueueOrder ? t("session.edit_text") : t("session.hub_cannot_update")}
                   onClick={() => setEditing({ id: item.id, text: item.text })}
                 >
-                  ✎
+                  <span class="queue-edit-word">{t("session.queue_edit_word")}</span>
                 </button>
                 <button class="icon-action danger" type="button" aria-label={t("session.queue_remove", { "n": i + 1 })} title={t("session.strikethrough")} onClick={() => remove(item)}>
                   ✕

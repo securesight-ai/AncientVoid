@@ -1126,6 +1126,8 @@ export const en = {
   "session.provider_no_thinking_text": "The provider supplies no thinking text",
   "session.queue_edit": "Edit queued message {n}",
   "session.queue_remove": "Remove queued message {n}",
+    "session.queue_edit_word": "edit",
+"session.queue_retry": "Try again",
   "session.queue_send_next": "Send queued message {n} next",
   "session.queue_send_now": "Send queued message {n} now",
   "session.queue_to_back": "Move queued message {n} to the back",
