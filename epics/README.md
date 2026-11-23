@@ -1,4 +1,4 @@
-# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P78)
+# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P81)
 
 **On hold seit 15.11.2026 (Nutzerentscheid): P30 und P31.** Beide bleiben
 im Inventar, sind aber aus Empfehlungen für die nächste Arbeit ausgeschlossen.
@@ -293,8 +293,7 @@ vergeben war, führt das Epic die Nummer **P60** weiter (Repo-Regel
 |---|---|---|---|
 | [P60 — Agenten-Teams: Umbenennung, Kartenübersicht, Parallelität, Modellwahl](EPIC-P60-agenten-teams.md) | Run→Team vollständig umbenannt (Contracts, `/api/teams`, Policy `team.*`, Journal-Migration, `#/teams`-Redirects), Team-Detail mit Karten je Worker, breite DAGs + belegte Gleichzeitigkeit, Modell-Allowlist mit Formularauswahl (schließt ungeprüfte `task.model`-Lücke) — **umgesetzt 14.11.2026** (ADR-0077, MR !467/!468 + Abschluss-MR; Geräte-Abnahme → Endabnahme-Block) | keine fachliche offene (P40 umgesetzt, Gate grün; Live-Lauf-Block P39 unberührt) | 2–3 |
 
-Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main;
-ADR vor der ersten Contract-Änderung).
+Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR vor der ersten Contract-Änderung).
 
 ## Nutzerauftrag vom 15.11.2026 — Mehrsprachigkeit (Veröffentlichung)
 
@@ -323,6 +322,7 @@ ADR vor der ersten Contract-Änderung).
 | [P78 — Token-effiziente MCP-Anbindung: Progressive Disclosure statt Tool-Flut](EPIC-P78-token-effiziente-mcp-anbindung.md) | ADR-0098-Regel: fixer Contract / Dynamic Tool Search / Code Mode; getriggerter Prototyp erst ab >1 Backend mit >20 Tools |, belegte Session-App-Installation oder benannter Tab-Fallback; Lifecycle/Recovery ohne Hauptfenster — **Planungsentwurf, Umsetzung gesperrt** | P76 Exit grün; P32 bleibt vertagt, P30/P31 On hold | 0,5–1 Evaluation + 1–2 Umsetzung |
 | [P79 — Token-Tempo lokaler Inferenz in der PWA (eigener Menüpunkt)](EPIC-P79-inferenz-token-tempo.md) | Request-bezogene Verteilungen (Perzentile, KV-Reuse, TTFT) eigener Menüpunkt; tokdeck-Muster: externes Tool wird Hub-Modul — **Code steht (T79.1–T79.5, PR #264), Exit offen (T79.6/Geräteprüfung)** | — | — |
 | [P80 — Pentest-Seite: Scan ausgewählter Projekte über die SiLenT-Deck-API](EPIC-P80-pentest-scanseite.md) | Neue PWA-Seite + Contract/Core-Modul/Hub-Routen; generische MCP-Anbindung (Muster ADR-0096: Backend = Konfiguration, Allowlist-Gate), SiLenT-Deck bleibt Execution-Backend und bekommt MCP-Fassade (SiLenT_Tz EPIC-04/4.9, Übergang HTTP-Adapter); K5 Blob-Grenzen, K7-Journal, K9/K10 Degeneration ohne Deck; LLM-Analyse bleibt im Deck (Injection-Grenze) — **Planungsentwurf (Nutzerauftrag 22.11.2026)** | keine blockierende (Quer-Epic); P30/P31 On hold unberührt; externe Abhängigkeit: laufendes SiLenT-Deck | 1–2 Agenten-Tage |
+| [P81 — Host-Monitoring und Strom: alle Werte aller Hosts](EPIC-P81-host-monitoring-strom.md) | Neuer Reiter „Hosts“ unter `#/statistik` (omarchy, evox2, Server, NAS; Watt/kWh ohne Euro), 90 Tage Verlauf, gemeinsame Chart-Bausteine für Statistik/Metriken/Inferenz; powermeter als Stilvorlage, nicht 1:1 — **Planungsentwurf 23.11.2026** | keine blockierende (Quer-Epic); ADR-0117 vor Contract | 3–4 |
 
 ## Nutzerauftrag vom 20.11.2026 — Sprachausgabe (TTS) im Chat
 
