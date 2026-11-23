@@ -395,6 +395,25 @@ describe("query-Bau und Snippet des Durchlaufs", () => {
   });
 
 
+  it("hält eine Tippfehler-Familie für ein Wort — das enthaltende gewinnt", async () => {
+    addSessionRow("sfamilie", "/home/kaib/repos/tokdeck", "Token-Widget");
+    await seed("sfamilie", [
+      { seq: 1, type: "user", payload: { kind: "session.prompt", text: "warum finde ich tokdek nicht?" } },
+      { seq: 2, type: "assistant", payload: { kind: "message", text: "tokde tokdec tokdeck — drei Varianten, ein Tool." } },
+      { seq: 3, type: "user", payload: { kind: "session.prompt", text: "tokde und tokdec ebenfalls gestartet" } },
+      { seq: 4, type: "assistant", payload: { kind: "message", text: "tokdeck und tokdeck laufen beide" } },
+    ]);
+    const index = idx();
+    await index.refresh();
+    // Alle drei Kandidaten treffen gleich oft. Vorschläge, die im größeren Wort
+    // stecken, fallen weg — sonst steht Rauschen vor dem gesuchten Namen.
+    const res = await index.search({ q: "tokdek" });
+    const terms = (res.suggest ?? []).map((s) => s.term);
+    expect(terms).toContain("tokdeck");
+    expect(terms).not.toContain("tokde");
+    expect(terms).not.toContain("tokdec");
+  });
+
   it("schlägt das echte Wort vor, wenn der getippte nur die eigene Frage trifft", async () => {
     addSessionRow("srate", "/home/kaib/repos/tokdeck", "Token-Widget");
     await seed("srate", [
