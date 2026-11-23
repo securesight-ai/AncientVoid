@@ -306,7 +306,6 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 
 | [BUG-0268](bug-0268-strg-klick-ersetzt-kachel.md) | Strg-/Cmd-Klick auf eine Session-Karte ersetzt im fixierten Raster die fokussierte Kachel statt eine zweite zu öffnen (`openFromList` verwirft `newTile` seit dabe85d5, E2E „Kachelfokus fragt neu" rot) | open | S3 | pwa | [#322](https://github.com/securesight-ai/AncientVoid/issues/322) |
 | [BUG-0270](bug-0270-chat-status-lag-nach-turn-end.md) | Nach Zugende bleibt Status „aktiv/arbeitet“ statt „bereit“ — Tail setzt Status nur per 3s-Poll, nicht aus `session.turn_end` im WS | in-progress | S3 | pwa | [#334](https://github.com/securesight-ai/AncientVoid/issues/334) |
-
 | [BUG-0271](bug-0271-toast-layout-shift.md) | Toast-Benachrichtigungen liegen im Flow und schieben Split/Topbar statt Overlay | in-progress | S3 | pwa | [#337](https://github.com/securesight-ai/AncientVoid/issues/337) |
 
 Die nächste freie Nummer ist **0272** (0270 Status-Lag nach turn_end mit PR #335 gemerged; 0271 Toast-Layout-Shift; 0269 Statistik-Schnitt-Reload — zuerst als 0263, 0268 parallel in PR #327 für Strg-Klick; 0265 Kontextüberlauf als Anmeldepleite — ADR-0115, 0266 Bild-Auslese ohne OCR-Werkzeug, 0267 eingefügtes Bild ohne Oeffnen-Hinweis im Prompt; gemerged, 0260 mit PR #297 gemerged,
