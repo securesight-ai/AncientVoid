@@ -1,11 +1,11 @@
 ---
 id: BUG-0261
 slug: pi-zweite-laeufe-auf-derselben-sitzung
-status: open
+status: done
 severity: S1
 area: harness
 instance: prod
-commit: ""
+commit: "a00c7305"
 forge: "https://github.com/securesight-ai/AncientVoid/issues/300"
 epic: "EPIC-P15 / ADR-0085 (korrigiert durch ADR-0114)"
 created: 2026-11-23
