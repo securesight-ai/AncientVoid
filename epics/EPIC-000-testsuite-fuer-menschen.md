@@ -207,6 +207,15 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   (`--trace on`) anlegen und BUG-0167 wieder öffnen. Beleg: Laufzeile mit
   Datum und fastify-Version.
 
+### Übernommen aus EPIC-P81 (2026-11-23)
+
+- [ ] **T000.33 — Host-Monitoring freischalten und am Handy abnehmen.**
+  (Herkunft: EPIC-P81-host-monitoring-strom.md T81.13)
+  omarchy: `scripts/host-monitoring-setup.sh` mit `modules drivetemp nct6775` und
+  `rapl <benutzer>`, danach Neustart; evox2: `modules nct6775 it87`. Prüfen: CPU-Watt
+  auf omarchy ist eine Zahl statt „keine Berechtigung“, alle vier Hosts stehen unter
+  Statistik → Hosts, Kurven füllen sich. Beleg: Checklisten-Zeile mit Datum.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine

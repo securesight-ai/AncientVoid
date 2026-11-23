@@ -125,7 +125,7 @@ function Section({ id, title, note, collapsed, onToggle, children }: { id: strin
         {note !== undefined && <small class="stat-section-note">{note}</small>}
         <span class="stat-chevron" aria-hidden="true">{collapsed ? "▸" : "▾"}</span>
       </button>
-      {!collapsed && <div id={`stat-sec-${id}`} class="stat-section-body stat-scroll">{children}</div>}
+      {!collapsed && <div id={`stat-sec-${id}`} class="stat-section-body">{children}</div>}
     </Card>
   );
 }
@@ -433,7 +433,7 @@ function exportCsv(report: StatisticsReport): void {
 function SessionTable({ sessions }: { sessions: SessionStatistics[] }) {
   if (sessions.length === 0) return <p class="stat-note">{t("statistics.no_sessions")}</p>;
   return (
-    <table>
+    <div class="stat-scroll"><table>
       <thead>
         <tr>
           <th>{t("statistics.adapter_model")}</th>
@@ -465,14 +465,14 @@ function SessionTable({ sessions }: { sessions: SessionStatistics[] }) {
           </tr>
         ))}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
 function TurnTable({ turns }: { turns: TurnStatistics[] }) {
   if (turns.length === 0) return <p class="stat-note">{t("statistics.no_turns")}</p>;
   return (
-    <table>
+    <div class="stat-scroll"><table>
       <thead>
         <tr>
           <th>{t("statistics.adapter_model")}</th>
@@ -498,7 +498,7 @@ function TurnTable({ turns }: { turns: TurnStatistics[] }) {
           </tr>
         ))}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
@@ -506,7 +506,7 @@ function GateTable({ report }: { report: StatisticsReport }) {
   const g = report.gateWait;
   if (g === null) return <p class="stat-note">{t("statistics.no_approvals")}</p>;
   return (
-    <table>
+    <div class="stat-scroll"><table>
       <tbody>
         <tr><th scope="row">{t("statistics.gates")}</th><td>{formatCount(g.gates)}</td></tr>
         <tr><th scope="row">{t("approvals.answer_verb")}</th><td>{formatCount(g.answered)} ({ratio(g.answered, g.gates)})</td></tr>
@@ -515,14 +515,14 @@ function GateTable({ report }: { report: StatisticsReport }) {
         <tr><th scope="row">{t("statistics.immediately_allowed")}</th><td>{formatCount(g.autoApproved)}</td></tr>
         <tr><th scope="row">{t("statistics.wait_time")}</th><td><Distribution d={g.waitMs} unit="ms" /></td></tr>
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
 function ToolTable({ report }: { report: StatisticsReport }) {
   if (report.tools.length === 0) return <p class="stat-note">{t("statistics.no_tools")}</p>;
   return (
-    <table>
+    <div class="stat-scroll"><table>
       <thead>
         <tr>
           <th>{t("statistics.tool")}</th>
@@ -544,7 +544,7 @@ function ToolTable({ report }: { report: StatisticsReport }) {
           </tr>
         ))}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
@@ -553,14 +553,14 @@ function TeamTable({ report, filtered }: { report: StatisticsReport; filtered: b
   if (tm === null) return <p class="stat-note">{t("statistics.no_teams")}</p>;
   return (
     <div>
-      <table>
+      <div class="stat-scroll"><table>
         <tbody>
           <tr><th scope="row">{t("statistics.teams_tasks")}</th><td>{formatCount(tm.teams)} · {formatCount(tm.tasks)}</td></tr>
           <tr><th scope="row">{t("statistics.ends")}</th><td>{t("statistics.done")} {formatCount(tm.done)}{t("statistics.failed")} {formatCount(tm.failed)}{t("statistics.open")} {formatCount(tm.open)}{t("statistics.unknown")} {formatCount(tm.unknown)}</td></tr>
           <tr><th scope="row">{t("statistics.worker_end_rate")}</th><td>{tm.workerEndRate === null ? "—" : `${Math.round(tm.workerEndRate * 100)} %`}</td></tr>
           <tr><th scope="row">{t("statistics.retry_rate")}</th><td>{tm.retryRate === null ? "—" : `${Math.round(tm.retryRate * 100)} %`}</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <p class="stat-note">{t("statistics.done_note")}{filtered ? "" : " (hier ungeschnitten)"}{t("statistics.but_no_cut")}</p>
     </div>
   );
@@ -569,7 +569,7 @@ function TeamTable({ report, filtered }: { report: StatisticsReport; filtered: b
 function AnomalyTable({ anomalies }: { anomalies: SessionAnomaly[] }) {
   if (anomalies.length === 0) return <p class="stat-note">{t("statistics.no_anomalies")}</p>;
   return (
-    <table>
+    <div class="stat-scroll"><table>
       <thead>
         <tr>
           <th>{t("common.session_cap")}</th>
@@ -591,7 +591,7 @@ function AnomalyTable({ anomalies }: { anomalies: SessionAnomaly[] }) {
           </tr>
         ))}
       </tbody>
-    </table>
+    </table></div>
   );
 }
 
@@ -631,7 +631,7 @@ function CompareBody({ report, project, host, harness, periodA }: { report: Stat
   return (
     <div>
       <Segmented label={t("statistics.comparison_b")} value={periodB} options={PERIOD_OPTIONS} onChange={setPeriodB} />
-      <table>
+      <div class="stat-scroll"><table>
         <thead>
           <tr>
             <th>{t("statistics.adapter_model")}</th>
@@ -662,7 +662,7 @@ function CompareBody({ report, project, host, harness, periodA }: { report: Stat
             );
           })}
         </tbody>
-      </table>
+      </table></div>
       <p class="stat-note">{t("statistics.ab_explain")}</p>
     </div>
   );

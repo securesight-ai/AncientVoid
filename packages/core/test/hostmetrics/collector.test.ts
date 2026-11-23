@@ -96,6 +96,20 @@ describe("Host-Sammler", () => {
     expect(get("fs:/:used_percent")!.value).toBeCloseTo((800 / 900) * 100);
   });
 
+  it("hwmon: unbelegter Super-I/O-Eingang (0 °C) ist kein Messwert, 0 °C anderer Chips bleibt", async () => {
+    await put({
+      "sys/class/hwmon/hwmon5/name": "nct6799",
+      "sys/class/hwmon/hwmon5/temp10_input": "0",
+      "sys/class/hwmon/hwmon5/temp1_input": "33000",
+      "sys/class/hwmon/hwmon6/name": "k10temp",
+      "sys/class/hwmon/hwmon6/temp1_input": "0",
+    });
+    const { get } = await twice();
+    expect(get("hwmon:nct6799:virtual:temp10")).toMatchObject({ value: null, reason: "Sensor nicht belegt" });
+    expect(get("hwmon:nct6799:virtual:temp1")!.value).toBe(33);
+    expect(get("hwmon:k10temp:virtual:temp1")!.value).toBe(0);
+  });
+
   it("hwmon: alle Sensoren, Schlüssel ohne hwmonN, leere Datei ist keine Null", async () => {
     await put({
       "sys/class/hwmon/hwmon7/name": "k10temp\n",
