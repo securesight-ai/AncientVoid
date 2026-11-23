@@ -18,6 +18,14 @@ curl -s -o /dev/null -w "health=%{http_code}\n" http://127.0.0.1:7373/api/health
 curl -s http://127.0.0.1:7373/api/health | python3 -c "import json,sys; d=json.load(sys.stdin)['deployment']; print(d['runtimeSha'][:8], d['checkoutSha'][:8], d['pwaSha'][:8], d['runtimeDirty'])"
 ```
 
+Zwei Fakten, die 23.11.2026 Zeit gespart hätten: `apps/pwa/dist` liegt auf der
+Platte — das neue Bundle wirkt für neue Seitenlade **vor** jedem Neustart (im HTML
+nach `assets/index-….js` grepen), der Neustart dient nur dazu, die drei Shas wieder
+deckungsgleich zu machen. Und der Idle-Test unten zählt **Kindprozesse**; tmux-Worker
+sind keine Kinder, also wird mitten im Zug neu gestartet. Seit pi als RPC-Prozess läuft
+(PR #357) ist das beherrschbar: der Hub übernimmt den laufenden Worker nach dem
+Neustart wieder (live beobachtet: ein Pane über drei Neustarts), vorher riss es den Zug ab.
+
 Drei Shas müssen gleich sein (`runtimeSha == checkoutSha == pwaSha`) und
 `runtimeDirty` false. Nur eine gleiche Zahl ist kein Nachweis: `checkoutSha`
 allein beschreibt den Arbeitsbaum, nicht den Prozess.
