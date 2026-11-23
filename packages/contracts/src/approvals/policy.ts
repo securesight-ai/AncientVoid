@@ -77,6 +77,10 @@ export const POLICY_OPERATIONS = [
   "skills.write",
   "tools.ask",
   "attachments.upload",
+  /** Nutzerfund 2026-11-23: Bilddatei von der Maschine *dieses* Hubs lesen
+   * (Einfügen unter Linux/Wayland liefert nur einen Pfad). Nur ein Mensch an diesem
+   * Hub — kein Agent, keine Flotte: ein fremder Hub darf keine Pfade hier wählen. */
+  "files.readLocal",
   "settings.manage",
   "actions.run",
   "drafts.write",
@@ -163,6 +167,8 @@ export const POLICY: Readonly<Record<PolicyOperation, Readonly<Record<ActorKind,
   "tools.ask": { human: "deny", fleet: "deny", agent: "deny", bridge: "allow", companion: "deny", display: "deny" },
   /** T7.10: files into sessions — from a person's device (or their home hub). */
   "attachments.upload": { human: HUMAN, fleet: "allow", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
+  /** Lokaler Dateileser: nur dieses Hub, nur von Hand. */
+  "files.readLocal": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** T7.10: hub settings incl. the Gemini key — this hub's own devices only. */
   "settings.manage": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** T7.6: registered test/git/tool actions — a person's button. An agent

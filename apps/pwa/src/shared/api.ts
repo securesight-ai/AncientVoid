@@ -1370,6 +1370,25 @@ function createHubApi(P: (path: string) => string) {
     if (!res.ok) throw new Error(res.status === 409 ? "Die Datei hat sich geändert — neu laden." : `${res.status}`);
     return URL.createObjectURL(await res.blob());
   },
+  /** Bilddatei von der Maschine des Hubs (Einfügen unter Linux/Wayland: die
+   * Zwischenablage enthält dort nur einen Pfad). Daraus wird eine ganz normale
+   * Datei — der bestehende Anhang-Weg (Hochladen, OCR, Fehler) bleibt unverändert. */
+  localImageFile: async (path: string): Promise<File> => {
+    const res = await fetch(P("/api/local-files/bytes"), {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${getToken()}` },
+      body: JSON.stringify({ path }),
+    });
+    if (!res.ok) {
+      const grund = await res.json().catch(() => ({}) as { error?: string });
+      throw new Error(typeof grund.error === "string" ? grund.error : `${res.status}`);
+    }
+    const typ = res.headers.get("content-type") ?? "image/png";
+    const sitzungName = path.split("/").pop() ?? "bild";
+    const ausHeader = /filename\*=UTF-8''([^;]+)/.exec(res.headers.get("content-disposition") ?? "");
+    const name = ausHeader ? decodeURIComponent(ausHeader[1]!) : sitzungName;
+    return new File([await res.blob()], name, { type: typ });
+  },
   /** Bytes eines Bildes, das ein Werkzeug gelesen hat — ohne Revisionsprüfung,
    * weil die Vorschau die Datei so zeigt, wie sie jetzt ist. Der Token bleibt im
    * Header; in der Bild-URL steckt nie ein Geheimnis. */

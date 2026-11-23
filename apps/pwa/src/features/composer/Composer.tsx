@@ -13,7 +13,7 @@ import { SourceChips, SourcePreviewNote } from "./SourceChips.tsx";
 import type { AttachmentRecord } from "../../shared/api.ts";
 import { Button } from "../../shared/ui/index.ts";
 import { openClipboardShelf } from "../../shared/clipboard-shelf.ts";
-import { imageFilesFrom } from "../../shared/paste-images.ts";
+import { imageFilesFrom, imagePathsFrom } from "../../shared/paste-images.ts";
 import { requestAttach } from "../../shared/attach-external.ts";
 import { ShelfGlyph, useShelfCount } from "../clipboard/ClipboardShelf.tsx";
 
@@ -117,6 +117,21 @@ export function Composer({
   const shelfCount = useShelfCount();
   // EPIC-P43 T43.4: einzeilig, bis das Feld zum ersten Mal den Fokus bekommt.
   const [touched, setTouched] = useState(false);
+  // Grund, wenn ein eingefügter Bildpfad nicht zu holen war (Linux/Wayland-Fall).
+  const [pfadHinweis, setPfadHinweis] = useState("");
+
+  /** Bildpfade aus der Zwischenablage in echte Dateien verwandeln: der Hub auf
+   * demselben Rechner liest sie, danach läuft der normale Anhang-Weg. */
+  async function ausPfadenEinhaengen(pfade: string[]): Promise<void> {
+    setPfadHinweis("");
+    for (const pfad of pfade) {
+      try {
+        requestAttach(await api.localImageFile(pfad));
+      } catch (fehler) {
+        setPfadHinweis(fehler instanceof Error ? fehler.message : "Bild nicht abrufbar");
+      }
+    }
+  }
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -275,23 +290,39 @@ export function Composer({
       // Ein Screenshot aus der Zwischenablage oder eine fallengelassene Bilddatei wird zum
       // Anhang derselben Session — derselbe Weg wie die Bueroklammer (ADR-0093), damit
       // Hochladen, Lese-Status und Fehler denselben Anzeigezustand haben.
+      // Unter Linux/Wayland bringt Chromium die Bild-Bytes oft nicht in die
+      // Zwischenablage; Datei-Manager legen dafuer einen Pfad ab. Den holt der Hub
+      // (gleicher Anhang-Weg, keine neuen Rechte ueber projectRoots hinaus).
       onPaste={(e) => {
         if (disabled || !onAttachmentsChange) return;
         const bilder = imageFilesFrom(e.clipboardData);
-        if (bilder.length === 0) return;
+        if (bilder.length > 0) {
+          e.preventDefault();
+          for (const bild of bilder) requestAttach(bild);
+          return;
+        }
+        const pfade = imagePathsFrom(e.clipboardData);
+        if (pfade.length === 0) return;
         e.preventDefault();
-        for (const bild of bilder) requestAttach(bild);
+        void ausPfadenEinhaengen(pfade);
       }}
       onDragOver={(e) => {
         if (disabled || !onAttachmentsChange) return;
-        if (Array.from(e.dataTransfer?.types ?? []).includes("Files")) e.preventDefault();
+        const typen = Array.from(e.dataTransfer?.types ?? []);
+        if (typen.includes("Files") || typen.includes("text/uri-list")) e.preventDefault();
       }}
       onDrop={(e) => {
         if (disabled || !onAttachmentsChange) return;
         const bilder = imageFilesFrom(e.dataTransfer);
-        if (bilder.length === 0) return;
+        if (bilder.length > 0) {
+          e.preventDefault();
+          for (const bild of bilder) requestAttach(bild);
+          return;
+        }
+        const pfade = imagePathsFrom(e.dataTransfer);
+        if (pfade.length === 0) return;
         e.preventDefault();
-        for (const bild of bilder) requestAttach(bild);
+        void ausPfadenEinhaengen(pfade);
       }}
     >
       <textarea
@@ -352,6 +383,7 @@ export function Composer({
         </div>
       )}
       {slashHint && <div class="composer-notice dim">{slashHint}</div>}
+      {pfadHinweis && <div class="composer-notice err">{pfadHinweis}</div>}
       {enhanceError && <div class="composer-notice err">{enhanceError}</div>}
       {recommendError && !recommendation && <div class="composer-notice err">{recommendError}</div>}
 

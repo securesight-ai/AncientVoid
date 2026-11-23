@@ -15,6 +15,7 @@ import { REDACT_LOG_KEYS, DEFAULT_HOST_ID } from "@ancientvoid/contracts";
 import type { WebAuthnConfig } from "./modules/identity/webauthn.ts";
 import { authHook, type AuthOptions } from "./platform/auth.ts";
 import { registerRoutes } from "./routes.ts";
+import { registerLocalFileRoutes } from "./modules/attachments/local-files.routes.ts";
 import { registerAttachmentRoutes } from "./modules/attachments/attachments.routes.ts";
 import { registerPushRoutes } from "./modules/push/push.routes.ts";
 import { registerSttRoutes, type SttConfig } from "./modules/voice/stt.routes.ts";
@@ -180,6 +181,8 @@ export async function createHubApp(deps: HubAppDeps): Promise<FastifyInstance> {
   const hostId = deps.hostId ?? DEFAULT_HOST_ID;
   registerRoutes(app, { ...deps, projectRoots, fleet });
   if (deps.attachments && deps.settings) registerAttachmentRoutes(app, { attachments: deps.attachments, settings: deps.settings });
+  // Bild-Einfügen unter Linux: Bytes einer lokalen Bilddatei für den Composer.
+  if (deps.attachments) registerLocalFileRoutes(app, { projectRoots });
   if (deps.push) registerPushRoutes(app, { push: deps.push, tokens: deps.tokens });
   if (deps.desktop) registerDesktopRoutes(app, { desktop: deps.desktop, tokens: deps.tokens });
   if (deps.media) registerMediaRoutes(app, { ...deps.media, settings: deps.settings });
