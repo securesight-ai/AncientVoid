@@ -875,7 +875,7 @@ export const de = {
   "search.where_docs": "Fundorte in der Doku",
   "search.hubs_all": "andere Rechner einbeziehen",
   "search.hubs_none": "kein anderer Rechner gekoppelt",
-  "search.hub_ok": "{label}: {sessions} Fundstellen, {docs} Dokumente",
+  "search.hub_ok": "{label}: Fundstellen — Sitzungen {sessions}, Doku {docs}",
   "search.hub_offline": "{label}: nicht erreichbar",
   "search.hub_denied": "{label}: Zugang abgelehnt",
   "search.hub_unsupported": "{label}: dort keine Suchroute (anderer Hub zu alt)",

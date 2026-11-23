@@ -95,6 +95,8 @@ describe("Rollen-Chips", () => {
   it("benennt den Zustand jedes Hub-Rechners — ein toter ist ein Ergebnis", () => {
     const line = (over: Partial<HubSearchStatus> & Pick<HubSearchStatus, "state">) =>
       hubStatusLine({ hostId: "andre", label: "andre.tail", sessions: 3, docs: 1, ...over });
+    // Die Zahlen kommen fertig formuliert herein („1 Fundstelle“ / „3 Fundstellen“) —
+    // hier vergleicht der Test gegen dieselbe Quelle, nicht gegen eine Sprache.
     expect(line({ state: "ok" })).toEqual({ key: "search.hub_ok", params: { label: "andre.tail", sessions: 3, docs: 1 } });
     expect(line({ state: "offline" }).key).toBe("search.hub_offline");
     expect(line({ state: "denied" }).key).toBe("search.hub_denied");
