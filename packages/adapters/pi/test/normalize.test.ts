@@ -81,3 +81,31 @@ describe("pi usage (ADR-0032)", () => {
     expect(run([line + "\n"])).toEqual([]);
   });
 });
+
+describe("Compaction-Zeilen im Chat (Nutzerfund 2026-11-23)", () => {
+  const zeile = (rec: Record<string, unknown>) => run([JSON.stringify(rec)])[0]!;
+
+  it("eine fehlgeschlagene Verdichten sagt den Grund und dass der Kontext unverändert bleibt", () => {
+    const e = zeile({
+      type: "compaction_end",
+      reason: "threshold",
+      aborted: false,
+      errorMessage: "Auto-compaction failed: Summarization failed: generation hit the token cap and the summary is incomplete",
+    });
+    expect(e.payload).toMatchObject({ kind: "pi.compaction_end" });
+    expect(String(e.summary)).toContain("fehlgeschlagen");
+    expect(String(e.summary)).toContain("Antwort-Budget");
+    expect(String(e.summary)).toContain("unverändert");
+  });
+
+  it("Start und Erfolg heißen deutsch, nach Grund unterschieden", () => {
+    expect(String(zeile({ type: "compaction_start", reason: "threshold" }).summary)).toContain("Kontext an der Grenze");
+    expect(String(zeile({ type: "compaction_start", reason: "manual" }).summary)).toContain("von Hand");
+    expect(String(zeile({ type: "compaction_end", reason: "threshold", aborted: false }).summary)).toContain("Kontext verdichtet");
+  });
+
+  it("„session too small“ ist keine Panik, sondern nichts zu tun", () => {
+    const e = zeile({ type: "compaction_end", reason: "manual", aborted: false, errorMessage: "Nothing to compact (session too small)" });
+    expect(String(e.summary)).toContain("nichts zu verdichten");
+  });
+});
