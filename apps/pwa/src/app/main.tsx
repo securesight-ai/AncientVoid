@@ -37,7 +37,7 @@ import { RestoreBar } from "../features/windows/RestoreBar.tsx";
 import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
-import { detachTile, focusOpenSession, forgetDetached, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
+import { detachTile, focusOpenSession, forgetDetached, isLayoutFixed, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
 import { targetKey, tileWindowTarget } from "../features/windows/protocol.ts";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
@@ -447,10 +447,15 @@ function Main() {
     if (!wide) return;
     const open = (ref: TileRef) => {
       const current = latest.current.ws;
+      const search = ref.content?.kind === "search";
+      const tiles = visibleTiles(current);
+      if (search && isLayoutFixed(current) && tiles.every(Boolean) &&
+          !tiles.some((tile) => tile?.content?.kind === "search")) return false;
       const next = openInNewTile(current, ref);
       // Search operates on the current card's command fields, just as the phone dialog does.
-      latest.current.changeWorkspace(ref.content?.kind === "search" ? { ...next, focus: current.focus } : next);
-      if (ref.content?.kind === "search") document.querySelector<HTMLInputElement>(".command-card input")?.focus();
+      latest.current.changeWorkspace(search ? { ...next, focus: current.focus } : next);
+      if (search) document.querySelector<HTMLInputElement>(".command-card input")?.focus();
+      return true;
     };
     const off = onWorkspaceOpen(open);
     const layer = (kind: "browser" | "devices") => onLayerOpen(kind, () => {
@@ -495,10 +500,9 @@ function Main() {
   return (
     <>
       <TooltipLayer />
-      {/* EPIC-P64 T64.4: am PC mit sichtbarer Liste sitzt die Glocke im Kopf
-       * der Listenspalte (App bell-Prop) — die globale Eck-Glocke gilt nur
-       * noch für zugeklappte Liste (T51.4) und schmale Layouts. */}
-      {wide ? (listCollapsed ? <NotificationCenter corner /> : null) : <NotificationCenter />}
+      {/* EPIC-P64: die Desktop-Liste hat ihre eigene Glocke. Am Tablet und
+       * bei eingeklappter Liste sitzt sie in der Fensterecke. */}
+      {wide ? (!filesWide || listCollapsed ? <NotificationCenter corner /> : null) : <NotificationCenter />}
       {staleAt && (
         <div class="topbar">
           {/* K10: tippen lädt neu — der Service Worker holt dann wieder Netz-zuerst. */}
@@ -546,7 +550,7 @@ function Main() {
         // T8.5 (AC-P8-6): from 1280 px list and session side by side.
         <div class={`split${listCollapsed ? " list-collapsed" : ""}`}>
           <aside class="split-list">
-            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={!listCollapsed} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
+            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={filesWide && !listCollapsed} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
           </aside>
           <section class="split-detail">
             {/* EPIC-P18: up to four sessions as tiles. */}

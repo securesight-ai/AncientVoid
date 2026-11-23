@@ -1,4 +1,4 @@
-import { test, expect } from "../support/fixtures.ts";
+import { test, expect, enableAutoTiling } from "../support/fixtures.ts";
 
 /** PC und Tablet nutzen ab 700 px denselben Grid-Arbeitsplatz; darunter bleibt der Handy-Ablauf. */
 test.describe("Tablet", () => {
@@ -17,6 +17,7 @@ test.describe("Tablet", () => {
     await app.setViewportSize({ width: 800, height: 1280 });
     await app.goto(`${hub.origin}/#/sessions/${first}`);
     await expect(app.locator('.tile[data-tile="1"] .session-top-title')).toHaveText("Erste Aufgabe");
+    await enableAutoTiling(app);
     await app.locator(".split-list .session-card").filter({ hasText: "Zweite Aufgabe" }).locator(".session-open").click();
     await expect(app.locator(".tile")).toHaveCount(2);
     for (const width of [800, 1024, 1280]) {

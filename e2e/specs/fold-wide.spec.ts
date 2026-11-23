@@ -32,44 +32,29 @@ test.describe("Z Fold ausgeklappt (BUG-0180)", () => {
     await app.setViewportSize(FOLD);
     await app.goto(`${hub.origin}/#/sessions/${id}`);
 
-    const split = app.locator(".tablet-split");
-    await expect(split).toBeVisible();
-    const cols = await split.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").map(parseFloat));
-    expect(cols).toHaveLength(2);
-    expect(cols[0]!).toBeGreaterThanOrEqual(200);
-
-    const box = await app.evaluate(() => {
-      const strip = document.querySelector(".session-strip")!.getBoundingClientRect();
-      const detail = document.querySelector("[data-testid=tablet-detail]")!.getBoundingClientRect();
-      const appEl = document.getElementById("app")!.getBoundingClientRect();
-      return {
-        stripRight: strip.right,
-        detailLeft: detail.left,
-        stripBelow: strip.top >= 0 && strip.top < detail.bottom,
-        appWidth: appEl.width,
-        vw: window.innerWidth,
-        scrollWidth: document.documentElement.scrollWidth,
-      };
+    await expect(app.locator(".split")).toBeVisible();
+    const boxes = await app.evaluate(() => {
+      const list = document.querySelector(".split-list")!.getBoundingClientRect();
+      const detail = document.querySelector(".split-detail")!.getBoundingClientRect();
+      return { listWidth: list.width, listRight: list.right, detailLeft: detail.left, detailRight: detail.right, viewport: innerWidth };
     });
-    // Die Liste steht links neben der Session, nicht darueber.
-    expect(box.stripRight).toBeLessThanOrEqual(box.detailLeft + 1);
-    // Keine zwei schwarzen Balken: die App fuellt den Screen bis auf ihr Randpadding.
-    expect(box.appWidth).toBeGreaterThanOrEqual(box.vw - 28);
-    expect(box.scrollWidth).toBeLessThanOrEqual(box.vw);
+    expect(boxes.listWidth).toBeGreaterThanOrEqual(200);
+    expect(boxes.listRight).toBeLessThanOrEqual(boxes.detailLeft + 1);
+    expect(boxes.detailRight).toBeGreaterThanOrEqual(boxes.viewport - 28);
+    expect(await app.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(boxes.viewport);
     expect(await overflowing(app)).toEqual([]);
 
-    // Und die Liste ist wirklich erreichbar: die offene Session ist markiert, die
-    // neue Session hat einen eigenen Knopf.
-    await expect(app.locator(".strip-item")).toHaveCount(3); // zwei Sessions + „Neu“
-    await expect(app.locator(".strip-item.active")).toHaveCount(1);
-    await expect(app.locator(".strip-new")).toBeVisible();
+    const list = app.locator(".split-list");
+    await expect(list.locator(".session-card")).toHaveCount(2);
+    await expect(list.locator(".session-card[aria-current]")).toHaveCount(1);
+    await expect(list.getByRole("button", { name: "Neue Session", exact: true })).toBeVisible();
   });
 
   test("am Handy bleibt es eine Spalte — und nichts ragt heraus", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "dummy" });
     await app.setViewportSize(PHONE);
     await app.goto(`${hub.origin}/#/sessions/${id}`);
-    await expect(app.locator(".tablet-split")).toHaveCount(0);
+    await expect(app.locator(".split")).toHaveCount(0);
     await expect(app.locator(".session-topbar")).toBeVisible();
     expect(await overflowing(app)).toEqual([]);
   });

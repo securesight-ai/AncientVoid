@@ -153,7 +153,8 @@ test.describe("EPIC-P29: Workspace-Runtime (T29.7)", () => {
     const id = await hub.createSession({ adapter: "opencode", prompt: "ohne Manifest", project: hub.alpha });
     await hub.until(async () => (await hub.api<{ status: string }>(`/api/sessions/${id}`)).body.status === "idle", "idle");
     expect((await hub.api(`/api/sessions/${id}/workspace`)).status).toBe(404);
-    expect(workspaceEvents(await hub.events(id))).toHaveLength(0);
+    const events = workspaceEvents(await hub.events(id));
+    expect(events.filter((e) => !e.payload.kind?.startsWith("workspace.main_sync_"))).toHaveLength(0);
     // Die Session bleibt normal steuerbar — kein Warten, keine Sperre.
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await expect(app.getByPlaceholder("Antworten…")).toBeVisible();

@@ -5,10 +5,9 @@ const EVENT = "ancientvoid:workspace-open";
 export function openWorkspaceContent(ref: TileRef): boolean {
   return !window.dispatchEvent(new CustomEvent<TileRef>(EVENT, { detail: ref, cancelable: true }));
 }
-export function onWorkspaceOpen(open: (ref: TileRef) => void): () => void {
+export function onWorkspaceOpen(open: (ref: TileRef) => boolean): () => void {
   const listener = (e: Event) => {
-    e.preventDefault();
-    open((e as CustomEvent<TileRef>).detail);
+    if (open((e as CustomEvent<TileRef>).detail)) e.preventDefault();
   };
   window.addEventListener(EVENT, listener);
   return () => window.removeEventListener(EVENT, listener);

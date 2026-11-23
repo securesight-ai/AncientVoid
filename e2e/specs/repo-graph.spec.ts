@@ -1,4 +1,4 @@
-import { test, expect, cardAction } from "../support/fixtures.ts";
+import { test, expect, enableAutoTiling, cardAction, sessionTab } from "../support/fixtures.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -127,6 +127,7 @@ test.describe("Repo-Graph (EPIC-P48)", () => {
     expect(fileWin.url()).toContain(`/sessions/${id}/datei/README.md`);
     await expect(fileWin.getByText("Das Handbuch beschreibt den Handoff")).toBeVisible();
 
+    await enableAutoTiling(app);
     // Hauptfenster: Knoten-Klick öffnet eine zusätzliche Dateikarte; der Graph bleibt erhalten.
     await app.getByRole("button", { name: "Datei README.md auswählen" }).click();
     await expect(app.locator(".session-live[data-tab='datei']")).toBeVisible();
@@ -142,8 +143,8 @@ test.describe("Repo-Graph (EPIC-P48)", () => {
     const id = await hub.createSession({ adapter: "dummy", prompt: "Seitenleiste" });
     await app.goto(`${hub.origin}/#/sessions/${id}/graph`);
     await expect(app.locator(".graph-canvas")).toBeVisible();
-    // Strg+Umschalt+E öffnet die rechte Sidebar; erst Nutzung schlägt die fokussierte Session als Quelle vor.
-    await app.keyboard.press("Control+Shift+e");
+    await sessionTab(app, "Befehle");
+    await app.getByRole("button", { name: "Dateibaum öffnen", exact: true }).click();
     await expect(app.locator('[data-testid=files-sidebar]')).toBeVisible();
     await app.locator(".files-row").filter({ hasText: "README.md" }).click();
     await expect(app.locator(".tile .file-card")).toHaveCount(1);
