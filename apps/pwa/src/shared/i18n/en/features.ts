@@ -876,7 +876,7 @@ export const en = {
   "search.where_docs": "found in docs",
   "search.hubs_all": "include the other hubs",
   "search.hubs_none": "no other hub is paired",
-  "search.hub_ok": "{label}: {sessions} matches, {docs} documents",
+  "search.hub_ok": "{label}: matches — sessions {sessions}, docs {docs}",
   "search.hub_offline": "{label}: not reachable",
   "search.hub_denied": "{label}: access refused",
   "search.hub_unsupported": "{label}: no search route there (hub too old)",

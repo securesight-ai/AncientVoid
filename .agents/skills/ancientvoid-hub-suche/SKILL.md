@@ -48,6 +48,13 @@ dieses Hubs und das Markdown der Projekte unter `projectRoots`. Ein anderer Hub
    Antwortfelder `docProjects` / `docTruncated` sagen, was tatsächlich scannte
    (Grenze: 12 Projekte, 2,5 s).
 
+5. **Anderer Rechner = anderer Fundus.** Seit PR #307 gibt es den Kreuz
+   „andere Rechner einbeziehen" (`hubs=1`): der Hub fragt seine Fleet-Peers über
+   `/api/search` und meldet pro Rechner `ok / offline / denied / unsupported /
+   skipped`. Ohne diesen Kreuz bleibt die Antwort lokal — die Frage nach einem
+   Tool, das auf dem anderen Rechner gebaut wurde, läuft dann ins Leere. Prüfen:
+   `peers` und `hubs` in der Antwort; `sessionTotal` steigt nur mit `hubs=1`.
+
 ## Direct proof am Bestand (wenn API und Index sich widersprechen)
 
 ```bash
