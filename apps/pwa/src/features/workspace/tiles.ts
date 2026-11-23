@@ -143,6 +143,20 @@ export function openInNewTile(ws: Workspace, ref: TileRef): Workspace {
   return put({ ...ws, layout }, index, ref);
 }
 
+/**
+ * BUG-0268: Strg/⌘-Klick — eine eigene Kachel, auch im fixierten Raster. Ein
+ * volles Raster wächst dafür eine Layout-Stufe, statt die fokussierte Kachel
+ * zu verdrängen; eine schon offene Session bekommt nur den Fokus.
+ */
+export function openAdditionalTile(ws: Workspace, ref: TileRef): Workspace {
+  const focused = focusOpenSession(ws, ref);
+  if (focused) return focused;
+  if (!isLayoutFixed(ws)) return openInNewTile(ws, ref);
+  const visible = COUNT[ws.layout];
+  if (ws.slots.slice(0, visible).includes(null)) return openInNewTile(ws, ref);
+  return openInNewTile({ ...ws, layout: (GROW[visible] ?? "2x2") as Layout }, ref);
+}
+
 /** BUG-0244: feste Kachel (Neue Session → Index 0). Belegte Kachel wird verschoben, nicht verworfen. */
 export function openInTile(ws: Workspace, ref: TileRef, index: number): Workspace {
   if (index < 0) return openInNewTile(ws, ref);

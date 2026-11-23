@@ -38,7 +38,7 @@ import { RestoreBar } from "../features/windows/RestoreBar.tsx";
 import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
-import { detachTile, focusOpenSession, focusTile, forgetDetached, isLayoutFixed, openInNewTile, openInTile, parseWorkspace, reattach, restoreTile, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
+import { detachTile, focusOpenSession, focusTile, forgetDetached, isLayoutFixed, openAdditionalTile, openInNewTile, openInTile, parseWorkspace, reattach, restoreTile, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
 import { targetKey, tileWindowTarget } from "../features/windows/protocol.ts";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
@@ -477,7 +477,9 @@ function Main() {
     const base = forgetDetached(ws, ref);
     // Schon offen in einer Kachel → nur hinspringen, keine zweite Karte.
     const focused = focusOpenSession(base, ref);
-    changeWorkspace(focused ?? openInNewTile(base, ref));
+    // BUG-0268: Strg/⌘-Klick (newTile) erzwingt die eigene Kachel — im
+    // fixierten Raster wächst das Layout, statt die fokussierte Kachel zu ersetzen.
+    changeWorkspace(focused ?? (opts?.newTile ? openAdditionalTile(base, ref) : openInNewTile(base, ref)));
   };
   // Every route has its own remembered target. Existing cards never consume new route props.
   useEffect(() => {
