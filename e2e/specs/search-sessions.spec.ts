@@ -87,5 +87,14 @@ test.describe("Suche über Sessiontexte", () => {
     // Die Fundstelle nennt ihr Projekt, sonst steht da nur ein Dateiname.
     await expect(app.locator(".search-result-card").first()).toContainText("alpha");
     await expect(app.locator(".search-status").filter({ hasText: "Projekte durchsucht" })).toBeVisible();
+
+    // Die Fundorte oben sind auf dem Handy die einzige Doku-Antwort, die man ohne
+    // Scrollen durch hundert Sitzungskarten sieht.
+    await expect(app.locator(".search-where-chip").first()).toContainText("alpha/README.md");
+
+    // Öffnen heißt: die Datei aus dem Projekt der Fundstelle, nicht aus dem der
+    // laufenden Sitzung — sonst steht da ein Fehler, wo ein Handbuch liegt.
+    await app.locator(".search-result-card").first().click();
+    await expect(app.locator(".file-viewer-body")).toContainText("Das Handbuch beschreibt den Handoff");
   });
 });
