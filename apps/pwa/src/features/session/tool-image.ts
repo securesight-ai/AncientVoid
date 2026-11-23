@@ -35,6 +35,54 @@ const SCHALEN_WERKZEUGE = new Set(["bash", "shell", "exec", "exec_command", "loc
 /** Hochstens so viele Vorschläge pro Werkzeugausgabe — sonst zugemüllte Chats. */
 const MAX_VORSCHLAEGE = 6;
 
+/** `cd` in einer zusammengesetzten Schalenzeile; das **letzte** zählt. */
+const CD_IM_BEFEHL = /\bcd\s+(?:"([^"]+)"|'([^']+)'|([^\s;&|]+))/g;
+
+/** Der Befehl einer Schalen-Nutzung (Schlüssel je nach Adapter verschieden). */
+function befehlAusEingabe(eingabe: unknown): string {
+  if (typeof eingabe !== "object" || eingabe === null) return "";
+  const r = eingabe as Record<string, unknown>;
+  for (const schlüssel of ["command", "cmd", "shell", "script"]) {
+    if (typeof r[schlüssel] === "string") return r[schlüssel] as string;
+  }
+  return "";
+}
+
+/**
+ * Von welcher Wurzel aus die **relativen** Namen in einer Schalen-Ausgabe zu lesen
+ * sind. Ein `cd` verschiebt sie, und ohne das zu beachten zeigen Vorschauen ins
+ * Leere: eigene Sitzung 7d3df295 (Arbeitsverzeichnis `/home/kaib/repos/ancientvoid-suche`)
+ * lieferte `cd /home/kaib/repos/AncientVoid && ls -1 apps/pwa/public/icons/*.png` —
+ * über die Sitzungsroute hätte es 404 heißen müssen, denn unter der Sitzungs­wurzel
+ * gibt es diese Pfade nicht. `null` heißt: Wurzel nicht bestimmbar (relatives `cd`,
+ `~`, Shell-Variable, Ziel außerhalb des Projekts) — dann lieber gar keine Vorschau
+ * als eine, die ins Leere zeigt.
+ */
+function ausgabeWurzel(befehl: string, ref: SessionRef): { praefix: string } | null {
+  let aktuell: string | undefined;
+  let verschoben = false;
+  for (const treffer of befehl.matchAll(CD_IM_BEFEHL)) {
+    const ziel = (treffer[1] ?? treffer[2] ?? treffer[3] ?? "").trim();
+    verschoben = true;
+    if (!ziel || ziel === ".") continue;
+    if (!ziel.startsWith("/") && aktuell === undefined) return null; // ausgehend von einer unbekannten Wurzel raten
+    const teil = ziel.startsWith("/") ? ziel.split("/") : `${aktuell}`.split("/").concat(ziel.split("/"));
+    const sauber: string[] = [];
+    for (const segment of teil) {
+      if (!segment || segment === ".") continue;
+      if (segment === "..") sauber.pop();
+      else if (segment.includes("$") || segment.startsWith("~")) return null; // Variable oder Home → unbekannt
+      else sauber.push(segment);
+    }
+    aktuell = `/${sauber.join("/")}`;
+  }
+  if (!verschoben || aktuell === undefined) return { praefix: "" };
+  const wurzel = ref.project.endsWith("/") ? ref.project : `${ref.project}/`;
+  if (!aktuell.startsWith(wurzel)) return null;
+  const praefix = aktuell.slice(wurzel.length);
+  return { praefix: praefix ? `${praefix}/` : "" };
+}
+
 /**
  * Welche Sitzung darf eine Vorschau bekommen? Nur die eigene des laufenden Hubs.
  * Sitzungsdatensatz **und** fremder Rechner werden getrennt betrachtet: jeder
@@ -68,13 +116,16 @@ function pfadAusEingabe(input: unknown): string {
  * Projektwurzel (Projekt-Route), relative relativ zum Arbeitsverzeichnis der
  * Sitzung (Sitzungs-Route). Alles andere bewusst `null`.
  */
-function refFuerPfad(pfad: string, ref: SessionRef): ToolImageRef | null {
+function refFuerPfad(pfad: string, ref: SessionRef, praefix = ""): ToolImageRef | null {
   if (untauglicherPfad(pfad)) return null;
   const name = pfad.split("/").pop() ?? pfad;
   if (pfad.startsWith("/")) {
     const wurzel = ref.project.endsWith("/") ? ref.project : `${ref.project}/`;
     if (!pfad.startsWith(wurzel)) return null;
     return { target: `project=${encodeURIComponent(ref.project)}`, path: pfad.slice(wurzel.length), name };
+  }
+  if (praefix) {
+    return { target: `project=${encodeURIComponent(ref.project)}`, path: `${praefix}${pfad}`, name };
   }
   return { target: `session=${encodeURIComponent(ref.id)}`, path: pfad, name };
 }
@@ -138,9 +189,12 @@ export function toolImageHits(
   const werkzeug = typeof nutzung?.name === "string" ? nutzung.name.toLowerCase() : "";
   if (!SCHALEN_WERKZEUGE.has(werkzeug)) return { direkt, vorschlaege };
 
+  const wurzel = ausgabeWurzel(befehlAusEingabe((event.payload as { input?: unknown }).input), ref);
+  if (!wurzel) return { direkt, vorschlaege };
+
   const schon = new Set(direkt.map((b) => `${b.target}\u0000${b.path}`));
   for (const kandidat of werkzeugText(result).match(BILD_PFAD_IN_TEXT) ?? []) {
-    const bild = refFuerPfad(kandidat, ref);
+    const bild = refFuerPfad(kandidat, ref, wurzel.praefix);
     if (!bild) continue;
     const schluessel = `${bild.target}\u0000${bild.path}`;
     if (schon.has(schluessel)) continue;
