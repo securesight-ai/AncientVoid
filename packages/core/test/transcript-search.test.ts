@@ -394,6 +394,51 @@ describe("query-Bau und Snippet des Durchlaufs", () => {
     expect(scanSnippet("ganz ohne Fund", ["fehit"]).includes(SNIPPET_MARK_OPEN)).toBe(false);
   });
 
+
+  it("hält eine Tippfehler-Familie für ein Wort — das enthaltende gewinnt", async () => {
+    addSessionRow("sfamilie", "/home/kaib/repos/tokdeck", "Token-Widget");
+    await seed("sfamilie", [
+      { seq: 1, type: "user", payload: { kind: "session.prompt", text: "warum finde ich tokdek nicht?" } },
+      { seq: 2, type: "assistant", payload: { kind: "message", text: "tokde tokdec tokdeck — drei Varianten, ein Tool." } },
+      { seq: 3, type: "user", payload: { kind: "session.prompt", text: "tokde und tokdec ebenfalls gestartet" } },
+      { seq: 4, type: "assistant", payload: { kind: "message", text: "tokdeck und tokdeck laufen beide" } },
+    ]);
+    const index = idx();
+    await index.refresh();
+    // Alle drei Kandidaten treffen gleich oft. Vorschläge, die im größeren Wort
+    // stecken, fallen weg — sonst steht Rauschen vor dem gesuchten Namen.
+    const res = await index.search({ q: "tokdek" });
+    const terms = (res.suggest ?? []).map((s) => s.term);
+    expect(terms).toContain("tokdeck");
+    expect(terms).not.toContain("tokde");
+    expect(terms).not.toContain("tokdec");
+  });
+
+  it("schlägt das echte Wort vor, wenn der getippte nur die eigene Frage trifft", async () => {
+    addSessionRow("srate", "/home/kaib/repos/tokdeck", "Token-Widget");
+    await seed("srate", [
+      // Der Vertipper steckt im Bestand — in genau der Frage, die ihn enthält.
+      { seq: 1, type: "user", payload: { kind: "session.prompt", text: "warum finde ich tokdek nicht?" } },
+      { seq: 2, type: "assistant", payload: { kind: "message", text: "tokdeck läuft auf 127.0.0.1:7474." } },
+      { seq: 3, type: "user", payload: { kind: "session.prompt", text: "starte tokdeck neu" } },
+      { seq: 4, type: "assistant", payload: { kind: "message", text: "tokdeck ist wieder da, Token laufen." } },
+    ]);
+    const index = idx();
+    await index.refresh();
+    // Der rohe Begriff hat recht und ist trotzdem nutzlos: eine Fundstelle, die
+    // sich selbst wiederholt. Das echte Wort bringt vier — also der Vorschlag.
+    const res = await index.search({ q: "tokdek" });
+    expect(res.mode).toBe("and");
+    expect(res.total).toBe(1);
+    expect(res.suggest).toEqual([{ term: "tokdeck", count: 3 }]);
+    // Der Vorschlag wird nicht heimlich benutzt: die Liste bleibt, was bestellt
+    // wurde; der Chip entscheidet.
+    const echt = await index.search({ q: "tokdeck" });
+    expect(echt.mode).toBe("and");
+    expect(echt.total).toBe(3);
+    expect(echt.suggest).toBeUndefined();
+  });
+
   it("rätselt nicht, sondern berichtigt gegen die Wörter des Index", () => {
     expect(editDistance("tokdek", "tokdeck", 1)).toBe(1);
     expect(editDistance("tokdek", "token", 1)).toBeGreaterThan(1);

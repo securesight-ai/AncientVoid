@@ -114,6 +114,25 @@ test.describe("Eigene Fenster (EPIC-P34)", () => {
     await expect(app.locator(".settings-page")).toBeVisible();
   });
 
+  test("BUG-0262: die Notizen-Kachel löst sich als Notizen-Fenster, nicht als leeres Session-Fenster @desktop", async ({ app, context }) => {
+    await dockGo(app, "Notizen");
+    const popupP = context.waitForEvent("page");
+    await app.locator(".tool-pane").getByRole("button", { name: "In eigenem Fenster öffnen" }).click();
+    const popup = await popupP;
+    await popup.waitForLoadState();
+    // Vorher: /?window=1#/sessions/ — leeres Fenster „Dieses Fenster hat kein Ziel."
+    expect(popup.url()).toContain("window=1#/notizen");
+    // Der Testhub hat einen leeren Vault — die Seite zeigt ihren Ersteinrichtungs-
+    // Zustand (Zielordner wählen). Hauptsache: es ist die Notizen-Seite, nicht die Leerstelle.
+    await expect(popup.locator('[data-testid="vault-pane"], [data-testid="vault-picker"]')).toBeVisible();
+    await expect(popup.getByText("Dieses Fenster hat kein Ziel.")).toHaveCount(0);
+    // Hauptfenster: die Kachel ist abgelöst …
+    await expect(app.locator('[data-tile="1"] .tile-empty')).toBeVisible();
+    // … und „In die App zurück“ bringt die Seite als Kachel heim.
+    await clickClosing(popup, popup.getByRole("button", { name: "In die App zurück" }));
+    await expect(app.locator(".tool-pane")).toContainText("Notizen");
+  });
+
   test("nach einem Neuladen des Hauptfensters melden sich offene Fenster wieder an @desktop", async ({ app, hub, context }) => {
     await hub.createSession({ adapter: "opencode", prompt: "Reload Aufgabe" });
     await card(app, "Reload Aufgabe").click();

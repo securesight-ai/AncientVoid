@@ -201,6 +201,7 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S79 | Diktat-Aufnahmen bleiben als Sprachnachricht in der Ablage (drei neueste, höchstens 12 MB) und lassen sich neu erkennen — auch nach einem Ausfall der eigenen Erkennung; ersetzt wird nur ein unveränderter Text | Composer → Ablage → Sprachnachricht → „neu erkennen“ | ADR-0092 (Nachträge) | spec:voice-local.spec.ts |
 | S80 | Die Ablage nimmt beim Wiederkommen auch extern Kopiertes auf — Text als „Andere App“, Screenshots als Bild-Stufe mit Vorschaubild — und hängt ein solches Bild an die Session an | Ablage-Blatt; automatisch beim Fokus | ADR-0093 | spec:clipboard-aussen.spec.ts |
 | S81 | Welche Spracheingabe ein Gerät benutzt, ist pro Gerät wählbar — Automatisch, Lokal (Hub) oder Browser (meist Cloud) — mit ehrlicher Quellenangabe, und „Lokal“ fällt nie still in die Cloud zurück | Mikro-Knopf gedrückt halten (Menü) oder Einstellungen → Spracheingabe | ADR-0095 (mit Nachtrag) | spec:stt-modus.spec.ts |
+| S82 | Ein Screenshot aus der Zwischenablage oder eine abgelegte Bilddatei wird mit einem Einfügen zum Anhang der Nachricht; die Chat-Zeile zeigt ein Vorschaubild, und ein Tipp — oder der Bild-Link eines Agenten — öffnet das Vollbild | Eingabefeld: Einfügen oder Ablegen; Vorschaubild in der Chat-Zeile; Link `#/anhang/<id>` | — | spec:anhang-bilder.spec.ts |
 
 ## PC-Arbeitsfläche
 

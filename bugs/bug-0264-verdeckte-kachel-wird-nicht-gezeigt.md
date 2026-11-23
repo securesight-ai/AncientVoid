@@ -1,5 +1,5 @@
 ---
-id: BUG-0262
+id: BUG-0264
 slug: verdeckte-kachel-wird-nicht-gezeigt
 status: fixed
 severity: S2

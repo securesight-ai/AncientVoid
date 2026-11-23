@@ -126,7 +126,7 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       ...(p.projectUnder ? { projectRoot: p.projectUnder } : {}),
       ...(p.session ? { sessionId: p.session } : {}),
     });
-    return { status: "ready", query: q, mode: res.mode, ...(res.corrected ? { corrected: res.corrected } : {}), index: res.index, hits: res.hits, total: res.total, facets: res.facets };
+    return { status: "ready", query: q, mode: res.mode, ...(res.corrected ? { corrected: res.corrected } : {}), ...(res.suggest ? { suggest: res.suggest } : {}), index: res.index, hits: res.hits, total: res.total, facets: res.facets };
   });
 
   /** Ein Suchfeld, beide Körper in einer Antwort — die PWA muss nicht zweimal
@@ -154,6 +154,7 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
     let facets: { role: TranscriptRole; count: number }[] = [];
     let mode: SessionSearchMode = "and";
     let corrected: string[] | undefined;
+    let suggest: { term: string; count: number }[] | undefined;
     let sessionStatus: "ready" | "unavailable" = "unavailable";
     let index: SearchIndexState = { engine: "scan", sessions: 0, lines: 0, indexedAt: null };
     if (scope !== "docs" && deps.search) {
@@ -174,6 +175,7 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       facets = res.facets;
       mode = res.mode;
       corrected = res.corrected;
+      suggest = res.suggest;
       sessionStatus = "ready";
       index = res.index;
     }
@@ -263,6 +265,7 @@ export function registerSearchRoutes(app: FastifyInstance, ctx: RouteContext): v
       query: q,
       mode,
       ...(corrected ? { corrected } : {}),
+      ...(suggest ? { suggest } : {}),
       scope,
       sessions,
       sessionTotal,

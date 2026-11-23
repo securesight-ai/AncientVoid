@@ -43,6 +43,12 @@ lokal 13/13 — einmal neu angestoßen). Diagnose-Rezept liegt als Skill
 Begriffe (< 5 Zeichen) werden nicht geraten, und was keinen Kandidaten hat,
 bleibt leer.
 
+Der häufigere Fall ist der Widerhall: der vertippte Begriff steckt im Bestand —
+in der Frage selbst — und die Liste ist richtig und nutzlos zugleich. Darum läuft
+parallel die **Vorschlagsstufe**: sie zählt Fundstellen ähnlicher Wörter und zeigt
+einen Chip („meintest du tokdeck? 3 Fundstellen“), der neu sucht. Die Reihenfolge
+der eigenen Treffer wird nie heimlich verändert.
+
 **Cross-Hub-Suche** (dieser Zweig/PR): `hubs=1` fragt die gekoppelten Hub-Rechner über
 die bestehende Fleet-Tür (`/api/search` ist fleet-routable, kein neues Recht),
 funde tragen `hub`/`hubUrl`, und pro Rechner steht in `hubs`, wie er mitgemacht
@@ -51,6 +57,18 @@ Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile
 Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
 
 ## Erledigt (verifiziert)
+
+- **Bilder im Chat: einfügen, ansehen, verlinken (S82, 23.11.)** — Einfügen oder Ablegen im
+  Eingabefeld haengt Screenshots an die Nachricht (`shared/paste-images.ts`,
+  `composer/Composer.tsx`); die Chat-Zeile zeigt ein echtes Vorschaubild mit Oeffnen-Ecke
+  (`features/attachments/Attachments.tsx`, `app/styles/58-attachment-viewer.css`); ein Tipp —
+  oder der Bild-Link eines Agenten (`#/anhang/<id>`, session-intern `…/anhang/<id>` in
+  `app/route.ts` + `app/main.tsx`) — oeffnet dasselbe Vollbild, als `body`-Portal (z 400,
+  Fokusfalle, Esc/Tipp am Rand/✕ schliesst). Bewiesen in `e2e/specs/anhang-bilder.spec.ts`
+  (2 passed, mobile): natuerliche Bildmasse 320×200 im Vorschaubild, Vollbild-BBox
+  > 200×100, Deep-Link oeffnet und fuehrt session-intern zurueck; Dokument-Chips bleiben die
+  Text-Ansicht („4711“). Agenten-Rezept: `docs/bild-links-fuer-agenten.md`, Leitplanke in
+  `AGENTS.md` (kein Bild als Dateipfad abliefern).
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
   plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die
   echten `events.jsonl` **inkl. Blob-Payloads** (K5-Offload — ohne Blob-Read

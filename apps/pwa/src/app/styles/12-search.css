@@ -223,6 +223,26 @@ body:has(.search-pane) .nyx-fab {
   display: none;
 }
 
+/* Vorschlag, wenn ein ähnliches Wort mehr Fundstellen hat: ein Chip, ein Tipp,
+   die echte Liste. Nichts wird hier versteckt, es wird nachgesucht. */
+.search-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+
+.search-suggest-chip {
+  border: 1px solid var(--fg-dim);
+  border-radius: 999px;
+  background: var(--bg-chip);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-xs);
+  padding: 4px 10px;
+  text-align: left;
+}
+
 /* Cross-Hub: jeder gekoppelte Rechner nennt seinen Zustand. Ein Rechner, der
    nicht antwortet, ist ein Ergebnis — nicht „nichts gefunden“. */
 .search-hubs {

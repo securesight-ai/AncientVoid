@@ -54,7 +54,12 @@ dieses Hubs und das Markdown der Projekte unter `projectRoots`. Ein anderer Hub
    Teilfolge. Prüfen: `mode` in der Antwort ist `typo`, `corrected` listet das
    gesuchte Wort. Begriffe unter 5 Zeichen werden bewusst nicht geraten.
 
-6. **Anderer Rechner = anderer Fundus.** Seit PR #307 gibt es den Kreuz
+6. **Widerhall.** Der vertippte Begriff trifft genau die eigene Frage — die
+   Liste ist „richtig“ und leer an Nutzen. Dagegen zählt die Vorschlagsstufe
+   Fundstellen ähnlicher Indexwörter und liefert `suggest: [{term, count}]`
+   (nur wenn `count > total`); die PWA zeigt den Chip „meintest du …?“.
+
+7. **Anderer Rechner = anderer Fundus.** Seit PR #307 gibt es den Kreuz
    „andere Rechner einbeziehen" (`hubs=1`): der Hub fragt seine Fleet-Peers über
    `/api/search` und meldet pro Rechner `ok / offline / denied / unsupported /
    skipped`. Ohne diesen Kreuz bleibt die Antwort lokal — die Frage nach einem

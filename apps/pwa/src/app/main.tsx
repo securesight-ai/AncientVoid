@@ -12,7 +12,8 @@ import { SessionTail } from "../features/session/SessionTail.tsx";
 import { getToken, isAuthError, setToken, hubApi, hostApi, remoteHost, setSelfHostId, type SessionRecord } from "../shared/api.ts";
 import { resyncPush } from "../shared/push.ts";
 import { CommandBar } from "../features/commands/CommandBar.tsx";
-import { isToolPage, pageHash, parseAppHash, redirectLegacyRunHash, redirectLegacyStatHash, sessionHash, type CodeTarget, type TailTab } from "./route.ts";
+import { pageHash, parseAppHash, redirectLegacyRunHash, redirectLegacyStatHash, sessionHash, type CodeTarget, type TailTab } from "./route.ts";
+import { AttachmentRouteView } from "../features/attachments/Attachments.tsx";
 import { registerShortcut } from "../shared/shortcuts/registry.ts";
 import { CheatSheet } from "../shared/shortcuts/CheatSheet.tsx";
 import { installShortcutHints } from "../shared/shortcut-hint.ts";
@@ -36,8 +37,8 @@ import { RestoreBar } from "../features/windows/RestoreBar.tsx";
 import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
-import { closeTile, detachTile, focusOpenSession, forgetDetached, isLayoutFixed, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
-import { targetKey } from "../features/windows/protocol.ts";
+import { detachTile, focusOpenSession, forgetDetached, isLayoutFixed, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
+import { targetKey, tileWindowTarget } from "../features/windows/protocol.ts";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
 import "./styles/index.css";
@@ -188,6 +189,12 @@ function Main() {
     { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "metriken" | "inferenz" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string }
   >({ view: "list", page: "dashboard" });
 
+  // Ein Anhang-Deep-Link (`#/anhang/<id>` oder `…/sessions/<id>/anhang/<id>`) liegt UEBER
+  // der jeweiligen Seite — der Link aus einer Agent-Nachricht oeffnet das Bild, Schliessen
+  // fuehrt dorthin zurueck, wo man war.
+  const [attachmentView, setAttachmentView] = useState<{ attachmentId: string; back: string } | null>(null);
+  const letzterHash = useRef("#/");
+
   useEffect(() => {
     // BUG-0006 (part 2): /api/health is deliberately open (tailnet
     // monitoring) — using it here to decide "ready" meant this always
@@ -259,6 +266,17 @@ function Main() {
         return;
       }
       const parsed = parseAppHash(location.hash);
+      if (parsed.view === "attachment") {
+        setAttachmentView({ attachmentId: parsed.attachmentId, back: letzterHash.current });
+        return;
+      }
+      if (parsed.view === "tail" && parsed.attachment) {
+        letzterHash.current = sessionHash(parsed.sessionId, parsed.hostId ?? null);
+        setAttachmentView({ attachmentId: parsed.attachment, back: letzterHash.current });
+      } else {
+        setAttachmentView(null);
+        letzterHash.current = location.hash || "#/";
+      }
       if (parsed.view === "devices") {
         // EPIC-P42: `#/geraete` ist die Fenster-Route des Popouts; im Hauptfenster geht es zur Übersicht
         // (das Panel öffnet sich über den Geräte-Knopf).
@@ -349,11 +367,15 @@ function Main() {
         );
       }
       if (msg.type !== "return") return;
-      if (msg.target.kind === "tool") {
-        location.hash = pageHash(msg.target.page);
+      if (msg.target.kind !== "session") {
+        // BUG-0262: Werkzeug-/Geräte-Fenster kommen als ihre Kachel zurück — der abgelöste Ref trägt den Seiten-Inhalt.
+        const ref = (latest.current.ws.detached ?? []).find((d) => {
+          const target = tileWindowTarget(d);
+          return target !== null && targetKey(target) === targetKey(msg.target);
+        });
+        if (ref) latest.current.changeWorkspace(reattach(latest.current.ws, ref));
         return;
       }
-      if (msg.target.kind !== "session") return;
       const ref: TileRef = msg.target.hostId ? { sessionId: msg.target.sessionId, hostId: msg.target.hostId } : { sessionId: msg.target.sessionId };
       latest.current.changeWorkspace(reattach(latest.current.ws, defaultSessionRef(ref)));
     });
@@ -368,11 +390,10 @@ function Main() {
   const popoutTile = async (index: number, drop?: DropPoint) => {
     const ref = latest.current.ws.slots[index];
     if (!ref) return;
-    const page = ref.content?.kind === "page" && isToolPage(ref.content.page) ? ref.content.page : null;
-    if (!page && !ref.sessionId) return;
-    const result = await openPopout(page
-      ? { kind: "tool", page }
-      : { kind: "session", sessionId: ref.sessionId, ...(ref.hostId ? { hostId: ref.hostId } : {}) }, drop);
+    const target = tileWindowTarget(ref);
+    // BUG-0262: Karten ohne Fensteradresse (Neu, Suche, Datei) lösen sich nicht in ein kaputtes Fenster ab.
+    if (!target) return;
+    const result = await openPopout(target, drop);
     if (result === "blocked") {
       setPopoutNotice(blockedNotice);
       // Rückfall der Ziehgeste: die Nutzeraktion kann abgelaufen sein — ein Klick auf den Knopf ist eine frische.
@@ -381,11 +402,7 @@ function Main() {
     }
     setPopoutNotice("");
     // BUG-0245: nur neu geöffnete Fenster lösen die Kachel — „focused“ heißt das Fenster war schon da.
-    if (result === "opened") {
-      const current = latest.current.ws;
-      const at = current.slots.indexOf(ref);
-      if (at >= 0) latest.current.changeWorkspace(page ? closeTile(current, at) : detachTile(current, at));
-    }
+    if (result === "opened") latest.current.changeWorkspace(detachTile(latest.current.ws, index));
   };
   // Opening a session adds a card; already detached sessions retain their explicit window.
   const openFromList = (session: SessionRecord) => {
@@ -502,7 +519,9 @@ function Main() {
           ws={ws}
           sessions={getHubStatus().sessions}
           onOpen={(ref) => {
-            void openPopout({ kind: "session", sessionId: ref.sessionId, ...(ref.hostId ? { hostId: ref.hostId } : {}) }).then((result) => {
+            const target = tileWindowTarget(ref);
+            if (!target) return;
+            void openPopout(target).then((result) => {
               if (result === "blocked") setPopoutNotice(blockedNotice);
             });
           }}
@@ -592,6 +611,9 @@ function Main() {
       {!wide && <FilesLayer wide={false} focusedSessionId={route.view === "tail" ? route.session.id : null} />}
       {!wide && <BrowserLayer focusedSessionId={route.view === "tail" ? route.session.id : null} />}
       {!wide && <DeviceLayer focusedSessionId={route.view === "tail" ? route.session.id : null} />}
+      {attachmentView && (
+        <AttachmentRouteView key={attachmentView.attachmentId} attachmentId={attachmentView.attachmentId} onClose={() => (location.hash = attachmentView.back)} />
+      )}
       <NyxFab />
     </>
   );

@@ -1,4 +1,5 @@
-import { browserHash, devicesHash, fileHash, filetreeHash, graphHash, pageHash, sessionHash, TOOL_PAGE_IDS, vaultFileHash, type ToolPageId } from "../../app/route.ts";
+import { browserHash, devicesHash, fileHash, filetreeHash, graphHash, isToolPage, pageHash, sessionHash, TOOL_PAGE_IDS, vaultFileHash, type ToolPageId } from "../../app/route.ts";
+import type { TileRef } from "../workspace/tiles.ts";
 
 /**
  * EPIC-P34 T34.10 (ADR-0053): Abstimmung zwischen dem Hauptfenster und eigenen Fenstern über
@@ -73,6 +74,28 @@ export function targetKey(target: WindowTarget): string {
 /** BUG-0245: stabiler Browsing-Context-Name — zweites `window.open` mit demselben Namen hebt das bestehende Fenster statt eines Duplikats. */
 export function windowName(target: WindowTarget): string {
   return `av_${targetKey(target).replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+}
+
+/**
+ * BUG-0262: das Fensterziel einer Kachel. Nur Session-Kacheln sind Session-Fenster — Seiten-Kacheln
+ * tragen `sessionId: ""`; als Session gelöst wäre `#/sessions/` keine Route und das Fenster zeigte
+ * „Dieses Fenster hat kein Ziel.". null = keine Fensteradresse (Neu, Suche, Datei-Karte): die
+ * Kachel löst sich dann gar nicht ab, statt in ein kaputtes Fenster zu wandern.
+ */
+export function tileWindowTarget(ref: TileRef): WindowTarget | null {
+  const host = ref.hostId ? { hostId: ref.hostId } : {};
+  const content = ref.content;
+  if (!content || content.kind === "session") return { kind: "session", sessionId: ref.sessionId, ...host };
+  if (content.kind === "page") {
+    // Vault rundet anders als die anderen Werkzeugseiten: `#/notizen` parst im Fenster als
+    // { kind: "vault" } zurück — nur als Vault gelöst, matcht das `hello` des Fensters den
+    // Öffner-Schlüssel und die Kachel löst sich wirklich ab.
+    if (content.page === "vault") return { kind: "vault", ...(content.vaultFile ? { path: content.vaultFile } : {}) };
+    return isToolPage(content.page) ? { kind: "tool", page: content.page } : null;
+  }
+  if (content.kind === "browser") return ref.sessionId ? { kind: "browser", sessionId: ref.sessionId, ...host } : null;
+  if (content.kind === "devices") return { kind: "device" };
+  return null;
 }
 
 /** Das Token steht nie in der URL — es liegt im gemeinsamen localStorage. */
