@@ -86,7 +86,7 @@ function put(ws: Workspace, index: number, ref: TileRef | null): Workspace {
 
 function revealFixedTile(ws: Workspace, index: number, ref: TileRef): Workspace {
   const count = COUNT[ws.layout];
-  if (index < count) return put(ws, index, ref);
+  if (index < count) return ws.slots[index] === ref ? { ...ws, focus: index } : put(ws, index, ref);
   const target = Math.min(Math.max(0, ws.focus), count - 1);
   const slots = [...ws.slots];
   slots[index] = slots[target] ?? null;
