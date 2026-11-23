@@ -95,3 +95,5 @@ npm run typecheck && npm run lint                                         # ok
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue angelegt — [#319](https://github.com/securesight-ai/AncientVoid/issues/319)
 - [x] `bugfix` angewiesen
+
+<!-- CI-Trigger: echter Baumdelta-Push nach stummem Actions-Webhook (PR #320) -->
