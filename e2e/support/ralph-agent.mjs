@@ -8,11 +8,21 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 const prompt = process.argv.at(-1) ?? "";
-const hit = /State-Datei \(Wahrheit über Fortschritt\): (\S+)/.exec(prompt);
-if (!hit) {
-  console.error("ralph-agent: Prompt nennt keine State-Datei");
-  process.exit(2);
+// EPIC-P54 / ADR-0113: die Agent-Review-Session bekommt ihren eigenen Prompt
+// (Review-State-Datei, „Wahrheit über diesen Review“). Der Stand-in schreibt
+// das deterministische Fazit: Aufgaben laut Arbeits-State geprüft, grün.
+const reviewHit = /Review-State-Datei \(Wahrheit über diesen Review\): (\S+)/.exec(prompt);
+if (reviewHit) {
+  const file = reviewHit[1];
+  const doc = JSON.parse(readFileSync(file, "utf8"));
+  doc.status = "wartend";
+  doc.notes = "Stand-in-Review (deterministisch, kein LLM): Aufgaben laut Arbeits-State erledigt und geprüft.";
+  doc.last_progress_at = new Date().toISOString();
+  writeFileSync(file, `${JSON.stringify(doc, null, 2)}\n`);
+  console.log("ralph-agent: Review grün — wartend");
+  process.exit(0);
 }
+const hit = /State-Datei \(Wahrheit über Fortschritt\): (\S+)/.exec(prompt);
 const file = hit[1];
 const doc = JSON.parse(readFileSync(file, "utf8"));
 const total = Array.isArray(doc.tasks_total) ? doc.tasks_total : [];
