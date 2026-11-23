@@ -89,6 +89,24 @@ byte-identisch), live `POST /api/hosts/kaisgamingdesk/attachments` → 201 und
 `GET …/attachments/<id>` → 200 beim Peer; im Browser zeigt die fremde Sitzung
 dasselbe Chip-Bild wie die eigene (vorher 415).
 
+**Warteschlange einer fremden Sitzung bedienen** (Nutzerfund 23.11., PC):
+„Editieren und Löschen von Vorgemerkt funktioniert nicht“. Zwei Defekte:
+`operationOf()` hatte für `/api/sessions/<id>/queue…` kein Mapping →
+Fail-closed-Fallback → Peer-Hub antwortete 403 „Nicht erlaubt für
+fleet:cachyos-ai: …“, und der Fleet-Proxy ließ **PATCH** gar nicht durch.
+Neue Policy-Operation `sessions.queue` (Mensch + Flotte allow, Agent/Display
+deny), Mapping für `PATCH`/`DELETE`/`…/send` (Liste bleibt `read`), PATCH in der
+Proxy-Methodenliste, und der Proxy reicht den Grund des Peers durch statt der
+„Kopplung widerrufen“-Vermutung. Nachweis: neue Fleet-Integration mit zwei
+echten Hubs (4/4: Liste mit `position`, Text ändern, umhängen, streichen,
+sofort senden — jeweils beim Peer nachgelesen), neue Policy-Tests (4/4), neue
+PC-E2E (8/8 desktop/tablet/mobile), 79/79 in fleet+policy+queue+css. Live auf
+`83d57105`: eigener Rechner `PATCH …/queue/<unbekannt>` → 422
+„nicht mehr in der Warteschlange“ (kam also durch die Policy), Bundle
+`index-3beX1QxM.js` enthält die neue Zeile. **Offen:** kaisgamingdesk läuft
+noch auf älterem Stand und lehnt dort weiterhin ab — Flotten-Änderungen wirken
+erst, wenn **beide** Hubs denselben main haben.
+
 ## Erledigt (verifiziert)
 - **Eingefügte Bilder erreichen den Agenten jetzt als Bild, nicht als Vermerk
   (BUG-0267).** Der Adapter `pi` sagt `images:false`, der Hub legte ihm deshalb

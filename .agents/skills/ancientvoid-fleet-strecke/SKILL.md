@@ -34,6 +34,45 @@ Reparatur: eigene, **specific** Route für binäre Uploads im Fleet-Modul
 bodyLimit: MAX_ATTACHMENT_BYTES + 1024 }, …); scope.post("/api/hosts/:hostId/attachments", …) })`
 mit `forwardRaw()` (Bytes + originales `content-type` + `x-filename`,
 Timeout 60 s, Antwortgröße wie sonst gedeckelt).
+## 403 „Nicht erlaubt für fleet:<hostId>: PATCH …“ ≠ Kopplung widerrufen
+
+Der Peer-Hub entscheidet selbst, was ein Flotten-Token darf: `operationOf()`
+(`apps/hub/src/platform/policy.ts`) bildet Schreibwege **einzeln** auf benannte
+Operationen ab; was nicht abgebildet ist, fällt auf den Fail-closed-Fallback
+(erlaubt nur, wer `tokens.manage` darf) und wird für `fleet:*` verworfen.
+Symptom 2026-11-23: Warteschlange einer fremden Sitzung (`/api/sessions/<id>/queue…`)
+hatte kein Mapping → Editieren/Umhängen/Streichen/Jetzt-Senden war verboten,
+während Vormerken (`/steer` → `sessions.prompt`, fleet: allow) funktionierte.
+Der Proxy machte daraus 502 „lehnt den Zugriff ab (Kopplung widerrufen?)“ — eine
+Vermutung, die in die Irre führte. Heute: `sessions.queue` (Mensch+Flotte allow,
+Agent/Display deny), und der Proxy reicht den **Grund des Peers** durch.
+
+Prüfen, ob eine Route ein Mapping hat:
+
+```bash
+grep -n "queue\|steer" apps/hub/src/platform/policy.ts
+node -e "const {policyFor}=require('@ancientvoid/contracts');console.log(policyFor('sessions.queue','fleet:x'))"
+```
+
+Zwei Grenzen, die beide bedient sein wollen:
+- **Heim-Hub:** `app.route({ method: [...] })` in `fleet-proxy.ts` muss die
+  Methode überhaupt weiterleiten (PATCH fehlte; eine fremde
+  Warteschlangen-Änderung konnte den Peer nie erreichen).
+- **Peer-Hub:** die Policy-Entscheidung fällt dort. Ein Partner-Hub auf älterem
+  Stand lehnt weiter ab, auch nachdem der Heim-Hub aktualisiert ist —
+  Flotten-Funktionen brauchen **beide** Hubs auf demselben main.
+
+## Live an einer echten Nutzer-Sitzung testen (Vorsicht)
+
+Die Warteschlangen-Knöpfe wirken auf das **erste** Element der Liste, nicht auf
+das zuletzt eigene. Vor jedem Klick Index und Text des Ziel-Eintrags lesen, und
+eigene Test-Einträge sofort wieder streichen. Ein versehentliches
+✎/✕-Paar löscht eine vorgemerkte Meldung des Nutzers — sie ist danach nirgends
+mehr (hard delete). Zu retten war sie nur über freie Seiten in
+`data/hub.db` (`strings`/Bytesuche nach dem Text; die Anhang-JSON liegt neben
+dem Text), dann mit `POST /api/sessions/<id>/steer`
+(`{kind:"prompt", text, attachmentIds:[…], queue:true}`) exakt wieder einreihen.
+
 
 ## Prüfen, ob ein Pfad überhaupt weiterleitbar ist
 
