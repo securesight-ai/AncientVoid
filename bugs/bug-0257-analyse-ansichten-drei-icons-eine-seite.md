@@ -6,7 +6,7 @@ severity: S3
 area: pwa
 instance: dev
 commit: "2a7eab27"
-forge: "https://github.com/securesight-ai/AncientVoid/issues/294"
+forge: "https://github.com/securesight-ai/AncientVoid/issues/295"
 epic: ""
 created: 2026-11-22
 reporter: Nutzermeldung 22.11.2026 (Statistik, Metriken und Inferenz teilen sich ein Icon und stehen als drei Seiten nebeneinander)
