@@ -20,6 +20,8 @@ export interface TerminalConfigEntry {
   label: string;
   ssh?: string;
   local?: boolean;
+  /** Pfad oder Name der Shell für lokale Ziele (Default bash, ADR-0087 Nachtrag). */
+  shell?: string;
 }
 
 const hashTicket = (ticket: string): string => createHash("sha256").update(ticket).digest("hex");
@@ -57,7 +59,11 @@ function spawnShell(
   };
   if (target.local) {
     // Kein node-pty: `script` allokiert ein PTY ohne natives Addon (Linux).
-    return spawn("script", ["-qfc", "bash -l", "/dev/null"], {
+    // Login-Flag nur, wo die Shell eines kennt (bash/zsh); dash & co. brechen sonst.
+    const shell = target.shell ?? "bash";
+    const name = shell.split("/").pop() ?? shell;
+    const cmd = name === "bash" || name === "zsh" ? `${shell} -l` : shell;
+    return spawn("script", ["-qfc", cmd, "/dev/null"], {
       env,
       stdio: ["pipe", "pipe", "pipe"],
     });

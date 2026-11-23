@@ -345,7 +345,9 @@ export const HubConfig = z.object({
   /**
    * ADR-0087: Allowlist für den PWA-Terminal-Tab.
    * Jedes Ziel: `ssh` (OpenSSH-Host/Alias) oder `local: true` (Hub-Host).
-   * Ohne Abschnitt: leere Liste, Tab erklärt die Config.
+   * Lokale Ziele starten optional eine konkrete Shell (Pfad oder Name,
+   * Default bash). Ohne Abschnitt: leere Liste — plus Auto-Erkennung
+   * (terminalAutodetect, ADR-0087 Nachtrag 2026-11-23).
    */
   terminals: z
     .array(
@@ -355,6 +357,7 @@ export const HubConfig = z.object({
           label: z.string().min(1).max(80),
           ssh: z.string().min(1).max(200).optional(),
           local: z.boolean().optional(),
+          shell: z.string().min(1).max(64).regex(/^[A-Za-z0-9/._-]+$/).optional(),
         })
         .superRefine((v, ctx) => {
           const hasSsh = Boolean(v.ssh);
@@ -362,10 +365,19 @@ export const HubConfig = z.object({
           if (hasSsh === hasLocal) {
             ctx.addIssue({ code: "custom", message: "terminals[]: genau eines von ssh | local=true" });
           }
+          if (v.shell && !hasLocal) {
+            ctx.addIssue({ code: "custom", message: "terminals[]: shell nur für local=true" });
+          }
         }),
     )
     .max(20)
     .default([]),
+  /**
+   * ADR-0087 Nachtrag 2026-11-23: auf dem Hub-Host installierte Shells
+   * automatisch als lokale Terminal-Ziele anbieten (/etc/shells, mit
+   * Fallback-Sonde). false = nur die Allowlist, wie vor dem Nachtrag.
+   */
+  terminalAutodetect: z.boolean().default(true),
 });
 export type HubConfig = z.infer<typeof HubConfig>;
 
