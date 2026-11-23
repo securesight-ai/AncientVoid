@@ -101,3 +101,4 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `inference.engines` | array<object> | [] |
 | `inference.gate.engines` | array<object> | [] |
 | `terminals` | array<object> | [] |
+| `terminalAutodetect` | boolean | true |
