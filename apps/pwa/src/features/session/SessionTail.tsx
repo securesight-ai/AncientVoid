@@ -76,7 +76,8 @@ import { GraphPane } from "../graph/GraphPane.tsx";
 import { GitGraphPane } from "../git-graph/GitGraphPane.tsx";
 import { FileViewer } from "../files/FileViewer.tsx";
 import { StatusDot } from "../../shared/StatusDot.tsx";
-import { useHubStatus } from "../shell/hub-status.ts";
+import { getHubStatus, publishHubStatus, useHubStatus } from "../shell/hub-status.ts";
+import { statusHintFromBatch } from "./status-from-events.ts";
 import {
   getHere,
   registerField,
@@ -401,6 +402,8 @@ export function SessionTail({
   >("connecting");
   const [filter, setFilter] = useState<FilterPreset>(loadFilter);
   const [status, setStatus] = useState(session.status);
+  /** WS hat den Status schon gesetzt — ein parallel gestarteter 3s-Poll darf idle nicht mit working überschreiben. */
+  const wsStatusRef = useRef<{ status: string; at: number } | null>(null);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const tailRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
@@ -725,6 +728,20 @@ export function SessionTail({
             const merged = [...prev, ...batch];
             return tailWindow(merged, TAIL_ROWS, floorSeqRef.current);
           });
+          // BUG-0270: Status aus dem Strom, nicht erst aus dem 3s-Poll — sonst bleibt
+          // die letzte Antwort im laufenden Zug und Übersicht/Nyx sagen „aktiv“.
+          const hint = statusHintFromBatch(batch);
+          if (hint !== null) {
+            wsStatusRef.current = { status: hint, at: Date.now() };
+            setStatus(hint);
+            const host = remoteHost(session.hostId);
+            const hub = getHubStatus();
+            publishHubStatus({
+              sessions: hub.sessions.map((s) =>
+                s.id === session.id && remoteHost(s.hostId) === host ? { ...s, status: hint as typeof s.status } : s,
+              ),
+            });
+          }
           // ADR-0083: der Block hat den Teiltext eingeholt — die Live-Blase verschwindet.
           const assistantBlocks = batch.filter((e) => e.type === "assistant");
           if (assistantBlocks.length) {
@@ -800,7 +817,18 @@ export function SessionTail({
     const timer = setInterval(async () => {
       try {
         const rec = await api.session(session.id);
-        setStatus(rec.status);
+        const ws = wsStatusRef.current;
+        // Ein vor dem settle gestarteter Poll kann noch „working“ liefern, nachdem
+        // turn_end den Status bereits auf idle gesetzt hat — den Rückschritt verwerfen.
+        const staleWorking =
+          ws !== null &&
+          Date.now() - ws.at < 5_000 &&
+          ws.status === "idle" &&
+          rec.status === "working";
+        if (!staleWorking) {
+          setStatus(rec.status);
+          if (rec.status !== "working") wsStatusRef.current = null;
+        }
         setRecord(rec);
       } catch {
         // offline — keep last state
