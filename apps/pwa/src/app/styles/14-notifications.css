@@ -90,16 +90,20 @@
   min-width: 16px;
   padding: 1px 4px;
 }
-/* T8.6: messages sit in the page flow at the top and push the content
- * down — they never lie over a control (P8 Messlauf: a toast covered the
- * search button for 8 s). */
+/* Overlay statt Flow: Toasts dürfen das Split/Topbar-Layout nicht schieben
+ * (Nutzerwunsch 2026-11-23). Rechts Platz für die Glocke; Klicks fallen durch
+ * den Stack, greifen nur auf den Karten. Auto-Dismiss in Notifications.tsx. */
 .toast-stack {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 8px);
+  /* Gleiche Ankerformel wie .notif-bell — zoom-skaliertes Viewport. */
+  left: max(8px, calc((100vw / var(--ui-zoom) - 680px) / 2 + 8px));
+  right: max(calc(56px + env(safe-area-inset-right)), calc((100vw / var(--ui-zoom) - 680px) / 2 + 56px + env(safe-area-inset-right)));
+  z-index: var(--z-toast);
   display: grid;
   gap: 6px;
-  /* Room on the right for the bell only (8 + 36 + 8 + 8 px), else the ✕ lies
-   * on the round button. The historic 96 px reserve included a gear button
-   * that no longer exists (EPIC-P51 T51.4). */
-  margin: calc(env(safe-area-inset-top) + 8px) calc(56px + env(safe-area-inset-right)) 6px 0;
+  margin: 0;
+  pointer-events: none;
 }
 
 .toast-stack:empty {
@@ -269,6 +273,7 @@
 }
 
 .toast-more {
+  pointer-events: auto;
   align-self: flex-end;
   background: var(--bg-elev);
   color: var(--fg-dim);
