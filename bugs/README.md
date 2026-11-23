@@ -293,7 +293,7 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 | [BUG-0259](bug-0259-ralph-loop-review-workflow-fehlt.md) | Ralph: Beobachter statt hub-Loop registriert (keine freie Adapterwahl), kein Agent-Review, kein Heartbeat | done | S2 | loops | [#289](https://github.com/securesight-ai/AncientVoid/issues/289) · [PR #290](https://github.com/securesight-ai/AncientVoid/pull/290) |
 | [BUG-0260](bug-0260-main-sync-ohne-fern-fehlt-in-die-sessions-akte.md) | Projekt ohne `origin`-Fern: Check und Scheduler fetchen unbedingt — `workspace.main_sync_failed` in der Sessions-Akte, Route 502 | done | S2 | workspace | [#296](https://github.com/securesight-ai/AncientVoid/issues/296) · [PR #297](https://github.com/securesight-ai/AncientVoid/pull/297) |
 
-| [BUG-0261](bug-0261-pi-zweite-laeufe-auf-derselben-sitzung.md) | Pi sicherte `midTurnInput: true` zu, `steer` startet aber einen zweiten `pi -p --session`-Prozess — drei Läufe auf einer Sitzung, `session.turn_end reason:"error"` + `adapter.down` | open | S1 | harness | [#300](https://github.com/securesight-ai/AncientVoid/issues/300) |
+| [BUG-0261](bug-0261-pi-zweite-laeufe-auf-derselben-sitzung.md) | Pi sicherte `midTurnInput: true` zu, `steer` startet aber einen zweiten `pi -p --session`-Prozess — drei Läufe auf einer Sitzung, `session.turn_end reason:"error"` + `adapter.down` | done | S1 | harness | [#300](https://github.com/securesight-ai/AncientVoid/issues/300) · [PR #301](https://github.com/securesight-ai/AncientVoid/pull/301) |
 Die nächste freie Nummer ist **0262** (gemerged, 0260 mit PR #297 gemerged,
 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
 0183 mit PR #50, 0184 mit PR #48 und 0185 mit dem Nightly-Fix aus den Issues #54–#57 gemerged,
