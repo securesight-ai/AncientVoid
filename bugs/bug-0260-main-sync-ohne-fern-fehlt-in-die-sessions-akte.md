@@ -1,11 +1,11 @@
 ---
 id: BUG-0260
 slug: main-sync-ohne-fern
-status: open
+status: done
 severity: S2
 area: workspace
 instance: prod
-commit: ""
+commit: "c61cc92d"
 forge: "https://github.com/securesight-ai/AncientVoid/issues/296"
 epic: "EPIC-P67 / ADR-0088"
 created: 2026-11-22
