@@ -208,8 +208,9 @@ Das Kontextfenster (131072) kommt aus der kuratierten Tabelle (`@ancientvoid/mod
 **Live belegt 2026-11-10** (Adapter-Lauf, gpubox erreichbar): maki und omp wählen das Modell beim Start und antworten
 auf „Antworte nur mit ANKUNFT“ mit „ANKUNFT“. Der Schlüssel ist dabei nie in Config, Log oder Commit gelandet.
 
-**Metriken (EPIC-P59/ADR-0078 Nachtrag 2026-11-17):** Halogen ist kein
-llama.cpp — `/metrics` bleibt 404. Der Hub-Sampler nutzt deshalb `/health`
+**Metriken (EPIC-P59/ADR-0078 Nachtrag 2026-11-17):** Reicht das Gateway
+`/metrics` nicht durch, zeigt `aiMetrics.servers[].metricsUrl` auf den Zähler-Endpunkt der Engine (BUG-0278);
+sonst fallen kurze Anfragen zwischen zwei Abfragen. Ohne Zähler nutzt der Hub-Sampler `/health`
 (Queue, busy, Slots, Kontext) und optional `aiMetrics.servers[].halogenLog`
 (Pfad zum Serverlog, Format wie Kais `halogen-livelog.py`) für Prefill-/
 Decode-tokens/s. Systemmetriken kommen vom Hub auf dem KI-Host

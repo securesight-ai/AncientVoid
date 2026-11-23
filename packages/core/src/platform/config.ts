@@ -313,6 +313,8 @@ export const HubConfig = z.object({
             url: z.string().url(),
             label: z.string().min(1).max(60).optional(),
             apiKeyFile: z.string().min(1).optional(),
+            /** BUG-0278: Zähler-Endpunkt, wenn das Gateway hinter `url` kein `/metrics` durchreicht. */
+            metricsUrl: z.string().url().optional(),
             /** Halogen-Serverlog für Prefill/Decode t/s (ADR-0078 Nachtrag). */
             halogenLog: z.string().min(1).optional(),
           }),

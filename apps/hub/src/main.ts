@@ -464,6 +464,7 @@ async function main(): Promise<void> {
       ...(s.label ? { label: s.label } : {}),
       ...(s.apiKeyFile ? { apiKeyFile: keyFile(s.apiKeyFile)! } : {}),
       ...(s.halogenLog ? { halogenLog: keyFile(s.halogenLog)! } : {}),
+      ...(s.metricsUrl ? { metricsUrl: s.metricsUrl } : {}),
     }));
     if (config.aiMetrics.probeKnown) {
       const seen = new Set(servers.map((s) => s.url));

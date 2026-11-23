@@ -108,3 +108,69 @@ describe("aimetrics sampler halogen fallback", () => {
     expect(fields.find((f) => f.key === "halogen:prefill_tokens_per_s")?.value).toBe(400);
   });
 });
+
+describe("BUG-0278: Halogen-Zähler neben dem Gateway", () => {
+  const COUNTERS = (req: number, tok: number, sec: number) =>
+    `halogen:requests_total ${req}\nllamacpp:tokens_predicted_total ${tok}\nllamacpp:tokens_predicted_seconds_total ${sec}\nllamacpp:prompt_tokens_total 10\nllamacpp:prompt_seconds_total 1\n`;
+
+  function setup() {
+    const state = { counters: COUNTERS(5, 100, 2) as string | null, now: Date.parse("2026-11-23T22:00:00.000Z"), keys: new Map<string, string | undefined>() };
+    const deps: AiMetricsSamplerDeps = {
+      fetch: async (url, init) => {
+        state.keys.set(url, (init?.headers as Record<string, string> | undefined)?.authorization);
+        if (url === "http://127.0.0.1:18099/metrics" && state.counters !== null) return { status: 200, ok: true, text: async () => state.counters! };
+        if (url === "http://gw:8100/health") return { status: 200, ok: true, text: async () => HEALTH };
+        return { status: 404, ok: false, text: async () => "" };
+      },
+      readFile: async () => "gateway-key",
+      readdir: async () => [],
+      os: { loadavg: () => [0, 0, 0], cpus: () => [], totalmem: () => 1, freemem: () => 1 },
+      now: () => new Date(state.now),
+      logger: { info: () => undefined, warn: () => undefined, error: () => undefined },
+    };
+    const sampler = createAiMetricsSampler({
+      intervalSec: 10, windowSec: 900, retentionSamples: 100, hostProbe: false, selfLabel: "test", deps,
+      servers: [{ url: "http://gw:8100/v1", label: "halogen", apiKeyFile: "k", metricsUrl: "http://127.0.0.1:18099/metrics" }],
+    });
+    const tick = async (counters: string | null) => {
+      state.counters = counters;
+      state.now += 10_000;
+      await sampler.tickNow();
+    };
+    const field = (key: string) => sampler.report().sources[0]!.fields.find((f) => f.key === key)!;
+    return { state, sampler, tick, field };
+  }
+
+  it("eine Anfrage zwischen zwei Abfragen wird sichtbar, der letzte Wert bleibt mit Zeit stehen", async () => {
+    const { tick, field, state } = setup();
+    await tick(COUNTERS(5, 100, 2));
+    expect(field("derived:decode_active").value).toBeNull();
+    await tick(COUNTERS(6, 370, 6.5));
+    expect(field("derived:decode_active").value).toBeCloseTo(60);
+    expect(field("derived:requests_per_min").value).toBeCloseTo(6);
+    expect(field("llamacpp:predicted_tokens_seconds_total").value).toBe(6.5);
+    const seen = field("derived:decode_active").ts;
+    await tick(COUNTERS(6, 370, 6.5));
+    expect(field("derived:decode_active")).toMatchObject({ ts: seen });
+    expect(field("derived:requests_per_min").value).toBe(0);
+    // Slots kommen weiter aus /health; der Gateway-Schlüssel geht nur ans Gateway.
+    expect(field("halogen:slots").value).toBe(2);
+    expect(state.keys.get("http://127.0.0.1:18099/metrics")).toBeUndefined();
+    expect(state.keys.get("http://gw:8100/health")).toBe("Bearer gateway-key");
+  });
+
+  it("Neustart der Engine ergibt keine negative Rate", async () => {
+    const { tick, field } = setup();
+    await tick(COUNTERS(6, 370, 6.5));
+    await tick(COUNTERS(0, 0, 0));
+    expect(field("derived:requests_per_min").value).toBeNull();
+    expect(field("derived:tokens_per_s_decode").value).toBeNull();
+  });
+
+  it("Zähler weg: Quelle meldet Fehler, /health-Werte bleiben (K9)", async () => {
+    const { tick, field, sampler } = setup();
+    await tick(null);
+    expect(sampler.report().sources[0]!.status).toMatchObject({ ok: false, error: expect.stringContaining("Zähler nicht erreichbar") });
+    expect(field("halogen:slots").value).toBe(2);
+  });
+});

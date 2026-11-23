@@ -32,6 +32,8 @@ export interface AiMetricsSamplerServer {
   label?: string;
   /** Dateipfad mit dem API-Key (erste Zeile) — nur als Datei, nie als Wert (ADR-0011). */
   apiKeyFile?: string;
+  /** BUG-0278: Zähler-Endpunkt, wenn `url` (Gateway) `/metrics` nicht durchreicht. Ohne Schlüssel abgefragt. */
+  metricsUrl?: string;
   /**
    * Optional: Halogen-Serverlog (Kai-livelog-Format) für Prefill/Decode t/s.
    * Nur Dateipfad; Inhalt wird nicht in Events geschrieben (ADR-0078 Nachtrag).
@@ -65,11 +67,20 @@ interface FieldDef {
   unit: string;
   source: "gemeldet" | "sysfs" | "os" | "abgeleitet";
   family?: string;
+  /** Zweiter Familienname desselben Werts (Versionen der Engine). */
+  alias?: string;
   file?: string;
   derive?: (prev: Record<string, number>, cur: Record<string, number>, dtSec: number) => number | null;
 }
 
 const MODEL_FIELDS: FieldDef[] = [
+  // BUG-0278: aus Zählern, damit auch Anfragen zählen, die zwischen zwei Abfragen begannen und endeten.
+  { key: "derived:decode_active", label: "Decode-Tempo (letzte Anfragen)", unit: "tokens/s", source: "abgeleitet", derive: (p, c) => perActiveSecond(p, c, "llamacpp:tokens_predicted_total", ["llamacpp:tokens_predicted_seconds_total", "llamacpp:predicted_tokens_seconds_total"]) },
+  { key: "derived:prefill_active", label: "Prefill-Tempo (letzte Anfragen)", unit: "tokens/s", source: "abgeleitet", derive: (p, c) => perActiveSecond(p, c, "llamacpp:prompt_tokens_total", ["llamacpp:prompt_seconds_total"]) },
+  { key: "derived:requests_per_min", label: "Anfragen je Minute", unit: "count", source: "abgeleitet", derive: (p, c, dt) => {
+    const perSec = rate(p, c, dt, ["halogen:requests_total"]);
+    return perSec === null ? null : perSec * 60;
+  } },
   { key: "derived:tokens_per_s_total", label: "Tokens/s gesamt", unit: "tokens/s", source: "abgeleitet", derive: (p, c, dt) => rate(p, c, dt, ["llamacpp:prompt_tokens_total", "llamacpp:tokens_predicted_total"]) },
   { key: "derived:tokens_per_s_prefill", label: "Prefill tokens/s", unit: "tokens/s", source: "abgeleitet", derive: (p, c, dt) => rate(p, c, dt, ["llamacpp:prompt_tokens_total"]) },
   { key: "derived:tokens_per_s_decode", label: "Decode tokens/s", unit: "tokens/s", source: "abgeleitet", derive: (p, c, dt) => rate(p, c, dt, ["llamacpp:tokens_predicted_total"]) },
@@ -82,7 +93,7 @@ const MODEL_FIELDS: FieldDef[] = [
   { key: "llamacpp:prompt_seconds_total", label: "Prompt-Zeit (kumuliert)", unit: "s", source: "gemeldet", family: "llamacpp:prompt_seconds_total" },
   { key: "llamacpp:prompt_tokens_seconds", label: "Prefill- Durchschn. (gemeldet)", unit: "tokens/s", source: "gemeldet", family: "llamacpp:prompt_tokens_seconds" },
   { key: "llamacpp:tokens_predicted_total", label: "Generierte Tokens (kumuliert)", unit: "count", source: "gemeldet", family: "llamacpp:tokens_predicted_total" },
-  { key: "llamacpp:predicted_tokens_seconds_total", label: "Decode-Zeit (kumuliert)", unit: "s", source: "gemeldet", family: "llamacpp:predicted_tokens_seconds_total" },
+  { key: "llamacpp:predicted_tokens_seconds_total", label: "Decode-Zeit (kumuliert)", unit: "s", source: "gemeldet", family: "llamacpp:predicted_tokens_seconds_total", alias: "llamacpp:tokens_predicted_seconds_total" },
   { key: "llamacpp:predicted_tokens_seconds", label: "Decode- Durchschn. (gemeldet)", unit: "tokens/s", source: "gemeldet", family: "llamacpp:predicted_tokens_seconds" },
   { key: "llamacpp:requests_processing", label: "Queue: in Bearbeitung", unit: "count", source: "gemeldet", family: "llamacpp:requests_processing" },
   { key: "llamacpp:requests_deferred", label: "Queue: zurückgestellt", unit: "count", source: "gemeldet", family: "llamacpp:requests_deferred" },
@@ -101,6 +112,9 @@ const MODEL_FIELDS: FieldDef[] = [
   { key: "halogen:slots", label: "Halogen: Slots", unit: "count", source: "gemeldet", family: "halogen:slots" },
   { key: "halogen:context", label: "Halogen: Kontext", unit: "tokens", source: "gemeldet", family: "halogen:context" },
   { key: "halogen:kv_pool_positions", label: "Halogen: KV-Pool", unit: "tokens", source: "gemeldet", family: "halogen:kv_pool_positions" },
+  { key: "halogen:requests_total", label: "Halogen: Anfragen (kumuliert)", unit: "count", source: "gemeldet", family: "halogen:requests_total" },
+  { key: "halogen:prompt_tokens_cached_total", label: "Halogen: Prompt-Tokens aus Cache", unit: "count", source: "gemeldet", family: "halogen:prompt_tokens_cached_total" },
+  { key: "halogen:kv_pool_waiting_for_room", label: "Halogen: warten auf KV-Platz", unit: "count", source: "gemeldet", family: "halogen:kv_pool_waiting_for_room" },
   { key: "halogen:decode_tokens_per_s", label: "Halogen: Decode tokens/s", unit: "tokens/s", source: "gemeldet", family: "halogen:decode_tokens_per_s" },
   { key: "halogen:prefill_tokens_per_s", label: "Halogen: Prefill tokens/s", unit: "tokens/s", source: "gemeldet", family: "halogen:prefill_tokens_per_s" },
 ];
@@ -129,9 +143,19 @@ function rate(prev: Record<string, number>, cur: Record<string, number>, dtSec: 
     const p = prev[family];
     const c = cur[family];
     if (p === undefined || c === undefined) return null;
+    if (c < p) return null; // Zähler sprang zurück: Engine neu gestartet, keine negative Rate
     delta += c - p;
   }
   return delta / dtSec;
+}
+
+/** Tempo während der Arbeit: Zuwachs je gerechneter Sekunde. Ohne Arbeit kein Wert, keine 0. */
+function perActiveSecond(prev: Record<string, number>, cur: Record<string, number>, tokens: string, seconds: string[]): number | null {
+  const family = seconds.find((f) => prev[f] !== undefined && cur[f] !== undefined);
+  if (family === undefined) return null;
+  const dTokens = (cur[tokens] ?? NaN) - (prev[tokens] ?? NaN);
+  const dSeconds = cur[family]! - prev[family]!;
+  return dTokens > 0 && dSeconds > 0 ? dTokens / dSeconds : null;
 }
 
 function percentile(sorted: number[], q: number): number | null {
@@ -240,12 +264,19 @@ export function createAiMetricsSampler(options: AiMetricsSamplerOptions): AiMetr
     const init = Object.keys(headers).length ? { headers } : undefined;
     const raw: Record<string, number> = {};
     let probeError: string | undefined;
+    let counterError: string | undefined;
 
     try {
-      const res = await deps.fetch(metricsUrl(server.url), init);
+      // Der Gateway-Schlüssel geht nur an die URL, für die er gilt (ADR-0011).
+      const res = server.metricsUrl ? await deps.fetch(server.metricsUrl) : await deps.fetch(metricsUrl(server.url), init);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const families = parsePrometheus(await res.text());
       for (const [family, values] of families) raw[family] = values.reduce((sum, v) => sum + v, 0);
+      // Halogen meldet Slots, Warteschlange und busy nur in /health; Zähler bleiben maßgeblich.
+      if (Object.keys(raw).some((family) => family.startsWith("halogen:"))) {
+        const health = await deps.fetch(healthUrl(server.url), init).catch(() => null);
+        if (health?.ok) Object.assign(raw, { ...parseHalogenHealth(await health.text()).raw, ...raw });
+      }
     } catch (err) {
       probeError = err instanceof Error ? err.message : String(err);
       // Halogen: /metrics fehlt oft — Fallback /health (ADR-0078 Nachtrag).
@@ -255,6 +286,8 @@ export function createAiMetricsSampler(options: AiMetricsSamplerOptions): AiMetr
         const parsed = parseHalogenHealth(await health.text());
         if (!parsed.recognized) throw new Error(probeError, { cause: err });
         Object.assign(raw, parsed.raw);
+        // K9: ein ausdrücklich konfigurierter Zähler-Endpunkt fällt nicht still weg.
+        counterError = server.metricsUrl ? `Zähler nicht erreichbar: ${probeError}` : undefined;
         probeError = undefined;
       } catch (healthErr) {
         probeError = healthErr instanceof Error ? healthErr.message : String(healthErr);
@@ -269,12 +302,12 @@ export function createAiMetricsSampler(options: AiMetricsSamplerOptions): AiMetr
 
     await appendHalogenLogRates(source, server, raw);
 
-    source.report.status = { ok: true };
+    source.report.status = counterError ? { ok: false, error: counterError } : { ok: true };
     source.report.lastSampleAt = ts;
     const dtSec = source.lastRawAt ? (Date.parse(ts) - source.lastRawAt) / 1000 : 0;
     for (const def of MODEL_FIELDS) {
       let value: number | null;
-      if (def.family) value = raw[def.family] ?? null;
+      if (def.family) value = raw[def.family] ?? (def.alias ? raw[def.alias] : undefined) ?? null;
       else if (def.key.startsWith("derived:") && raw[def.key] !== undefined) value = raw[def.key]!;
       else value = def.derive ? def.derive(source.lastRaw, raw, dtSec) : null;
       // ADR-0023: ein Feld, das die Quelle nicht meldet, bleibt „nicht gemeldet“.

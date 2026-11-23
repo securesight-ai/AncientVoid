@@ -120,3 +120,15 @@ Kernel meldet PPT unter `device/hwmon/hwmonN/power1_{average,input}` in µW. Auf
 (`sysfs:package_power_watts`), auf einer Karte (`power1_cap` vorhanden) die der GPU
 (`sysfs:power_watts`). Trifft keins oder beides zu, bleibt beides „nicht gemeldet“.
 Der neue Feldschlüssel ist additiv (`key` ist ein freier String).
+
+## Nachtrag 2026-11-23 — Zähler statt Momentaufnahme (BUG-0278)
+
+Halogen ab 0.18 hat `/metrics` (llama.cpp-Namen plus `halogen:*`); ein Gateway davor reicht
+den Pfad nicht zwingend durch. `/health` allein zeigt nur den Augenblick: Anfragen von
+wenigen Sekunden fallen zwischen zwei Abfragen. Deshalb:
+
+1. Optional `aiMetrics.servers[].metricsUrl`: Zähler-Endpunkt neben `url`, ohne Schlüssel abgefragt.
+   Fällt er aus, bleiben die `/health`-Werte, und die Quelle steht auf Fehler (K9).
+2. Meldet eine Quelle `halogen:*`-Zähler, wird `/health` zusätzlich gelesen (Slots, Warteschlange, busy).
+3. Neue abgeleitete Felder: Decode-/Prefill-Tempo je gerechneter Sekunde und Anfragen je Minute. Ohne
+   neue Arbeit entsteht kein Wert; der letzte bleibt mit Alter stehen. Springt ein Zähler zurück, gibt es keine Rate.

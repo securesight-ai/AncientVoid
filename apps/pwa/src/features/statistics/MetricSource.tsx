@@ -14,6 +14,8 @@ function series(field: AiMetricsField): SeriesPoint[] {
 }
 
 export function MetricSource({ source, stepMs }: { source: AiMetricsSourceReport; stepMs: number }) {
+  // Ein Wert, der gerade nicht neu entsteht (letzte Anfrage), trägt sein Alter.
+  const now = Date.now();
   const reported = source.fields.filter((f) => f.value !== null);
   return (
     <div class="metric-source">
@@ -27,7 +29,7 @@ export function MetricSource({ source, stepMs }: { source: AiMetricsSourceReport
           {reported.map((f) => {
             const { points, stride } = thin(series(f), 120);
             return (
-              <StatTile key={f.key} label={f.label} value={formatMetricValue(f.value, f.unit)}>
+              <StatTile key={f.key} label={f.label} value={formatMetricValue(f.value, f.unit)} {...(f.ts !== null && now - Date.parse(f.ts) > stepMs * 3 ? { note: formatMetricAge(f.ts) } : {})}>
                 <Sparkline points={points} stepMs={stepMs * stride} />
               </StatTile>
             );
