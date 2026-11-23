@@ -1,6 +1,50 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
 
+## 23.11.2026 Nacht — Lenken mitten im Zug: pi läuft jetzt als RPC-Prozess (PR #357)
+
+**Warum das vorher zu war (BUG-0261).** pi wurde pro Nachricht als eigener Prozess
+gebracht; Lenken mitten im Zug hätte einen *zweiten* pi-Prozess auf derselben Sitzung
+gestartet, und zwei Prozesse überschreiben das Arbeitsverzeichnis. Deshalb war
+`midTurnInput` für pi auf `false`, und die PC-Oberfläche bot „Jetzt senden“ nicht an.
+
+**Die Änderung (PR #357, Branch `feat/pi-rpc-steering`).** `pi --mode rpc` ist genau
+dassebe Protokoll, nur langlebig: ein Prozess pro Sitzung, JSONL-Eingaben auf stdin.
+Der Adapter hat dafür `adapters.pi.config.mode` (`oneshot` = altes Verhalten,
+Standard; `rpc` = ein Prozess pro Sitzung). Neu: `packages/adapters/pi/src/rpc.ts`
+(Zeilenrahmung nur LF, Anfragematch, Fristen, Aufräumhaken), `steer`/`follow_up` über
+den laufenden Prozess, `/compact` als RPC-Befehl, Abbruch erst `abort` dann nach 5 s
+Keule, `queue_update` → Systemereignis **`pi.queue`** („vorgemerkt — N Lenkung“),
+`extension_ui_request` wird verworfen. Zugrahmen meldet jetzt der Adapter selbst
+(`ctx.turn("working"/"idle")` auf `agent_start`/`agent_settled`) — persistente
+Prozesse enden nicht pro Zug.
+
+**Nachweis (Kratz-Hub :7399, echtes Modell Strata, `workerRunner: process`).**
+(a) `sleep 18`-Werkzeuglauf, nach 6 s gelenkt → Antwort `GESTEUERT`. (b) Meldung
+vorgemerkt (`queued`), dann `POST /queue/<id>/send` mitten im Lauf → 200, Ereignis
+`pi.queue` („vorgemerkt — 1 Lenkung“), Antwort `JETZTGESENDT`. (c) zweiter Zug erinnert
+sich an den ersten („Die letzte Anweisung lautete … GESTEUERT“) — derselbe Prozess,
+kein `worker_end`. (d) lenken ohne offenen Zug → 422 „es läuft kein Zug“.
+Tests: `rpc.test.ts` 6/6, `rpc-adapter.test.ts` 8/8, Paket 63/63, Typecheck sauber.
+
+**Noch nicht erledigt.** (1) Der **Live-Hub läuft weiterhin `oneshot`** — der
+Config-Schalter `adapters.pi.config.mode = "rpc"` wird erst nach dem Merge gesetzt
+(Rollback = eine Zeile + Neustart). (2) **BUG-0272 Pforte**: `durchlassen()` in
+`packages/core/src/modules/inference/pforte.ts` hat weiter **keine Aufrufstelle** —
+Admission-Kontrolle existiert nur als Route (`/api/inference/gate`) und Lease, nicht
+als Riegel vor den Modellaufrufen.
+
+**Fallstricke für die nächste Sitzung.** `hubctl token issue` schreibt in die **Standard-DB
+`data/hub.db`**, nicht in die des Kratz-Hubs — fürs Kratz-Setup immer
+`--db /tmp/<…>/data/hub.db` mitgeben (sonst hängt ein Scratch-Token am Live-Hub; die
+drei von heute sind widerrufen: `scratch-rpc`, `scratch-live`, `scratch-ui`).
+Kratz-Hub-Rezept: `ANCIENTVOID_CONFIG=/tmp/av-rpc/config.json node apps/hub/src/main.ts`
+mit `workerRunner: "process"` (Wert `"child"` ist ungültig → Hub startet nicht) und
+`adapters: { pi: { config: { mode: "rpc" } } }`. pi putzt seine Prozesszeile —
+`pgrep -f 'pi --mode rpc'` findet nichts, Nachweis über Verhalten (kein `worker_end`,
+Gedächtnis über Züge hinweg) statt über `ps`.
+
+
 ## 23.11.2026 Abend — Compaction-Schleife, Bilder, Warteschlange (verifiziert)
 
 **Compaction-Loop (Punkt 5).** Ursache gemessen: `Auto-compaction failed:
