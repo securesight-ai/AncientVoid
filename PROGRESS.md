@@ -1,6 +1,22 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
 
+## 23.11.2026 Nacht — Störsignal im RPC-Strom beseitigt (PR #360, main 3da56ab8)
+
+Nach dem Hub-Neustart um 21:16 erschien in einer laufenden Sitzung
+`pi: unbekannter Stream-Typ "get_state"` (seq 9998). Grund: übernimmt der Hub einen
+**laufenden** tmux-Worker, spielt der Pane-Puffer die eigene Anfragezeile
+(`{"id":"av1","type":"get_state"}`) zurück, und die Protokollschicht reichte sie an den
+Event-Parser weiter. Regel jetzt: Frames mit einer Id, die der Adapter selbst vergibt
+(`av`-Präfix), sind keine Ereignisse — pi nutzt UUIDs und `call_…`; echte Antworten
+(`type:"response"`) bleiben unberührt. Rot bewiesen ohne Absicherung
+(`expected [ get_state, agent_start ] to deeply equal [ agent_start ]`), Paket 67/67.
+
+**Nebenbefund, nützlich für künftige RPC-Arbeit:** echtes `pi --mode rpc` antwortet auf
+`get_state` exakt mit `{"id":"…","type":"response","command":"get_state","success":true,…}` —
+die Id-Zuordnung in `rpc.ts` passt. Beim Start sendet pi zusätzlich
+`extension_ui_request`-Frames (eigene UUID-Ids); die bleiben bewusst ungelesen.
+
 ## 23.11.2026 Nacht — Bildvorschau auch für Dateinamen aus Shell-Ausgaben (PR #359)
 
 **Fund.** Kai zeigte auf ein `tool_result` mit `neonsunset_shot1.png 200 65140 …`:
