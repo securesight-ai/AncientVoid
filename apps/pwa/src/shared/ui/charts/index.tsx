@@ -23,7 +23,7 @@ function paths(points: readonly SeriesPoint[], stepMs: number, height: number, m
 }
 
 export function Sparkline({ points, stepMs = 60_000 }: { points: readonly SeriesPoint[]; stepMs?: number }) {
-  if (points.length < 2) return <span class="chart-spark" aria-hidden="true" />;
+  if (points.length < 2) return null;
   return (
     <svg class="chart-spark" viewBox={`0 0 ${W} 40`} preserveAspectRatio="none" aria-hidden="true">
       {paths(points, stepMs, 38, Math.max(...points.map((p) => p[1])) * 1.1 || 1).map((p) => (
@@ -127,5 +127,16 @@ export function TrendChip({ delta, text, label }: { delta: number; text: string;
     <span class="chart-trend" title={label}>
       <span aria-hidden="true">{delta > 0 ? "↗" : delta < 0 ? "↘" : "→"}</span> {text} <span class="sr-only">{label}</span>
     </span>
+  );
+}
+
+export function StatTile({ label, value, note, children }: { label: string; value: string; note?: string; children?: ComponentChildren }) {
+  return (
+    <div class="stat-tile">
+      <span class="chart-bar-label">{label}</span>
+      <strong>{value}</strong>
+      {note && <small>{note}</small>}
+      {children}
+    </div>
   );
 }

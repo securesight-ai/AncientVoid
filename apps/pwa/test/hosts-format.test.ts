@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { HostMetricsHost } from "@ancientvoid/contracts";
 import { formatHostValue, formatWh, groupPoints, sumSeries, totalPower } from "../src/features/statistics/hosts-format.ts";
 import { t } from "../src/shared/i18n/index.ts";
-import { nearestIndex, niceMax, segments, trend } from "../src/shared/ui/charts/geometry.ts";
+import { formatMetricValue } from "../src/shared/metrics.ts";
+import { nearestIndex, niceMax, segments, thin, trend } from "../src/shared/ui/charts/geometry.ts";
 
 const host = (id: string, watts: number | null, ok = true, wattMissing: string[] = []): HostMetricsHost => ({
   id, label: id, kind: "peer", status: ok ? { ok: true } : { ok: false, error: "weg" }, ts: null, intervalSec: 5, spark: [], today: null,
@@ -46,5 +47,19 @@ describe("Diagramm-Geometrie (EPIC-P81 T81.9)", () => {
     expect(trend([[0, 10], [300, 25]], 300)).toBe(15);
     expect(trend([[0, 10], [900, 25]], 300)).toBeNull();
     expect(trend([], 300)).toBeNull();
+  });
+
+  it("ausdünnen behält den letzten Punkt und nennt den Schritt", () => {
+    const points = Array.from({ length: 250 }, (_, i) => [i, i] as const);
+    const out = thin(points, 120);
+    expect(out.stride).toBe(3);
+    expect(out.points.length).toBeLessThanOrEqual(120);
+    expect(out.points.at(-1)).toEqual([249, 249]);
+  });
+
+  it("kleine Messwerte werden nicht zu 0 gerundet", () => {
+    expect(formatMetricValue(0.0213, "s/token")).toBe("0,021 s/token");
+    expect(formatMetricValue(0, "s")).toBe("0 s");
+    expect(formatMetricValue(3, "count")).toBe("3");
   });
 });

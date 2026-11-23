@@ -1,9 +1,10 @@
 import { useEffect, useState } from "preact/hooks";
 import type { InferenceAskResult, InferenceModelStatus, InferencePerfRow, InferenceSnapshot, InferenceSourceList } from "@ancientvoid/contracts";
 import { hubApi } from "../../shared/api.ts";
+import { Meter, Sparkline, StatTile } from "../../shared/ui/charts/index.tsx";
 import { Card, Chip, EmptyState } from "../../shared/ui/index.ts";
 import { t } from "../../shared/i18n/index.ts";
-import { alter, anteil, byteGroesse, dauer, tempo, uhrzeit, verlauf, zahl } from "./inference-format.ts";
+import { alter, anteil, byteGroesse, dauer, tempo, hatVerlauf, uhrzeit, zahl } from "./inference-format.ts";
 
 /**
  * EPIC-P79 T79.4 (ADR-0102): Token-Tempo der Inferenz-Engines.
@@ -272,26 +273,24 @@ function LiveCard({ snap }: { snap: InferenceSnapshot }) {
  */
 function HistoryCard({ snap }: { snap: InferenceSnapshot }) {
   const zeilen = [
-    { label: t("inference.history.decode"), linie: verlauf(snap.history.decodeTokS) },
-    { label: t("inference.history.prefill"), linie: verlauf(snap.history.prefillTokS) },
-    {
-      label: t("inference.history.ram"),
-      linie: verlauf(snap.history.ramUsedBytes.map((b) => Math.round(b / (1024 * 1024)))),
-    },
-  ].filter((z) => z.linie != null);
+    { label: t("inference.history.decode"), werte: snap.history.decodeTokS, text: (v: number) => `${tempo(v)} tok/s` },
+    { label: t("inference.history.prefill"), werte: snap.history.prefillTokS, text: (v: number) => `${tempo(v)} tok/s` },
+    { label: t("inference.history.ram"), werte: snap.history.ramUsedBytes, text: (v: number) => byteGroesse(v) },
+  ]
+    .map((z) => ({ ...z, werte: z.werte.filter((v) => Number.isFinite(v)) }))
+    .filter((z) => hatVerlauf(z.werte));
   if (zeilen.length === 0) return null;
   return (
     <Card aria-label={t("inference.card.history")}>
       <strong>{t("inference.card.history")}</strong>
       <p class="inference-hinweis">{t("inference.card.historyHint")}</p>
-      {zeilen.map((z) => (
-        <div class="inference-verlauf" key={z.label}>
-          <span>{z.label}</span>
-          <svg viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label={z.label}>
-            <polyline points={z.linie!} fill="none" stroke="currentColor" stroke-width="1.5" />
-          </svg>
-        </div>
-      ))}
+      <div class="stat-tiles">
+        {zeilen.map((z) => (
+          <StatTile key={z.label} label={z.label} value={z.text(z.werte.at(-1)!)} note={t("inference.history.peak", { wert: z.text(Math.max(...z.werte)) })}>
+            <Sparkline points={z.werte.map((v, i) => [i * 1000, v] as const)} stepMs={1000} />
+          </StatTile>
+        ))}
+      </div>
     </Card>
   );
 }
@@ -483,19 +482,9 @@ function CacheCard({ snap }: { snap: InferenceSnapshot }) {
   );
 }
 
-function Balken({ anteilWert, klassen }: { anteilWert: number | null; klassen?: string }) {
-  if (anteilWert == null) return null;
-  const breit = Math.max(0, Math.min(1, anteilWert)) * 100;
-  return (
-    <div class={["inference-balken", klassen].filter(Boolean).join(" ")}>
-      <span style={`width:${breit}%`} />
-    </div>
-  );
-}
-
 function HardwareCard({ snap }: { snap: InferenceSnapshot }) {
   const h = snap.hardware!;
-  const vramAnteil = h.vramTotalBytes ? (h.vramUsedBytes ?? 0) / h.vramTotalBytes : null;
+  const vramAnteil = h.vramTotalBytes && h.vramUsedBytes != null ? h.vramUsedBytes / h.vramTotalBytes : null;
   const vram = byteGroesse(h.vramUsedBytes) === "—" && byteGroesse(h.vramTotalBytes) === "—" ? "—" : `${byteGroesse(h.vramUsedBytes)} / ${byteGroesse(h.vramTotalBytes)}`;
   const ram = byteGroesse(h.ramUsedBytes) === "—" ? "—" : `${byteGroesse(h.ramUsedBytes)} / ${byteGroesse(h.ramTotalBytes)}`;
   // „Maximum“ ist zweierlei: was der Slot hergibt und was die Karte könnte. Ist der
@@ -525,9 +514,8 @@ function HardwareCard({ snap }: { snap: InferenceSnapshot }) {
       <strong>{t("inference.card.hardware")}</strong>
       <p class="inference-hinweis">{t("inference.card.hardwareHint")}</p>
       <Werte paare={zeilen} />
-      <Balken anteilWert={h.gpuUtil} />
-      <Balken anteilWert={vramAnteil} klassen={vramAnteil != null && vramAnteil >= 0.9 ? "inference-balken--warn" : undefined} />
-      <Balken anteilWert={h.gpuTempC == null ? null : h.gpuTempC / 100} klassen={h.gpuTempC != null && h.gpuTempC >= 85 ? "inference-balken--err" : undefined} />
+      {h.gpuUtil != null && <Meter label={t("inference.hardware.util")} percent={h.gpuUtil * 100} text={anteil(h.gpuUtil)} />}
+      {vramAnteil != null && <Meter label={t("inference.hardware.vram")} percent={vramAnteil * 100} text={anteil(vramAnteil)} />}
     </Card>
   );
 }

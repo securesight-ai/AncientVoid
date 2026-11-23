@@ -1,6 +1,6 @@
 # EPIC-P81 — Host-Monitoring und Strom: alle Werte aller Hosts, schick und ehrlich
 
-**Status:** in Umsetzung seit 23.11.2026 (T81.1–T81.8 liegen), Rest offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
+**Status:** in Umsetzung seit 23.11.2026 (T81.1–T81.12 liegen), Rest offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
 
 ## 1. Ziel & Entscheidung
 
@@ -150,8 +150,8 @@ Jeder Hub speichert nur sich selbst, der Home-Hub zusätzlich das NAS.
 - [x] **T81.8** NAS-Sammler per SSH. **K9**
 - [x] **T81.9** Chart-Bausteine und Tokens, Design-System-Doku.
 - [x] **T81.10** Reiter „Hosts“ mit Detailseite, E2E `host-monitoring.spec.ts`. **K10**
-- [ ] **T81.11** Reiter Metriken und Inferenz auf die Bausteine; bestehende Specs grün.
-- [ ] **T81.12** Reiter Statistik überarbeiten; Filter-/Klapp-Zustand (P66) bleibt. **K10**
+- [x] **T81.11** Reiter Metriken und Inferenz auf die Bausteine; bestehende Specs grün.
+- [x] **T81.12** Reiter Statistik überarbeiten; Filter-/Klapp-Zustand (P66) bleibt. **K10**
 - [ ] **T81.13** Roll-out auf drei Hubs (evox2 läuft unter anderem Benutzer: Nutzer nötig), `docs/host-monitoring.md`, Guide-Inventar,
   Host-Liste in `~/AGENTS.md`.
 

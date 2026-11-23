@@ -33,3 +33,9 @@ export function trend(points: readonly SeriesPoint[], ageMs: number): number | n
   const before = last && [...points].reverse().find((p) => last[0] - p[0] >= ageMs && last[0] - p[0] < ageMs * 2);
   return last && before ? last[1] - before[1] : null;
 }
+
+/** Höchstens `max` Punkte; der Schritt wächst mit, damit Lücken Lücken bleiben. */
+export function thin(points: readonly SeriesPoint[], max: number): { points: SeriesPoint[]; stride: number } {
+  const stride = Math.max(1, Math.ceil(points.length / max));
+  return { points: points.filter((_, i) => (points.length - 1 - i) % stride === 0), stride };
+}
