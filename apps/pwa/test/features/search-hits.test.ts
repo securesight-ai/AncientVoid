@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { SessionTextHit } from "@ancientvoid/contracts";
-import { DEFAULT_ROLES, ROLE_KEYS, ROLE_ORDER, groupHits, roleLabel, splitSnippet, toggleRole } from "../../src/features/search/session-hits.tsx";
+import type { HubSearchStatus, SessionTextHit } from "@ancientvoid/contracts";
+import { DEFAULT_ROLES, ROLE_KEYS, ROLE_ORDER, groupHits, hiddenFacetRoles, hubStatusLine, roleLabel, splitSnippet, toggleRole } from "../../src/features/search/session-hits.tsx";
+import { projectName } from "../../src/shared/project-name.ts";
 
 /**
  * Suche (Nachschärfe 2026-11-22): die Fundstellen-Logik der PWA. Hier sitzt
@@ -82,6 +83,30 @@ describe("Rollen-Chips", () => {
     expect(ROLE_ORDER).toEqual(["user", "assistant", "thinking", "tool", "system"]);
   });
 
+  it("trägt den Rechner einer Fremdsitzung an die Gruppe", () => {
+    const groups = groupHits([
+      hit({ sessionId: "a", seq: 1 }),
+      hit({ sessionId: "b", seq: 2, hub: "kaisgamingdesk", hubUrl: "https://kaisgamingdesk.tail" } as never),
+    ]);
+    expect(groups[0]?.hub).toBeUndefined();
+    expect(groups[1]).toMatchObject({ sessionId: "b", hub: "kaisgamingdesk", hubUrl: "https://kaisgamingdesk.tail" });
+  });
+
+  it("benennt den Zustand jedes Hub-Rechners — ein toter ist ein Ergebnis", () => {
+    const line = (over: Partial<HubSearchStatus> & Pick<HubSearchStatus, "state">) =>
+      hubStatusLine({ hostId: "andre", label: "andre.tail", sessions: 3, docs: 1, ...over });
+    // Die Zahlen kommen fertig formuliert herein („1 Fundstelle“ / „3 Fundstellen“) —
+    // hier vergleicht der Test gegen dieselbe Quelle, nicht gegen eine Sprache.
+    expect(line({ state: "ok" })).toEqual({ key: "search.hub_ok", params: { label: "andre.tail", sessions: 3, docs: 1 } });
+    expect(line({ state: "offline" }).key).toBe("search.hub_offline");
+    expect(line({ state: "denied" }).key).toBe("search.hub_denied");
+    expect(line({ state: "unsupported" }).key).toBe("search.hub_unsupported");
+    expect(line({ state: "skipped" }).key).toBe("search.hub_skipped");
+    expect(line({ state: "error", note: "HTTP 500" })).toEqual({ key: "search.hub_error", params: { label: "andre.tail", note: "HTTP 500" } });
+    // Ohne lesbaren Namen bleibt die Kurzform des Rechners stehen.
+    expect(hubStatusLine({ hostId: "andre", state: "offline", sessions: 0, docs: 0 }).params.label).toBe("andre");
+  });
+
   it("schaltet zu und ab, und der letzte Chip bleibt stehen", () => {
     const withThinking = toggleRole(DEFAULT_ROLES, "thinking");
     expect(withThinking).toContain("thinking");
@@ -89,5 +114,27 @@ describe("Rollen-Chips", () => {
     // Eine Suche ohne jede Rolle gibt es nicht — sonst füllt der Hub still die
     // Standardrolle auf, und die Oberfläche zeigt etwas anderes als gewählt.
     expect(toggleRole(["assistant"], "assistant")).toEqual(["assistant"]);
+  });
+
+  it("nennt den Kurznamen eines Projekts, auch mit Schrägstrichen am Ende", () => {
+    expect(projectName("/home/kaib/repos/tokdeck")).toBe("tokdeck");
+    expect(projectName("/home/kaib/repos/tokdeck/")).toBe("tokdeck");
+    expect(projectName("/")).toBe("/");
+  });
+
+  it("zählt die Fundstellen in abgeschalteten Rollen, damit eine leere Liste nicht lügt", () => {
+    const facets = [
+      { role: "user" as const, count: 2 },
+      { role: "assistant" as const, count: 18 },
+      { role: "thinking" as const, count: 284 },
+      { role: "tool" as const, count: 765 },
+    ];
+    const hidden = hiddenFacetRoles(facets, DEFAULT_ROLES);
+    expect(hidden.roles).toEqual(["thinking", "tool"]);
+    expect(hidden.count).toBe(1049);
+    // Alles an: nichts verborgen — der Hinweis darf nicht stehenbleiben.
+    expect(hiddenFacetRoles(facets, ROLE_ORDER)).toEqual({ roles: [], count: 0 });
+    // Eine Facette mit 0 ist keine versteckte Fundstelle.
+    expect(hiddenFacetRoles([{ role: "system", count: 0 }], DEFAULT_ROLES).count).toBe(0);
   });
 });

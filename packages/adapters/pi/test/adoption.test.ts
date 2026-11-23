@@ -73,11 +73,23 @@ describe("pi: Session aus der Datei übernehmen (ADR-0041)", () => {
   it("forkSession: --fork nur im ersten Zug, danach --continue in der Kopie", async () => {
     const root = store();
     const calls: string[][] = [];
-    const ctx = makeRecordingContext({ spawnWorker: async (cmd: string[]) => { calls.push(cmd); return fakeProc(); } });
+    // BUG-0261: ein zweiter Prompt waehrend eines laufenden Zug wird abgelehnt.
+    // Der Zug muss also enden, bevor der naechste Prompt kommt — genau so ruft
+    // der Hub den Adapter an. Fake-Prozess meldet seinen Exit sofort.
+    const fertig = () => ({
+      pid: 1,
+      onStdout: () => {},
+      onStderr: () => {},
+      onExit: (cb: (code: number | null) => void) => { setTimeout(() => cb(0), 0); },
+      kill: async () => {},
+    }) as never;
+    const ctx = makeRecordingContext({ spawnWorker: async (cmd: string[]) => { calls.push(cmd); return fertig(); } });
     const adapter = createAdapter({ sessionsDir: root });
     const handle = await adapter.start({ adapter: "pi", project: "/work/app", args: { resumeSessionId: ID, forkSession: true } }, ctx);
     await adapter.steer(handle, { kind: "prompt", text: "eins" }, ctx);
-    await adapter.steer(handle, { kind: "prompt", text: "zwei" }, ctx);
+    await new Promise((r) => setTimeout(r, 5));
+    const zweiter = await adapter.steer(handle, { kind: "prompt", text: "zwei" }, ctx);
+    expect(zweiter.ok).toBe(true);
     expect(calls[0]![2]).toContain("--fork");
     expect(calls[1]![2]).toContain("--continue");
     expect(calls[1]![2]).not.toContain("--fork");

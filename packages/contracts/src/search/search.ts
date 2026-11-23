@@ -59,6 +59,11 @@ export const SessionTextHit = z.object({
   archived: z.boolean(),
   /** Wie viele Fundstellen diese Session insgesamt hat (Gruppenkopf). */
   sessionHits: z.number().int().nonnegative(),
+  /** gesetzt bei Funden aus einem **anderen Hub-Rechner**: `hostId` des Peers und
+   * dessen URL. Ohne diese Felder weiß die Oberfläche nicht, welcher Sprung
+   * hier möglich ist — ein Fremdsitzung-Sprung geht nur über deren Hub. */
+  hub: z.string().optional(),
+  hubUrl: z.string().optional(),
 });
 export type SessionTextHit = z.infer<typeof SessionTextHit>;
 
@@ -98,6 +103,20 @@ export const SessionTextSearchResponse = z.object({
 });
 export type SessionTextSearchResponse = z.infer<typeof SessionTextSearchResponse>;
 
+/** Wie ein anderer Hub-Rechner in einer Suchrunde mitgemacht hat. Ein
+ * nicht erreichbarer Rechner ist ein Ergebnis, keine stille Lücke. */
+export const HubSearchStatus = z.object({
+  hostId: z.string(),
+  /** lesbarer Name (URL-Rechnername), falls bekannt */
+  label: z.string().optional(),
+  state: z.enum(["ok", "offline", "denied", "unsupported", "skipped", "error"]),
+  sessions: z.number().int().nonnegative(),
+  docs: z.number().int().nonnegative(),
+  /** Kurzgrund bei nicht-ok — für die Zeile in der Oberfläche. */
+  note: z.string().optional(),
+});
+export type HubSearchStatus = z.infer<typeof HubSearchStatus>;
+
 /** Ein Fund in einem Markdown-Dokument des Projekts (bestehende Form, jetzt
  * vertraglich fixiert — die PWA hatte eine duplizierte Kopie davon). */
 export const DocSearchHit = z.object({
@@ -106,6 +125,12 @@ export const DocSearchHit = z.object({
   title: z.string(),
   snippet: z.string(),
   score: z.number(),
+  /** gesetzt, wenn die Doku-Seite über mehrere Projekte lief: zu welchem Projekt
+   * die Datei gehört. Ohne dieses Feld weiß die Oberfläche nicht, wo der Fund herkommt. */
+  project: z.string().optional(),
+  /** Fund aus dem Doku-Bestand eines anderen Hub-Rechners. */
+  hub: z.string().optional(),
+  hubUrl: z.string().optional(),
 });
 export type DocSearchHit = z.infer<typeof DocSearchHit>;
 
@@ -140,5 +165,15 @@ export const UnifiedSearchResponse = z.object({
   docEngine: DocSearchEngine,
   /** `null` = Doku wurde nicht angefragt (Scope „nur Sessions“). */
   docStatus: z.enum(["ready", "indexing", "unavailable", "skipped", "error"]).nullable(),
+  /** Welche Projekte die Doku-Seite durchsucht hat — nur bei „alle Projekte“ gesetzt. */
+  docProjects: z.array(z.string()).optional(),
+  /** Wie viele Hub-Rechner dieses Hub gekoppelt hat — die Oberfläche zeigt den
+   * Kreuz „andere Rechner“ nur, wenn es welche gibt. */
+  peers: z.number().int().nonnegative().optional(),
+  /** Ergebnis der Runde auf den anderen Rechnern (nur wenn mitgesucht wurde). */
+  hubs: z.array(HubSearchStatus).optional(),
+  /** `true` = mehr Projekte im Hub, als die Suche pro Runde anfasst: die Doku-Seite
+   * ist bewusst unvollständig und sagt das auch. */
+  docTruncated: z.boolean().optional(),
 });
 export type UnifiedSearchResponse = z.infer<typeof UnifiedSearchResponse>;

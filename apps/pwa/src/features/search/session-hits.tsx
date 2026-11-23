@@ -1,4 +1,4 @@
-import { SNIPPET_MARK_CLOSE, SNIPPET_MARK_OPEN, type SessionTextHit, type TranscriptRole } from "@ancientvoid/contracts";
+import { SNIPPET_MARK_CLOSE, SNIPPET_MARK_OPEN, type HubSearchStatus, type SessionTextHit, type TranscriptRole } from "@ancientvoid/contracts";
 import { t } from "../../shared/i18n/index.ts";
 import { ago } from "../../shared/status.ts";
 import { projectName } from "../../shared/project-name.ts";
@@ -49,6 +49,37 @@ export function toggleRole(roles: readonly TranscriptRole[], role: TranscriptRol
   return roles.filter((r) => r !== role);
 }
 
+/** Facetten, die Treffer haben, aber abgeschaltet sind. Ohne diese Zahl
+ * behauptet eine leere Ergebnisliste, der Hub wisse nichts — dabei liegen die
+ * Funde in Denk- und Werkzeugspuren, die standardmäßig aus sind. */
+export function hiddenFacetRoles(
+  facets: readonly { role: TranscriptRole; count: number }[],
+  roles: readonly TranscriptRole[],
+): { roles: TranscriptRole[]; count: number } {
+  const off = facets.filter((f) => f.count > 0 && !roles.includes(f.role));
+  return { roles: off.map((f) => f.role), count: off.reduce((sum, f) => sum + f.count, 0) };
+}
+
+/** Zeile für einen Hub-Rechner in der Ergebnisliste: der Staat heißt immer
+ * „dieser Rechner hat mitgemacht / nicht mitgemacht“, nie eine leere Liste. */
+export function hubStatusLine(status: HubSearchStatus): { key: string; params: Record<string, string | number> } {
+  const label = status.label || status.hostId;
+  switch (status.state) {
+    case "ok":
+      return { key: "search.hub_ok", params: { label, sessions: status.sessions, docs: status.docs } };
+    case "offline":
+      return { key: "search.hub_offline", params: { label } };
+    case "denied":
+      return { key: "search.hub_denied", params: { label } };
+    case "unsupported":
+      return { key: "search.hub_unsupported", params: { label } };
+    case "skipped":
+      return { key: "search.hub_skipped", params: { label } };
+    default:
+      return { key: "search.hub_error", params: { label, note: status.note ?? "" } };
+  }
+}
+
 export interface SnippetPiece {
   text: string;
   hit: boolean;
@@ -71,6 +102,10 @@ export interface HitGroup {
   archived: boolean;
   total: number;
   hits: SessionTextHit[];
+  /** Fund aus einem anderen Hub-Rechner: Rechnername und dessen URL. Ohne diese
+   * Felder führt der „Sitzung öffnen“-Knopf ins Leere — die Sitzung wohnt dort. */
+  hub?: string;
+  hubUrl?: string;
 }
 
 /** hoch N pro Sitzung, Rest einklappbar — eine Sitzung, die zwanzig Mal
@@ -91,6 +126,8 @@ export function groupHits(hits: readonly SessionTextHit[], limit = GROUP_VISIBLE
         archived: hit.archived,
         total: hit.sessionHits,
         hits: [],
+        ...(hit.hub ? { hub: hit.hub } : {}),
+        ...(hit.hubUrl ? { hubUrl: hit.hubUrl } : {}),
       };
       byId.set(hit.sessionId, group);
       order.push(group);
@@ -113,9 +150,10 @@ export function Snippet({ snippet }: { snippet: string }) {
 export interface SessionHitsProps {
   groups: HitGroup[];
   /** Die Sitzung, in der die Suche gerade geöffnet ist — ihre Funde springen
-   * im Chat zur Stelle, andere öffnen die Sitzung. */
+   * im Chat zur Stelle, andere öffnen die Sitzung. Bei Funden von einem anderen
+   * Rechner ist die URL dieses Rechners dabei (die Sitzung wohnt dort). */
   currentSessionId: string;
-  onOpenSession: (sessionId: string) => void;
+  onOpenSession: (sessionId: string, hubUrl?: string) => void;
   onJumpToSeq?: (seq: number) => void;
 }
 
@@ -131,6 +169,7 @@ export function SessionHits({ groups, currentSessionId, onOpenSession, onJumpToS
                 <span class="hit-title">{group.title || group.sessionId.slice(0, 8)}</span>
                 <span class="hit-group-meta dim mono">
                   {projectName(group.project)}
+                  {group.hub ? ` · ${t("search.hit_on_hub", { hub: group.hub })}` : ""}
                   {group.archived ? ` · ${t("search.archived")}` : ""}
                 </span>
               </button>
@@ -147,12 +186,12 @@ export function SessionHits({ groups, currentSessionId, onOpenSession, onJumpToS
                   <span class={`hit-role hit-role--${hit.role}`}>{roleLabel(hit.role)}</span>
                   <span class="hit-when dim">{ago(hit.ts)}</span>
                   <span class="hit-seq dim mono">#{hit.seq}</span>
-                  {same && onJumpToSeq ? (
+                  {same && !group.hub && onJumpToSeq ? (
                     <button type="button" class="hit-jump" onClick={() => onJumpToSeq(hit.seq)}>
                       {t("search.jump_to_hit")}
                     </button>
                   ) : !same ? (
-                    <button type="button" class="hit-jump" onClick={() => onOpenSession(group.sessionId)}>
+                    <button type="button" class="hit-jump" onClick={() => onOpenSession(group.sessionId, group.hubUrl)}>
                       {t("search.open_session")}
                     </button>
                   ) : null}

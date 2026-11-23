@@ -16,6 +16,33 @@ gelegtes Gerätetoken ist widerrufen (`token revoke`, Route antwortet danach 401
 Der Deploy bringt auch **P75 Sprachausgabe** auf den Hub (main enthielt es seit
 11:46; der Live-Hub stand vorher auf `5701180b`).
 
+**Nachzug 23.11. — „warum finde ich Tokdeck nicht?“** Die Suche fand Tokdeck
+(20 Fundstellen in Frage/Antwort, 1 062 mit Denken/Werkzeug), aber drei Lücken
+waren echt: (1) Begriffe mit Trennern (`tokdeck.env.key`, Pfade) suchte man als
+ein Wort und fanden sie nicht — FTS5 zerlegt sie in Tokens; jetzt Phrase-Suche.
+(2) Die Doku-Seite war an das Projekt der laufenden Sitzung gebunden, das Repo
+`tokdeck` war nie im Suchraum — jetzt `allProjects=1` mit Projekt an der
+Fundstelle und gemeldetem Umfang (12 Projekte / 2,5 s). (3) Eine leere Liste nannte
+keine Facetten, las sich also wie „nichts im Hub“, obwohl 162 Fundstellen in
+Denken/Werkzeug lagen — jetzt Zahl plus Einschalt-Knopf. Nebenbei: der
+Nyx-Schwebeknopf lag auf dem Handy auf dem „Sitzung öffnen“-Knopf der Fundkarte.
+
+Nachweis danach am **laufenden** Hub (sha `d72024c5`, health 200 nach 2 s):
+„Tokdeck“ → Sitzungen 20 Fundstellen; mit „Doku in allen Projekten“ → 7
+Fundstellen aus 7 Projekten, oben als Fundorte (`tokdeck/README.md`,
+`tokdeck/PROGRESS.md`); „tokdeck.env.key“ → Hinweisle „208 Fundstellen liegen in
+Denken, Werkzeug“, nach einem Klick 208 Fundstellen. Gate: #302 `pass 3m0s`,
+#303 `pass 3m23s` (erster Versuch von `activity-register.test.ts` verlaufen,
+lokal 13/13 — einmal neu angestoßen). Diagnose-Rezept liegt als Skill
+`.agents/skills/ancientvoid-hub-suche`.
+
+**Cross-Hub-Suche** (dieser Zweig/PR): `hubs=1` fragt die gekoppelten Hub-Rechner über
+die bestehende Fleet-Tür (`/api/search` ist fleet-routable, kein neues Recht),
+funde tragen `hub`/`hubUrl`, und pro Rechner steht in `hubs`, wie er mitgemacht
+hat (ok / offline / abgelehnt / zu alter Hub / übersprungen). Die PWA zeigt den
+Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile pro
+Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
+
 ## Erledigt (verifiziert)
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
   plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die

@@ -47,14 +47,14 @@ export function InferenceSettings() {
 
   return (
     <SettingsSection title={t("inference.settings.title")} testid="settings-inference">
-      <SettingRow label="URL (OpenAI-kompatibel, inkl. /v1)" hint={status?.url ?? t("inference.settings.unbound")}>
-        <input data-testid="inference-url" value={url} onInput={(e) => setUrl((e.target as HTMLInputElement).value)} placeholder="http://100.65.133.28:8100/v1" />
+      <SettingRow label={t("inference.settings.url")} hint={status?.url ?? t("inference.settings.unbound")}>
+        <input data-testid="inference-url" value={url} onInput={(e) => setUrl((e.target as HTMLInputElement).value)} placeholder={t("inference.settings.url_placeholder")} />
       </SettingRow>
       <SettingRow label={t("inference.settings.model")} hint={status?.model ?? "—"}>
-        <input data-testid="inference-model" value={model} onInput={(e) => setModel((e.target as HTMLInputElement).value)} placeholder="halogen-qwen3.8-flash-next-uncensored-iq4xs" />
+        <input data-testid="inference-model" value={model} onInput={(e) => setModel((e.target as HTMLInputElement).value)} placeholder={t("inference.settings.model_placeholder")} />
       </SettingRow>
-      <SettingRow label={t("inference.settings.keyfile")} hint="~/.config/ancientvoid/evox2.key">
-        <input data-testid="inference-keyfile" value={apiKeyFile} onInput={(e) => setApiKeyFile((e.target as HTMLInputElement).value)} placeholder="~/.config/ancientvoid/evox2.key" />
+      <SettingRow label={t("inference.settings.keyfile")}>
+        <input data-testid="inference-keyfile" value={apiKeyFile} onInput={(e) => setApiKeyFile((e.target as HTMLInputElement).value)} placeholder={t("inference.settings.keyfile_placeholder")} />
       </SettingRow>
       {status?.probe && (
         <p role="status" data-testid="inference-probe" class={status.probe.ok ? "ok" : "err"}>

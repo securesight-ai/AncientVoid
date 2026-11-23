@@ -215,6 +215,67 @@
   font-size: var(--text-xs);
 }
 
+/* Der Nyx-Knopf schwebt über der Liste und würde auf dem Handy genau auf dem
+   „Sitzung öffnen"-Knopf einer Fundkarte landen (gemessen: 48×48 px rechts unten).
+   Auf der Suchseite ist der Assistent einen Tab entfernt — hier steht er nur im Weg.
+   Dasselbe Muster wie die Vollansicht des Repo-Graphen (32-repo-graph.css). */
+body:has(.search-pane) .nyx-fab {
+  display: none;
+}
+
+/* Cross-Hub: jeder gekoppelte Rechner nennt seinen Zustand. Ein Rechner, der
+   nicht antwortet, ist ein Ergebnis — nicht „nichts gefunden“. */
+.search-hubs {
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-xs);
+}
+
+.search-hub {
+  line-height: 1.45;
+}
+
+.search-hub--ok {
+  color: var(--fg-dim);
+}
+
+.search-hub--offline,
+.search-hub--denied,
+.search-hub--unsupported,
+.search-hub--error {
+  color: var(--warn);
+}
+
+/* Die Fundorte oben: auf dem Handy landet die Doku sonst hinter hunderten
+   Sitzungskarten, und die Frage „wo wohnt dieser Name?“ ist damit nicht beantwortet. */
+.search-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+}
+
+.search-where-chip {
+  border: 1px solid var(--bg-chip);
+  border-radius: 999px;
+  background: var(--bg-elev);
+  color: inherit;
+  font: inherit;
+  padding: 3px 9px;
+}
+
+/* Hinweis auf abgeschaltete Rollen: eine leere Liste liest sich sonst wie
+   „der Hub weiß nichts“, dabei liegen die Funde nur in einer anderen Rolle. */
+.search-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}
+
 .search-block {
   display: grid;
   gap: 8px;

@@ -58,7 +58,7 @@ test.describe("Suche über Sessiontexte", () => {
     // der Hub ist und nicht das eine Projekt.
     await expect(app.locator(".hit-group")).toHaveCount(2);
 
-    await app.locator(".search-here input").check();
+    await app.locator(".search-here", { hasText: "nur dieses Projekt" }).locator("input").check();
     await expect(app.locator(".hit-group")).toHaveCount(1);
     await expect(app.locator(".hit-group-title")).toHaveCount(1);
 
@@ -66,5 +66,41 @@ test.describe("Suche über Sessiontexte", () => {
     await app.getByRole("button", { name: "Doku", exact: true }).click();
     await expect(app.locator(".hit-group")).toHaveCount(0);
     await expect(app.locator(".search-roles")).toHaveCount(0);
+  });
+
+  test("Doku über alle Projekte findet das Handbuch des anderen Projekts @tablet @desktop", async ({ app, hub }) => {
+    // Der Fall aus dem Alltag: man sucht den Namen eines Tools oder Worts aus
+    // einem anderen Repo, sitzt aber in einer Sitzung dieses Projekts. Die
+    // Doku-Seite ist sonst an das Projekt der Sitzung gebunden.
+    const id = await hub.createSession({ adapter: "opencode", project: hub.beta, prompt: "Wie läuft der Handoff zwischen PC und Handy?" });
+    await hub.until(async () => (await hub.sessions()).every((s) => s.status === "idle"), "Zug fertig");
+
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await sessionTab(app, "Suche");
+    await app.locator(".search-input").fill("Handbuch");
+
+    // Beta hat kein „Handbuch“ in seinem Markdown — die Doku-Seile bleibt leer.
+    await expect(app.locator(".search-block-head").nth(1)).toContainText("0 Fundstellen");
+
+    await app.locator(".search-here", { hasText: "Doku in allen Projekten" }).locator("input").check();
+    await expect(app.locator(".search-block-head").nth(1)).toContainText("Fundstelle");
+    // Die Fundstelle nennt ihr Projekt, sonst steht da nur ein Dateiname.
+    await expect(app.locator(".search-result-card").first()).toContainText("alpha");
+    await expect(app.locator(".search-status").filter({ hasText: "Projekte durchsucht" })).toBeVisible();
+
+    // Die Fundorte oben sind auf dem Handy die einzige Doku-Antwort, die man ohne
+    // Scrollen durch hundert Sitzungskarten sieht.
+    await expect(app.locator(".search-where-chip").first()).toContainText("alpha/README.md");
+
+    // Öffnen heißt: die Datei aus dem Projekt der Fundstelle, nicht aus dem der
+    // laufenden Sitzung — sonst steht da ein Fehler, wo ein Handbuch liegt.
+    await app.locator(".search-result-card").first().click();
+    await expect(app.locator(".file-viewer-body")).toContainText("Das Handbuch beschreibt den Handoff");
+
+    // Cross-Hub: ohne gekoppelten Rechner sagt die Seite das, statt eine Suche
+    // vorzutäuschen, die nichts findet.
+    await app.locator(".file-viewer button").first().click();
+    await app.locator(".search-here", { hasText: "andere Rechner einbeziehen" }).locator("input").check();
+    await expect(app.locator(".search-status", { hasText: "kein anderer Rechner gekoppelt" })).toBeVisible();
   });
 });

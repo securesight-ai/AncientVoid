@@ -171,7 +171,21 @@ function likeEscape(s: string): string {
 /** Suchanfrage → FTS5-Ausdruck. Jeder Begriff wird als Präfix gesucht
  * („suche“ findet „Suche“ und „suchend“); was nach FTS5-Syntax aussieht
  * (`OR`, `NOT`, Klammern, Doppelpunkt) ist vorher auf Wörter zurückgeschnitten.
- * Ein einzelner `"Phrasen"`-Begriff bleibt eine Phrase. */
+ * Ein einzelner `"Phrasen"`-Begriff bleibt eine Phrase.
+ *
+ * Punkt, Schrägstrich, Doppelpunkt und Co. sind keine Wortbestandteile: FTS5
+ * zerlegt `tokdeck.env.key` in vier Tokens. Ein Begriff wie
+ * `tokdeck.env.key` muss deshalb als **Phrase** dieser Tokens gesucht werden —
+ * sonst sucht man den Dateinamen eines Tools und findet ihn nicht, obwohl jede
+ * Zeile ihn enthält. */
+const FTS_TOKEN_SPLIT = /[^\p{L}\p{N}']+/u;
+
+function ftsPhrase(token: string): string | null {
+  const parts = token.split(FTS_TOKEN_SPLIT).filter((p) => p.length > 0);
+  if (!parts.length) return null;
+  return `"${parts.join(" ").replace(/"/g, '""')}"*`;
+}
+
 export function buildFtsQuery(q: string): { match: string; terms: string[] } | null {
   const trimmed = q.trim();
   if (!trimmed) return null;
@@ -180,14 +194,13 @@ export function buildFtsQuery(q: string): { match: string; terms: string[] } | n
     const inner = phrase[1].trim().replace(/"/g, '""');
     return { match: `"${inner}"`, terms: [inner.replace(/""/g, '"')] };
   }
-  const terms = trimmed
-    .split(/[\s,;]+/)
-    .map((t) => t.replace(/[^\p{L}\p{N}'_-]/gu, "").replace(/-+/g, "-"))
-    .filter((t) => t.length > 0);
-  if (!terms.length) return null;
+  const raw = trimmed.split(/[\s,;]+/).filter((t) => t.length > 0);
+  const parts = raw.map(ftsPhrase).filter((m): m is string => m !== null);
+  if (!parts.length) return null;
   // Zitiert + Präfix: die Anführungszeichen halten alles, was nach FTS5-Syntax
-  // aussieht (or, NOT, Klammern, Doppelpunkt), sauber als Wort.
-  return { match: terms.map((t) => `"${t.replace(/"/g, '""')}"*`).join(" "), terms };
+  // aussieht (or, NOT, Klammern, Doppelpunkt), sauber als Wort — und die
+  // Leerzeichen darin sind genau die Trenner, die der Index auch gesetzt hat.
+  return { match: parts.join(" "), terms: raw };
 }
 
 /** Snippet für den Scan-Fallback: Fenster um den ersten Fund, alle Fundwörter
@@ -547,19 +560,40 @@ export class SessionTextIndex {
     // Die Stufen werden vor dem Ausliefern entschieden, nicht seitengeweise:
     // dieselbe Anfrage muss auf Seite 1 und Seite 2 dieselbe Stufe benutzen,
     // sonst vermischt „mehr laden“ Wortfunde mit Teilwortfunden.
-    const andMatch = built.terms.map((t) => `"${t.replace(/"/g, '""')}"*`).join(" ");
+    const phrases = built.terms.map(ftsPhrase).filter((m): m is string => m !== null);
+    const andMatch = phrases.join(" ");
     if (this.probeFts(andMatch, opts, roles)) {
       return { ...this.runFts(andMatch, opts, limit, offset, roles), mode: "and", index };
     }
     const part = this.searchScan(opts, limit, offset, roles, index);
     if (part.total > 0) return part;
-    if (built.terms.length > 1) {
-      const orMatch = built.terms.map((t) => `"${t.replace(/"/g, '""')}"*`).join(" OR ");
+    if (phrases.length > 1) {
+      const orMatch = phrases.join(" OR ");
       if (this.probeFts(orMatch, opts, roles)) {
         return { ...this.runFts(orMatch, opts, limit, offset, roles), mode: "or", index };
       }
     }
-    return { hits: [], total: 0, mode: "and", facets: [], index };
+    // Nichts in den gewählten Rollen — aber die Chips sollen trotzdem sagen,
+    // wo es läge. Eine leere Liste ohne diese Zahl liest sich wie „der Hub weiß
+    // nichts“, dabei liegt der Fund in Denk- oder Werkzeugspuren.
+    return { hits: [], total: 0, mode: "and", facets: this.scopeFacets(andMatch, opts), index };
+  }
+
+  /** Facetten über alle Rollen (nur Projekt-/Sitzungsfilter) — für den Fall, dass
+   * in den gewählten Rollen nichts lag. Die Zahl ist die Antwort auf „warum
+   * finde ich nichts?“: sie zeigt, wo der Fund tatsächlich steht. */
+  private scopeFacets(match: string, opts: SessionTextSearchOptions): { role: TranscriptRole; count: number }[] {
+    const scope = this.where(opts, []);
+    return (this.db
+      .prepare(
+        `SELECT l.role AS role, count(*) AS c
+         FROM transcript_fts
+         CROSS JOIN transcript_lines l ON l.id = transcript_fts.rowid
+         LEFT JOIN sessions s ON s.id = l.session_id
+         WHERE transcript_fts MATCH ?${scope.sql}
+         GROUP BY l.role`,
+      )
+      .all(match, ...scope.params) as unknown as { role: TranscriptRole; c: number }[]).map((r) => ({ role: r.role, count: r.c }));
   }
 
   /** Kostet eine Zeile: gibt es überhaupt einen Treffer für diesen Ausdruck?
