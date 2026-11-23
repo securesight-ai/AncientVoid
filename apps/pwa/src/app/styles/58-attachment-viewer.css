@@ -69,7 +69,7 @@
 .attachment-lightbox {
   position: fixed;
   inset: 0;
-  z-index: 400;
+  z-index: var(--z-lightbox);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   background: color-mix(in srgb, var(--scrim-950), black 60%);
@@ -121,7 +121,7 @@
 }
 
 /* Niedriges Querformat am Handy: Vorschau flacher, Leiste enger — das Bild bleibt gross. */
-@media (max-height: 460px) {
+@media (max-height: 520px) {
   .attachment-thumb-frame {
     height: 64px;
   }
