@@ -105,3 +105,54 @@ export function tipText(source: TipSource): string {
   }
   return "";
 }
+
+/** Abstand des Tooltips zum Viewport-Rand und zum Ziel (BUG-0255). */
+export const TIP_MARGIN_PX = 8;
+/** Weniger Platz darüber (CSS-px) → Tooltip unter dem Ziel. */
+export const TIP_BELOW_PX = 40;
+
+export interface TipAnchor {
+  /** Horizontale Mitte des Ziels. */
+  x: number;
+  top: number;
+  bottom: number;
+  /** Rechte Kante des Ziels — Startpunkt der Neben-Platzierung. */
+  right: number;
+}
+
+export interface TipPlacement {
+  left: number;
+  /** `above`/`below`: Kante des Ziels; `side`: vertikale Mitte des Tooltips. */
+  top: number;
+  mode: "above" | "below" | "side";
+}
+
+/**
+ * Platzierung des Tooltips im Viewport, ohne DOM (BUG-0255): Ziele am linken
+ * Rand (Icon-Leiste) bekommen den Tooltip **rechts daneben**, statt mittig
+ * über dem Anker mit `translate(-50%)` links aus dem Bildschirm zu ragen.
+ * Alle Koordinaten in CSS-px (Aufrufer teilt Render-px durch `zoom`).
+ */
+export function placeTip(
+  anchor: TipAnchor,
+  viewport: { width: number; height: number },
+  size: { width: number; height: number },
+): TipPlacement {
+  const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), Math.max(lo, hi));
+  const overflowsLeft = anchor.x - size.width / 2 < TIP_MARGIN_PX;
+  const fitsRight = anchor.right + TIP_MARGIN_PX + size.width <= viewport.width - TIP_MARGIN_PX;
+  if (overflowsLeft && fitsRight) {
+    const center = (anchor.top + anchor.bottom) / 2;
+    return {
+      mode: "side",
+      left: anchor.right + TIP_MARGIN_PX,
+      top: clamp(center, TIP_MARGIN_PX + size.height / 2, viewport.height - TIP_MARGIN_PX - size.height / 2),
+    };
+  }
+  const below = anchor.top < TIP_BELOW_PX;
+  return {
+    mode: below ? "below" : "above",
+    left: clamp(anchor.x - size.width / 2, TIP_MARGIN_PX, viewport.width - TIP_MARGIN_PX - size.width),
+    top: below ? anchor.bottom : anchor.top,
+  };
+}

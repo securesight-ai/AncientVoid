@@ -74,8 +74,25 @@ Start-Optionen: `target` (Epic oder Bug, z. B. `EPIC-P54`), `command`
 Connector sät `<workdir>/.ralph/<target>-state.json` aus der Epic-Datei,
 spawn`t pro Turn einen Agenten mit dem Ralph-Protokoll-Prompt, meldet
 Fortschritt/Gates als `loop.*`-Events (Ausgabe gekürzt + Blob, K5) und stoppt
-bei `wartend` — Abnahme bleibt deins. Pause stoppt neue Turns; der Hermes-Beobachter
-`ralph` (ADR-0038) bleibt davon unberührt der zweite Weg.
+bei `wartend` — Abnahme bleibt deins. Pause stoppt neue Turns.
+
+**Genau ein Ralph-Loop (BUG-0259):** Registriere `ralph-hub` **oder** den
+Hermes-Beobachter `ralph`, nie beide — zwei Frontends für dasselbe
+State-Protokoll verwässern die eine Wahrheit über den Lauf. Der Beobachter
+bleibt als Paket vorhanden; neue Setups registrieren `ralph-hub` (freie
+Adapter-/LLM-Wahl über `command`).
+
+**Agent-Review (ADR-0113, BUG-0259):** Erreicht der Arbeitslauf `wartend`,
+startet der Connector automatisch genau eine Review-Session (Rolle `review`,
+eigene State-Datei `<target>-review-state.json`, eigenes Turn-Budget ≤ 5) —
+als **eigene, in der PWA sichtbare Session**. Die Review prüft deterministisch
+(Endchecks: lint/typecheck/gezielte Tests, Diff gegen die State-Wahrheit),
+beantwortet beantwortbare Fragen selbständig und schreibt ihr Fazit in die
+Review-State-Datei; erst deren `wartend` meldet der Arbeitslauf grün
+(`loop.review`-Events mit Fazit, blockiert = Level 2). Ohne Session-Starter
+bleibt das Mensch-Gate — laut benannt. Während jedes Agenten-Turns sendet der
+Connector alle 30 s ein `loop.heartbeat`-Event; nach Hub-Neustart nimmt der
+Lauf aus State-Datei + Session-Snapshot wieder auf (K7, nichts doppelt).
 
 ## aSPARK-Factory (`@ancientvoid/loop-aspark-factory`)
 

@@ -75,3 +75,20 @@ test.describe("Tooltips", () => {
     await expect(app.getByRole("tooltip")).toHaveCount(0);
   });
 });
+
+test.describe("Tooltip-Geometrie am Tablet (BUG-0255)", () => {
+  test.use({ viewport: { width: 800, height: 1280 }, hasTouch: true, isMobile: true });
+
+  test("Icon-Leisten-Tooltip erscheint rechts neben dem Icon und bleibt im Viewport", async ({ app }) => {
+    const item = app.locator('.sidebar .dock-item[data-sidebar-id="automationen"]');
+    await expect(item).toBeVisible();
+    const icon = (await item.boundingBox())!;
+    await item.hover();
+    const tip = app.getByRole("tooltip");
+    await expect(tip).toHaveText("Automationen");
+    const box = (await tip.boundingBox())!;
+    expect(box.x, "beginnt rechts der Icon-Kante").toBeGreaterThan(icon.x + icon.width);
+    expect(box.x, "nicht links abgeschnitten").toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width, "rechts im Viewport").toBeLessThanOrEqual(app.viewportSize()!.width);
+  });
+});

@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { basicFeatures, loopAdapterId } from "@ancientvoid/contracts";
-import type { Ack, Adapter, AdapterCapabilities, AdapterContext, HealthReport, LoopConnector, LoopStartSpec, SessionHandle, SessionSpec, SteerInput } from "@ancientvoid/contracts";
+import type { Ack, Adapter, AdapterCapabilities, AdapterContext, HealthReport, LoopConnector, LoopSessionStarter, LoopStartSpec, SessionHandle, SessionSpec, SteerInput } from "@ancientvoid/contracts";
 
 interface Snapshot {
   spec: LoopStartSpec;
@@ -14,7 +14,7 @@ interface Snapshot {
  * Der Snapshot (Startvorgabe + Leseposition) liegt je Session unter `stateDir` — der Recovery-Pfad für K7:
  * nach einem Hub-Neustart liest der Connector ab dieser Position weiter, nichts doppelt, nichts fehlt.
  */
-export function loopAsAdapter(connector: LoopConnector, opts: { stateDir: string }): Adapter {
+export function loopAsAdapter(connector: LoopConnector, opts: { stateDir: string; startSession?: LoopSessionStarter }): Adapter {
   const file = (sessionId: string) => join(opts.stateDir, `${sessionId}.json`);
   const cursors = new Map<string, unknown>();
   const specs = new Map<string, LoopStartSpec>();
@@ -45,6 +45,7 @@ export function loopAsAdapter(connector: LoopConnector, opts: { stateDir: string
         cursors.set(sessionId, cursor);
         void save(sessionId).catch((err) => ctx.log("warn", "loop snapshot not written", { error: String(err) }));
       },
+      ...(opts.startSession ? { startSession: opts.startSession } : {}),
     });
   };
 

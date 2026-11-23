@@ -2,17 +2,15 @@
 
 **Art:** tutorial
 
-Stand 2026-11-20 (Frischhalte-Review, drift 31 > 30 nach Grid-/Sidebar-PR und
-main): Wizard-Pfad (`./setup.sh --yes --adapter=dummy`), Device-Token und
-`/api/ready` unverändert; die PWA-Oberfläche nutzt die Bausteine aus
-[`design-system.md`](design-system.md), der Ablauf dieses Tutorials bleibt
-derselbe. Auf PC/Tablet öffnen neue Inhalte als zusätzliche Grid-Karten und
-die Sidebar ist unter Optionen sortier-/ausblendbar — der Handy-Erststart
-(Dock → Session → Nachricht) ändert sich nicht. Main-Sync und
-Prompt-Verbessern ändern den Erststart nicht. Neu für Erstnutzer: Sessions
-starten auf dem aktuellen `origin/main` ([`main-sync.md`](main-sync.md)), und
-der Dateibaum zeigt Statuspunkte für Epics und Bugs
-([`epic-status.md`](epic-status.md)).
+Stand 2026-11-23 (Frischhalte-Review, drift 31 > 30 nach BUG-0255/0256- und
+Ralph-PRs): Wizard-Pfad (`./setup.sh --yes --adapter=dummy`), Device-Token und
+`/api/ready` unverändert; der Erststart-Ablauf (Dock → Session → Nachricht)
+bleibt derselbe. Neue Oberflächen-Details ändern ihn nicht: Icon-Leisten-
+Tooltips stehen rechts neben dem Icon (BUG-0255), die Glocke trägt ihre
+Zahl links außen (BUG-0256), und `ralph-hub` ist der zu registrierende
+Ralph-Loop für freie Adapterwahl ([loops.md](loops.md)) — alles nach dem
+Erststart-Thema dieses Tutorials. Main-Sync, Statuspunkte und
+Prompt-Verbessern bleiben wie zuvor beschrieben.
 
 Ziel: Du hast einen laufenden Hub, dein Handy zeigt ihn an, und du hast von
 dort aus eine Nachricht an eine laufende Agent-Session geschickt. Wir nehmen

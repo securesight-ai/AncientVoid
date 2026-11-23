@@ -339,3 +339,20 @@ test.describe("Glocke am PC: Listenkopf wenn die Liste offen, Fenstereck wenn zu
     await expectInListHead(app, "(Zoom 130 %)");
   });
 });
+test.describe("Badge-Geometrie der Glocke (BUG-0256)", () => {
+  test.use({ viewport: { width: 800, height: 1280 }, hasTouch: true, isMobile: true });
+
+  test("Zahl hängt an der Glocke (linker Rand) und bleibt vollständig im Viewport", async ({ app, hub }) => {
+    // Ungelesene erzeugen — die Glocke steht im Tablet-split als Flusselement im Listenkopf.
+    await hub.createSession({ adapter: "opencode", prompt: "Bitte KONTINGENT" });
+    const bell = app.locator(".notif-bell");
+    const count = app.locator(".notif-count");
+    await expect(count).toBeVisible();
+    const b = (await bell.boundingBox())!;
+    const c = (await count.boundingBox())!;
+    expect(c.y, "an der Glocke verankert (vorher: y=-4, 227 px über der Glocke)").toBeGreaterThanOrEqual(b.y - 8);
+    expect(c.y, "vollständig im Viewport").toBeGreaterThanOrEqual(0);
+    expect(c.x + c.width, "überlappt die Glocke horizontal").toBeLessThanOrEqual(b.x + b.width + 8);
+    expect(c.x, "am linken Rand der Glocke").toBeLessThanOrEqual(b.x + 4);
+  });
+});
