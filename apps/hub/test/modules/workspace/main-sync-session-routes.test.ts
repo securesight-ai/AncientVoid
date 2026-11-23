@@ -28,8 +28,8 @@ describe("main-sync session routes", () => {
     return execFileAsync("git", args);
   }
 
-  async function call(method: "GET" | "POST", url: string, token: string) {
-    const res = await app.inject({ method, url, headers: { authorization: `Bearer ${token}` }, ...(method === "POST" ? { payload: {} } : {}) });
+  async function call(method: "GET" | "POST", url: string, token: string, payload?: Record<string, unknown>) {
+    const res = await app.inject({ method, url, headers: { authorization: `Bearer ${token}` }, ...(method === "POST" ? { payload: payload ?? {} } : {}) });
     return { status: res.statusCode, body: res.json() as Record<string, unknown> };
   }
 
@@ -110,6 +110,40 @@ describe("main-sync session routes", () => {
     const after = await call("GET", `/api/sessions/${sessionId}/main-sync`, human);
     expect(after.body).toMatchObject({ behind: 0 });
     expect(typeof after.body.lastSyncedAt).toBe("string");
+  });
+
+  it("ADR-0102: ungültiger Body antwortet 400 statt still weiterzumachen", async () => {
+    const res = await call("POST", `/api/sessions/${sessionId}/main-sync`, human, { conflictStrategy: "bogus" });
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain("conflictStrategy");
+  });
+
+  it("ADR-0102: favor-session löst einen echten Konflikt gunsten der Session und nennt die Datei", async () => {
+    const record = await sessions.create({ adapter: "idle", project: repo, prompt: "konflikt" }, "pc");
+    const deadline = Date.now() + 8000;
+    while (sessions.get(record.id)?.status !== "idle" && Date.now() < deadline) await new Promise((r) => setTimeout(r, 20));
+    const workdir = sessions.mainSyncCandidates().find((c) => c.sessionId === record.id)?.workdir;
+    expect(workdir).toBeTruthy();
+    // Session-Seite und Origin-Seite ändern dieselbe Datei — Default wäre `conflict`.
+    await writeFile(join(workdir!, "gemeinsam.txt"), "session\n");
+    await git(["-C", workdir!, "add", "-A"]);
+    await git(["-C", workdir!, "commit", "-q", "-m", "session-seite"]);
+    const other = join(dir, "konflikt-other");
+    await git(["clone", "-q", origin, other]);
+    await git(["-C", other, "config", "user.email", "other@ancientvoid.local"]);
+    await git(["-C", other, "config", "user.name", "ancientvoid other"]);
+    await writeFile(join(other, "gemeinsam.txt"), "origin\n");
+    await git(["-C", other, "add", "-A"]);
+    await git(["-C", other, "commit", "-q", "-m", "origin-seite"]);
+    await git(["-C", other, "push", "-q", "origin", "main"]);
+    await rm(other, { recursive: true, force: true });
+
+    const res = await call("POST", `/api/sessions/${record.id}/main-sync`, human, { conflictStrategy: "favor-session" });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ outcome: "applied", autoResolved: ["gemeinsam.txt"] });
+    const { stdout: inhalt } = await execFileAsync("git", ["-C", workdir!, "show", "HEAD:gemeinsam.txt"]);
+    expect(inhalt).toBe("session\n");
+    // Der alte Weg bleibt ehrlich: Default-Body bricht bei Konflikt ab.
   });
 
   it("Policy main-sync.apply: Agenten-Token schreibt nicht (403) — Menschenfläche", async () => {

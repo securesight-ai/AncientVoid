@@ -1261,11 +1261,13 @@ export class SessionManager {
 
   /**
    * Anwenden (POST-Sicht): merge `origin/<Hauptbranch>` in den Session-Branch —
-   * nur auf wartender Session mit sauberem Worktree, bei Konflikt/Fehler sofort
-   * abgebrochen (Worktree unverändert, AC-P67-7). Ergebnis als Event im
-   * Verlauf; der nächste Zug sieht den neuen Stand (kein Prompt-Eingriff).
+   * nur auf wartender Session mit sauberem Worktree. Default bricht bei
+   * Konflikt sofort ab (Worktree unverändert, AC-P67-7); `favor-session`
+   * löst Konflikt-Hunks automatisch gunsten des Session-Branchs und nennt
+   * die Dateien (ADR-0102). Ergebnis als Event im Verlauf; der nächste Zug
+   * sieht den neuen Stand (kein Prompt-Eingriff).
    */
-  async mainSyncApply(sessionId: string, opts: { skipFetch?: boolean } = {}): Promise<MainSyncApplyResult> {
+  async mainSyncApply(sessionId: string, opts: { skipFetch?: boolean; conflictStrategy?: "abort" | "favor-session" } = {}): Promise<MainSyncApplyResult> {
     const targets = this.mainSyncTargets(sessionId);
     if ("error" in targets) throw new Error(targets.error);
     const { session } = targets;
@@ -1294,13 +1296,13 @@ export class SessionManager {
     }
     let result: MainSyncApplyResult;
     try {
-      result = (await engine.apply(session.workdir, branch)) as MainSyncApplyResult;
+      result = (await engine.apply(session.workdir, branch, ...(opts.conflictStrategy ? [{ conflictStrategy: opts.conflictStrategy }] : []))) as MainSyncApplyResult;
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
       result = { outcome: "failed", reason: "unknown", detail: detail.slice(0, 500) };
     }
     if (result.outcome === "applied") {
-      await this.emitSystem(session, "workspace.main_sync_applied", { from: result.from, to: result.to, files: result.files });
+      await this.emitSystem(session, "workspace.main_sync_applied", { from: result.from, to: result.to, files: result.files, ...(result.autoResolved && result.autoResolved.length > 0 ? { autoResolved: result.autoResolved } : {}) });
     } else if (result.outcome === "conflict") {
       await this.emitSystem(session, "workspace.main_sync_conflict", { files: result.files });
     } else {

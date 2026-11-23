@@ -4,6 +4,7 @@ import {
   MAIN_SYNC_EVENT_KINDS,
   MAIN_SYNC_EVENT_PAYLOAD,
   MAIN_SYNC_SETTINGS_KEYS,
+  MainSyncApplyRequest,
   MainSyncApplyResult,
   MainSyncCheckResult,
   MainSyncChecked,
@@ -170,5 +171,27 @@ describe("EPIC-P67 T67.1: Main-Sync-Events und API (K5)", () => {
     expect(MainSyncApplyResult.safeParse({ outcome: "failed", reason: "offline", detail: "kein Netz" }).success).toBe(true);
     expect(MainSyncApplyResult.safeParse({ outcome: "applied", from: "a" }).success).toBe(false);
     expect(MainSyncApplyResult.safeParse({ outcome: "mercurial" }).success).toBe(false);
+  });
+});
+
+describe("ADR-0102: Anwenden mit Konfliktgunst der Session", () => {
+  it("MainSyncApplyRequest: leer/abort/favor-session gültig, alles andere abgelehnt (strict)", () => {
+    expect(MainSyncApplyRequest.safeParse({}).success).toBe(true);
+    expect(MainSyncApplyRequest.safeParse({ conflictStrategy: "abort" }).success).toBe(true);
+    expect(MainSyncApplyRequest.safeParse({ conflictStrategy: "favor-session" }).success).toBe(true);
+    expect(MainSyncApplyRequest.safeParse({ conflictStrategy: "bogus" }).success).toBe(false);
+    expect(MainSyncApplyRequest.safeParse({ conflictStrategy: "abort", extra: 1 }).success).toBe(false);
+  });
+
+  it("MainSyncApplyResult: applied nennt optional autoResolved; alte Payloads (ohne das Feld) bleiben gültig", () => {
+    expect(MainSyncApplyResult.safeParse({ outcome: "applied", from: "a", to: "b", files: [], autoResolved: ["x.ts"] }).success).toBe(true);
+    expect(MainSyncApplyResult.safeParse({ outcome: "applied", from: "a", to: "b", files: [] }).success).toBe(true);
+    expect(MainSyncApplyResult.safeParse({ outcome: "applied", from: "a", to: "b", files: [], autoResolved: "x.ts" }).success).toBe(false);
+  });
+
+  it("Event-Payload main_sync_applied nimmt autoResolved ebenfalls additiv", () => {
+    const schema = MAIN_SYNC_EVENT_PAYLOAD["workspace.main_sync_applied"];
+    expect(schema.safeParse({ from: "a", to: "b", files: [] }).success).toBe(true);
+    expect(schema.safeParse({ from: "a", to: "b", files: [], autoResolved: ["x.ts"] }).success).toBe(true);
   });
 });

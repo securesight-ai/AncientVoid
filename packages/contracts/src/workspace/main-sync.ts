@@ -187,6 +187,10 @@ export const MainSyncApplied = z
     from: z.string().min(1).max(64),
     to: z.string().min(1).max(64),
     files: MainSyncFilesList,
+    /** ADR-0102: Dateien, deren Konflikte automatisch gunsten des
+     * Session-Branchs gelöst wurden (`favor-session`). Fehlt = nichts
+     * automatisch gelöst (alter Leser versteht das Feld nicht falsch). */
+    autoResolved: MainSyncFilesList.optional(),
   })
   .strict();
 export type MainSyncApplied = z.infer<typeof MainSyncApplied>;
@@ -239,9 +243,22 @@ export const MainSyncCheckResult = z
   .strict();
 export type MainSyncCheckResult = z.infer<typeof MainSyncCheckResult>;
 
+/** POST-Body des Anwendens: `conflictStrategy` `abort` (Default, AC-P67-7 —
+ * bei Konflikt abbrechen, nichts verändern) oder `favor-session` (Konflikt-
+ * Hunks automatisch gunsten des Session-Branchs lösen, ADR-0102). */
+export const MAIN_SYNC_CONFLICT_STRATEGIES = ["abort", "favor-session"] as const;
+export type MainSyncConflictStrategy = (typeof MAIN_SYNC_CONFLICT_STRATEGIES)[number];
+
+export const MainSyncApplyRequest = z
+  .object({
+    conflictStrategy: z.enum(MAIN_SYNC_CONFLICT_STRATEGIES).optional(),
+  })
+  .strict();
+export type MainSyncApplyRequest = z.infer<typeof MainSyncApplyRequest>;
+
 /** POST-Ergebnis: angewendet, Konflikt (nichts verändert), übersprungen (mit Grund) oder gescheitert (Git-Fehler, Worktree unverändert). */
 export const MainSyncApplyResult = z.discriminatedUnion("outcome", [
-  z.object({ outcome: z.literal("applied"), from: z.string().min(1).max(64), to: z.string().min(1).max(64), files: MainSyncFilesList }).strict(),
+  z.object({ outcome: z.literal("applied"), from: z.string().min(1).max(64), to: z.string().min(1).max(64), files: MainSyncFilesList, autoResolved: MainSyncFilesList.optional() }).strict(),
   z.object({ outcome: z.literal("conflict"), files: MainSyncFilesList }).strict(),
   z.object({ outcome: z.literal("skipped"), reason: z.string().min(1).max(200), detail: z.string().max(500).optional() }).strict(),
   z.object({ outcome: z.literal("failed"), reason: z.string().min(1).max(200), detail: z.string().max(500).optional() }).strict(),
