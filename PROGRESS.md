@@ -57,6 +57,18 @@ Kreuz „andere Rechner einbeziehen“ (nur wenn Peers bekannt sind), eine Zeile
 Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen.
 
 ## Erledigt (verifiziert)
+
+- **Bilder im Chat: einfügen, ansehen, verlinken (S82, 23.11.)** — Einfügen oder Ablegen im
+  Eingabefeld haengt Screenshots an die Nachricht (`shared/paste-images.ts`,
+  `composer/Composer.tsx`); die Chat-Zeile zeigt ein echtes Vorschaubild mit Oeffnen-Ecke
+  (`features/attachments/Attachments.tsx`, `app/styles/58-attachment-viewer.css`); ein Tipp —
+  oder der Bild-Link eines Agenten (`#/anhang/<id>`, session-intern `…/anhang/<id>` in
+  `app/route.ts` + `app/main.tsx`) — oeffnet dasselbe Vollbild, als `body`-Portal (z 400,
+  Fokusfalle, Esc/Tipp am Rand/✕ schliesst). Bewiesen in `e2e/specs/anhang-bilder.spec.ts`
+  (2 passed, mobile): natuerliche Bildmasse 320×200 im Vorschaubild, Vollbild-BBox
+  > 200×100, Deep-Link oeffnet und fuehrt session-intern zurueck; Dokument-Chips bleiben die
+  Text-Ansicht („4711“). Agenten-Rezept: `docs/bild-links-fuer-agenten.md`, Leitplanke in
+  `AGENTS.md` (kein Bild als Dateipfad abliefern).
 - **Sessiontext-Index (Core)** `packages/core/src/modules/search/session-text-index.ts`
   plus Migration 40 (`transcript_lines`, `transcript_state`): FTS5 über die
   echten `events.jsonl` **inkl. Blob-Payloads** (K5-Offload — ohne Blob-Read

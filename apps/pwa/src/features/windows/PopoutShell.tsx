@@ -35,6 +35,8 @@ function targetFromHash(hash: string): WindowTarget | null {
   if (route.view === "list" && route.page === "vault") return route.vaultFile ? { kind: "vault", path: route.vaultFile } : { kind: "vault" };
   if (route.view === "devices") return { kind: "device" };
   if (route.view === "filetree") return { kind: "filetree" };
+  // Ein Anhang ist kein eigenes Popout-Fenster — das Hauptfenster oeffnet ihn als Vollbild.
+  if (route.view === "attachment") return null;
   if (route.view === "tail") {
     if (route.browser) return { kind: "browser", sessionId: route.sessionId, ...(route.hostId ? { hostId: route.hostId } : {}) };
     if (route.tab === "graph") return { kind: "graph", sessionId: route.sessionId, ...(route.hostId ? { hostId: route.hostId } : {}) };

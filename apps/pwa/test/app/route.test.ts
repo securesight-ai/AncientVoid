@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { browserHash, codeHash, filetreeHash, isToolPage, pageHash, PAGE_SLUG, parseAppHash, redirectLegacyStatHash, sessionHash, type ListPage } from "../../src/app/route.ts";
+import {
+  attachmentHash,
+  browserHash,
+  codeHash,
+  filetreeHash,
+  isToolPage,
+  pageHash,
+  PAGE_SLUG,
+  parseAppHash,
+  redirectLegacyStatHash,
+  sessionAttachmentHash,
+  sessionHash,
+  type ListPage,
+} from "../../src/app/route.ts";
 
 describe("Browser-Route (EPIC-P39 T39.3)", () => {
   it("round-trips lokal und auf einem anderen Host; die Session-Route bleibt unberührt", () => {
@@ -96,3 +109,30 @@ describe("Dateibaum-Fenster-Route (BUG-0128)", () => {
   });
 });
 
+
+describe("Anhang-Route (Bild-Link aus einer Agent-Nachricht)", () => {
+  it("baut die Hashes — einzeln und innerhalb der Session", () => {
+    expect(attachmentHash("a 1")).toBe("#/anhang/a%201");
+    expect(sessionAttachmentHash("s1", "a1")).toBe("#/sessions/s1/anhang/a1");
+    expect(sessionAttachmentHash("s1", "a1", "h2")).toBe("#/hosts/h2/sessions/s1/anhang/a1");
+  });
+
+  it("erkennt den Einzeln-Link als eigenes Bildfenster", () => {
+    expect(parseAppHash("#/anhang/a1")).toEqual({ view: "attachment", attachmentId: "a1" });
+    expect(parseAppHash("#/anhang/a%201")).toEqual({ view: "attachment", attachmentId: "a 1" });
+  });
+
+  it("erkennt den Link innerhalb der Session, ohne die Session-Route zu zerstoeren", () => {
+    expect(parseAppHash(sessionAttachmentHash("s1", "a1"))).toEqual({ view: "tail", sessionId: "s1", attachment: "a1" });
+    expect(parseAppHash(sessionAttachmentHash("s2", "a2", "h2"))).toEqual({ view: "tail", sessionId: "s2", hostId: "h2", attachment: "a2" });
+    // Kombination aus Tab und Anhang ist bewusst nicht unterstuetzt: der Datei-Tab traegt
+    // Pfade mit Schraegstrichen, ein zusaetzliches Segment waere mehrdeutig.
+    expect(parseAppHash("#/sessions/s1/graph")).toEqual({ view: "tail", sessionId: "s1", tab: "graph" });
+  });
+
+  it("laesst die bestehenden Session-Routen unveraendert — auch Pfade mit Schrägstrichen", () => {
+    expect(parseAppHash("#/sessions/s1/datei/src/a.ts")).toEqual({ view: "tail", sessionId: "s1", tab: "datei", file: "src/a.ts" });
+    expect(parseAppHash("#/sessions/s1/browser")).toEqual({ view: "tail", sessionId: "s1", browser: true });
+    expect(parseAppHash("#/hosts/h2/sessions/s1/code/src%2Fa.ts:L12")).toEqual({ view: "tail", hostId: "h2", sessionId: "s1", code: { path: "src/a.ts", line: 12 } });
+  });
+});
