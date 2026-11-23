@@ -37,7 +37,7 @@ import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
 import { detachTile, focusOpenSession, forgetDetached, openInNewTile, openInTile, parseWorkspace, reattach, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
-import { targetKey } from "../features/windows/protocol.ts";
+import { targetKey, tileWindowTarget } from "../features/windows/protocol.ts";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
 import "./styles/index.css";
@@ -348,7 +348,16 @@ function Main() {
           }, FORGET_GRACE_MS),
         );
       }
-      if (msg.type !== "return" || msg.target.kind !== "session") return;
+      if (msg.type !== "return") return;
+      if (msg.target.kind !== "session") {
+        // BUG-0262: Werkzeug-/Geräte-Fenster kommen als ihre Kachel zurück — der abgelöste Ref trägt den Seiten-Inhalt.
+        const ref = (latest.current.ws.detached ?? []).find((d) => {
+          const target = tileWindowTarget(d);
+          return target !== null && targetKey(target) === targetKey(msg.target);
+        });
+        if (ref) latest.current.changeWorkspace(reattach(latest.current.ws, ref));
+        return;
+      }
       const ref: TileRef = msg.target.hostId ? { sessionId: msg.target.sessionId, hostId: msg.target.hostId } : { sessionId: msg.target.sessionId };
       latest.current.changeWorkspace(reattach(latest.current.ws, defaultSessionRef(ref)));
     });
@@ -363,7 +372,10 @@ function Main() {
   const popoutTile = async (index: number, drop?: DropPoint) => {
     const ref = latest.current.ws.slots[index];
     if (!ref) return;
-    const result = await openPopout({ kind: "session", sessionId: ref.sessionId, ...(ref.hostId ? { hostId: ref.hostId } : {}) }, drop);
+    const target = tileWindowTarget(ref);
+    // BUG-0262: Karten ohne Fensteradresse (Neu, Suche, Datei) lösen sich nicht in ein kaputtes Fenster ab.
+    if (!target) return;
+    const result = await openPopout(target, drop);
     if (result === "blocked") {
       setPopoutNotice(blockedNotice);
       // Rückfall der Ziehgeste: die Nutzeraktion kann abgelaufen sein — ein Klick auf den Knopf ist eine frische.
@@ -485,7 +497,9 @@ function Main() {
           ws={ws}
           sessions={getHubStatus().sessions}
           onOpen={(ref) => {
-            void openPopout({ kind: "session", sessionId: ref.sessionId, ...(ref.hostId ? { hostId: ref.hostId } : {}) }).then((result) => {
+            const target = tileWindowTarget(ref);
+            if (!target) return;
+            void openPopout(target).then((result) => {
               if (result === "blocked") setPopoutNotice(blockedNotice);
             });
           }}
