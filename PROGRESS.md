@@ -67,6 +67,15 @@ Rechner, und eine Fremdsitzung öffnet auf deren Hub statt ins Leere zu springen
   **8 passed** (Mitternacht, Monats-/Jahresgrenze, erster Eintrag, Sammelzeile ohne
   Zeit), E2E `chat-zuege.spec.ts` **1 passed** (Anker genau einmal, Text „Heute“,
   Uhrzeit bleibt als `HH:MM:SS` stehen).
+- **Kontextüberlauf ist keine Anmeldepleite mehr (BUG-0265, ADR-0115).** Vier
+  identische Rohfehler in Sitzung `943797b3` („prompt (237428 tokens) … context
+  (204800)") liefen als „Die CLI ist nicht (mehr) angemeldet" ins Banner — die
+  gierige auth-Regel `invalid.*(api.?key|token)` fing „invalid_request_error" plus
+  späteres „tokens". Neue Kategorie `context` prüft vor quota/auth, nennt die
+  Tokenzahlen und den gangbaren Weg (Übergabe/großeres Modell); auth-Regel scharf
+  (`invalid.{0,24}?(api.?key|token|credential)`). Rot-vor-gruen: 6 failed →
+  **24 passed** in `provider-error.test.ts`. Runbook hat jetzt eine
+  Kategorien-Tabelle (setzt den Frischhalte-Wecker von `operations-runbook.md`).
 
 
 - **Bilder im Chat: einfügen, ansehen, verlinken (S82, 23.11.)** — Einfügen oder Ablegen im
