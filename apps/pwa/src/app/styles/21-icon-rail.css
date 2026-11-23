@@ -169,6 +169,13 @@
   border-bottom: 2px solid transparent;
 }
 
+@media (pointer: coarse) and (700px <= width < 1280px) {
+  .tile-tabs button {
+    width: 44px;
+    min-height: 44px;
+  }
+}
+
 .tile-tabs button.active {
   border-bottom-color: var(--accent);
 }
