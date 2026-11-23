@@ -1,7 +1,7 @@
 ---
 id: BUG-0257
 slug: analyse-ansichten-drei-icons-eine-seite
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
