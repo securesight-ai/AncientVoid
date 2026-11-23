@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { dayKey, dayLabel, needsDaySeparator } from "../../src/shared/i18n/day-label.ts";
-import { fmtDate } from "../../src/shared/i18n/format.ts";
+import { dayKey, dayLabel, needsDaySeparator, stampLabel } from "../../src/shared/i18n/day-label.ts";
+import { fmtDate, fmtTime } from "../../src/shared/i18n/format.ts";
 import { t } from "../../src/shared/i18n/index.ts";
 import { itemTs } from "../../src/features/session/turns.ts";
 
@@ -58,5 +58,18 @@ describe("itemTs (Chat-Eintrag -> Zeit)", () => {
     expect(itemTs({ kind: "event", event: { ts: "2026-11-23T13:00:00Z" } as never })).toBe("2026-11-23T13:00:00Z");
     expect(itemTs({ kind: "work", key: "w", entries: [], running: false, startTs: "2026-11-22T10:00:00Z", endTs: "2026-11-22T10:05:00Z" })).toBe("2026-11-22T10:00:00Z");
     expect(itemTs({ kind: "unknown", key: "u", count: 3, firstSeq: 7 })).toBeUndefined();
+  });
+});
+
+describe("stampLabel (Stempel an der Nachricht)", () => {
+  it("heute reicht die Uhrzeit, ab gestern steht der Tag davor", () => {
+    // Uhrzeitformat folgt der App-Sprache — verglichen wird gegen dasselbe Format.
+    const uhr = (d: Date) => fmtTime(d.toISOString(), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const heute = new Date(2026, 10, 23, 9, 57, 50);
+    expect(stampLabel(heute.toISOString(), HEUTE)).toBe(uhr(heute));
+    const gestern = new Date(2026, 10, 22, 9, 57, 50);
+    expect(stampLabel(gestern.toISOString(), HEUTE)).toBe(`${t("common.day_yesterday")} · ${uhr(gestern)}`);
+    const vorvier = new Date(2026, 10, 20, 8, 0, 0);
+    expect(stampLabel(vorvier.toISOString(), HEUTE)).toContain(`· ${uhr(vorvier)}`);
   });
 });
