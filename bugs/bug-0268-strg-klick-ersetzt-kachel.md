@@ -1,7 +1,7 @@
 ---
 id: BUG-0268
 slug: strg-klick-ersetzt-kachel
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
@@ -68,3 +68,15 @@ Rot: `e2e/specs/main-sync-session.spec.ts` „BUG-0219: Kachelfokus fragt neu"
 `apps/pwa/test/features/workspace/tiles.test.ts` (newTile-Pfad durch
 `openFromList`) hat den Rückschritt durchgehen lassen; der rote E2E-Fall
 existiert schon und muss nur wieder grün werden.
+
+
+## Fix (2026-11-23)
+
+`openAdditionalTile` in `tiles.ts` (fixiertes Raster wächst eine Layout-Stufe,
+Dedup zuerst) und Auswertung von `opts.newTile` in `openFromList`
+(`main.tsx:480`). Rot ohne Fix: 4 Unit-Fälle
+(`apps/pwa/test/features/workspace/tiles.test.ts`, „BUG-0268") und der neue
+E2E-Fall `main-sync-session.spec.ts` „BUG-0268: Strg-Klick ersetzt im
+fixierten Raster keine Kachel" (`[data-tile="2"]` element(s) not found,
+belaufen per Stash des Fixes). Grün mit Fix: Unit 30/30, E2E 2/2 @desktop,
+lint + typecheck.

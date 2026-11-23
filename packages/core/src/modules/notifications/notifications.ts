@@ -138,3 +138,13 @@ export function parseNotificationParams(raw: string | null | undefined): Record<
     return undefined;
   }
 }
+
+/** BUG-0226: Horizont des Notification-Feeds in Tagen. Ältere Zeilen liefert
+ * `notifications()` nicht aus und werden (gedrosselt) aus der Tabelle gekappt
+ * — die Glocke zeigt einen aktuellen Bestand, kein Archiv. */
+export const NOTIFICATION_HORIZON_DAYS = 14;
+
+/** BUG-0226: ISO-Grenze des Horizonts (älter als das wird weder geliefert noch behalten). */
+export function notificationHorizonCutoff(now = new Date()): string {
+  return new Date(now.getTime() - NOTIFICATION_HORIZON_DAYS * 24 * 3600 * 1000).toISOString();
+}

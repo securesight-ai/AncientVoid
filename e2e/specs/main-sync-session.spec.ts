@@ -171,6 +171,22 @@ test.describe("Session: Main-Sync-Indikator und Menü (EPIC-P67 T67.8)", () => {
     await expect(betaBadge).toHaveText(/4 hinter main/);
   });
 
+  /** BUG-0268: Strg/⌘-Klick ist die Zusage „eine eigene Kachel“ — auch im
+   * fixierten Raster wächst das Layout, statt die fokussierte Kachel zu ersetzen. */
+  test("BUG-0268: Strg-Klick ersetzt im fixierten Raster keine Kachel, es wächst auf eine zweite @desktop", async ({ app, hub, isMobile }) => {
+    test.skip(isMobile, "Kachelwachstum braucht das Desktop-Projekt (breites Layout)");
+    await hub.createSession({ adapter: "dummy", project: hub.alpha, prompt: "Alphaarbeit" });
+    const idB = await hub.createSession({ adapter: "dummy", project: hub.beta, prompt: "Betaarbeit" });
+
+    await app.goto(`${hub.origin}/#/sessions/${idB}`);
+    await expect(app.locator('[data-tile="1"] .session-top-title')).toHaveText("Betaarbeit");
+    // Fixiertes 1er-Raster ist der Ausgangszustand (kein enableAutoTiling);
+    // am PC steht die Liste links — Strg-Klick auf die alpha-Karte.
+    await app.locator(".session-card", { hasText: "alpha" }).first().locator(".session-open").click({ modifiers: ["Control"] });
+    await expect(app.locator('[data-tile="2"] .session-top-title')).toHaveText("Alphaarbeit");
+    await expect(app.locator('[data-tile="1"] .session-top-title')).toHaveText("Betaarbeit");
+  });
+
   test("BUG-0219: Rückkehr zur offenen Session-Ansicht fragt neu (Sichtbarkeit)", async ({ app, hub }) => {
     const b = await withOrigin(hub.beta, "visb");
     const idB = await hub.createSession({ adapter: "dummy", project: hub.beta, prompt: "arbeite", workspaceMode: "worktree" });

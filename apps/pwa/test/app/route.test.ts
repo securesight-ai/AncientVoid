@@ -94,6 +94,15 @@ describe("Analyse-Seite mit Tabs (BUG-0257)", () => {
   });
 });
 
+describe("Wissen-Tab-Route (BUG-0275)", () => {
+  it("#/notizen/wissen bleibt die Vault-Seite mit dem Wissen-Reiter — nicht die Übersicht", () => {
+    expect(parseAppHash("#/notizen/wissen")).toEqual({ view: "list", page: "vault", vaultTab: "wissen" });
+    expect(parseAppHash("#/notizen/wissen/")).toEqual({ view: "list", page: "vault", vaultTab: "wissen" });
+    // Ohne Reiter bleibt die Datei-Ansicht unberührt.
+    expect(parseAppHash("#/notizen")).toEqual({ view: "list", page: "vault" });
+  });
+});
+
 describe("host-qualified session links (EPIC-P6)", () => {
   it("round-trips host and session", () => {
     const hash = sessionHash("abc", "home-server");

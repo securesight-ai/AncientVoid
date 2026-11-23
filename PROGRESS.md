@@ -1,6 +1,29 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
 
+## 23.11.2026 Nacht — cd-Fallstrick der Bildchips (PR #367)
+
+**Nachweis aus eigener Live-Sitzung.** 7d3df295 hat als Arbeitsverzeichnis
+`/home/kaib/repos/ancientvoid-suche`; der Befehl
+`cd /home/kaib/repos/AncientVoid && ls -1 apps/pwa/public/icons/*.png` nennt Pfade,
+die es unter der Sitzungs­wurzel **nicht** gibt. Die Chips der PR #355 laufen aber
+über `…/api/code/raw?session=<id>` — Wurzel = Arbeitsverzeichnis —, hätten also ein
+Bild versprochen, das mit 404 antwortet.
+
+**Regel.** Die `cd`-Kette der Zeile wird lexikalisch nachgerechnet (letztes `cd`,
+`.`/`..` bereinigt). Ziel im Projekt → Projektroute mit korrektem Präfix; Wurzel nicht
+bestimmbar (relatives `cd` ohne bekannte Ausgangswurzel, `~`, `$VAR`, Ziel außerhalb
+des Projekts) → **keine** Vorschläge. Grundsatz: lieber keine als eine ins Leere.
+Tests 15/15, Typecheck `apps/pwa` leer.
+
+**Bewusst nicht geändert.** Chips können weiterhin Namen nennen, die nur im Text
+stehen (zwei echte Fälle in der eigenen Sitzung: `pgrep`-Ausgabe → `image.png`,
+`grep` auf einen HTTP-Header-Dump → `nachweis-bild.png`). Ein Befehls-Allowlist
+(`ls`, `find`, …) hätte den Originalfall von #355 killt — dort kam der Name aus einer
+`for`-Schleife mit `printf`. Der Fehlversuch ist stattdessen ehrlich beschriftet:
+„Bild hier nicht abrufbar — es liegt außerhalb des Projekts."
+(`session.tool_image_missing`).
+
 ## 23.11.2026 Nacht — Störsignal im RPC-Strom beseitigt (PR #360, main 3da56ab8)
 
 Nach dem Hub-Neustart um 21:16 erschien in einer laufenden Sitzung
@@ -11,6 +34,14 @@ Event-Parser weiter. Regel jetzt: Frames mit einer Id, die der Adapter selbst ve
 (`av`-Präfix), sind keine Ereignisse — pi nutzt UUIDs und `call_…`; echte Antworten
 (`type:"response"`) bleiben unberührt. Rot bewiesen ohne Absicherung
 (`expected [ get_state, agent_start ] to deeply equal [ agent_start ]`), Paket 67/67.
+
+**Live-Stand nach diesem Block (gemessen, nicht vermutet).** Hub auf `26fe3fde`,
+`runtimeSha == checkoutSha == pwaSha == 26fe3fde`, `runtimeDirty: false`, ausgeliefertes
+Bundle `assets/index-DY-WYBVb.js`, pi-Capability `midTurnInput: true`. Der tmux-Worker
+der laufenden Sitzung (Pane seit 21:15:25) hat **drei** Hub-Neustarts überstanden — die
+Übernahme aus #357 trägt den Zug durch den Neustart, genau wie im Test. Merksatz für
+künftige Deployments: `apps/pwa/dist` liegt auf der Platte, ein neues Bundle wirkt schon
+vor dem Neustart; der Neustart ist nötig, damit die drei Shas wieder zueinander passen.
 
 **Nebenbefund, nützlich für künftige RPC-Arbeit:** echtes `pi --mode rpc` antwortet auf
 `get_state` exakt mit `{"id":"…","type":"response","command":"get_state","success":true,…}` —

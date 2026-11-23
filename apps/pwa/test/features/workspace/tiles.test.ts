@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { closeTile, compactTiles, detachTile, focusOpenSession, isDetached, isLayoutFixed, openInTile, reattach, restoreTile, cycleLayout, emptyWorkspace, focusTile, openInNewTile, openSession, parseWorkspace, serializeWorkspace, setLayout, setLayoutFixed, swapWith, tileCount, visibleTiles } from "../../../src/features/workspace/tiles.ts";
+import { closeTile, compactTiles, detachTile, focusOpenSession, isDetached, isLayoutFixed, openAdditionalTile, openInTile, reattach, restoreTile, cycleLayout, emptyWorkspace, focusTile, openInNewTile, openSession, parseWorkspace, serializeWorkspace, setLayout, setLayoutFixed, swapWith, tileCount, visibleTiles } from "../../../src/features/workspace/tiles.ts";
 
 const a = { sessionId: "a" };
 const b = { sessionId: "b" };
@@ -254,5 +254,33 @@ describe("Abgelöste Kacheln (EPIC-P34 T34.10)", () => {
     expect(parseWorkspace(serializeWorkspace(ws)).detached).toEqual([c]);
     expect(parseWorkspace(JSON.stringify({ layout: "1", slots: [a, null, null, null], focus: 0 })).detached).toBeUndefined();
     expect(parseWorkspace(JSON.stringify({ layout: "1", slots: [null, null, null, null], focus: 0, detached: [{ sessionId: 5 }, "x", a] })).detached).toEqual([a]);
+  });
+});
+
+describe("BUG-0268: Strg/⌘-Klick öffnet auch im fixierten Raster eine eigene Kachel", () => {
+  it("fixiertes 1er-Raster wächst auf 2v, statt die fokussierte Kachel zu verdrängen", () => {
+    const ws = openAdditionalTile(openSession(emptyWorkspace(), b), a);
+    expect(ws.layout).toBe("2v");
+    expect(visibleTiles(ws).map((t) => t?.sessionId)).toEqual(["b", "a"]);
+    expect(ws.focus).toBe(1);
+  });
+
+  it("eine freie sichtbare Kachel wird ohne Layoutwechsel gefüllt", () => {
+    const ws = openAdditionalTile(openSession(setLayout(emptyWorkspace(), "2v"), a), b);
+    expect(ws.layout).toBe("2v");
+    expect(visibleTiles(ws).map((t) => t?.sessionId)).toEqual(["a", "b"]);
+  });
+
+  it("schon offene Session bleibt eine Karte — Strg-Klick springt nur hin, kein Wachstum", () => {
+    const ws = openAdditionalTile(openSession(emptyWorkspace(), a), a);
+    expect(ws.layout).toBe("1");
+    expect(visibleTiles(ws).map((t) => t?.sessionId)).toEqual(["a"]);
+    expect(ws.focus).toBe(0);
+  });
+
+  it("gelöstes Raster bleibt bei den bekannten Wachstumsregeln (openInNewTile)", () => {
+    const ws = openAdditionalTile(setLayoutFixed(openSession(emptyWorkspace(), a), false), b);
+    expect(ws.layout).toBe("2v");
+    expect(visibleTiles(ws).map((t) => t?.sessionId)).toEqual(["a", "b"]);
   });
 });

@@ -143,7 +143,9 @@ export function parseAppHash(hash: string): AppRoute {
   if (statTab?.[1]) return { view: "list", page: "statistics", statTab: statTab[1] as "metriken" | "inferenz" };
   // BUG-0257: unbekannter Reiter unter #/statistik/… fällt auf die Seite selbst zurück.
   if (/^#\/statistik(\/|$)/.test(hash)) return { view: "list", page: "statistics" };
-  // EPIC-P49: Vault-Datei-Deep-Link vor dem Slug-Match prüfen (Pfad-Segmente!).
+  // EPIC-P74 T74.6 / BUG-0275: Wissen-Tab vor den Datei- und Slug-Matches
+  // prüfen (1ce6cf1f hatte den Zweig versehentlich entfernt).
+  if (/^#\/notizen\/wissen\/?$/.test(hash)) return { view: "list", page: "vault", vaultTab: "wissen" };
   const vaultFile = /^#\/notizen\/datei\/(.+)$/.exec(hash);
   if (vaultFile?.[1]) return { view: "list", page: "vault", vaultFile: vaultFile[1].split("/").map(decodeURIComponent).join("/") };
   // EPIC-P60: Query-Hashes (Slug-Regex greift dort nicht) — `#/teams?team=…` neu,
