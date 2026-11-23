@@ -88,7 +88,10 @@ describe("attachment extraction (T7.10)", () => {
     execFileSync("magick", ["-size", "200x200", "xc:white", join(dir, "leer.png")]);
     const r = await extractText("image", join(dir, "leer.png"), "leer.png", "image/png", opts);
     expect(r.text).toBe("");
-    expect(r.error).toContain("Gemini-Schlüssel");
+    // BUG-0277: seit BUG-0266 nennt der Schlüssel-lose Befund das
+    // Vision-Modell (nicht mehr den Gemini-Schlüssel) — OCR lief, fand aber nichts.
+    expect(r.error).toContain("Kein Text im Bild erkannt");
+    expect(r.error).toContain("Vision-Modell");
     // with a key, Gemini is asked (stubbed fetch — no network in tests)
     const calls: string[] = [];
     const withGemini = await extractText("image", join(dir, "leer.png"), "leer.png", "image/png", {
