@@ -1,4 +1,4 @@
-# ADR-0114 · Native Compaction und kompakter Kontext für Direktadapter
+# ADR-0115 · Native Compaction und kompakter Kontext für Direktadapter
 
 - Status: angenommen
 - Datum: 2026-11-23

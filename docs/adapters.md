@@ -236,7 +236,7 @@ Adapter-Factorys, einschließlich Codex Exec, ACP-Presets und Direktadapter.
 | ACP OMP | 19.1.1 meldet und verarbeitet `/fresh` und `/compact`. `/fresh` startet einen neuen Provider-Kontext. `/compact` wurde ohne Modell aufgerufen und meldete den fehlenden Modellzugang. |
 | ACP OpenCode | OpenCode 2.1.4 hat `/compact` live ausgeführt und dabei Start und Abschluss gemeldet ([BUG-0192](../bugs/bug-0192-slash-commands-nicht-bei-allen-anbietern.md)). |
 | ACP Maki | `bridgeCommands: true` aktiviert ausschließlich `/new` über einen neuen ACP-Session-Start. Die frühere init.lua-Brücke setzt ACP-Kommandos nicht zuverlässig um. |
-| Direktadapter | `/compact` kürzt die nächste Anfrage. [ADR-0114](adr/0114-nativer-compact-und-direktadapter.md) beschreibt den Settings-Schalter und die Messung. |
+| Direktadapter | `/compact` kürzt die nächste Anfrage. [ADR-0115](adr/0115-nativer-compact-und-direktadapter.md) beschreibt den Settings-Schalter und die Messung. |
 
 Der Composer filtert Vorschläge nach dem Geltungsbereich. Der Hub lehnt
 `/compact` bei fehlender Unterstützung ab. Andere unbekannte Slash-Eingaben
