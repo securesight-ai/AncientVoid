@@ -27,6 +27,13 @@ sich an den ersten („Die letzte Anweisung lautete … GESTEUERT“) — dersel
 kein `worker_end`. (d) lenken ohne offenen Zug → 422 „es läuft kein Zug“.
 Tests: `rpc.test.ts` 6/6, `rpc-adapter.test.ts` 8/8, Paket 63/63, Typecheck sauber.
 
+**Hub-Neustart mitgezogen (Fund beim Debuggen).** `recover()` hing den übernommenen
+Prozess an den One-Shot-Parser — in der RPC-Betriebsart wäre Lenken nach jedem Deploy
+tot gewesen. Behoben: `steuereProzess()` (frisch oder übernommen), Test
+„übernimmt nach einem Hub-Neustart denselben Steuerprozess" (ohne Fix rot, mit Fix
+grün). Live: tmux-Worker eines laufenden pi-Zugs überlebt den Hub-Kill, danach neues
+Prompt + Lenken → Antwort `NACHNEUSTART`. Paket: 66/66 grün.
+
 **Noch nicht erledigt.** (1) Der **Live-Hub läuft weiterhin `oneshot`** — der
 Config-Schalter `adapters.pi.config.mode = "rpc"` wird erst nach dem Merge gesetzt
 (Rollback = eine Zeile + Neustart). (2) **BUG-0272 Pforte**: `durchlassen()` in

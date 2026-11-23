@@ -91,3 +91,16 @@ bestehende Fall „queue:false ohne Zusicherung → vorgemerkt" deckt Pi jetzt a
 - Der lokal bekannte Windows-Fall `EBUSY … hub.db` in
   `session-queue.test.ts > überlebt einen Hub-Neustart (K7)` ist vor dem Fix
   derselbe (mit `git stash` nachgewiesen) und hat mit diesem Bug nichts zu tun.
+
+## Behoben auf der pi-Schiene (2026-11-23, PR #357)
+
+Der Mechanismus ohne Zweitprozess ist `pi --mode rpc`: ein Prozess pro Sitzung,
+Meldungen als JSONL-Frames auf stdin. `adapters.pi.config.mode` wählt zwischen
+`oneshot` (altes Verhalten, Standard) und `rpc`. Lenken mitten im Zug ist damit
+wieder erlaubt (ADR-0114 Nachtrag).
+
+Nachweis auf einem Kratz-Hub (Port 7399, echtes Modell): `sleep 18`-Werkzeuglauf,
+nach 6 s gelenkt → Antwort `GESTEUERT`; Meldung vorgemerkt + „Jetzt senden" mitten
+im Lauf → 200, Ereignis `pi.queue` („vorgemerkt — 1 Lenkung"), Antwort `JETZTGESENDT`;
+Hub-Neustart bei laufendem tmux-Worker → Sitzung übernimmt den Prozess, Lenken ergibt
+`NACHNEUSTART`. Ein zweiter pi-Prozess kam in keinem dieser Läufe vor.
