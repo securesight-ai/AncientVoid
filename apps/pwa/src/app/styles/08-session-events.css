@@ -501,6 +501,15 @@
 .tool-image {
   margin: 6px 0 2px;
 }
+/* Das Bild selbst ist der Link — ein Tipp öffnet es in voller Größe. */
+.tool-image-link {
+  display: block;
+  width: fit-content;
+  border-radius: 6px;
+}
+.tool-image-link:hover {
+  outline: 1px solid var(--border);
+}
 .tool-image img {
   display: block;
   max-width: 100%;

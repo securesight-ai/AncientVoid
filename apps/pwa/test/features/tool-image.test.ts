@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toolImageRef } from "../../src/features/session/tool-image.ts";
+import { toolImageRef, sessionRefFor } from "../../src/features/session/tool-image.ts";
 import type { NormalizedEvent } from "../../src/shared/ws.ts";
 
 const sitzung = { id: "s1", project: "/home/kaib/repos/AncientVoid" };
@@ -42,5 +42,17 @@ describe("Bildvorschau für gelesene Bilder (Nutzerfund 2026-11-23)", () => {
   it("andere Eingabe-Schlüssel (file_path) werden ebenfalls erkannt", () => {
     const e = nutzung({ file_path: "/home/kaib/repos/AncientVoid/x/webp.webp" });
     expect(toolImageRef(e, undefined, sitzung)?.path).toBe("x/webp.webp");
+  });
+
+  // Nutzerfund 2026-11-23: die Vorschau erschien live nirgends. Der Sitzungs-
+  // datensatz trägt immer eine hostId — auch die des eigenen Hubs (live nach-
+  // gewiesen: hostId "cachyos-ai" auf der eigenen Sitzung) — und die Weiche
+  // `hostId ? undefined : …` schloss damit jede eigene Sitzung aus.
+  it("eigene Sitzung mit eigener hostId bekommt die Vorschau, fremde nicht", () => {
+    const eigene = { id: "s1", project: "/home/kaib/repos/x", hostId: "cachyos-ai" };
+    expect(sessionRefFor(eigene, null)).toEqual({ id: "s1", project: "/home/kaib/repos/x" });
+    expect(sessionRefFor({ ...eigene, hostId: "kaisgamingdesk" }, "kaisgamingdesk")).toBeUndefined();
+    expect(sessionRefFor({ id: "s1", hostId: "cachyos-ai" }, null)).toBeUndefined();
+    expect(sessionRefFor(undefined, null)).toBeUndefined();
   });
 });

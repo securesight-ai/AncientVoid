@@ -15,6 +15,25 @@ export type ToolImageRef = {
 
 const BILD_ENDUNG = /\.(png|jpe?g|gif|webp|bmp|avif)$/i;
 
+/**
+ * Welche Sitzung darf eine Vorschau bekommen? Nur die eigene des laufenden Hubs.
+ * Sitzungsdatensatz **und** fremder Rechner werden getrennt betrachtet: jeder
+ * Datensatz trägt eine `hostId`, auch der eigene Hub (Nachweis live: Sitzung
+ * 7d3df295 hat `hostId: "cachyos-ai"`). Wer nur prüft, ob `hostId` gesetzt ist,
+ * schließt die eigenen Sitzungen aus — genau das war der Fehler am
+ * 23.11.2026: die Bildvorschau erschien nirgends, obwohl Route und Detektor
+ * funktionierten. Deshalb entscheidet hier der Vergleich mit der eigenen
+ * `hostId`, nicht die Frage, ob überhaupt eine dasteht.
+ */
+export function sessionRefFor(
+  session: { id: string; project?: string | null; hostId?: string | null } | undefined,
+  fremderRechner: string | null,
+): SessionRef | undefined {
+  if (!session || fremderRechner) return undefined;
+  if (!session.project) return undefined;
+  return { id: session.id, project: session.project };
+}
+
 function pfadAusEingabe(input: unknown): string {
   if (typeof input !== "object" || input === null) return "";
   const r = input as Record<string, unknown>;

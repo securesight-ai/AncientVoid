@@ -67,6 +67,7 @@ import type { SlashCommand } from "../composer/slash.ts";
 import { SessionConfigure } from "./SessionConfigure.tsx";
 import { WorkplaceBadge } from "./WorkplaceBadge.tsx";
 import { QueueList } from "./QueueList.tsx";
+import { sessionRefFor } from "./tool-image.ts";
 import { PcOpenNotice } from "./PcOpenNotice.tsx";
 import { WorkspaceRuntimePane } from "../workspace/runtime/WorkspaceRuntimePane.tsx";
 import type { Page } from "../../app/Dock.tsx";
@@ -267,7 +268,7 @@ export function SessionTail({
   // weil die Rohroute die Projektwurzel dieses Hubs braucht. Fremde Sitzungen
   // zeigen deshalb keine Vorschau — auch keine falsche Fehlermeldung.
   const sessionRef = useMemo(
-    () => (session.hostId ? undefined : { id: session.id, project: session.project }),
+    () => sessionRefFor(session, remoteHost(session.hostId)),
     [session.hostId, session.id, session.project],
   );
   const [events, setEvents] = useState<NormalizedEvent[]>([]);

@@ -15,7 +15,7 @@ import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 import { toolImageRef, type SessionRef, type ToolImageRef } from "./tool-image.ts";
 
 /** Bildvorschau zu einem gelesenen Bild — Bytes vom Hub, Token im Header. */
-function ToolImageView({ image }: { image: ToolImageRef }) {
+export function ToolImageView({ image }: { image: ToolImageRef }) {
   const api = useApi();
   const [url, setUrl] = useState("");
   const [fehler, setFehler] = useState("");
@@ -41,7 +41,11 @@ function ToolImageView({ image }: { image: ToolImageRef }) {
   }, [api, image.target, image.path]);
   return (
     <div class="tool-image">
-      {url ? <img src={url} alt={image.name} loading="lazy" decoding="async" /> : null}
+      {url ? (
+        <a class="tool-image-link" href={url} target="_blank" rel="noopener" title={t("session.tool_image_open")}>
+          <img src={url} alt={image.name} loading="lazy" decoding="async" />
+        </a>
+      ) : null}
       <div class="tool-image-meta">
         <span class="dim">{image.name}</span>
         {url ? (
