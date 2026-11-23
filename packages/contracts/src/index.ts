@@ -58,6 +58,7 @@ export * from "./team/team.ts";
 export * from "./aimetrics/aimetrics.ts";
 export * from "./inference/tempo.ts";
 export * from "./inference/model.ts";
+export * from "./inference/pforte.ts";
 export * from "./statistics/statistics.ts";
 export * from "./terminal/terminal.ts";
 export * from "./prompts/prompts.ts";

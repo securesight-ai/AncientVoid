@@ -99,4 +99,5 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `inference.windowHours` | integer | 72 |
 | `inference.minReadPrefill` | integer | 4000 |
 | `inference.engines` | array<object> | [] |
+| `inference.gate.engines` | array<object> | [] |
 | `terminals` | array<object> | [] |

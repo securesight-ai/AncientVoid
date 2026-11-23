@@ -77,7 +77,7 @@ import { createHubApp } from "./app.ts";
 import { ForgeService } from "./modules/forge/forge-service.ts";
 import { createHubAutomationService } from "./modules/automations/automations-service.ts";
 import { ExternalJobsService } from "./modules/automations/external-jobs.ts";
-import { createAiMetricsSampler, createInferenceTracker, type AiMetricsSamplerServer, type InferenceEngineConfig, type InferenceTracker } from "@ancientvoid/core";
+import { createAiMetricsSampler, createInferenceTracker, createPforte, type AiMetricsSamplerServer, type InferenceEngineConfig, type InferenceTracker } from "@ancientvoid/core";
 import { StatisticsService } from "./modules/statistics/statistics.service.ts";
 import { createPermissionBridge } from "./modules/approvals/permission-bridge.ts";
 
@@ -222,6 +222,20 @@ async function main(): Promise<void> {
   // dessen Main-Sync-Resolver (Stufe 1, ADR-0088) liest sie je Session-Start.
   const settings = new SettingsStore(db);
   const mainSyncService = new MainSyncSettingsService(settings);
+  // BUG-0272 (ADR-0116): Pforte pro Modell-Endpoint. Ein Einzelslot-Dienst wie
+  // Strata hat EINEN Kontext (hier 262 144 Token) für alle Sitzungen; ohne Pforte
+  // verdrängen sie sich im KV und melden Kontextüberlauf. Konfiguriert über
+  // `inference.gate` — ohne Eintrag bleibt jeder Endpoint ungedeckelt wie zuvor.
+  const inferenzPforte = createPforte(config.inference?.gate ?? { engines: [] }, {
+    onEreignis: (e) =>
+      logger.info(`pforte: ${e.art}`, {
+        endpoint: e.endpoint,
+        inhaber: e.inhaber,
+        warum: e.warum,
+        grund: e.grund ?? null,
+        wartetMs: e.wartetMs ?? null,
+      }),
+  });
   const sessions = new SessionManager(
     db,
     store,
@@ -239,6 +253,8 @@ async function main(): Promise<void> {
     // EPIC-P67 Stufe 1: Basis neuer Worktrees ist origin/<Hauptbranch>, nach
     // effektiven Einstellungen (global + Projekt-Override, ADR-0088).
     mainSyncService.resolver(),
+    // BUG-0272: nur wenn konfiguriert — sonst exakt das bisherige Verhalten.
+    config.inference?.gate ? inferenzPforte : undefined,
   );
   // EPIC-P29 / ADR-0051 §2: die Manifest-Freigabe braucht die Queue IMMER —
   // `requireStepApprovals` steuert nur das steer.prompt-Gate, nicht ob ein
@@ -561,6 +577,7 @@ async function main(): Promise<void> {
     team,
     ...(aimetrics ? { aimetrics, aimetricsMergePeers: config.aiMetrics?.mergePeers !== false } : {}),
     ...(inference ? { inference } : {}),
+    ...(config.inference?.gate ? { inferenzPforte } : {}),
     search: { transcript },
     // EPIC-P56 T56.3: Statistik-Rollup — hält die Fakten-Caches frisch und
     // liest sie für die Statistik-Seite (Journal bleibt Wahrheit, K7).

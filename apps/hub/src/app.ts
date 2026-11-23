@@ -1,5 +1,6 @@
 import type { HubTeam } from "./modules/team/index.ts";
 import type { ActionDefinition } from "@ancientvoid/contracts";
+import type { Pforte } from "@ancientvoid/core";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import fastifyWebsocket from "@fastify/websocket";
 import fastifyStatic from "@fastify/static";
@@ -58,6 +59,9 @@ export interface HubAppDeps {
   /** EPIC-P75: fetch für die TTS-Routen; BUG-0258: fetch für die Inferenz-Modell-Routen — Tests injizieren hier einen Attrappen-Dienst. */
   ttsFetch?: typeof fetch;
   inferenceFetch?: typeof fetch;
+  /** BUG-0272 (ADR-0116): Pforte pro Modell-Endpoint — nur gesetzt, wenn
+   * `inference.gate` konfiguriert ist. Die Route zeigt, wer auf Strata wartet. */
+  inferenzPforte?: Pforte;
   /** ADR-0087: Allowlist für den PWA-Terminal-Tab. */
   terminals?: readonly TerminalConfigEntry[];
   /** EPIC-P11: desktop companion (ADR-0031). */
@@ -185,7 +189,7 @@ export async function createHubApp(deps: HubAppDeps): Promise<FastifyInstance> {
   if (deps.media) registerMediaRoutes(app, { ...deps.media, settings: deps.settings });
   registerSttRoutes(app, deps.stt, async () => (await discoverProjects(projectRoots)).projects.map((p) => p.path));
   if (deps.settings) registerTtsRoutes(app, { settings: deps.settings, ...(deps.ttsFetch ? { fetch: deps.ttsFetch } : {}) });
-  if (deps.settings) registerInferenceModelRoutes(app, { settings: deps.settings, ...(deps.inferenceFetch ? { fetch: deps.inferenceFetch } : {}) });
+  if (deps.settings) registerInferenceModelRoutes(app, { settings: deps.settings, ...(deps.inferenceFetch ? { fetch: deps.inferenceFetch } : {}), ...(deps.inferenzPforte ? { pforte: deps.inferenzPforte } : {}) });
   registerTerminalRoutes(app, deps.terminals ?? []);
   registerFleetRoutes(app, { fleet, tokens: deps.tokens, hostId, ...(deps.hostLabel ? { hostLabel: deps.hostLabel } : {}) });
   registerFleetProxy(app, { fleet, hostId, sessions: deps.sessions, tokens: deps.tokens, ...(deps.metrics ? { metrics: deps.metrics } : {}) });
