@@ -2,7 +2,7 @@
 /**
  * T3.11 (EPIC-P3): "Ehrlichkeitsklausel automatisieren" (aSPARK-Lektion) —
  * verifies README.md's Adapter-Status-Matrix against each adapter's REAL
- * `capabilities()` return, for every adapter that has its own package (a
+ * `capabilities()` return, for the bundled adapter factories and supported mode variants (a
  * pure, side-effect-free call — no CLI/network access needed to construct
  * the object and read its capabilities).
  *
@@ -16,10 +16,8 @@
  * the mechanical drift: a README claiming a capability the real code no
  * longer has (or now has but the README doesn't credit).
  *
- * Adapters reached through the shared openai-compat example (local-llm,
- * deepseek) share one factory whose capabilities don't vary per config,
- * and `swarm`/`zai` have no package to import at all — all skipped, named
- * explicitly in the output, not silently ignored.
+ * Direct endpoints share a factory. ACP feature rows are checked per
+ * preset. Swarm and Zai have no standalone adapter implementation.
  *
  *   npm run check:adapter-matrix
  */
@@ -39,16 +37,21 @@ const CHECKED = [
   { id: "hermes", modulePath: "../packages/adapters/hermes/src/index.ts" },
   { id: "copilot", modulePath: "../packages/adapters/copilot/src/index.ts" },
   { id: "pi", modulePath: "../packages/adapters/pi/src/index.ts" },
+  { id: "cursor", modulePath: "../packages/adapters/cursor/src/index.ts" },
   { id: "cursor-clip", modulePath: "../packages/adapters/cursor-clip/src/index.ts" },
   { id: "claude-clip", modulePath: "../packages/adapters/claude-clip/src/index.ts" },
+  ...["local-llm", "deepseek"].map(id => ({
+    id, modulePath: "../examples/adapters/openai-compat/adapter.ts", config: { baseUrl: "http://127.0.0.1/v1" }, featureId: "OpenAI-kompatibler Direktadapter",
+  })),
 ];
 /** ADR-0018: one adapter module, several harnesses — checked per config. */
+const ACP_MODULE = "../packages/adapters/acp/src/index.ts";
 const CHECKED_CONFIGS = [
-  { id: "acp · copilot", modulePath: "../packages/adapters/acp/src/index.ts", config: { preset: "copilot" } },
-  { id: "acp · opencode", modulePath: "../packages/adapters/acp/src/index.ts", config: { preset: "opencode" } },
-  { id: "acp · dsh", modulePath: "../packages/adapters/acp/src/index.ts", config: { preset: "dsh" } },
+  { id: "codex · exec", modulePath: "../packages/adapters/codex/src/index.ts", config: { mode: "exec" } },
+  ...["copilot", "opencode", "dsh", "maki", "omp"].map(preset => ({ id: `acp · ${preset}`, modulePath: ACP_MODULE, config: { preset } })),
+  { id: "acp · maki mit Brücke", modulePath: ACP_MODULE, config: { preset: "maki", bridgeCommands: true } },
+  { id: "acp · eigener Befehl", modulePath: ACP_MODULE, config: { command: ["agent"] } },
 ];
-const SKIPPED = ["swarm", "zai", "local-llm", "deepseek"];
 
 const SYMBOL_TO_BOOL = { "✓": true, "—": false };
 
@@ -79,7 +82,7 @@ for (const line of lines) {
 }
 
 let mismatches = 0;
-for (const { id, modulePath } of CHECKED) {
+for (const { id, modulePath, config } of CHECKED) {
   const row = rows.get(id);
   if (!row) {
     console.error(`FAIL: no README matrix row found for adapter "${id}"`);
@@ -87,7 +90,7 @@ for (const { id, modulePath } of CHECKED) {
     continue;
   }
   const { createAdapter } = await import(modulePath);
-  const caps = createAdapter().capabilities();
+  const caps = createAdapter(config).capabilities();
   const checks = [
     ["reasoning", caps.reasoning, row.reasoning],
     ["tools", caps.tools, row.tools],
@@ -95,7 +98,8 @@ for (const { id, modulePath } of CHECKED) {
     ["steer", caps.steer, row.steer],
     ["usage", caps.usage, row.usage],
   ];
-  for (const [field, real, symbol] of checks) {
+  for (const [field, real, cell] of checks) {
+    const symbol = cell.replaceAll("*", "") === "no" ? "—" : cell;
     if (!(symbol in SYMBOL_TO_BOOL)) continue; // "~" or "?" — an honest partial/unknown, not a mismatch to flag
     const claimed = SYMBOL_TO_BOOL[symbol];
     if (claimed !== real) {
@@ -108,7 +112,7 @@ for (const { id, modulePath } of CHECKED) {
 }
 
 // ADR-0018: docs/harness-matrix.md — the per-function matrix, same rule.
-const FEATURE_COLUMNS = ["followUp", "interrupt", "toolGate", "questions", "modelChoice", "agents", "images", "files", "contextFork", "modelSwitch", "permissionModes"];
+const FEATURE_COLUMNS = ["followUp", "interrupt", "toolGate", "questions", "modelChoice", "agents", "images", "files", "contextFork", "modelSwitch", "permissionModes", "skills"];
 const matrix = await readFile(join(repoRoot, "docs", "harness-matrix.md"), "utf8");
 const block = matrix.split("<!-- harness-matrix:start -->")[1]?.split("<!-- harness-matrix:end -->")[0] ?? "";
 const featureRows = new Map();
@@ -117,15 +121,16 @@ for (const line of block.split("\n")) {
   const cells = line.split("|").slice(1, -1).map((c) => c.trim());
   featureRows.set(cells[0], cells.slice(2));
 }
-for (const { id, modulePath, config } of [...CHECKED, ...CHECKED_CONFIGS]) {
-  const cells = featureRows.get(id);
+for (const { id, modulePath, config, featureId = id } of [...CHECKED, ...CHECKED_CONFIGS]) {
+  const cells = featureRows.get(featureId);
   if (!cells) {
     console.error(`FAIL: no docs/harness-matrix.md row for adapter "${id}"`);
     mismatches++;
     continue;
   }
   const { createAdapter } = await import(modulePath);
-  const f = createAdapter(config).capabilities().features;
+  const caps = createAdapter(config).capabilities();
+  const f = caps.features;
   FEATURE_COLUMNS.forEach((key, i) => {
     const text = key === "toolGate" || key === "permissionModes";
     const real = key === "toolGate" ? f.toolGate : key === "modelChoice" ? f.modelChoice === "start" : key === "permissionModes" ? (f.permissionModes.length ? f.permissionModes.join(", ") : "—") : f[key];
@@ -135,13 +140,18 @@ for (const { id, modulePath, config } of [...CHECKED, ...CHECKED_CONFIGS]) {
       mismatches++;
     }
   });
+  const commands = (caps.commands ?? []).map(({ name, scope }) => `${name}:${scope}`).sort().join(", ") || "—";
+  const listed = cells[FEATURE_COLUMNS.length]?.replaceAll("`", "").split(", ").sort().join(", ");
+  if (listed !== commands) {
+    console.error(`FAIL: ${id}.commands = "${commands}", but docs/harness-matrix.md says "${listed}"`);
+    mismatches++;
+  }
 }
 
-console.log(`checked ${CHECKED.length} adapters with real capabilities() calls against README.md and docs/harness-matrix.md`);
-console.log(`skipped (no dedicated package / shared factory): ${SKIPPED.join(", ")}`);
+console.log(`checked ${CHECKED.length} README entries and ${CHECKED.length + CHECKED_CONFIGS.length} adapter configurations for features and command scopes`);
 
 if (mismatches > 0) {
-  console.error(`\nFAIL: ${mismatches} README-vs-capabilities() mismatch(es) — update README.md's matrix.`);
+  console.error(`\nFAIL: ${mismatches} matrix-vs-capabilities() mismatch(es).`);
   process.exit(1);
 }
-console.log("\nPASS: README Adapter-Status-Matrix matches every checked adapter's real capabilities().");
+console.log("\nPASS: README and harness matrix match the checked capabilities().");
