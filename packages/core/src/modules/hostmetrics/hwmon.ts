@@ -1,6 +1,6 @@
 import type { HostMetricPoint } from "@ancientvoid/contracts";
-import { join } from "node:path";
-import { deviceName, list, readNumber, readText } from "./files.ts";
+import { posix } from "node:path";
+import { readNumber, readText } from "./files.ts";
 import { point, type SourceContext } from "./types.ts";
 
 const KINDS: Record<string, { group: string; unit: string; scale: number }> = {
@@ -16,14 +16,14 @@ const KINDS: Record<string, { group: string; unit: string; scale: number }> = {
  * jedem Boot anders heißen kann.
  */
 export async function collectHwmon({ deps }: SourceContext): Promise<HostMetricPoint[]> {
-  const base = join(deps.root, "sys/class/hwmon");
+  const base = "sys/class/hwmon";
   const out: HostMetricPoint[] = [];
-  for (const entry of await list(base)) {
-    const dir = join(base, entry);
-    const chip = (await readText(join(dir, "name"))) ?? entry;
-    const address = (await deviceName(join(dir, "device"))) ?? "virtual";
-    const files = await list(dir);
-    const apu = chip === "amdgpu" && (await Promise.all(files.filter((f) => /^in\d+_label$/.test(f)).map((f) => readText(join(dir, f))))).includes("vddnb");
+  for (const entry of await deps.files.list(base)) {
+    const dir = posix.join(base, entry);
+    const chip = (await readText(deps.files, posix.join(dir, "name"))) ?? entry;
+    const address = (await deps.files.linkName(posix.join(dir, "device"))) ?? "virtual";
+    const files = await deps.files.list(dir);
+    const apu = chip === "amdgpu" && (await Promise.all(files.filter((f) => /^in\d+_label$/.test(f)).map((f) => readText(deps.files, posix.join(dir, f))))).includes("vddnb");
     const capped = files.includes("power1_cap");
     const seen = new Set<string>();
     for (const file of files) {
@@ -34,8 +34,8 @@ export async function collectHwmon({ deps }: SourceContext): Promise<HostMetricP
       if (seen.has(id)) continue; // `average` steht vor `input` und geht vor
       seen.add(id);
       const def = KINDS[kind]!;
-      const raw = await readNumber(join(dir, file));
-      const label = await readText(join(dir, `${id}_label`));
+      const raw = await readNumber(deps.files, posix.join(dir, file));
+      const label = await readText(deps.files, posix.join(dir, `${id}_label`));
       let powerDomain: string | null = null;
       if (kind === "power" && chip === "amdgpu" && apu !== capped) powerDomain = apu ? "cpu-package:0" : `gpu:${address}`;
       out.push(

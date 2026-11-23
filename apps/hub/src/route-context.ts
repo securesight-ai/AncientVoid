@@ -1,7 +1,7 @@
 import type { HubTeam } from "./modules/team/index.ts";
 import { resolve, sep } from "node:path";
 import type { FastifyRequest } from "fastify";
-import type { ClaudeLive, PlannerModelConfig, SettingsStore, AttachmentStore, SessionManager, TokenService, AdapterRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, AiMetricsSampler, InferenceTracker, FleetStore, MainSyncSettingsService } from "@ancientvoid/core";
+import type { ClaudeLive, PlannerModelConfig, SettingsStore, AttachmentStore, SessionManager, TokenService, AdapterRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, AiMetricsSampler, HostMetricsService, InferenceTracker, FleetStore, MainSyncSettingsService } from "@ancientvoid/core";
 import { KnowledgeService, nativeOpenCommand, scanProjectSkills, ensureBaseSkills, LoopRegistry, type SessionTextIndex } from "@ancientvoid/core";
 import type { ForgeService } from "./modules/forge/forge-service.ts";
 import type { StatisticsService } from "./modules/statistics/statistics.service.ts";
@@ -95,6 +95,9 @@ export interface RouteDeps {
   fleet?: FleetStore;
   /** Peer-Reports mergen (Default true, wenn aiMetrics gesetzt). */
   aimetricsMergePeers?: boolean;
+  /** EPIC-P81 (ADR-0117): Host-Metriken; ohne Angabe leere Host-Liste. */
+  hostMetrics?: HostMetricsService;
+  hostMetricsMergePeers?: boolean;
 }
 
 /**

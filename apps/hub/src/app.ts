@@ -1,6 +1,6 @@
 import type { HubTeam } from "./modules/team/index.ts";
 import type { ActionDefinition } from "@ancientvoid/contracts";
-import type { Pforte } from "@ancientvoid/core";
+import type { HostMetricsService, Pforte } from "@ancientvoid/core";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import fastifyWebsocket from "@fastify/websocket";
 import fastifyStatic from "@fastify/static";
@@ -124,6 +124,9 @@ export interface HubAppDeps {
    * Ohne Angabe antwortet die Session-Suche 501 statt so zu tun, als gäbe es
    * nichts zu finden. */
   search?: { transcript: SessionTextIndex };
+  /** EPIC-P81 (ADR-0117): Host-Metriken; ohne Angabe leere Host-Liste. */
+  hostMetrics?: HostMetricsService;
+  hostMetricsMergePeers?: boolean;
   /** Tests only: where the request log goes (default stdout). */
   logStream?: { write(message: string): void };
 }

@@ -1,6 +1,6 @@
 import type { HostMetricPoint } from "@ancientvoid/contracts";
-import { join } from "node:path";
-import { deviceName, list, readNumber, readText } from "./files.ts";
+import { posix } from "node:path";
+import { readNumber, readText } from "./files.ts";
 import { point, type SourceContext } from "./types.ts";
 
 const SECTOR_BYTES = 512; // /proc/diskstats zählt unabhängig vom Gerät in 512-Byte-Sektoren
@@ -10,7 +10,7 @@ export async function collectProc(ctx: SourceContext): Promise<HostMetricPoint[]
 }
 
 async function cpu({ deps, rates }: SourceContext): Promise<HostMetricPoint[]> {
-  const stat = await readText(join(deps.root, "proc/stat"));
+  const stat = await readText(deps.files, "proc/stat");
   if (stat === null) throw new Error("/proc/stat nicht lesbar");
   const out: HostMetricPoint[] = [];
   for (const line of stat.split("\n")) {
@@ -28,7 +28,7 @@ async function cpu({ deps, rates }: SourceContext): Promise<HostMetricPoint[]> {
     const core = name === "cpu" ? null : Number(name.slice(3));
     out.push(point({ key: `cpu:${name}:busy`, group: "cpu", device: name, label: core === null ? "Auslastung" : `Kern ${core}`, unit: "%", value, source: "proc" }));
     if (core !== null) {
-      const khz = await readNumber(join(deps.root, `sys/devices/system/cpu/${name}/cpufreq/scaling_cur_freq`));
+      const khz = await readNumber(deps.files, `sys/devices/system/cpu/${name}/cpufreq/scaling_cur_freq`);
       if (khz !== null) out.push(point({ key: `cpu:${name}:freq`, group: "clock", device: name, label: `Kern ${core}`, unit: "MHz", value: khz / 1000, source: "sysfs" }));
     }
   }
@@ -37,18 +37,18 @@ async function cpu({ deps, rates }: SourceContext): Promise<HostMetricPoint[]> {
 
 async function load({ deps }: SourceContext): Promise<HostMetricPoint[]> {
   const out: HostMetricPoint[] = [];
-  const parts = (await readText(join(deps.root, "proc/loadavg")))?.split(/\s+/);
+  const parts = (await readText(deps.files, "proc/loadavg"))?.split(/\s+/);
   const add = (key: string, label: string, unit: string, value: number | undefined) =>
     out.push(point({ key, group: "system", device: "host", label, unit, value: value !== undefined && Number.isFinite(value) ? value : null, source: "proc" }));
   ["1", "5", "15"].forEach((min, i) => add(`load:${min}`, `Last ${min} min`, "load", parts ? Number(parts[i]) : undefined));
   add("processes", "Threads gesamt", "count", parts ? Number(parts[3]?.split("/")[1]) : undefined);
-  const uptime = (await readText(join(deps.root, "proc/uptime")))?.split(" ")[0];
+  const uptime = (await readText(deps.files, "proc/uptime"))?.split(" ")[0];
   add("uptime", "Laufzeit", "s", uptime ? Number(uptime) : undefined);
   return out;
 }
 
 async function memory({ deps }: SourceContext): Promise<HostMetricPoint[]> {
-  const info = await readText(join(deps.root, "proc/meminfo"));
+  const info = await readText(deps.files, "proc/meminfo");
   if (info === null) throw new Error("/proc/meminfo nicht lesbar");
   const bytes = new Map<string, number>();
   for (const line of info.split("\n")) {
@@ -65,8 +65,8 @@ async function memory({ deps }: SourceContext): Promise<HostMetricPoint[]> {
     ["swap_used", "Swap belegt", minus(get("SwapTotal"), get("SwapFree"))],
   ];
   const out = rows.map(([id, label, value]) => point({ key: `memory:${id}`, group: "memory", device: "host", label, unit: "bytes", value, source: "proc" }));
-  for (const dev of (await list(join(deps.root, "sys/block"))).filter((d) => /^zram\d+$/.test(d))) {
-    const mm = (await readText(join(deps.root, "sys/block", dev, "mm_stat")))?.split(/\s+/).map(Number);
+  for (const dev of (await deps.files.list("sys/block")).filter((d) => /^zram\d+$/.test(d))) {
+    const mm = (await readText(deps.files, posix.join("sys/block", dev, "mm_stat")))?.split(/\s+/).map(Number);
     if (mm && mm.length >= 3) out.push(point({ key: `memory:${dev}:used`, group: "memory", device: dev, label: `${dev} im RAM`, unit: "bytes", value: mm[2]!, source: "sysfs" }));
   }
   return out;
@@ -75,7 +75,7 @@ async function memory({ deps }: SourceContext): Promise<HostMetricPoint[]> {
 async function pressure({ deps }: SourceContext): Promise<HostMetricPoint[]> {
   const out: HostMetricPoint[] = [];
   for (const kind of ["cpu", "memory", "io"]) {
-    const some = /^some avg10=([\d.]+)/.exec((await readText(join(deps.root, "proc/pressure", kind))) ?? "")?.[1];
+    const some = /^some avg10=([\d.]+)/.exec((await readText(deps.files, posix.join("proc/pressure", kind))) ?? "")?.[1];
     out.push(point({ key: `psi:${kind}`, group: "system", device: "host", label: `Druck ${kind} (10 s)`, unit: "%", value: some === undefined ? null : Number(some), source: "proc" }));
   }
   return out;
@@ -83,8 +83,8 @@ async function pressure({ deps }: SourceContext): Promise<HostMetricPoint[]> {
 
 async function disks({ deps, rates, nowMs }: SourceContext): Promise<HostMetricPoint[]> {
   const out: HostMetricPoint[] = [];
-  const whole = new Set(await list(join(deps.root, "sys/block")));
-  for (const line of ((await readText(join(deps.root, "proc/diskstats"))) ?? "").split("\n")) {
+  const whole = new Set(await deps.files.list("sys/block"));
+  for (const line of ((await readText(deps.files, "proc/diskstats")) ?? "").split("\n")) {
     const f = line.trim().split(/\s+/);
     const name = f[2];
     if (!name || !whole.has(name) || /^(loop|ram|zram|dm-|md|mtdblock)/.test(name)) continue;
@@ -105,14 +105,14 @@ async function network({ deps, rates, nowMs }: SourceContext): Promise<HostMetri
     out.push(point({ key: `net:${dev}:${id}`, group: "network", device: dev, label, unit: "bytes/s", value, source: "proc" }));
   let virtual = 0;
   const sum = { rx: null as number | null, tx: null as number | null };
-  for (const line of ((await readText(join(deps.root, "proc/net/dev"))) ?? "").split("\n")) {
+  for (const line of ((await readText(deps.files, "proc/net/dev")) ?? "").split("\n")) {
     const match = /^\s*([^:\s]+):\s*(.+)$/.exec(line);
     if (!match || match[1] === "lo") continue;
     const name = match[1]!;
     const f = match[2]!.trim().split(/\s+/).map(Number);
     const rx = rates.perSecond(`net:${name}:rx`, f[0] ?? NaN, nowMs);
     const tx = rates.perSecond(`net:${name}:tx`, f[8] ?? NaN, nowMs);
-    if (/^(tailscale|wg|tun)/.test(name) || (await deviceName(join(deps.root, "sys/class/net", name, "device"))) !== null) {
+    if (/^(tailscale|wg|tun)/.test(name) || (await deps.files.linkName(posix.join("sys/class/net", name, "device"))) !== null) {
       add(name, "rx", "Empfangen", rx);
       add(name, "tx", "Senden", tx);
     } else {
