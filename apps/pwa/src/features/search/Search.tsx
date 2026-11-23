@@ -88,7 +88,7 @@ export function SearchPane({
   const [loaded, setLoaded] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [docs, setDocs] = useState<ProjectDoc[] | null>(null);
-  const [viewing, setViewing] = useState<{ path: string; snippet?: string } | null>(null);
+  const [viewing, setViewing] = useState<{ path: string; snippet?: string; project?: string } | null>(null);
   // Eine jüngere Suche muss eine ältere Antwort überholen können, ohne dass
   // die ältere später dazwischenfunkt (Tippen auf dem Handy ist schnell).
   const seqRef = useRef(0);
@@ -270,6 +270,22 @@ export function SearchPane({
       {res && <div class="search-index dim mono">{indexLine}</div>}
       {res && res.mode === "teil" && <div class="dim search-note">{t("search.mode_part")}</div>}
       {res && res.mode === "or" && <div class="dim search-note">{t("search.mode_or")}</div>}
+      {/* Auf dem Handy verschwindet die Doku hinter hunderten Sitzungs-Karten.
+          Die drei Fundorte oben sind die Antwort auf „wo wohnt dieser Name?". */}
+      {res && scope !== "sessions" && res.docs.length > 0 && (
+        <div class="search-where">
+          <span class="dim">{t("search.where_docs")}</span>
+          {res.docs.slice(0, 3).map((doc, i) => (
+            <button
+              key={`where-${doc.file}:${i}`}
+              class="search-where-chip"
+              onClick={() => setViewing({ path: doc.file, snippet: doc.snippet, ...(doc.project ? { project: doc.project } : {}) })}
+            >
+              <span class="mono">{`${doc.project ? `${projectName(doc.project)}/` : ""}${doc.file}`}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {res && scope !== "docs" && (
         <section class="search-block">
@@ -327,7 +343,11 @@ export function SearchPane({
             <div class="ui-empty">{t("search.no_hits")}</div>
           )}
           {res.docs.map((doc, i) => (
-            <button key={`${doc.file}:${i}`} class="search-result-card" onClick={() => setViewing({ path: doc.file, snippet: doc.snippet })}>
+            <button
+              key={`${doc.file}:${i}`}
+              class="search-result-card"
+              onClick={() => setViewing({ path: doc.file, snippet: doc.snippet, ...(doc.project ? { project: doc.project } : {}) })}
+            >
               <div class="search-result-head">
                 <span class="mono search-result-file">{doc.file}</span>
                 <span class="dim">
@@ -370,7 +390,7 @@ export function SearchPane({
         </div>
       )}
 
-      {viewing && <DocViewer project={project} path={viewing.path} snippet={viewing.snippet} onClose={() => setViewing(null)} />}
+      {viewing && <DocViewer project={viewing.project ?? project} path={viewing.path} snippet={viewing.snippet} onClose={() => setViewing(null)} />}
     </div>
   );
 }

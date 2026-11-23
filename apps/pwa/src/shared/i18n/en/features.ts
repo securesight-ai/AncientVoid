@@ -873,6 +873,7 @@ export const en = {
   "search.no_hits_any": "nothing found — not in questions and answers, not in the docs",
   "search.only_this_project": "this project only",
   "search.docs_all_projects": "docs in every project",
+  "search.where_docs": "found in docs",
   "search.docs_projects": "docs: {count} projects scanned",
   "search.docs_more": "further projects not scanned",
   "search.hidden_roles": "{count} matches sit in {roles} — those roles are switched off",

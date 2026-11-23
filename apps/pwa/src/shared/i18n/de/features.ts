@@ -872,6 +872,7 @@ export const de = {
   "search.no_hits_any": "nichts gefunden — weder in Fragen und Antworten noch in der Doku",
   "search.only_this_project": "nur dieses Projekt",
   "search.docs_all_projects": "Doku in allen Projekten",
+  "search.where_docs": "Fundorte in der Doku",
   "search.docs_projects": "Doku: {count} Projekte durchsucht",
   "search.docs_more": "weitere Projekte nicht angefasst",
   "search.hidden_roles": "{count} Fundstellen liegen in {roles} — diese Rollen sind abgeschaltet",

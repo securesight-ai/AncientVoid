@@ -223,6 +223,25 @@ body:has(.search-pane) .nyx-fab {
   display: none;
 }
 
+/* Die Fundorte oben: auf dem Handy landet die Doku sonst hinter hunderten
+   Sitzungskarten, und die Frage „wo wohnt dieser Name?“ ist damit nicht beantwortet. */
+.search-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+}
+
+.search-where-chip {
+  border: 1px solid var(--bg-chip);
+  border-radius: 999px;
+  background: var(--bg-elev);
+  color: inherit;
+  font: inherit;
+  padding: 3px 9px;
+}
+
 /* Hinweis auf abgeschaltete Rollen: eine leere Liste liest sich sonst wie
    „der Hub weiß nichts“, dabei liegen die Funde nur in einer anderen Rolle. */
 .search-hint {
