@@ -24,3 +24,48 @@ export function imageFilesFrom(transfer: DataTransfer | null | undefined): File[
   }
   return out;
 }
+
+const BILD_ENDUNG = /\.(png|jpe?g|gif|webp|bmp)$/i;
+
+/**
+ *bilder aus der Zwischenablage als **Pfad** — der Fall unter Linux/Wayland.
+ *
+ * Datei-Manager (Nautilus, Dolphin, Thunar) und Werkzeuge wie `wl-copy`/`xclip`
+ * legen beim Kopieren eines Bildes keine Bytes, sondern `file://`-URIs bzw. den
+ * Pfad in die Zwischenablage; Chromium liefert unter Wayland die Bild-Bytes oft
+ * gar nicht. Der Browser kann die Datei nicht lesen — der Hub auf demselben
+ * Rechner schon (siehe Route `/api/local-files/bytes`).
+ */
+export function imagePathsFrom(transfer: DataTransfer | null | undefined): string[] {
+  if (!transfer) return [];
+  const roh: string[] = [];
+  for (const typ of ["text/uri-list", "text/plain"]) {
+    let wert = "";
+    try {
+      wert = transfer.getData(typ);
+    } catch {
+      continue;
+    }
+    if (wert) roh.push(wert);
+  }
+  const out: string[] = [];
+  const gesehen = new Set<string>();
+  for (const block of roh) {
+    for (const zeile of block.split(/\r?\n/)) {
+      let pfad = zeile.trim();
+      if (!pfad || pfad.startsWith("#")) continue; // uri-list-Kommentarzeilen
+      if (pfad.startsWith("file://")) {
+        try {
+          pfad = decodeURIComponent(pfad.slice(7));
+        } catch {
+          continue;
+        }
+      }
+      if (!pfad.startsWith("/") || !BILD_ENDUNG.test(pfad)) continue;
+      if (gesehen.has(pfad)) continue;
+      gesehen.add(pfad);
+      out.push(pfad);
+    }
+  }
+  return out;
+}

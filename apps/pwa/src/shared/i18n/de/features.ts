@@ -1127,6 +1127,8 @@ export const de = {
   "session.queue_remove": "Vorgemerkte Nachricht {n} streichen",
     "session.queue_edit_word": "ändern",
 "session.queue_retry": "Erneut versuchen",
+"session.tool_image_open": "Bild öffnen",
+"session.tool_image_missing": "Bild hier nicht abrufbar — es liegt außerhalb des Projekts.",
   "session.queue_send_next": "Vorgemerkte Nachricht {n} als nächstes senden",
   "session.queue_send_now": "Vorgemerkte Nachricht {n} jetzt senden",
   "session.queue_to_back": "Vorgemerkte Nachricht {n} nach hinten setzen",

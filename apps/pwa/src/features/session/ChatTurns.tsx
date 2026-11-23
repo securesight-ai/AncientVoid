@@ -5,6 +5,7 @@ import type { NormalizedEvent } from "../../shared/ws.ts";
 import { EventDetail, EventRow } from "./EventRow.tsx";
 import { currentStep, itemTs, stepsOf, workSummary, type ChatItem, type Step, type Work } from "./turns.ts";
 import { dayLabel, needsDaySeparator } from "../../shared/i18n/day-label.ts";
+import type { SessionRef } from "./tool-image.ts";
 
 /**
  * EPIC-P43 T43.4: der Chat in Zügen (turns.ts). Laufende Arbeit steht offen, der laufende Schritt
@@ -49,6 +50,7 @@ export function ChatTurns({
   onOpenVerlauf,
   after,
   live,
+  sessionRef,
 }: {
   sessionId: string;
   items: ChatItem[];
@@ -62,6 +64,8 @@ export function ChatTurns({
   after: (item: ChatItem, next: ChatItem | undefined) => ComponentChildren;
   /** ADR-0083: bereits uebertragene Teiltexte, bevor der Block eintrifft. */
   live?: { assistant: string; thinking: string };
+  /** Eigene Sitzung (Id + Projektwurzel) — für die Bildvorschau gelesener Bilder. */
+  sessionRef?: SessionRef | undefined;
 }) {
   const [choices, setChoices] = useState(() => loadChoices(sessionId));
   const toggle = (key: string, open: boolean) => {
@@ -99,7 +103,7 @@ export function ChatTurns({
             </div>
           )}
           {item.kind === "event" ? (
-            <EventRow event={item.event} expanded={expanded.has(item.event.seq)} onToggleExpand={() => onToggleExpand(item.event.seq)} toolResult={undefined} onJump={onJump} />
+            <EventRow event={item.event} expanded={expanded.has(item.event.seq)} onToggleExpand={() => onToggleExpand(item.event.seq)} toolResult={undefined} onJump={onJump} sessionRef={sessionRef} />
           ) : item.kind === "unknown" ? (
             <div class="turn-unknown" data-seq={item.firstSeq}>
               <span>
