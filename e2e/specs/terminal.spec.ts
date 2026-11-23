@@ -82,10 +82,36 @@ test.describe("Terminal-Tab (ADR-0087)", () => {
 });
 
 test.describe("Terminal ohne Config", () => {
-  test.use({ hubOptions: {} });
+  test.use({ hubOptions: { terminalAutodetect: false } });
 
   test("leere Allowlist erklärt die Config", async ({ app }) => {
     await openTerminal(app);
     await expect(app.getByTestId("terminal-empty")).toContainText("terminals");
+  });
+});
+
+test.describe("Auto-Erkennung (ADR-0087 Nachtrag 2026-11-23)", () => {
+  test.use({ hubOptions: {} });
+
+  test("ohne Config werden installierte Shells des Hub-Hosts angeboten", async ({ app }) => {
+    await openTerminal(app);
+    // Linux-E2E-Umgebung hat immer bash; die Fläche erklärt sich nicht mehr.
+    await expect(app.getByLabel("Terminal-Ziel")).toContainText("bash");
+    await expect(app.getByTestId("terminal-empty")).toHaveCount(0);
+  });
+});
+
+test.describe("Zwischenablage im Terminal (Nutzerreport 23.11.2026)", () => {
+  test("Ctrl+V fügt ein und Enter führt aus", async ({ app }) => {
+    test.setTimeout(40_000);
+    await openTerminal(app);
+    await app.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    await app.evaluate(() => navigator.clipboard.writeText("echo paste-42"));
+    await app.getByRole("button", { name: "Verbinden" }).click();
+    await expect(app.getByText("verbunden")).toBeVisible({ timeout: 15_000 });
+    await app.getByTestId("terminal-xterm").click();
+    await app.keyboard.press("Control+v");
+    await app.keyboard.press("Enter");
+    await expect(app.getByTestId("terminal-xterm")).toContainText("paste-42", { timeout: 15_000 });
   });
 });
