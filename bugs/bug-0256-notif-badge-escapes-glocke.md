@@ -1,7 +1,7 @@
 ---
 id: BUG-0256
 slug: notif-badge-escapes-glocke
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
