@@ -1,7 +1,7 @@
 ---
 id: BUG-0176
 slug: starten-klick-von-arbeitsort-feld-ueberdeckt
-status: open
+status: done
 severity: S3
 area: e2e
 instance: dev
@@ -67,4 +67,17 @@ lassen — erst mit Repro entscheiden.
 
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue angelegt ([#28](https://github.com/securesight-ai/AncientVoid/issues/28))
-- [ ] `bugfix` oder offen lassen
+- [x] `bugfix` oder offen lassen
+
+## Fix (2026-11-23)
+
+Testseitig (die im Issue genannte zweitere Option): Das Arbeitsort-Feld
+trägt seinen Vorschau-Zustand sichtbar (`data-preview="pending|done|failed"`
+auf dem Fieldset), und die beiden Start-Klicks in `session.spec.ts` warten
+über `startWhenPreviewSettled()` auf den abgeschlossenen (oder fehlgeschlagenen)
+Vorschau, bevor sie klicken — das Einwachsen des Formulars kann nicht mehr
+unterm Zeiger passieren. Der seltene Flake selbst ist nicht deterministisch
+reproduzierbar (2 Läufe von ~5 am 16.11., nie in Wiederholungen); die
+Änderung beseitigt die Race-Bedingung statt ihres Symptoms.
+
+Grün: `session.spec.ts` mobil 22/22, lint + typecheck.
