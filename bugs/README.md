@@ -295,6 +295,8 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 
 | [BUG-0261](bug-0261-pi-zweite-laeufe-auf-derselben-sitzung.md) | Pi sicherte `midTurnInput: true` zu, `steer` startet aber einen zweiten `pi -p --session`-Prozess — drei Läufe auf einer Sitzung, `session.turn_end reason:"error"` + `adapter.down` | done | S1 | harness | [#300](https://github.com/securesight-ai/AncientVoid/issues/300) · [PR #301](https://github.com/securesight-ai/AncientVoid/pull/301) |
 | [BUG-0262](bug-0262-seitenkachel-popout-ohne-ziel.md) | Seiten-Kachel (z. B. Notizen) als eigenes Fenster: Ziel wird immer als Session gebaut — Popup `#/sessions/` zeigt „Dieses Fenster hat kein Ziel." und löst die Kachel ab | fixed | S2 | pwa | [#312](https://github.com/securesight-ai/AncientVoid/issues/312) |
+
+| [BUG-0263](bug-0263-strg-klick-ersetzt-kachel.md) | Strg-/Cmd-Klick auf eine Session-Karte ersetzt im fixierten Raster die fokussierte Kachel statt eine zweite zu öffnen (`openFromList` verwirft `newTile` seit dabe85d5, E2E „Kachelfokus fragt neu" rot) | open | S3 | pwa | [#322](https://github.com/securesight-ai/AncientVoid/issues/322) |
 Die nächste freie Nummer ist **0263** (gemerged, 0260 mit PR #297 gemerged,
 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,
 0183 mit PR #50, 0184 mit PR #48 und 0185 mit dem Nightly-Fix aus den Issues #54–#57 gemerged,
