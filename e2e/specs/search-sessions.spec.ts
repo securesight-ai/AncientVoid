@@ -96,5 +96,11 @@ test.describe("Suche über Sessiontexte", () => {
     // laufenden Sitzung — sonst steht da ein Fehler, wo ein Handbuch liegt.
     await app.locator(".search-result-card").first().click();
     await expect(app.locator(".file-viewer-body")).toContainText("Das Handbuch beschreibt den Handoff");
+
+    // Cross-Hub: ohne gekoppelten Rechner sagt die Seite das, statt eine Suche
+    // vorzutäuschen, die nichts findet.
+    await app.locator(".file-viewer button").first().click();
+    await app.locator(".search-here", { hasText: "andere Rechner einbeziehen" }).locator("input").check();
+    await expect(app.locator(".search-status", { hasText: "kein anderer Rechner gekoppelt" })).toBeVisible();
   });
 });
