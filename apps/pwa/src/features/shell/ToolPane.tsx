@@ -19,7 +19,7 @@ import { TerminalPage } from "../terminal/TerminalPage.tsx";
 import { ReleaseNotesPage } from "../release-notes/ReleaseNotesPage.tsx";
 import { useHubStatus } from "./hub-status.ts";
 
-const TITLES: Partial<Record<ListPage, string>> = {
+export const TITLES: Partial<Record<ListPage, string>> = {
   new: t("common.new_session"),
   approvals: "Freigaben",
   statistics: "Statistik",
