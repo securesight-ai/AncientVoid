@@ -62,6 +62,28 @@ describe("BUG-0261: Pi oeffnet keinen zweiten Lauf auf dieselbe native Sitzung",
     expect(spawned).toHaveLength(1);
   });
 
+  it("sperrt weitere Eingaben bereits bevor der Worker gestartet ist", async () => {
+    const adapter = createAdapter({});
+    let finish!: (code: number) => void;
+    const worker = { ...laufenderProzess(), onExit: (cb: (code: number | null) => void) => { finish = cb; } };
+    const { promise, resolve } = Promise.withResolvers<WorkerProcess>();
+    let spawns = 0;
+    const ctx = makeRecordingContext({
+      spawnWorker: () => ++spawns === 2 ? promise : Promise.resolve(worker),
+    });
+    const handle = await adapter.start({ adapter: "pi", project: ctx.workdir, prompt: "erster Zug" }, ctx);
+    finish(0);
+    const next = adapter.steer(handle, { kind: "prompt", text: "zweiter Zug" }, ctx);
+    try {
+      expect(await adapter.steer(handle, { kind: "prompt", text: "zu früh" }, ctx)).toMatchObject({ ok: false });
+      expect(spawns).toBe(2);
+    } finally {
+      resolve(worker);
+      await next;
+      await adapter.stop(handle, ctx);
+    }
+  });
+
   it("nach sauberem Zugende ist Lenken wieder normal moeglich", async () => {
     const adapter = createAdapter({});
     const spawned: string[][] = [];

@@ -288,6 +288,7 @@ export const en = {
   "composer.batch_send_open": "Batch send (",
   "composer.budget_example": "$ top up budget",
   "composer.choose_skill": "Choose skill or agent",
+  "composer.compaction_unavailable": "/compact is unavailable here.",
   "composer.commands": "Commands",
   "composer.create_anyway": "Create anyway",
   "composer.current_content": "Current content ·",

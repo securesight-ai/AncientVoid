@@ -287,6 +287,7 @@ export const de = {
   "composer.batch_send_open": "Sammelversand (",
   "composer.budget_example": "$ neues Budget",
   "composer.choose_skill": "Skill oder Agent wählen",
+  "composer.compaction_unavailable": "/compact ist hier nicht verfügbar.",
   "composer.commands": "Commands",
   "composer.create_anyway": "Trotzdem neu anlegen",
   "composer.current_content": "Aktueller Inhalt ·",
