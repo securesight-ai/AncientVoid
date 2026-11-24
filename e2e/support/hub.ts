@@ -59,8 +59,9 @@ export interface HubOptions {
   browserOrigins?: string[];
   /** EPIC-P39: false = sichtbares Fenster (nur mit Anzeige; in E2E nicht genutzt). */
   browserHeadless?: boolean;
-  /** EPIC-P42 (ADR-0067): echte Android-Abnahme — SDK-/AVD-Pfade; nur aktiv mit env ANCIENTVOID_E2E_ANDROID=1. */
-  devices?: { sdkRoot: string; avdHome: string; avd: string };
+  /** EPIC-P42 (ADR-0067): echte Android-Abnahme — SDK-/AVD-Pfade; nur aktiv mit env ANCIENTVOID_E2E_ANDROID=1.
+   * In-App-Setup (2026-11-24): lokale Spiegel-URLs für JDK/cmdline-tools — kein Cloud-Egress im Test. */
+  devices?: { sdkRoot?: string; avdHome?: string; avd?: string; setup?: { jdkUrl: string; toolsUrl: string } };
   /** Echte Abnahme (P37 T37.6): absoluter Pfad zum echten glab statt Stub. */
   forgeCommand?: string;
   /** EPIC-P59 (ADR-0078): aiMetrics-Abschnitt für die Hub-Config (Test-Server, Intervall). */
@@ -198,7 +199,9 @@ export class TestHub {
       requireStepApprovals: this.options.requireStepApprovals ?? false,
       ...(this.options.steerWaitMs !== undefined ? { steerWaitMs: this.options.steerWaitMs } : {}),
       ...(this.options.browserOrigins ? { browserOrigins: this.options.browserOrigins } : {}),
-      ...(this.options.devices ? { devices: { sdkRoot: this.options.devices.sdkRoot, avdHome: this.options.devices.avdHome, avdAllowlist: [this.options.devices.avd] } } : {}),
+      ...(this.options.devices
+        ? { devices: { ...(this.options.devices.sdkRoot ? { sdkRoot: this.options.devices.sdkRoot } : {}), avdHome: this.options.devices.avdHome, avdAllowlist: this.options.devices.avd ? [this.options.devices.avd] : [], ...(this.options.devices.setup ? { setup: this.options.devices.setup } : {}) } }
+        : {}),
       ...(this.options.sttUrl ? { stt: {
         url: this.options.sttUrl,
         engine: "whisper-e2e",

@@ -23,6 +23,8 @@ import type {
   AvdDescriptor,
   DeviceAction,
   DeviceCapabilities,
+  DeviceAvdCreateInput,
+  DeviceImageList,
   DeviceStatus,
   DeviceTestEnv,
   DeviceTestRun,
@@ -55,6 +57,7 @@ import {
   parsePngSize,
   parseWmSize,
 } from "./adb.ts";
+import { DeviceSetup, readConfiguredSdkRoot } from "./device-setup.ts";
 
 /**
  * EPIC-P42 (ADR-0067): Android-Device-Dienst. AV-eigene Emulatoren werden mit Ownership-Marker (pid + argv +
@@ -63,33 +66,23 @@ import {
  * gebunden (veraltete Frames treffen nie den falschen Punkt). Frames/Logs/Bäume sind Bytes mit Grenzen, nie Events
  * (K5). Der Zustand faltet aus dem Journal (K7); Eingaben werden nach Neustart nie wiederholt.
  */
-export type DeviceErrorCode = "unavailable" | "not_found" | "quota" | "busy" | "conflict" | "blocked" | "failed";
-export class DeviceError extends Error {
-  readonly code: DeviceErrorCode;
-  constructor(code: DeviceErrorCode, message: string) {
-    super(message);
-    this.code = code;
-  }
-}
-
-/** Ausführungsnähte: echter Prozess in Produktion, Fake in Tests. */
-export interface DeviceExec {
-  run(argv: string[], opts: { timeoutMs: number; env?: Record<string, string> }): Promise<{ code: number; stdout: Buffer; stderr: string }>;
-  spawnDetached(argv: string[], opts: { env: Record<string, string>; logFile: string }): { pid: number };
-  ownedAlive(pid: number, marker: string): Promise<boolean>;
-  kill(pid: number, signal: "SIGTERM" | "SIGKILL"): Promise<void>;
-  exited(pid: number): Promise<boolean>;
-}
+export { DeviceError, maskDeviceLog, type DeviceErrorCode, type DeviceExec } from "./device-shared.ts";
+import { DeviceError, maskDeviceLog, type DeviceExec } from "./device-shared.ts";
 
 const MAX_BUFFER = 16 * 1024 * 1024;
 
 class NodeDeviceExec implements DeviceExec {
-  run(argv: string[], opts: { timeoutMs: number; env?: Record<string, string> }): Promise<{ code: number; stdout: Buffer; stderr: string }> {
+  run(argv: string[], opts: { timeoutMs: number; env?: Record<string, string>; stdin?: string }): Promise<{ code: number; stdout: Buffer; stderr: string }> {
     return new Promise((resolve) => {
-      execFile(argv[0]!, argv.slice(1), { timeout: opts.timeoutMs, maxBuffer: MAX_BUFFER, encoding: "buffer", env: { ...process.env, ...opts.env } }, (err, stdout, stderr) => {
+      const child = execFile(argv[0]!, argv.slice(1), { timeout: opts.timeoutMs, maxBuffer: MAX_BUFFER, encoding: "buffer", env: { ...process.env, ...opts.env } }, (err, stdout, stderr) => {
         const code = err && typeof (err as NodeJS.ErrnoException & { code?: number }).code === "number" ? ((err as unknown as { code: number }).code) : err ? 1 : 0;
         resolve({ code, stdout: stdout ?? Buffer.alloc(0), stderr: (stderr ?? Buffer.alloc(0)).toString("utf8") });
       });
+      // avdmanager/sdkmanager fragen nach (Lizenzen, Hardware-Profil) — Antwort über stdin, kein Shell-String.
+      if (opts.stdin !== undefined) {
+        child.stdin?.write(opts.stdin);
+        child.stdin?.end();
+      }
     });
   }
   spawnDetached(argv: string[], opts: { env: Record<string, string>; logFile: string }): { pid: number } {
@@ -146,6 +139,8 @@ export interface DeviceServiceOptions {
   bootTimeoutMs?: number;
   leaseIdleMs?: number;
   reapIntervalMs?: number;
+  /** In-App-Setup (2026-11-24): Overrides für Download-Quellen und Paketliste. */
+  setup?: { jdkUrl?: string; toolsUrl?: string; packages?: readonly string[] };
 }
 
 type EmuState = "starting" | "booting" | "ready" | "stopping" | "stopped" | "unknown";
@@ -200,16 +195,10 @@ interface JournalRecord {
 const now = () => new Date().toISOString();
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
-/** Sichtbare Log-Maskierung: Träger-Tokens und Passwort-Felder, ohne Logs unlesbar zu machen. */
-export function maskDeviceLog(text: string): string {
-  return text
-    .replace(/(Bearer\s+)[A-Za-z0-9._-]{8,}/gi, "$1<redacted>")
-    .replace(/((?:password|token|secret)=)[^\s&]+/gi, "$1<redacted>");
-}
 
 export class DeviceService {
   private readonly dataDir: string;
-  private readonly sdkRoot: string | null;
+  private sdkRoot: string | null;
   private readonly avdHome: string;
   private readonly allowlist: string[];
   private readonly maxEmulators: number;
@@ -220,19 +209,24 @@ export class DeviceService {
   private readonly bootTimeoutMs: number;
   private readonly leaseIdleMs: number;
   private readonly reapIntervalMs: number;
-  private readonly adbPath: string | null;
-  private readonly emulatorPath: string | null;
+  private adbPath: string | null;
+  private emulatorPath: string | null;
+  /** JAVA_HOME des In-App-Setups (falls installiert) — avdmanager/sdkmanager brauchen es. */
+  private jdkHome: string | null = null;
   private readonly instances = new Map<string, Instance>();
   private readonly generations = new Map<string, number>();
   private readonly tests = new Map<string, ActiveTest>(); // `${serial}:${runId}`
   private reaper: NodeJS.Timeout | null = null;
   private avdsCache: { at: number; avds: AvdDescriptor[] } | null = null;
   private inventoryCache: { at: number; rows: AdbDeviceEntry[] } | null = null;
+  /** In-App-Setup (2026-11-24): JDK/Tools/Lizenzen/Pakete aus der PWA heraus. */
+  readonly setup: DeviceSetup;
 
   constructor(opts: DeviceServiceOptions) {
     this.dataDir = join(opts.dataDir, "devices");
     mkdirSync(join(this.dataDir, "artifacts"), { recursive: true });
-    this.sdkRoot = opts.sdkRoot ?? process.env.ANDROID_SDK_ROOT ?? process.env.ANDROID_HOME ?? null;
+    // K7: Config/env vorziehen; sonst gilt die SDK-Wurzel des letzten erfolgreichen In-App-Setups.
+    this.sdkRoot = opts.sdkRoot ?? process.env.ANDROID_SDK_ROOT ?? process.env.ANDROID_HOME ?? readConfiguredSdkRoot(join(opts.dataDir, "devices"));
     this.avdHome = opts.avdHome ?? join(this.dataDir, "avd");
     mkdirSync(this.avdHome, { recursive: true });
     this.allowlist = opts.avdAllowlist ?? [];
@@ -246,7 +240,24 @@ export class DeviceService {
     this.reapIntervalMs = opts.reapIntervalMs ?? 15_000;
     this.adbPath = this.sdkRoot ? join(this.sdkRoot, "platform-tools", "adb") : null;
     this.emulatorPath = this.sdkRoot ? join(this.sdkRoot, "emulator", "emulator") : null;
+    this.setup = new DeviceSetup({
+      dataDir: this.dataDir,
+      exec: this.exec,
+      ...(opts.setup?.jdkUrl ? { jdkUrl: opts.setup.jdkUrl } : {}),
+      ...(opts.setup?.toolsUrl ? { toolsUrl: opts.setup.toolsUrl } : {}),
+      ...(opts.setup?.packages ? { packages: opts.setup.packages } : {}),
+      onReady: (sdkRoot, jdkHome) => this.applySdkRoot(sdkRoot, jdkHome),
+    });
     this.recover();
+  }
+
+  /** Nach erfolgreichem In-App-Setup übernimmt der Dienst die SDK-Wurzel (ohne Neustart). */
+  private applySdkRoot(sdkRoot: string, jdkHome: string | null): void {
+    this.sdkRoot = sdkRoot;
+    this.jdkHome = jdkHome;
+    this.adbPath = join(sdkRoot, "platform-tools", "adb");
+    this.emulatorPath = join(sdkRoot, "emulator", "emulator");
+    this.avdsCache = null;
   }
 
   // ---- Journal (K7) -----------------------------------------------------------------------------------------------
@@ -416,6 +427,40 @@ export class DeviceService {
     });
     this.avdsCache = { at: Date.now(), avds };
     return avds;
+  }
+
+  /** Installierte System-Images als sdkmanager-IDs (`system-images;<api>;<tag>;<abi>`). */
+  listImages(): DeviceImageList {
+    if (!this.sdkRoot) return { images: [] };
+    const root = join(this.sdkRoot, "system-images");
+    if (!existsSync(root)) return { images: [] };
+    const images: string[] = [];
+    for (const api of readdirSync(root, { withFileTypes: true })) {
+      if (!api.isDirectory()) continue;
+      for (const tag of readdirSync(join(root, api.name), { withFileTypes: true })) {
+        if (!tag.isDirectory()) continue;
+        for (const abi of readdirSync(join(root, api.name, tag.name), { withFileTypes: true })) {
+          if (abi.isDirectory()) images.push(`system-images;${api.name};${tag.name};${abi.name}`);
+        }
+      }
+    }
+    return { images };
+  }
+
+  /** Neuer AVD aus der PWA — feste avdmanager-argv-Vorlage, `no` auf die Hardware-Profil-Rückfrage. */
+  async createAvd(input: DeviceAvdCreateInput): Promise<AvdDescriptor> {
+    this.requireCaps();
+    const avdmanager = join(this.sdkRoot!, "cmdline-tools", "latest", "bin", "avdmanager");
+    if (!existsSync(avdmanager)) throw new DeviceError("unavailable", `avdmanager fehlt: ${avdmanager}`);
+    const existing = (await this.listAvds()).find((a) => a.name === input.name);
+    if (existing) throw new DeviceError("conflict", `AVD „${input.name}“ existiert bereits.`);
+    const env = this.jdkHome ? { ...this.runEnv(), JAVA_HOME: this.jdkHome, PATH: `${join(this.jdkHome, "bin")}:${process.env.PATH ?? ""}` } : this.runEnv();
+    const res = await this.exec.run([avdmanager, "create", "avd", "-n", input.name, "-k", input.image, "--device", input.profile], { timeoutMs: 120_000, env, stdin: "no\n" });
+    if (res.code !== 0) throw new DeviceError("failed", `AVD-Anlage fehlgeschlagen: ${clip(res.stderr.trim() || res.stdout.toString("utf8"), 400)}`);
+    this.avdsCache = null;
+    const created = (await this.listAvds()).find((a) => a.name === input.name);
+    if (!created) throw new DeviceError("failed", `avdmanager meldete Erfolg, aber „${input.name}“ ist nicht gelistet — Zustand prüfen.`);
+    return created;
   }
 
   async status(): Promise<DeviceStatus> {

@@ -32,6 +32,9 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `devices.avdHome` | string | — |
 | `devices.avdAllowlist` | array<string> | [] |
 | `devices.maxEmulators` | integer | 1 |
+| `devices.setup.jdkUrl` | string | — |
+| `devices.setup.toolsUrl` | string | — |
+| `devices.setup.packages` | array<string> | — |
 | `ocr.tessdataDir` | string | — |
 | `actions` | array<object> | [] |
 | `forge.gitlab.command` | string | "glab" |
