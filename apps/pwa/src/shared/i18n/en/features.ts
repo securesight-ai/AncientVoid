@@ -1653,7 +1653,7 @@ export const en = {
   "workspace.list_opens_tiles": "Opening items from the list adds tiles",
   "workspace.logs": "Logs",
   "workspace.manifest_frag": "· Manifest ",
-  "workspace.no_workspace": "This session has no workspace — without `ancientvoid.workspace.json` the unchanged old flow applies (ADR-0051 §7).",
+  "workspace.no_workspace": "Environment shows this session's runtime services — prepare, logs, preview, retry. This session has no workspace: the project's base commit carries no `ancientvoid.workspace.json` (ADR-0051); without a manifest the unchanged old flow applies.",
   "workspace.port": "Port ",
   "workspace.refresh": "Refresh",
   "workspace.resize_tile_height": "Resize tile height",
