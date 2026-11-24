@@ -12,7 +12,7 @@ import { Markdown } from "../../shared/Markdown.tsx";
 import { AttachmentChips, type AttachmentRef } from "../attachments/Attachments.tsx";
 import { SpeakButton } from "../../shared/SpeakButton.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
-import { toolImageHits, type SessionRef, type ToolImageRef } from "./tool-image.ts";
+import { bildpfad, toolImageHits, type SessionRef, type ToolImageRef } from "./tool-image.ts";
 
 /**
  * Den Vorschau-Block mitten in den sichtbaren Ausschnitt holen. `scrollIntoView`
@@ -42,41 +42,54 @@ function zeigeBlockVollstaendig(block: HTMLElement | null): void {
  * Dateinamen). Erst Chips, das Bild holt der Hub erst auf Zuruf — eine `ls` mit
  * 30 Namen lädt nicht 30 Bilder.
  */
-export function ToolImageScan({ bilder }: { bilder: ToolImageRef[] }) {
+export function ToolImageScan({ bilder, nichtGezeigt = 0 }: { bilder: ToolImageRef[]; nichtGezeigt?: number }) {
   const [offen, setOffen] = useState<string[]>([]);
   const block = useRef<HTMLDivElement>(null);
+  const erster = useRef(true);
+  // Chips und Bilder zusammen im Ausschnitt — und **nach** dem Rendern gerechnet:
+  // der Klick ändert die Blockhöhe erst im nächsten Tick, eine Rechnung vorher
+  // richtet sich an einem Block aus, den es gleich nicht mehr gibt.
+  const neuEinhaengen = () => zeigeBlockVollstaendig(block.current);
+  useEffect(() => {
+    if (erster.current) {
+      erster.current = false;
+      return;
+    }
+    neuEinhaengen();
+  }, [offen]);
   if (bilder.length === 0) return null;
-  const offenPfade = bilder.filter((b) => offen.includes(b.path)).map((b) => b.path);
-  // Chips und Bilder zusammen im Ausschnitt: sonst rutscht entweder das
-  // Steuerbrett oder die halbe Vorschau aus dem Bild.
-  const umschalten = (pfad: string, auf: boolean) => {
-    setOffen((vorher) => (auf ? vorher.filter((p) => p !== pfad) : [...vorher, pfad]));
-    zeigeBlockVollstaendig(block.current);
+  const offenSet = new Set(offen);
+  const umschalten = (schluessel: string) => {
+    setOffen((vorher) => (vorher.includes(schluessel) ? vorher.filter((p) => p !== schluessel) : [...vorher, schluessel]));
   };
   return (
     <div class="tool-image-scan" ref={block}>
       <div class="tool-image-scan-row">
         <span class="tool-image-scan-note dim">{t("session.tool_image_note")}</span>
         {bilder.map((bild) => {
-          const auf = offen.includes(bild.path);
+          const schluessel = bildpfad(bild);
+          const auf = offenSet.has(schluessel);
           return (
             <button
-              key={`${bild.target}/${bild.path}`}
+              key={schluessel}
               class="link-btn tool-image-chip"
               aria-expanded={auf}
-              onClick={() => umschalten(bild.path, auf)}
+              onClick={() => umschalten(schluessel)}
             >
               {bild.name} <span class="dim">{auf ? t("session.tool_image_hide") : t("session.tool_image_show")}</span>
             </button>
           );
         })}
+        {nichtGezeigt > 0 ? (
+          <span class="tool-image-scan-note dim">{t("session.tool_image_more", { count: String(nichtGezeigt) })}</span>
+        ) : null}
       </div>
-      {offenPfade.length > 0 ? (
+      {offen.length > 0 ? (
         <div class="tool-image-scan-bilder">
           {bilder
-            .filter((bild) => offenPfade.includes(bild.path))
+            .filter((bild) => offenSet.has(bildpfad(bild)))
             .map((bild) => (
-              <ToolImageView key={`vorschau-${bild.path}`} image={bild} />
+              <ToolImageView key={`vorschau-${bildpfad(bild)}`} image={bild} nachLaden={neuEinhaengen} />
             ))}
         </div>
       ) : null}
@@ -85,24 +98,33 @@ export function ToolImageScan({ bilder }: { bilder: ToolImageRef[] }) {
 }
 
 /** Bildvorschau zu einem gelesenen Bild — Bytes vom Hub, Token im Header. */
-export function ToolImageView({ image }: { image: ToolImageRef }) {
+export function ToolImageView({ image, nachLaden }: { image: ToolImageRef; nachLaden?: () => void }) {
   const api = useApi();
   const [url, setUrl] = useState("");
   const [fehler, setFehler] = useState("");
+  const [kaputt, setKaputt] = useState(false);
   useEffect(() => {
     let lebt = true;
     let objectUrl = "";
     setUrl("");
     setFehler("");
+    setKaputt(false);
     api
       .toolImageBlobUrl(image.target, image.path)
       .then((u) => {
         objectUrl = u;
-        if (lebt) setUrl(u);
-        else URL.revokeObjectURL(u);
+        if (lebt) {
+          setUrl(u);
+          // Byte für Byte wächst der Block erst jetzt — neu einhängen, sonst steht
+          // die Bildunterschrift wieder unter dem Eingabefeld.
+          nachLaden?.();
+        } else URL.revokeObjectURL(u);
       })
       .catch(() => {
-        if (lebt) setFehler(t("session.tool_image_missing"));
+        if (lebt) {
+          setFehler(t("session.tool_image_missing"));
+          nachLaden?.();
+        }
       });
     return () => {
       lebt = false;
@@ -111,9 +133,16 @@ export function ToolImageView({ image }: { image: ToolImageRef }) {
   }, [api, image.target, image.path]);
   return (
     <div class="tool-image">
-      {url ? (
+      {url && !kaputt ? (
         <a class="tool-image-link" href={url} target="_blank" rel="noopener" title={t("session.tool_image_open")}>
-          <img src={url} alt={image.name} loading="lazy" decoding="async" />
+          <img
+            src={url}
+            alt={image.name}
+            loading="lazy"
+            decoding="async"
+            onError={() => setKaputt(true)}
+            onLoad={() => nachLaden?.()}
+          />
         </a>
       ) : null}
       <div class="tool-image-meta">
@@ -124,6 +153,7 @@ export function ToolImageView({ image }: { image: ToolImageRef }) {
           </a>
         ) : null}
         {fehler ? <span class="dim">{fehler}</span> : null}
+        {kaputt ? <span class="dim">{t("session.tool_image_kaputt")}</span> : null}
       </div>
     </div>
   );
@@ -257,7 +287,7 @@ function EventRowView({
               {treffer.direkt.map((bild) => (
                 <ToolImageView key={bild.path} image={bild} />
               ))}
-              <ToolImageScan bilder={treffer.vorschlaege} />
+              <ToolImageScan bilder={treffer.vorschlaege} nichtGezeigt={treffer.nichtGezeigt} />
             </>
           );
         })()}

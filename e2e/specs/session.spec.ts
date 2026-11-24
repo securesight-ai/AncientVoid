@@ -150,12 +150,12 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
     await expect(app.locator(".dashboard")).toBeVisible();
   });
 
-  // BUG-0279: Am Handy führt der Übersicht-Knopf immer in die Übersicht. Der
+  // BUG-0282: Am Handy führt der Übersicht-Knopf immer in die Übersicht. Der
   // alte popView-Rückschritt merkte sich beim Zurückkehren die verlassene
   // Ansicht selbst wieder (main.tsx rememberView) und pendelte nach einem
   // In-Session-Sprung (Suche-Treffer, Forge-Link) zwischen den Sessions,
   // statt heimzukehren.
-  test("BUG-0279: Übersicht-Knopf nach In-Session-Sprung zurück in die Übersicht", async ({ app, hub }) => {
+  test("BUG-0282: Übersicht-Knopf nach In-Session-Sprung zurück in die Übersicht", async ({ app, hub }) => {
     await hub.createSession({ adapter: "dummy", prompt: "Nadel Alpha" });
     await hub.createSession({ adapter: "dummy", prompt: "Nadel Beta" });
     await expect(app.locator(".session-card")).toHaveCount(2);

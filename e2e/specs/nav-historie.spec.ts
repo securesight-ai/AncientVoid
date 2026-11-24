@@ -30,7 +30,7 @@ test.describe("Navigations-Historie für überlagernde Ansichten", () => {
 });
 
 test.describe("Navigations-Historie am Handy", () => {
-  // BUG-0279: Der Knopf ist kein Historie-Rücksprung mehr, sondern führt
+  // BUG-0282: Der Knopf ist kein Historie-Rücksprung mehr, sondern führt
   // deterministisch in die Übersicht — popView pendelte zwischen Sessions,
   // statt heimzukehren. Der Ping-Pong-Fall liegt in session.spec.ts.
   test("Zurück-Knopf der Session führt immer in die Übersicht", async ({ app, hub }) => {

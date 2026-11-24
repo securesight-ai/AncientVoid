@@ -149,6 +149,7 @@ Drei Schichten: **Primitiv** (nur Hex/rgb, nur in `00-tokens.css`) →
 | `--z-sheet` | ebene | `60` |
 | `--z-toast` | ebene | `200` |
 | `--z-popout` | ebene | `210` |
+| `--status-bar-h` | ebene | `28px` |
 | `--z-lightbox` | ebene | `300` |
 | `--font-scale` | preset | `1` |
 | `--ui-zoom` | preset | `1` |

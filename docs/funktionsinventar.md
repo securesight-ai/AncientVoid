@@ -132,7 +132,7 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S07 | GitLab | „Mehr“ → „GitLab“ | T43.4 | inventar |
 | S08 | Suche | „Mehr“ → „Suche“ | T43.4 | inventar |
 | S09 | Code | Reiter „Dateien“ | T43.5 | inventar |
-| S10 | Umgebung | „Mehr“ → „Umgebung“ | T43.4 | inventar |
+| S10 | Umgebung-Reiter nur, wenn die Session einen Workspace hat; nachweislich ohne (Anfang geladen, kein workspace-Event) bleibt der Eintrag weg — Kleinkram-Regel 2 | „Mehr“ (ohne Workspace kein Eintrag) | T43.4, Umgebungs-Fix 2026-11-24 | inventar |
 | S11 | Zurück zur Übersicht (Handy/Tablet) | „←“ im Kopf; ab 700 px Dock „Start“ | — | inventar |
 | S12 | Stop | Taste im Kopf | T43.4 | inventar |
 | S13 | Umbenennen | „⋯“ → „Umbenennen“ | — | inventar |

@@ -182,7 +182,7 @@ echte Geräte bleiben manuelle Abnahme (AC-P5-2).
   Selektieren.
 - **2026-11-20 (BUG-0234, PR #224):** `layout.spec.ts` prüft, dass der
   Zurück-Pfeil der Session-Topbar nur unter 700 px Breite existiert.
-- **2026-11-24 (BUG-0279):** `session.spec.ts` fährt den Handy-Fall: In-Session-
+- **2026-11-24 (BUG-0282):** `session.spec.ts` fährt den Handy-Fall: In-Session-
   Sprung (Suche-Treffer), dann Übersicht-Knopf — Ziel ist immer die Übersicht,
   nicht die zuvor offene Session. `nav-historie.spec.ts` pinnt den Knopf-Vertrag
   neu (deterministische Übersicht statt popView).

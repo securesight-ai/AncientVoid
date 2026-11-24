@@ -1,8 +1,8 @@
 ---
-id: BUG-0279
+id: BUG-0282
 slug: handy-zurueck-pfeil-pendelt
 severity: S2
-status: in-progress
+status: done
 instance: dev
 commit: "d0728b79"
 forge: "https://github.com/securesight-ai/AncientVoid/issues/397"
@@ -11,7 +11,7 @@ created: 2026-11-24
 reporter: "Nutzer (Chat)"
 ---
 
-# BUG-0279 — Handy: Zurück-Pfeil pendelt zwischen Sessions statt zur Übersicht
+# BUG-0282 — Handy: Zurück-Pfeil pendelt zwischen Sessions statt zur Übersicht
 
 ## Gesehen
 
@@ -92,3 +92,8 @@ Pendelkette.
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`) — [#397](https://github.com/securesight-ai/AncientVoid/issues/397)
 - [ ] `bugfix`
+
+## Abschluss (2026-11-24)
+
+Gemerged als PR #398 (verify grün). Nummern-Kollision mit main-0279 (Shell)
+aufgelöst: dieser Bug ist jetzt 0282 (zuerst als 0279 angelegt).

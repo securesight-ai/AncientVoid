@@ -24,7 +24,7 @@
     "@ancientvoid/adapter-testkit": "0.1.0",
     "@ancientvoid/workers": "0.1.0",
     "@types/web-push": "^3.6.4",
-    "fast-check": "^4.10.1"
+    "fast-check": "^4.10.3"
   },
   "optionalDependencies": {
     "playwright": "^1.65.1"
