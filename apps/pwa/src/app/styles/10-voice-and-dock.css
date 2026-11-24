@@ -135,7 +135,7 @@
   color: var(--fg-dim);
 }
 
-/* T8.5: session header — back, title, Stop apart from Senden, ⋯ menu. */
+/* T8.5: session header — Übersicht-Knopf (BUG-0279), title, Stop apart from Senden, ⋯ menu. */
 .session-topbar {
   gap: 8px;
   /* BUG-0118: das „⋯“-Menü hängt am Kopf. Kopf und Steuerung (.dock-stack) hatten beide z-index 10,
@@ -150,9 +150,13 @@
   line-height: 1;
 }
 
-/* BUG-0234: ab 700 px ist die Session-Liste dauerhaft sichtbar (Split) — der Zurück-Pfeil
- * neben dem Titel gehört nur auf das Handy. Ausnahme Handy-Querformat (Höhe ≤ 520 px,
- * BUG-0053): dort gilt das Mobil-Layout, der Pfeil bleibt. */
+.session-topbar .back-btn .tab-icon {
+  display: block;
+}
+
+/* BUG-0234: ab 700 px ist die Session-Liste dauerhaft sichtbar (Split) — der Übersicht-
+ * Knopf neben dem Titel gehört nur auf das Handy. Ausnahme Handy-Querformat (Höhe ≤ 520 px,
+ * BUG-0053): dort gilt das Mobil-Layout, der Knopf bleibt. */
 @media (min-width: 700px) and (min-height: 521px) {
   .session-topbar .back-btn {
     display: none;

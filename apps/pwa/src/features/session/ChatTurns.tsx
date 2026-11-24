@@ -187,7 +187,9 @@ function StepRow({ step, current, sessionRef }: { step: Step; current: boolean; 
   // Nutzerfund 23.11.2026: in der Zug-Ansicht (der üblichen Chat-Ansicht) war ein
   // gelesenes Bild gar nicht zu sehen — die Vorschau hing nur an der flachen
   // Ereignisliste. Also hier dasselbe Bild zeigen, am selben Schritt.
-  const treffer = step.use ? toolImageHits(step.use, step.result ?? undefined, sessionRef) : { direkt: [], vorschlaege: [] };
+  const treffer = step.use
+    ? toolImageHits(step.use, step.result ?? undefined, sessionRef)
+    : { direkt: [], vorschlaege: [], nichtGezeigt: 0 };
   return (
     <li class={`turn-step ${step.state}`} data-seq={step.key}>
       <button type="button" class={`turn-step-head${current ? " mv-shimmer" : ""}`} aria-expanded={detail} onClick={() => setDetail((on) => !on)}>
@@ -199,7 +201,7 @@ function StepRow({ step, current, sessionRef }: { step: Step; current: boolean; 
       {treffer.direkt.map((bild) => (
         <ToolImageView key={bild.path} image={bild} />
       ))}
-      <ToolImageScan bilder={treffer.vorschlaege} />
+      <ToolImageScan bilder={treffer.vorschlaege} nichtGezeigt={treffer.nichtGezeigt} />
       {detail && (
         <div class="turn-step-io">
           {step.use && <StepPart label={t("composer.input")} event={step.use} />}

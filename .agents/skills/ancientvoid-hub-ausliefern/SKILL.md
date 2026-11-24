@@ -24,7 +24,9 @@ nach `assets/index-….js` grepen), der Neustart dient nur dazu, die drei Shas w
 deckungsgleich zu machen. Und der Idle-Test unten zählt **Kindprozesse**; tmux-Worker
 sind keine Kinder, also wird mitten im Zug neu gestartet. Seit pi als RPC-Prozess läuft
 (PR #357) ist das beherrschbar: der Hub übernimmt den laufenden Worker nach dem
-Neustart wieder (live beobachtet: ein Pane über drei Neustarts), vorher riss es den Zug ab.
+Neustart wieder (live beobachtet: ein Pane über fünf Neustarts), vorher riss es den Zug
+ab. **Gilt nur für Adapter im RPC-Modus** (`adapters.pi.config.mode: "rpc"`): ein
+Einzelprozess pro Zug (`pi -p`) stirbt mit dem Hub, und der Zug endet halbfertig.
 
 Drei Shas müssen gleich sein (`runtimeSha == checkoutSha == pwaSha`) und
 `runtimeDirty` false. Nur eine gleiche Zahl ist kein Nachweis: `checkoutSha`

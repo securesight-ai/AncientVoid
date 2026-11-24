@@ -1,5 +1,6 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import { test, expect, sessionTab, clickClosing } from "../support/fixtures.ts";
+import { manifestProject } from "../support/workspace-project.ts";
 import type { TestHub } from "../support/hub.ts";
 
 /**
@@ -66,7 +67,6 @@ test.describe("Herauslösen überall (EPIC-P43 T43.7)", () => {
       ["Befehle", "Befehle", "files"],
       ["GitLab", "GitLab", "forge"],
       ["Suche", "Suche", "search"],
-      ["Umgebung", "Umgebung", "environment"],
     ] as const) {
       await sessionTab(tile, tab);
       const popup = await detach(context, app, label);
@@ -76,6 +76,22 @@ test.describe("Herauslösen überall (EPIC-P43 T43.7)", () => {
       await clickClosing(popup, popup.getByRole("button", { name: "In die App zurück" }));
       await expect(tile.locator(".detached-placeholder")).toHaveCount(0);
     }
+  });
+
+  test("Umgebung löst sich nur mit Workspace-Session heraus — ohne Workspace bleibt der Eintrag weg @desktop", async ({ app, hub, context }) => {
+    // Ohne Manifest ist die Umgebung-Ansicht nicht mehr erreichbar (Kleinkram-Regel 2,
+    // Umgebungs-Fix 2026-11-24) — das Herauslösen braucht eine Session mit Workspace-Events.
+    const project = manifestProject(hub, "hl-umgebung", { schemaVersion: 1 });
+    await hub.createSession({ adapter: "opencode", prompt: "Umgebung herauslösen", project });
+    await app.locator(".split-list .session-card").filter({ hasText: "Umgebung herauslösen" }).locator(".session-open").click();
+    const tile = app.locator('[data-tile="1"]');
+    await sessionTab(tile, "Umgebung");
+    const popup = await detach(context, app, "Umgebung");
+    expect(popup.url()).toContain("view=environment");
+    await expect(popup.locator(".popout-title")).toContainText("Umgebung");
+    await expect(tile.locator(".detached-placeholder")).toContainText("Umgebung läuft in einem eigenen Fenster.");
+    await clickClosing(popup, popup.getByRole("button", { name: "In die App zurück" }));
+    await expect(tile.locator(".detached-placeholder")).toHaveCount(0);
   });
 
   test("die Warteschlange als Fenster — ohne Dock, Sessions öffnen dort ihr eigenes Fenster @desktop", async ({ app, hub, context }) => {

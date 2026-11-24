@@ -54,9 +54,4 @@ Layout-Shift; nach kurzer Zeit automatisch weg.
 `position: fixed` + `z-index: var(--z-toast)`; kürzere `TOAST_MS`. Test:
 `apps/pwa/test/features/notifications/toast-overlay.test.ts`.
 
-## Abschluss (2026-11-24)
-
-Nachgestellt: `.toast-stack` ist `position: fixed` mit `z-index: var(--z-toast)`
-(`apps/pwa/src/app/styles/14-notifications.css:96-107`). Fix-Commit 9cde7892
-im Stand. `npx vitest run apps/pwa/test/features/notifications/toast-overlay.test.ts`
-→ 2 passed.
+Gemerged als PR [#338](https://github.com/securesight-ai/AncientVoid/pull/338) (e15eef36); Unit 2/2 grün im Session-Worktree nachgestellt.

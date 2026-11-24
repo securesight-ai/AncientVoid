@@ -6,7 +6,7 @@ severity: S2
 area: pwa
 instance: dev
 commit: ""
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/pull/156"
 epic: "ADR-0028 (lokale Spracherkennung), EPIC-P10 (Diktat)"
 created: 2026-11-18
 reporter: Nutzer (Kai, Nachfrage) + Agent (am laufenden Hub nachgemessen)
@@ -73,12 +73,4 @@ Hub: `GET /api/stt` prüft die Erreichbarkeit (kurz gecacht) und meldet `false` 
 erneuern (`refreshSttStatus()`), nach einem lokalen Ausfall wird sie erneuert, und der nächste
 Druck nimmt die Browser-Erkennung mit klarer Meldung.
 
-## Abschluss (2026-11-24)
-
-Im Stand vorhanden und belegt: `sttHealthUrl()`/`makeSttProbe()` in
-`apps/hub/src/modules/voice/stt.routes.ts` (4-s-Cache, `/health`-Probe; Commit
-e7e907de), `refreshSttStatus()` in `apps/pwa/src/shared/local-stt.ts:19` mit
-Neuholen nach Ausfall (`apps/pwa/src/features/stt/use-push-to-talk.ts:191`),
-Quellenwahl Automatisch/Lokal/Browser (4346d032).
-`npx vitest run apps/hub/test/stt-availability.test.ts` → 4 passed;
-`e2e/specs/stt-ausfall-rueckfall.spec.ts` existiert und hält den Rückfall fest.
+Gemerged als PR [#156](https://github.com/securesight-ai/AncientVoid/pull/156): Hub-Probe auf `/health` (kurz gecacht, `available:false` + Grund), App erneuert die Auskunft nach Ausfall und fällt auf die Browser-Erkennung zurück. Nachgestellt im Session-Worktree: Unit 4/4 (`apps/hub/test/stt-availability.test.ts`), E2E 2/2 (`stt-ausfall-rueckfall.spec.ts`, Projekt mobile).

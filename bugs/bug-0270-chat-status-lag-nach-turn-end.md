@@ -69,13 +69,5 @@ aber nicht `status`; `live = status === "working"` hält den Zug-Mark offen und
 ## Handoff
 
 - [x] Datei im Index `bugs/README.md`
-- [ ] GitHub-Issue
-- [ ] Fix-PR
-
-## Abschluss (2026-11-24)
-
-Nachgestellt: `statusFromEvents` existiert und wird in `SessionTail.tsx`
-genutzt (Zeile 830 verwirft den Rückschritt, wenn `turn_end` den Status schon
-auf idle gesetzt hat). Fix-Commit 791ebf81 (PR #335) im Stand.
-`npx vitest run apps/pwa/test/features/session/status-from-events.test.ts` →
-7 passed.
+- [x] GitHub-Issue [#334](https://github.com/securesight-ai/AncientVoid/issues/334)
+- [x] Fix-PR [#335](https://github.com/securesight-ai/AncientVoid/pull/335) (60b437f5, gemerged) — Unit 7/7 grün im Session-Worktree nachgestellt
