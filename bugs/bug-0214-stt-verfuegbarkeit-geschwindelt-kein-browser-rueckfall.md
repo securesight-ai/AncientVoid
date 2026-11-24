@@ -1,12 +1,12 @@
 ---
 id: BUG-0214
 slug: stt-verfuegbarkeit-geschwindelt-kein-browser-rueckfall
-status: open
+status: done
 severity: S2
 area: pwa
 instance: dev
 commit: ""
-forge: ""
+forge: "https://github.com/securesight-ai/AncientVoid/pull/156"
 epic: "ADR-0028 (lokale Spracherkennung), EPIC-P10 (Diktat)"
 created: 2026-11-18
 reporter: Nutzer (Kai, Nachfrage) + Agent (am laufenden Hub nachgemessen)
@@ -72,3 +72,5 @@ Hub: `GET /api/stt` prüft die Erreichbarkeit (kurz gecacht) und meldet `false` 
 `streaming` wird nur gemeldet, wenn die Erkennung erreichbar ist. App: Auskunft lässt sich
 erneuern (`refreshSttStatus()`), nach einem lokalen Ausfall wird sie erneuert, und der nächste
 Druck nimmt die Browser-Erkennung mit klarer Meldung.
+
+Gemerged als PR [#156](https://github.com/securesight-ai/AncientVoid/pull/156): Hub-Probe auf `/health` (kurz gecacht, `available:false` + Grund), App erneuert die Auskunft nach Ausfall und fällt auf die Browser-Erkennung zurück. Nachgestellt im Session-Worktree: Unit 4/4 (`apps/hub/test/stt-availability.test.ts`), E2E 2/2 (`stt-ausfall-rueckfall.spec.ts`, Projekt mobile).

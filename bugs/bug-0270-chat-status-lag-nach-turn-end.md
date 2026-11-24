@@ -1,7 +1,7 @@
 ---
 id: BUG-0270
 slug: chat-status-lag-nach-turn-end
-status: in-progress
+status: done
 severity: S3
 area: pwa
 instance: local
@@ -69,5 +69,5 @@ aber nicht `status`; `live = status === "working"` hält den Zug-Mark offen und
 ## Handoff
 
 - [x] Datei im Index `bugs/README.md`
-- [ ] GitHub-Issue
-- [ ] Fix-PR
+- [x] GitHub-Issue [#334](https://github.com/securesight-ai/AncientVoid/issues/334)
+- [x] Fix-PR [#335](https://github.com/securesight-ai/AncientVoid/pull/335) (60b437f5, gemerged) — Unit 7/7 grün im Session-Worktree nachgestellt
