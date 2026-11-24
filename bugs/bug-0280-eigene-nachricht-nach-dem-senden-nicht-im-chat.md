@@ -45,6 +45,25 @@ Vorgemerkte Eingaben (ADR-0085) werden nur in `QueueList` dargestellt; erst die
 Auslieferung erzeugt das `session.prompt`-Ereignis, das `turnsOf` als
 Zeilenanfang rendert. Zwischen Senden und Auslieferung gibt es keine Zeile.
 
+## Nachtrag 24.11.2026 — dieselbe Nachricht, 19 Minuten lang unsichtbar
+
+Die Messnachricht derselben Untersuchung ist spaeter wirklich angekommen, und die
+Zahlen zeigen, wie lang die Blindstelle ist:
+
+* gesendet 07:38:08 (lokale Uhr, Zeitstempel der Sonde: 1795502288958)
+* Ereignis `session.prompt` erst **seq 20145, 06:57:19Z = 07:57:19 lokal** — also
+  **~19 Minuten** spaeter, waehrend der Zug durchlief (Adapter `pi` sagt
+  `midTurnInput:false`, ADR-0074/0085: Zustellung fruehestens am Zugende)
+* Waehrend dieser 19 Minuten: kein Chat-Eintrag, `GET /api/sessions/:id/queue`
+  lieferte den Text nur dort — nach der Zustellung ist die Warteschlange wieder leer
+  (anzahl 0)
+* Meta-Zeile der nun sichtbaren Nachricht: „Du · pc-diagnose" — der Name des
+  (laengst widerrufenen) Zweck-Tokens. Das ist BUG-0281, hier erstmals an einer
+  echten Zeile sichtbar.
+
+Genau diese Luecke von ~19 Minuten ohne jeden sichtbaren Nachweis ist der Grund,
+warum die Nachricht als „verschwunden" erlebt wird.
+
 ## Vorschlag
 
 Vorgemerkte eigene Eingabe als eigene Chat-Zeile mit Status („wartet auf den
