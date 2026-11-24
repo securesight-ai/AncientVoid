@@ -1,4 +1,4 @@
-# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P81)
+# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P82)
 
 **On hold seit 15.11.2026 (Nutzerentscheid): P30 und P31.** Beide bleiben
 im Inventar, sind aber aus Empfehlungen für die nächste Arbeit ausgeschlossen.
@@ -329,6 +329,12 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 | Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
 |---|---|---|---|
 | [P75 — Sprachausgabe: Chat-Nachrichten und Fragen vorlesen](EPIC-P75-sprachausgabe-chat-vorlesen.md) | Play-Button an Agent→User-Nachrichten (Assistant-Blasen, Frage-/Approval-Karten) synthetisiert über den Hub ([ADR-0097](../docs/adr/0097-sprachausgabe-tts-hub-proxy.md): `POST /api/tts` → derselbe Hivemind-/tts-Dienst wie VoidWardens Nyx-Ansagen, Policy `voice.speak` nur Menschen, Audio transient — K5, Serialisierung max 1 wegen geteilter Box, ehrliche Verfügbarkeitsprobe nach BUG-0214-Muster); TTS-Eintrag in den Einstellungen (SettingsStore, Hörprobe, ohne Restart); kein Auto-Vorlesen, kein Cloud-TTS, kein Ghost-Processing — **abgeschlossen 2026-11-17 (Geräteabnahme nach P000)** | keine fachliche offene (Quer-Epic; P65-Audiobasis) | ~0,5 |
+
+## Nutzerauftrag vom 24.11.2026 — Audit-Räumen (Inventar, Monolith-Schnitt, Härtung)
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P82 — Audit-Räumen: Inventar, Monolith-Schnitt, Härtungsdetails](EPIC-P82-audit-raeumen-inventar-schnitt-haertung.md) | Knip-Inventar räumen und `check:knip` ins Gate; `session-manager.ts` entlang Modulnaht teilen (reines Verschieben); WS-Revocation-Recheck aus aufgelöstem Auth; Session-Tail-Tickets nach STT-/Terminal-Muster; SQL-Whitelist-Kommentare — **Planungsentwurf (Nutzerauftrag 24.11.2026)** | keine blockierende (Quer-Epic); P81/P79/P80-Ausläufe unberührt; P30/P31 On hold unberührt; Tracker #412 | 1–2 |
 
 ## Reihenfolge & Gating
 
