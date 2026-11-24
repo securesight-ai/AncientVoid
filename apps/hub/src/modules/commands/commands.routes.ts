@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { CommandContext, TRANSFORMS, type CommandPlan, type PlanStep, type StepResult } from "@ancientvoid/contracts";
-import { parseCommand, planCommand, resolveIntent, type Intent, type PlannerModelConfig, type ResolveData } from "@ancientvoid/core";
+import { hintergrundAnfrage, parseCommand, planCommand, resolveIntent, type Intent, type PlannerModelConfig, type ResolveData } from "@ancientvoid/core";
 import type { RouteContext } from "../../route-context.ts";
 
 /**
@@ -170,20 +170,21 @@ export function registerCommandRoutes(app: FastifyInstance, ctx: RouteContext, d
     if (!deps.model) return reply.code(501).send({ error: "Kein lokales Modell konfiguriert (assistant/gatekeeper.model) — Text bleibt unverändert." });
     const started = Date.now();
     try {
-      const res = await (deps.model.fetch ?? fetch)(`${deps.model.url.replace(/\/$/, "")}/chat/completions`, {
-        method: "POST",
-        signal: AbortSignal.timeout(deps.model.timeoutMs ?? 30_000),
-        headers: { "content-type": "application/json", ...(deps.model.apiKey ? { authorization: `Bearer ${deps.model.apiKey}` } : {}) },
-        body: JSON.stringify({
-          model: deps.model.model,
-          temperature: 0.2,
-          max_tokens: 2000,
-          messages: [
-            { role: "system", content: `${TRANSFORM_PROMPT[body.data.transform]} Antworte nur mit dem neuen Text, ohne Einleitung.` },
-            { role: "user", content: body.data.text },
-          ],
-        }),
-      });
+      const res = await hintergrundAnfrage(deps.model.pforte, deps.model.model, deps.model.url, "text", "Text umformulieren", () =>
+        (deps.model!.fetch ?? fetch)(`${deps.model!.url.replace(/\/$/, "")}/chat/completions`, {
+          method: "POST",
+          signal: AbortSignal.timeout(deps.model!.timeoutMs ?? 30_000),
+          headers: { "content-type": "application/json", ...(deps.model!.apiKey ? { authorization: `Bearer ${deps.model!.apiKey}` } : {}) },
+          body: JSON.stringify({
+            model: deps.model!.model,
+            temperature: 0.2,
+            max_tokens: 2000,
+            messages: [
+              { role: "system", content: `${TRANSFORM_PROMPT[body.data.transform]} Antworte nur mit dem neuen Text, ohne Einleitung.` },
+              { role: "user", content: body.data.text },
+            ],
+          }),
+        }));
       if (!res.ok) throw new Error(`Modell ${res.status}`);
       const out = (await res.json()) as { choices?: { message?: { content?: string } }[] };
       const text = (out.choices?.[0]?.message?.content ?? "").trim();
