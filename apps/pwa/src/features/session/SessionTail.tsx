@@ -102,6 +102,7 @@ import { ChangesHead, changeSummary } from "./ChangesHead.tsx";
 import { openLayer } from "../../shared/layers.ts";
 import { ChatTurns, itemFirstSeq, itemLastSeq } from "./ChatTurns.tsx";
 import { turnsOf } from "./turns.ts";
+import { showActorSuffix } from "./actor-display.ts";
 import { PinnedPrompt } from "./PinnedPrompt.tsx";
 import {
   lastUserPrompt,
@@ -1158,6 +1159,8 @@ export function SessionTail({
     [filtered, backgroundTile],
   );
   const hiddenOlder = filtered.length - visible.length;
+  // BUG-0281: Das Geräte-Kurzlabel erscheint nur, wenn mehrere verschiedene Akteure im Spiel sind.
+  const chatMultiActor = useMemo(() => showActorSuffix(visible.map((e) => (e.payload as { actor?: string }).actor)), [visible]);
   // EPIC-P43 T43.4: der Chat in Zügen — aus dem ungefilterten Strom, damit Schritte nicht verloren gehen.
   const live = status === "working" || status === "starting";
   const chat = useChatEvents(shownEvents, api);
@@ -2648,6 +2651,7 @@ export function SessionTail({
                         expanded={expanded.has(e.seq)}
                         onToggleExpand={() => toggleExpanded(e.seq)}
                         sessionRef={sessionRef}
+                        showActor={chatMultiActor}
                         toolResult={
                           e.type === "tool_use"
                             ? toolResultByToolId.get(toolIdOf(e) ?? "")
