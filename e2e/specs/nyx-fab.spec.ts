@@ -219,6 +219,46 @@ test.describe("Nyx-FAB (Speech-to-Text)", () => {
     }
   });
 
+  test("BUG-0283: intern scrollende Übersichtsliste — der FAB verdeckt kein Karten-Bedienelement", async ({ app, hub }) => {
+    await app.setViewportSize({ width: 390, height: 844 });
+    for (let i = 0; i < 18; i++) await hub.createSession({ adapter: "dummy", prompt: `Übersicht ${i + 1}` });
+    await app.goto(`${hub.origin}/#/`);
+    const list = app.locator(".dashboard");
+    await expect.poll(() => list.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(400);
+    await expect(app.locator('[data-testid=nyx-fab]')).toBeVisible();
+    // Erstumbruch abwarten: die Sessions wandern nach „fertig“ in die Ruhig-Gruppe —
+    // ohne den Fix zieht genau das Karten ohne jedes Event unter den FAB.
+    await app.waitForTimeout(2600);
+
+    const max = await list.evaluate((el) => el.scrollHeight - el.clientHeight);
+    for (let y = 0; y <= max; y += 60) {
+      await list.evaluate((el, y) => el.scrollTo(0, y), y);
+      await app.waitForTimeout(240); // der FAB misst nach dem Nachrollen (Entprellung 140 ms)
+      const verdeckt = await app.evaluate(() => {
+        const listEl = document.querySelector(".dashboard");
+        if (!listEl) return ["Liste fehlt"];
+        const clip = listEl.getBoundingClientRect();
+        const treffer: string[] = [];
+        for (const el of Array.from(listEl.querySelectorAll<HTMLElement>('input, select, textarea, button, a[href], summary'))) {
+          if (el.closest("[data-nyx-fab]")) continue;
+          const c = el.getBoundingClientRect();
+          if (c.width === 0 || c.height === 0) continue;
+          const cx = c.x + c.width / 2;
+          const cy = c.y + c.height / 2;
+          // Nur Controls, die sichtbar in der Liste stehen — unter dem Dockrand
+          // Geclipptes ist unerreichbar, aber vom FAB unberührt.
+          if (cy < clip.top || cy > clip.bottom || cy < 0 || cy > window.innerHeight) continue;
+          const hit = document.elementFromPoint(cx, cy);
+          if (!hit) continue;
+          if (hit === el || el.contains(hit) || hit.contains(el)) continue; // Tipp kaeme an
+          treffer.push(`${el.className || el.tagName} -> ${hit.className || hit.tagName}`);
+        }
+        return treffer;
+      });
+      expect(verdeckt, `Listen-Scrollpunkt ${y} px`).toEqual([]);
+    }
+  });
+
   test("BUG-0201: am PC sitzt der FAB nicht ueber dem Chat-Verlauf", async ({ app, hub }) => {
     await app.setViewportSize({ width: 1280, height: 800 });
     const id = await hub.createSession({ adapter: "dummy" });

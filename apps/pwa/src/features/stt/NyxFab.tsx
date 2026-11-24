@@ -141,14 +141,22 @@ export function NyxFab() {
     };
 
     pruefen();
-    window.addEventListener("scroll", spaeter, { passive: true });
+    // BUG-0283: Scroll-Events blubbern nicht — die Übersichtsliste (BUG-0099) und der
+    // Chat-Verlauf scrollen intern, window-scroll feuert dort nie. Capture am Dokument
+    // sieht jeden Scroller; der MutationObserver fängt datengetriebene Umbrüche
+    // (Abschnittswechsel, wachsender Verlauf), die ohne jedes Event Karten unter den
+    // FAB schieben. Beides läuft in dieselbe Entprellung.
+    document.addEventListener("scroll", spaeter, { capture: true, passive: true });
+    const umbreche = new MutationObserver(spaeter);
+    umbreche.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("resize", spaeter);
     window.addEventListener("hashchange", spaeter);
     const timers = [200, 800, 2000].map((ms) => window.setTimeout(pruefen, ms));
     return () => {
-      if (wartend) clearTimeout(wartend);
+      clearTimeout(wartend);
       timers.forEach(clearTimeout);
-      window.removeEventListener("scroll", spaeter);
+      umbreche.disconnect();
+      document.removeEventListener("scroll", spaeter, { capture: true });
       window.removeEventListener("resize", spaeter);
       window.removeEventListener("hashchange", spaeter);
     };
