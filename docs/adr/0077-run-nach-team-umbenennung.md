@@ -1,6 +1,6 @@
 # ADR-0077 — Run→Team: Orchestrierungs-Fläche umbenennen, Journal migrieren, Modell-Allowlist erzwingen
 
-**Status:** akzeptiert · **Betrifft:** `packages/contracts/src/orchestration/`,
+**Status:** akzeptiert; Benennung (§1, §2) ab T83.1 ersetzt durch [ADR-0123](0123-swarm-und-team.md) · **Betrifft:** `packages/contracts/src/orchestration/`,
 `packages/core/src/modules/orchestration/`, `apps/hub/src/modules/orchestration/`,
 `apps/hub/src/platform/policy.ts`, `packages/contracts/src/approvals/policy.ts`,
 `packages/contracts/src/automations/automation.ts`, `apps/hubctl/src/automations.ts`,
