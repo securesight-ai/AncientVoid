@@ -98,7 +98,7 @@ describe("Bildvorschläge aus Shell-Ausgaben", () => {
   });
 
   it("ohne eigene Sitzung gibt es nichts zu zeigen", () => {
-    expect(toolImageHits(schale("ls"), ergebnis("bild.png"), undefined)).toEqual({ direkt: [], vorschlaege: [] });
+    expect(toolImageHits(schale("ls"), ergebnis("bild.png"), undefined)).toEqual({ direkt: [], vorschlaege: [], nichtGezeigt: 0 });
   });
 
   // Fallstrick am 23.11.2026 live erwischt: `cd` verschiebt die Wurzel, über die
@@ -123,6 +123,31 @@ describe("Bildvorschläge aus Shell-Ausgaben", () => {
     expect(fremd.vorschlaege).toEqual([]);
     expect(toolImageHits(schale("cd sub && ls -1 *.png"), ergebnis("bild.png"), sitzung).vorschlaege).toEqual([]);
     expect(toolImageHits(schale("cd ~ && ls -1 *.png"), ergebnis("bild.png"), sitzung).vorschlaege).toEqual([]);
+  });
+
+  it("cd-artige Wörter in Argumenten verschieben die Wurzel nicht", () => {
+    const treffer = toolImageHits(
+      schale("sed 's/cd alt/cd neu/' notizen.md && ls -1 *.png"),
+      ergebnis("bild.png"),
+      sitzung,
+    );
+    expect(treffer.vorschlaege.map((b) => [b.target, b.path])).toEqual([["session=s1", "bild.png"]]);
+  });
+
+  it("Menge wird nicht versteckt: sechs Chips, der Rest als Zahl", () => {
+    const namen = Array.from({ length: 9 }, (_, i) => `bild${i + 1}.png`).join("\n");
+    const treffer = toolImageHits(schale("ls -1 *.png"), ergebnis(namen), sitzung);
+    expect(treffer.vorschlaege).toHaveLength(6);
+    expect(treffer.nichtGezeigt).toBe(3);
+  });
+
+  it("zwei gleich benannte Dateien mit unterschiedlichem Ziel sind getrennte Chips", () => {
+    const treffer = toolImageHits(
+      schale("ls -1 /home/kaib/repos/AncientVoid/bild.png"),
+      ergebnis("bild.png\n/home/kaib/repos/AncientVoid/bild.png"),
+      sitzung,
+    );
+    expect(treffer.vorschlaege.map((b) => b.target)).toEqual(["session=s1", "project=%2Fhome%2Fkaib%2Frepos%2FAncientVoid"]);
   });
 
   it("mehrere cd in einer Zeile: das letzte bestimmt die Wurzel", () => {

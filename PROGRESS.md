@@ -1,7 +1,51 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
 
-## 23.11.2026 Nacht — cd-Fallstrick der Bildchips (PR #367)
+## 24.11.2026 — Nachschau über die eigenen Änderungen (PR #…)
+
+Vier echte Mängel in dem, was ich am Vorabend gebaut habe — alle behoben, nicht nur
+gefunden:
+
+1. **Chips nach Pfad, nicht nach Ziel geschaltet.** Der offene Zustand hing an
+   `path`, die Chips aber an `target/path`: `bild.png` im Projekt und `bild.png` im
+   Sitzungsordner öffneten sich immer zusammen. Jetzt ein Schlüssel (`bildpfad()`).
+2. **Einhängen zu früh gerechnet.** `zeigeBlockVollstaendig()` lief im Klick-Handler,
+   also vor dem Rendern — die Höhe des gerade erschienenen Bilds fehlte, die
+   Bildunterschrift rutschte erneut unters Eingabefeld. Jetzt nach dem Rendern
+   (`useEffect` auf dem offenen Zustand, beim Laden der Seite aus) **und** nach dem
+   Bild (`nachLaden`). Der erste Screenshot sah nur gut aus, weil schon ein anderes
+   Bild offen war.
+3. **Stillschweigend gekürzt.** Eine `ls` mit 40 Namen zeigte 6 Chips und schwieg zu
+   den anderen 34. Jetzt `nichtGezeigt` + „… {count} weitere Dateien nicht
+   aufgelistet".
+4. **Echo-Erkennung nach Präfix** (`id.startsWith("av")`) hätte auch ein echtes
+   Ereignis treffen können. Jetzt: nur Ids, die dieser Adapter wirklich vergeben hat.
+   Zusätzlich: `cd`-Erkennung verlangt eine Befehlsposition (`sed 's/cd alt/cd neu/'`
+   verschob die Wurzel sonst), Klammer/Komma am `cd`-Ziel werden abgeschnitten.
+
+Tests: `apps/pwa/test/features/tool-image.test.ts` 18/18 (neu: Argumente mit `cd`,
+Kürzungszahl, zwei gleich benannte Ziele), `packages/adapters/pi/test` 67/67 (neu:
+fremde `av`-Id bleibt ein Ereignis), `npm run typecheck` und `check:i18n` leer.
+
+**Zwei weitere Funde im Browser-Check (Kratz-Hub :7399, neue Fixture mit 9 Namen und
+zwei gleich benannten Dateien):**
+* Kaputte Bilddatei: Route liefert 200, Bytes kommen an (1270 B, `image/png`), aber der
+  Browser kann nicht dekodieren → bisher ein gebrochenes Bildkästchen ohne jeden Hinweis.
+  Jetzt `onError` am `<img>`: kein Kasten, dafür „Bild kam an, ließ sich aber nicht
+  anzeigen (beschädigte Datei?)". (Die Fixture selbst war porös — IHDR-Länge 17 statt 13,
+  erzeugt aus einem Shell-Herodoc; das ist ein Lehrstück: erst die Bytes prüfen, dann der
+  UI einen Fehler unterschieben.)
+* Nach dem ersten Öffnen blieb der Block 6 px zu tief (Bildhöhe wächst nach dem
+  Einhängen). Jetzt additionally `onLoad` → Block wird nach dem Dekodieren neu
+  eingehängt. Gemessen nachher: Block 189–368 bei Rahmen 155–436 (68 px Abstand),
+  beide Bildunterschriften per `elementFromPoint` erreichbar.
+
+**Bewusst offen gelassen (Limitation, nicht Fehler):** die Wurzel einer
+Schalen-Ausgabe wird als **eine** Kette berechnet — `cd A && (cd B && ls); ls` nennt
+Namen aus zwei Wurzeln, die sich nicht sauber trennen lassen. Ebenso `pushd`/`popd`.
+Beide Fälle laufen ins Weglassen (keine Vorschau), nicht in eine falsche Vorschau.
+
+## ## 23.11.2026 Nacht — cd-Fallstrick der Bildchips (PR #367)
 
 **Nachweis aus eigener Live-Sitzung.** 7d3df295 hat als Arbeitsverzeichnis
 `/home/kaib/repos/ancientvoid-suche`; der Befehl
@@ -302,6 +346,18 @@ noch auf älterem Stand und lehnt dort weiterhin ab — Flotten-Änderungen wirk
 erst, wenn **beide** Hubs denselben main haben.
 
 ## Erledigt (verifiziert)
+- **Shell endet an der Statusleiste, Rauszoomen bis 50 % möglich (BUG-0279).**
+   Am PC reichte die Shell bis zum Fensterboden und legte sich 28 px über die
+   fixe Statusleiste; die Zoom-Untergrenze war deshalb bei 70 % versüßt
+   (`SCALE_MIN`). Neu: Token `--status-bar-h`, Abzug am Container
+   (`#app:has(.split)` ab 1280 px: `calc(100dvh / var(--ui-zoom) - var(--status-bar-h))`),
+   Untergrenze 0.5, Hinweis in den Einstellungen. Belege: `ui-scale.test.ts`
+   6 passed (zuerst rot: `expected 0.7 to be 0.5`), `oberflaeche.spec.ts`
+   13 passed (Grenzen 50/200 %), `zoom-flaechen.spec.ts` Matrix auf fünf Stufen
+   (50/70/100/130/200 %) — 11 passed, Vorher war dieser Spec auf Windows schon
+   ohne Änderung rot (Shell-Unterkante 720 ≠ Boden 692). Offene Folgethemen:
+   BUG-0280 (eigene Nachricht nach dem Senden nicht im Chat) und BUG-0281
+   (Gerätekennung „Du · handy“ am Desktop, weil derselbe Token genutzt wird).
 - **Eingefügte Bilder erreichen den Agenten jetzt als Bild, nicht als Vermerk
   (BUG-0267).** Der Adapter `pi` sagt `images:false`, der Hub legte ihm deshalb
   nur den ausgelesenen Text vor — und ohne OCR stand dort nur „(kein Text

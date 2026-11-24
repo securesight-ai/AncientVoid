@@ -12,7 +12,9 @@ import { registerShortcut } from "../shared/shortcuts/registry.ts";
 const SCALE_KEY = "ancientvoid.uiScale";
 const MOTION_KEY = "ancientvoid.ctxMotion";
 
-export const SCALE_MIN = 0.7;
+export const SCALE_MIN = 0.5;
+/** Untergrenze nach Nutzerfund 24.11.2026: am PC-Fenster waren 70 % zu gross —
+ * die Spalten passten nicht. 50 % ist die bewusste Grenze, kleiner wird unleserlich. */
 export const SCALE_MAX = 2;
 export const SCALE_STEP = 0.1;
 /** Accumulated wheel delta that makes one step; a trackpad pinch sends many small ones. */

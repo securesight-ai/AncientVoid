@@ -7,8 +7,7 @@ import type { ComponentChildren } from "preact";
 import { InterruptedBanner } from "./InterruptedBanner.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 import { readTailScroll, writeTailScroll } from "./tail-scroll.ts";
-import { sessionHash, fileHash, pageHash } from "../../app/route.ts";
-import { popView } from "../../shared/nav-history.ts";
+import { sessionHash, fileHash } from "../../app/route.ts";
 import { registerShortcut } from "../../shared/shortcuts/registry.ts";
 import {
   sourcesBlock,
@@ -157,6 +156,12 @@ const READING_TABS: ReadonlySet<string> = new Set([
   "git",
   "datei",
 ]);
+
+/** `workspace.*`-Art eines Event-Payloads — null ohne Art. main_sync zählt aufruferseitig nicht. */
+function workspaceKindOf(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null || !("kind" in payload)) return null;
+  return typeof payload.kind === "string" ? payload.kind : null;
+}
 
 /** EPIC-P18: set when this view is one tile of the desktop workspace —
  * several SessionTails then share one page. */
@@ -1052,6 +1057,20 @@ export function SessionTail({
     }
     return seq;
   }, [events]);
+  // Kleinkram-Regel 2: „Umgebung“ bleibt weg, wenn die Session nachweislich
+  // keinen Workspace hat — das geladene Fenster reicht bis zum Sessionstart
+  // (events[0].seq <= 1) und kein workspace.*-Event existiert (main_sync-
+  // Events zählen nicht: sie laufen auch ohne Manifest). Bei langen Sessions,
+  // deren Anfang noch nicht geladen ist, bleibt der Eintrag ehrlich stehen.
+  const workspacePossible = useMemo(
+    () =>
+      (events[0]?.seq ?? 1) > 1 ||
+      events.some((e) => {
+        const kind = workspaceKindOf(e.payload);
+        return kind !== null && kind.startsWith("workspace.") && !kind.startsWith("workspace.main_sync_");
+      }),
+    [events],
+  );
   // T21.3: measured turns of the same adapter/model — fetched when a turn starts, never guessed client-side.
   const [estimate, setEstimate] = useState<RunEstimate | null>(null);
   useEffect(() => {
@@ -1716,12 +1735,16 @@ export function SessionTail({
       show: () => setActiveTab("forge"),
     },
     { id: "suche", label: t("session.search"), icon: "suche", show: showSucheTab },
-    {
-      id: "umgebung",
-      label: t("session.environment"),
-      icon: "umgebung",
-      show: showUmgebungTab,
-    },
+    ...(workspacePossible
+      ? [
+          {
+            id: "umgebung" as Tab,
+            label: t("session.environment"),
+            icon: "umgebung" as TabIconName,
+            show: showUmgebungTab,
+          },
+        ]
+      : []),
   ];
   const inMore = MORE.some(
     (m) => m.id === activeTab && !MAIN.some((t) => t.tabs.includes(m.id)),
@@ -1853,20 +1876,19 @@ export function SessionTail({
           </div>
         )}
         <div>
-          {/* T8.5: back, what this is, Stop apart from Senden, the rest in ⋯ */}
+          {/* T8.5: Kopf — Übersicht-Knopf, Titel, Stop abseits von Senden,
+           * Rest in ⋯. BUG-0282: statt Historie-Rücksprung (popView) führt
+           * der Knopf am Handy deterministisch in die Übersicht; der Stack
+           * pendelte sonst zwischen Sessions. */}
           <div class={`topbar session-topbar${tile ? " tile-top" : ""}`}>
             {tile?.head?.start}
             <Button
               aria-label={t("app.to_overview")}
               title={t("app.to_overview")}
-              onClick={() => {
-                // Navigations-Historie: exakt die zuvor sichtbare Ansicht
-                // wiederherstellen; ohne Vorgeschichte die Übersicht.
-                location.hash = popView() ?? pageHash("dashboard");
-              }}
+              onClick={() => onNavigate("dashboard")}
               class="back-btn"
             >
-              ←
+              <TabIcon name="uebersicht" />
             </Button>
             <div class="session-top-main">
               {renaming ? (
