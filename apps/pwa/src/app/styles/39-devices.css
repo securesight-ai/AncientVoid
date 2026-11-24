@@ -8,8 +8,11 @@
 
 .device-frame { max-height: 56dvh; width: auto; max-width: 100%; align-self: center; cursor: crosshair; user-select: none; background: var(--content-terminal); border-radius: 8px; }
 
-.device-install { border: 1px solid var(--bg-chip); border-radius: 8px; padding: 4px 8px; }
-.device-install summary { cursor: pointer; }
+.device-setup { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--bg-chip); border-radius: 8px; padding: 6px 8px; }
+.device-setup pre { max-height: 24dvh; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+.device-setup details summary { cursor: pointer; }
 
+ .device-install { border: 1px solid var(--bg-chip); border-radius: 8px; padding: 4px 8px; }
+ .device-install summary { cursor: pointer; }
 .device-logs pre,
 .device-tree pre { max-height: 40dvh; overflow: auto; white-space: pre-wrap; word-break: break-all; }
