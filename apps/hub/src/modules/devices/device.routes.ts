@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { AttachmentId, DeviceActionInput, DeviceTestCase } from "@ancientvoid/contracts";
+import { AttachmentId, DeviceActionInput, DeviceAvdCreateInput, DeviceTestCase } from "@ancientvoid/contracts";
 import { DeviceError } from "@ancientvoid/core";
 import type { RouteContext } from "../../route-context.ts";
 
@@ -46,6 +46,35 @@ export function registerDeviceRoutes(app: FastifyInstance, ctx: RouteContext): v
   };
 
   app.get("/api/devices", async () => devices.status());
+
+  // ---- In-App-Setup (2026-11-24): kompletter Simulator-Setup-Ablauf aus der PWA -------------------------------
+
+  app.get("/api/devices/setup", async () => devices.setup.status());
+
+  app.post("/api/devices/setup", async (req, reply) => {
+    if (!humanOnly(req, reply)) return;
+    const sdkRoot = (req.body as { sdkRoot?: unknown } | null)?.sdkRoot;
+    if (typeof sdkRoot !== "string" || sdkRoot.trim().length < 1 || sdkRoot.length > 4096) return reply.code(400).send({ error: "sdkRoot (absoluter Zielordner) erforderlich" });
+    const started = await devices.setup.start(sdkRoot.trim());
+    if (!started.started) {
+      const busy = started.status.state === "running";
+      return reply.code(busy ? 409 : 400).send({ error: busy ? "Setup läuft bereits." : started.status.reason ?? "Setup nicht gestartet.", code: busy ? "busy" : undefined });
+    }
+    return reply.code(202).send(started.status);
+  });
+
+  app.get("/api/devices/images", async () => devices.listImages());
+
+  app.post("/api/devices/avds", async (req, reply) => {
+    if (!humanOnly(req, reply)) return;
+    const parsed = DeviceAvdCreateInput.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: `Ungültiger AVD-Auftrag: ${parsed.error.issues[0]?.path.join(".") || "Wurzel"} — ${parsed.error.issues[0]?.message ?? "?"}` });
+    try {
+      return reply.code(201).send(await devices.createAvd(parsed.data));
+    } catch (err) {
+      return fail(reply, err);
+    }
+  });
 
   app.post("/api/devices/start", async (req, reply) => {
     if (!humanOnly(req, reply)) return;

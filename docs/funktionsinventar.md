@@ -184,7 +184,7 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S62 | Session per Link wieder öffnen | Deeplink | — | spec:deeplink.spec.ts |
 | S63 | Wiederanlauf nach Hub-Neustart | — | — | spec:recovery.spec.ts |
 | S64 | Leseposition bleibt beim Scrollen und Tippen | Chat | T43.4 | spec:session-scroll.spec.ts |
-| S65 | Android-Testgeräte: Liste, Start/Stop, Lease, Standbild (EPIC-P42) | „Mehr“ → „Geräte“ | T43.5 | inventar |
+| S65 | Android-Testgeräte: Liste, Start/Stop, Lease, Standbild (EPIC-P42); In-App-Setup: SDK einrichten (JDK, cmdline-tools, Lizenzen, Pakete) und AVD anlegen — komplett ohne CLI (2026-11-24) | „Mehr“ → „Geräte“ | T43.5, In-App-Setup 2026-11-24 | spec:device-setup.spec.ts |
 | S66 | Android-Testgeräte in eigenes Fenster (PC) | Geräte → „⧉“ | T43.7 | inventar |
 | S67 | Android-Testgeräte bedienen: Tippen, Wischen, Tasten, Ausrichtung, URL (mit Lease) | Geräte-Panel | — | spec:android-device.spec.ts |
 | S68 | Chat in Zügen: Arbeit gefaltet, Schritte mit Ein- und Ausgabe | Reiter „Chat“ | T43.4 | spec:chat-zuege.spec.ts |

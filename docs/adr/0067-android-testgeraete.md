@@ -61,6 +61,30 @@ AV-eigenen AVD `av-test` (Pixel-6-Profil, Android 15/API 35, google_apis/x86_64,
     ungefragte Downloads). Der Hub erhält die Pfade per Config `devices.sdkRoot`/`devices.avdHome` (env-Fallback
     `ANDROID_SDK_ROOT`), AVD-Home ist AV-eigen (`av-avd`), Allowlist `devices.avdAllowlist` optional.
 
+### Nachtrag 2026-11-24: In-App-Setup — der komplette Setup-Ablauf in der PWA
+
+Der manuelle Installationsauftrag aus T42.1 wird durch einen geführten Ablauf in der PWA ersetzt
+(Nutzerauftrag „Simulator-Setup ohne externe/manuelle Zwischenschritte“):
+
+- **Phasen fest und sichtbar:** `jdk` (Temurin 21, angepinnt über Adoptium-API — nur wenn kein
+  System-Java), `tools` (cmdline-tools, angepinnte Google-Zip), `licenses`, `packages`
+  (`platform-tools`, `emulator`, `system-images;android-35;google_apis;x86_64`). Download-Quellen
+  und Paketliste sind per Config `devices.setup.{jdkUrl,toolsUrl,packages}` übersteuerbar
+  (Spiegel/Offline, `file://` unterstützt); Standard sind die angepinnten URLs — Downloads laufen
+  ausschließlich auf ausdrücklichen Klick im Geräte-Panel (Menschen-only wie alles Schreibende).
+- **K7:** Setup-Zustand faltet aus `data/devices/setup.jsonl`; ein `running` ohne lebenden Lauf wird
+  nach Hub-Neustart `failed` (nie automatisch fortgesetzt). Die SDK-Wurzel des letzten erfolgreichen
+  Setups gilt nach Neustart als Fallback hinter Config/env. **K5:** Status ist eine kleine
+  Byte-Antwort mit gekapptem, maskiertem Log-Schwanz — nie ein Event.
+- **AVD-Anlage in der PWA:** `avdmanager create avd` über feste argv-Vorlage (Name, installiertes
+  System-Image, Geräteprofil; `no` auf die Hardware-Profil-Rückfrage über stdin). Installierte
+  Images listet der Hub aus `<sdkRoot>/system-images`.
+- **Verträge/Routen:** `DeviceSetupStatus`, `DeviceAvdCreateInput`, `DeviceImageList` in
+  `contracts/src/devices/devices.ts`; Routen `GET/POST /api/devices/setup`, `GET /api/devices/images`,
+  `POST /api/devices/avds` (alle schreibenden Menschen-only, Agent-Token 403).
+- **E2E:** `e2e/specs/device-setup.spec.ts` fährt den ganzen Ablauf gegen Spiegel-Archive mit
+  Fake-CLIs (kein Cloud-Egress); die echte AVD-Abnahme bleibt wie bisher env-ge-gated.
+
 ### Orca-Übernahme (Planungsgrundlage 2026-11-08)
 
 Nach Review von [stablyai/orca](https://github.com/stablyai/orca) @ `bdeb388d75120b6e36dd619291286de0cc9aae02`

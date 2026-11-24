@@ -111,8 +111,17 @@ export const HubConfig = z.object({
       avdHome: z.string().optional(),
       avdAllowlist: z.array(z.string().min(1).max(64)).max(10).default([]),
       maxEmulators: z.number().int().min(1).max(2).default(1),
+      /** In-App-Setup (2026-11-24): Download-Quellen und Paketliste — Overrides für
+       * Spiegel/Offline-Installationen; ohne Angabe gelten die angepinnten Defaults. */
+      setup: z
+        .object({
+          jdkUrl: z.string().url().optional(),
+          toolsUrl: z.string().url().optional(),
+          packages: z.array(z.string().min(1).max(120)).max(8).optional(),
+        })
+        .default({}),
     })
-    .default({ avdAllowlist: [], maxEmulators: 1 }),
+    .default({ avdAllowlist: [], maxEmulators: 1, setup: {} }),
   /** T7.10: local OCR — a tessdata dir with extra languages (e.g. deu),
    * set up by scripts/setup-ocr.sh without root. */
   ocr: z.object({ tessdataDir: z.string().optional() }).default({}),

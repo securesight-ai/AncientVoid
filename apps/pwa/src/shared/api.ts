@@ -3,7 +3,7 @@ import { errorText } from "./i18n/index.ts";
 import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity } from "@ancientvoid/contracts";
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
-import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, HostMetricRange, HostMetricsDetail, HostMetricsHistory, HostMetricsReport, InferenceAskResult, InferenceModelStatus, InferenceModelView, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, DeviceAction, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
+import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, HostMetricRange, HostMetricsDetail, HostMetricsHistory, HostMetricsReport, InferenceAskResult, InferenceModelStatus, InferenceModelView, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, AvdDescriptor, DeviceAction, DeviceSetupStatus, DeviceImageList, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
 export type { TerminalTarget };
 import type { TtsSettingsPatch, TtsSettingsView, TtsStatusResponse } from "@ancientvoid/contracts";
 import type { SessionTextSearchResponse, TranscriptRole, UnifiedSearchResponse } from "@ancientvoid/contracts";
@@ -1311,6 +1311,11 @@ function createHubApi(P: (path: string) => string) {
   browserFeedbackSend: (id: string, input: BrowserFeedbackInput) => api<{ ok: boolean }>(P(`/api/sessions/${id}/browser/feedback/send`), { method: "POST", body: JSON.stringify(input) }),
   /** EPIC-P42 (ADR-0067): Android-Testgeräte (host-lokal; Frames/Logs/Bäume sind Bytes mit Grenzen). */
   devicesStatus: () => api<DeviceStatus>(P("/api/devices")),
+  /** In-App-Setup (2026-11-24): SDK-Installation und AVD-Anlage aus der PWA. */
+  deviceSetupStatus: () => api<DeviceSetupStatus>(P("/api/devices/setup")),
+  deviceSetupStart: (sdkRoot: string) => api<DeviceSetupStatus>(P("/api/devices/setup"), { method: "POST", body: JSON.stringify({ sdkRoot }) }),
+  deviceImages: () => api<DeviceImageList>(P("/api/devices/images")),
+  deviceCreateAvd: (input: { name: string; image: string; profile: string }) => api<AvdDescriptor>(P("/api/devices/avds"), { method: "POST", body: JSON.stringify(input) }),
   deviceStart: (avd: string, sessionId: string | null) => api<unknown>(P("/api/devices/start"), { method: "POST", body: JSON.stringify({ avd, ...(sessionId ? { sessionId } : {}) }) }),
   deviceStop: (serial: string) => api<{ serial: string; stopped: boolean }>(P("/api/devices/stop"), { method: "POST", body: JSON.stringify({ serial }) }),
   deviceLease: (serial: string, sessionId: string | null) => api<{ serial: string; generation: number }>(P("/api/devices/lease"), { method: "POST", body: JSON.stringify({ serial, ...(sessionId ? { sessionId } : {}) }) }),

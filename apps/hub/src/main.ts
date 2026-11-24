@@ -360,6 +360,9 @@ async function main(): Promise<void> {
     ...(config.devices.avdHome ? { avdHome: config.devices.avdHome } : {}),
     avdAllowlist: config.devices.avdAllowlist,
     maxEmulators: config.devices.maxEmulators,
+    ...(config.devices.setup.jdkUrl || config.devices.setup.toolsUrl || config.devices.setup.packages
+      ? { setup: { ...(config.devices.setup.jdkUrl ? { jdkUrl: config.devices.setup.jdkUrl } : {}), ...(config.devices.setup.toolsUrl ? { toolsUrl: config.devices.setup.toolsUrl } : {}), ...(config.devices.setup.packages ? { packages: config.devices.setup.packages } : {}) } }
+      : {}),
     isActive: (id) => {
       const rec = sessions.get(id);
       return Boolean(rec) && !rec!.archived && !["stopped", "error"].includes(rec!.status);

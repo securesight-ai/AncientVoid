@@ -197,3 +197,51 @@ export const DeviceTestRun = z.object({
   note: z.string().nullable(),
 });
 export type DeviceTestRun = z.infer<typeof DeviceTestRun>;
+
+// ---- In-App-Setup (2026-11-24): JDK, cmdline-tools, Lizenzen, Pakete — der komplette
+// Simulator-Setup-Ablauf läuft in der PWA, ohne manuelle CLI-Schritte. Downloads nur auf
+// ausdrücklichen Klick (EPIC-P42 §2 „ungefragte Downloads“ bleibt Out-of-Scope). --------
+
+/** Angepinnte Download-Quellen; Config-Override (`devices.setup.*`) erlaubt Spiegel/Offline-Installationen. */
+export const DEVICE_SETUP_TOOLS_URL = "https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip";
+export const DEVICE_SETUP_JDK_URL = "https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jdk/hotspot/normal/eclipse";
+export const DEVICE_SETUP_PACKAGES = ["platform-tools", "emulator", "system-images;android-35;google_apis;x86_64"] as const;
+/** Standard-System-Image und Geräteprofil für neue AVDs (ADR-0067: API 35, Pixel-6-Profil). */
+export const DEVICE_DEFAULT_IMAGE = "system-images;android-35;google_apis;x86_64";
+export const DEVICE_DEFAULT_PROFILE = "pixel_6";
+export const DEVICE_AVD_PROFILES = ["pixel_6", "pixel_7", "pixel_tablet"] as const;
+
+/** K5: Status-Antwort bleibt klein — der Log-Schwanz ist gekappt, nie ein Event. */
+export const DEVICE_SETUP_TAIL_MAX_CHARS = 4_000;
+export const DEVICE_SETUP_DOWNLOAD_TIMEOUT_MS = 20 * 60_000;
+export const DEVICE_SETUP_STEP_TIMEOUT_MS = 15 * 60_000;
+
+export const DEVICE_SETUP_PHASES = ["jdk", "tools", "licenses", "packages"] as const;
+export type DeviceSetupPhase = (typeof DEVICE_SETUP_PHASES)[number];
+
+export const DeviceSetupStatus = z.object({
+  state: z.enum(["idle", "running", "done", "failed"]),
+  /** Aktueller (running) oder zuletzt gelaufener Schritt; `none` = noch nie gelaufen. */
+  phase: z.enum([...DEVICE_SETUP_PHASES, "none"]),
+  sdkRoot: z.string().nullable(),
+  /** Vorschlag für das Eingabefeld (AV-eigenes Verzeichnis unter dem Datenverzeichnis). */
+  suggestedSdkRoot: z.string(),
+  startedAt: z.string().nullable(),
+  updatedAt: z.string(),
+  /** fail loud: Grund im Zustand, nie still. */
+  reason: z.string().nullable(),
+  tail: z.string().max(DEVICE_SETUP_TAIL_MAX_CHARS),
+});
+export type DeviceSetupStatus = z.infer<typeof DeviceSetupStatus>;
+
+/** Neuer AVD aus der PWA: Name, installiertes System-Image, Geräteprofil — feste argv-Vorlage. */
+export const DeviceAvdCreateInput = z.object({
+  name: z.string().regex(/^[a-z][a-z0-9_-]{1,31}$/, "AVD-Name: klein beginnend, dann a-z, 0-9, -, _ (2–32 Zeichen)"),
+  image: z.string().min(3).max(120),
+  profile: z.string().min(2).max(64),
+});
+export type DeviceAvdCreateInput = z.infer<typeof DeviceAvdCreateInput>;
+
+/** Installierte System-Images (Verzeichnisliste unter <sdkRoot>/system-images). */
+export const DeviceImageList = z.object({ images: z.array(z.string().min(3).max(120)) });
+export type DeviceImageList = z.infer<typeof DeviceImageList>;
