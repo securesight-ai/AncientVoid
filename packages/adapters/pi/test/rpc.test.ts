@@ -42,10 +42,12 @@ describe("pi rpc — JSONL-Gespräch", () => {
     // Der tmux-Puffer spielt nach einem Hub-Neustart genau diese Zeile zurück.
     proc.schreiben(`${JSON.stringify({ id: "av1", type: "get_state" })}\n`);
     proc.schreiben(`${JSON.stringify({ type: "agent_start" })}\n`);
+    // Eine Id, die wir nie vergeben haben, ist kein Echo — auch nicht mit `av` davor.
+    proc.schreiben(`${JSON.stringify({ id: "av77", type: "agent_start" })}\n`);
     proc.schreiben(`${JSON.stringify({ id: "av1", type: "response", command: "get_state", success: true, data: { sessionId: "pi-1" } })}\n`);
     const antwort = await offen;
     expect(antwort.success).toBe(true);
-    expect(empfangen.map((s) => s.type)).toEqual(["agent_start"]);
+    expect(empfangen.map((s) => s.type)).toEqual(["agent_start", "agent_start"]);
   });
 
   it("ordnet Antworten anhand der Id, auch in anderer Reihenfolge", async () => {
