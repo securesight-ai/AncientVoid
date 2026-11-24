@@ -22,6 +22,8 @@ export function createPiRpc(proc: WorkerProcess, onRecord: (record: RpcRecord) =
   let puffer = "";
   let zaehler = 0;
   const offen = new Map<string, { loesen: (r: RpcResponse) => void; wachter?: ReturnType<typeof setTimeout> }>();
+  /** Alle Ids, die **dieser** Adapter je vergeben hat — Echo-Erkennung ohne Raten. */
+  const eigeneIds = new Set<string>();
 
   proc.onStdout((chunk: string) => {
     puffer += chunk;
@@ -42,8 +44,10 @@ export function createPiRpc(proc: WorkerProcess, onRecord: (record: RpcRecord) =
       // Übernehmen eines tmux-Workers nach einem Hub-Neustart: der Puffer enthält
       // die vorher eingetippte Anfrage, und die landete als
       // `pi: unbekannter Stream-Typ "get_state"` im Chat (Fund 2026-11-23, 21:16).
-      // Eigene Ids tragen das Präfix `av`; pi erzeugt UUIDs und `call_…`.
-      if (typeof datensatz.id === "string" && datensatz.id.startsWith("av") && datensatz.type !== "response") {
+      // Gesehen wird an der **vergebenen Id**, nicht am Präfix: ein Präfix wie `av`
+      // könnte theoretisch auch einer echten Ereignis-Id passen (pi sendet Ids als
+      // UUIDs und `call_…`, aber verlässlich ist das nicht). Nur eigene Ids sind sicher.
+      if (typeof datensatz.id === "string" && eigeneIds.has(datensatz.id) && datensatz.type !== "response") {
         continue;
       }
       if (datensatz.type === "response") {
@@ -75,11 +79,13 @@ export function createPiRpc(proc: WorkerProcess, onRecord: (record: RpcRecord) =
 
   return {
     send: (record) => {
+      if (typeof record.id === "string") eigeneIds.add(record.id);
       proc.write(`${JSON.stringify(record)}\n`);
     },
     request: (type, extra, timeoutMs = 10_000) =>
       new Promise<RpcResponse>((loesen) => {
         const id = `av${(zaehler += 1)}`;
+        eigeneIds.add(id);
         const wachter = setTimeout(() => {
           offen.delete(id);
           loesen({ command: type, success: false, error: `pi antwortet nicht auf ${type} (${timeoutMs} ms)` });

@@ -35,8 +35,12 @@ const SCHALEN_WERKZEUGE = new Set(["bash", "shell", "exec", "exec_command", "loc
 /** Hochstens so viele Vorschläge pro Werkzeugausgabe — sonst zugemüllte Chats. */
 const MAX_VORSCHLAEGE = 6;
 
-/** `cd` in einer zusammengesetzten Schalenzeile; das **letzte** zählt. */
-const CD_IM_BEFEHL = /\bcd\s+(?:"([^"]+)"|'([^']+)'|([^\s;&|]+))/g;
+/**
+ * `cd` in einer zusammengesetzten Schalenzeile; das **letzte** zählt. Verlangt eine
+ * Befehlsposition (Zeilenanfang, `;`, `|`, `&&`, Klammer) — sonst verschluckt ein
+ * Argument wie `sed 's/cd alt/cd neu/' file && ls` ein `cd`, das nie ausgeführt wurde.
+ */
+const CD_IM_BEFEHL = /(?:^|[;&|\n\r(])\s*cd\s+(?:"([^"]+)"|'([^']+)'|([^\s;&|)]+))/g;
 
 /** Der Befehl einer Schalen-Nutzung (Schlüssel je nach Adapter verschieden). */
 function befehlAusEingabe(eingabe: unknown): string {
@@ -62,7 +66,7 @@ function ausgabeWurzel(befehl: string, ref: SessionRef): { praefix: string } | n
   let aktuell: string | undefined;
   let verschoben = false;
   for (const treffer of befehl.matchAll(CD_IM_BEFEHL)) {
-    const ziel = (treffer[1] ?? treffer[2] ?? treffer[3] ?? "").trim();
+    const ziel = (treffer[1] ?? treffer[2] ?? treffer[3] ?? "").trim().replace(/[,;)\]]+$/, "");
     verschoben = true;
     if (!ziel || ziel === ".") continue;
     if (!ziel.startsWith("/") && aktuell === undefined) return null; // ausgehend von einer unbekannten Wurzel raten
@@ -177,30 +181,41 @@ export function toolImageHits(
   event: NormalizedEvent,
   result: NormalizedEvent | undefined,
   ref: SessionRef | undefined,
-): { direkt: ToolImageRef[]; vorschlaege: ToolImageRef[] } {
+): { direkt: ToolImageRef[]; vorschlaege: ToolImageRef[]; nichtGezeigt: number } {
   const direkt: ToolImageRef[] = [];
   const vorschlaege: ToolImageRef[] = [];
-  if (!ref) return { direkt, vorschlaege };
+  let nichtGezeigt = 0;
+  if (!ref) return { direkt, vorschlaege, nichtGezeigt };
   const gelesen = toolImageRef(event, result, ref);
   if (gelesen) direkt.push(gelesen);
-  if (!result) return { direkt, vorschlaege };
+  if (!result) return { direkt, vorschlaege, nichtGezeigt };
 
   const nutzung = event.type === "tool_use" ? (event.payload as { name?: unknown }) : undefined;
   const werkzeug = typeof nutzung?.name === "string" ? nutzung.name.toLowerCase() : "";
-  if (!SCHALEN_WERKZEUGE.has(werkzeug)) return { direkt, vorschlaege };
+  if (!SCHALEN_WERKZEUGE.has(werkzeug)) return { direkt, vorschlaege, nichtGezeigt };
 
   const wurzel = ausgabeWurzel(befehlAusEingabe((event.payload as { input?: unknown }).input), ref);
-  if (!wurzel) return { direkt, vorschlaege };
+  if (!wurzel) return { direkt, vorschlaege, nichtGezeigt };
 
-  const schon = new Set(direkt.map((b) => `${b.target}\u0000${b.path}`));
+  const schon = new Set(direkt.map((b) => bildpfad(b)));
+  const kandidaten: ToolImageRef[] = [];
   for (const kandidat of werkzeugText(result).match(BILD_PFAD_IN_TEXT) ?? []) {
     const bild = refFuerPfad(kandidat, ref, wurzel.praefix);
     if (!bild) continue;
-    const schluessel = `${bild.target}\u0000${bild.path}`;
+    const schluessel = `${bild.target}\u0000${bildpfad(bild)}`;
     if (schon.has(schluessel)) continue;
     schon.add(schluessel);
-    vorschlaege.push(bild);
-    if (vorschlaege.length >= MAX_VORSCHLAEGE) break;
+    kandidaten.push(bild);
   }
-  return { direkt, vorschlaege };
+  vorschlaege.push(...kandidaten.slice(0, MAX_VORSCHLAEGE));
+  // Eine `ls` mit 40 Namen zeigt sechs Chips — aber sie verheimlicht nicht, dass
+  // noch 34 warten. Stillschweigend kürzen wäre eine Lüge über die Datenmenge.
+  nichtGezeigt = Math.max(0, kandidaten.length - MAX_VORSCHLAEGE);
+  return { direkt, vorschlaege, nichtGezeigt };
+}
+
+/** Schlüssel für Chips: Ziel **und** Pfad, sonst öffnen zwei gleich benannte
+ * Dateien (eine im Projekt, eine im Sitzungsordner) immer zusammen. */
+export function bildpfad(bild: ToolImageRef): string {
+  return `${bild.target}\u0000${bild.path}`;
 }
