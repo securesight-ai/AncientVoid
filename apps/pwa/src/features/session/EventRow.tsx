@@ -209,6 +209,7 @@ function EventRowView({
   toolResult,
   onJump,
   sessionRef,
+  showActor = false,
 }: {
   event: NormalizedEvent;
   expanded: boolean;
@@ -219,6 +220,8 @@ function EventRowView({
   onJump: (anchor: string) => void;
   /** Eigene Sitzung — nötig, um ein gelesenes Bild über die Rohroute zu zeigen. */
   sessionRef: SessionRef | undefined;
+  /** BUG-0281: Gerätelabel nur zeigen, wenn mehrere verschiedene Akteure auftreten. */
+  showActor?: boolean;
 }) {
   const { event, state: fullText } = useFullEvent(rowEvent, useApi());
   const time = stampLabel(event.ts);
@@ -360,8 +363,8 @@ function EventRowView({
   return (
     <div class={`event ${event.type}${prompt ? " own" : ""}${providerError ? " provider-error" : ""}${expanded ? " expanded" : ""}`} data-seq={event.seq} onClick={(ev) => onCardClick(ev, onToggleExpand)}>
       <div class="meta">
-        <span>
-          {prompt ? t("session.you_suffix", { "suffix": typeof device === "string" && device ? ` · ${device}` : "" }) : `#${event.seq} · ${event.type}`}
+        <span title={prompt && typeof device === "string" && device ? device : undefined}>
+          {prompt ? t("session.you_suffix", { "suffix": showActor && typeof device === "string" && device ? ` · ${device}` : "" }) : `#${event.seq} · ${event.type}`}
           {blobNote}
         </span>
         <span>{time}</span>
@@ -424,5 +427,5 @@ function CopyButton({ text }: { text: string }) {
  * purpose: they are recreated each render but do the same for this row. */
 export const EventRow = memo(
   EventRowView,
-  (a, b) => a.event === b.event && a.expanded === b.expanded && a.toolResult === b.toolResult && a.sessionRef === b.sessionRef,
+  (a, b) => a.event === b.event && a.expanded === b.expanded && a.toolResult === b.toolResult && a.sessionRef === b.sessionRef && a.showActor === b.showActor,
 );

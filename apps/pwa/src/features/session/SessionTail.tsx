@@ -101,7 +101,9 @@ import { StatusLine } from "./StatusLine.tsx";
 import { ChangesHead, changeSummary } from "./ChangesHead.tsx";
 import { openLayer } from "../../shared/layers.ts";
 import { ChatTurns, itemFirstSeq, itemLastSeq } from "./ChatTurns.tsx";
+import { PendingOwnChat } from "./PendingOwnChat.tsx";
 import { turnsOf } from "./turns.ts";
+import { showActorSuffix } from "./actor-display.ts";
 import { PinnedPrompt } from "./PinnedPrompt.tsx";
 import {
   lastUserPrompt,
@@ -1158,6 +1160,8 @@ export function SessionTail({
     [filtered, backgroundTile],
   );
   const hiddenOlder = filtered.length - visible.length;
+  // BUG-0281: Das Geräte-Kurzlabel erscheint nur, wenn mehrere verschiedene Akteure im Spiel sind.
+  const chatMultiActor = useMemo(() => showActorSuffix(visible.map((e) => (e.payload as { actor?: string }).actor)), [visible]);
   // EPIC-P43 T43.4: der Chat in Zügen — aus dem ungefilterten Strom, damit Schritte nicht verloren gehen.
   const live = status === "working" || status === "starting";
   const chat = useChatEvents(shownEvents, api);
@@ -2565,51 +2569,53 @@ export function SessionTail({
                 />
               </>
             ) : activeTab === "chat" ? (
-              chatItems.length === 0 ? (
-                <div class="ui-empty">
-                  {live
-                    ? t("session.tail_loading", { "suffix": shownModel ? ` · ${shownModel}` : "" })
-                    : t("session.no_messages")}
-                </div>
-              ) : (
-                <ChatTurns
-                  key={session.id}
-                  sessionId={session.id}
-                  sessionRef={sessionRef}
-                  items={chatItems}
-                  live={liveText}
-                  expanded={expanded}
-                  onToggleExpand={toggleExpanded}
-                  onJump={jumpTo}
-                  firstNewSeq={firstNew?.seq ?? null}
-                  onOpenVerlauf={showVerlaufTab}
-                  after={(item, next) => {
-                    if (item.kind !== "event" && item.kind !== "work")
-                      return null;
-                    const last =
-                      item.kind === "event"
-                        ? item.event.seq
-                        : itemLastSeq(item);
-                    const closed = turnsClosedBetween(
-                      tokenStats.turns,
-                      last,
-                      next ? itemFirstSeq(next) : null,
-                    );
-                    if (closed.length === 0) return null;
-                    const turnFill = closed[closed.length - 1]!.contextTokens;
-                    return (
-                      <div class="turn-stats dim">
-                        {turnStatsText(
-                          tokenStats.turns.findIndex(
-                            (t) => t.endSeq === closed[0]!.endSeq,
-                          ) + 1,
-                          closed,
-                        )}
-                      </div>
-                    );
-                  }}
-                />
-              )
+              <>
+                {chatItems.length === 0 ? (
+                  <div class="ui-empty">
+                    {live
+                      ? t("session.tail_loading", { "suffix": shownModel ? ` · ${shownModel}` : "" })
+                      : t("session.no_messages")}
+                  </div>
+                ) : (
+                  <ChatTurns
+                    key={session.id}
+                    sessionId={session.id}
+                    sessionRef={sessionRef}
+                    items={chatItems}
+                    live={liveText}
+                    expanded={expanded}
+                    onToggleExpand={toggleExpanded}
+                    onJump={jumpTo}
+                    firstNewSeq={firstNew?.seq ?? null}
+                    onOpenVerlauf={showVerlaufTab}
+                    after={(item, next) => {
+                      if (item.kind !== "event" && item.kind !== "work")
+                        return null;
+                      const last =
+                        item.kind === "event"
+                          ? item.event.seq
+                          : itemLastSeq(item);
+                      const closed = turnsClosedBetween(
+                        tokenStats.turns,
+                        last,
+                        next ? itemFirstSeq(next) : null,
+                      );
+                      if (closed.length === 0) return null;
+                      const turnFill = closed[closed.length - 1]!.contextTokens;
+                      return (
+                        <div class="turn-stats dim">
+                          {turnStatsText(
+                            tokenStats.turns.findIndex(
+                              (t) => t.endSeq === closed[0]!.endSeq,
+                            ) + 1,
+                            closed,
+                          )}
+                        </div>
+                      );
+                    }}
+                  />
+                )}
+              </>
             ) : visible.length === 0 ? (
               <div class="ui-empty">
                 {status === "working" || status === "starting"
@@ -2648,6 +2654,7 @@ export function SessionTail({
                         expanded={expanded.has(e.seq)}
                         onToggleExpand={() => toggleExpanded(e.seq)}
                         sessionRef={sessionRef}
+                        showActor={chatMultiActor}
                         toolResult={
                           e.type === "tool_use"
                             ? toolResultByToolId.get(toolIdOf(e) ?? "")
@@ -2669,6 +2676,10 @@ export function SessionTail({
                   );
                 })}
               </>
+            )}
+            {/* BUG-0280: die eigene Vorgemerke gehört in den Fluss — Chat wie Verlauf; der Streifen bleibt die Verwaltung. */}
+            {(activeTab === "chat" || activeTab === "verlauf") && (
+              <PendingOwnChat sessionId={session.id} api={api} refreshKey={queueTick} />
             )}
           </div>
 
