@@ -178,6 +178,7 @@
   --z-sheet: 60;
   --z-toast: 200;
   --z-popout: 210;
+  --status-bar-h: 28px; /* Fixe Statusleiste ab 1280 px: Flaechen enden an ihrer Oberkante */
   --z-lightbox: 300; /* Vollbild-Ansichten im body-Portal: ueber Schiene, Kopf und Statusleiste */
 
   /* ─── JS-/Preset-Eingänge: Defaults hier, Überschreiben zur Laufzeit ─── */

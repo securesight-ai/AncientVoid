@@ -6,6 +6,10 @@ describe("clampScale (EPIC-P20 T20.2)", () => {
     expect(clampScale(1.04)).toBe(1);
     expect(clampScale(1.26)).toBe(1.3);
     expect(clampScale(0.1)).toBe(SCALE_MIN);
+    // Kais PC-Fenster: 70 % reichte nicht, um die Spalten klein genug zu machen.
+    // Die Untergrenze ist eine bewusste Entscheidung, kein Nebenprodukt.
+    expect(SCALE_MIN).toBe(0.5);
+    expect(clampScale(0.3)).toBe(0.5);
     expect(clampScale(9)).toBe(SCALE_MAX);
   });
 

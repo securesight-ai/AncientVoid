@@ -346,6 +346,18 @@ noch auf älterem Stand und lehnt dort weiterhin ab — Flotten-Änderungen wirk
 erst, wenn **beide** Hubs denselben main haben.
 
 ## Erledigt (verifiziert)
+- **Shell endet an der Statusleiste, Rauszoomen bis 50 % möglich (BUG-0279).**
+   Am PC reichte die Shell bis zum Fensterboden und legte sich 28 px über die
+   fixe Statusleiste; die Zoom-Untergrenze war deshalb bei 70 % versüßt
+   (`SCALE_MIN`). Neu: Token `--status-bar-h`, Abzug am Container
+   (`#app:has(.split)` ab 1280 px: `calc(100dvh / var(--ui-zoom) - var(--status-bar-h))`),
+   Untergrenze 0.5, Hinweis in den Einstellungen. Belege: `ui-scale.test.ts`
+   6 passed (zuerst rot: `expected 0.7 to be 0.5`), `oberflaeche.spec.ts`
+   13 passed (Grenzen 50/200 %), `zoom-flaechen.spec.ts` Matrix auf fünf Stufen
+   (50/70/100/130/200 %) — 11 passed, Vorher war dieser Spec auf Windows schon
+   ohne Änderung rot (Shell-Unterkante 720 ≠ Boden 692). Offene Folgethemen:
+   BUG-0280 (eigene Nachricht nach dem Senden nicht im Chat) und BUG-0281
+   (Gerätekennung „Du · handy“ am Desktop, weil derselbe Token genutzt wird).
 - **Eingefügte Bilder erreichen den Agenten jetzt als Bild, nicht als Vermerk
   (BUG-0267).** Der Adapter `pi` sagt `images:false`, der Hub legte ihm deshalb
   nur den ausgelesenen Text vor — und ohne OCR stand dort nur „(kein Text

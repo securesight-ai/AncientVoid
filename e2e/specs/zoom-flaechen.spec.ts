@@ -8,7 +8,7 @@ import type { TestHub } from "../support/hub.ts";
  * `html { zoom }` sind dvh/vh/vw Layout-Pixel und müssen durch `--ui-zoom` geteilt werden (docs/zoom-robuste-flaechen.md).
  * Jede neue fensterfüllende Fläche gehört in diese Matrix. Toleranz ±1 px (Rundung); kein Retry, kein Skip.
  */
-const UI_SCALES = [0.7, 1, 1.3, 2];
+const UI_SCALES = [0.5, 0.7, 1, 1.3, 2];
 /** Schriftgröße: nur an den Rändern und bei 100 % — mit allen vier Zoomstufen gekreuzt. */
 const FONT_SCALES = [0.85, 1, 1.3];
 
