@@ -71,4 +71,29 @@ test.describe("Warteschlange am PC bearbeiten", () => {
     await expect(app.locator(".queue-item")).toHaveCount(0);
     await hub.until(async () => (await hub.api<QueueItem[]>(`/api/sessions/${id}/queue`)).body.length === 0, "auch beim Hub gestrichen");
   });
+
+    test("die eigene Vorgemerke steht als Chat-Zeile mit vollem Text und Status @desktop", async ({ app, hub }) => {
+    // BUG-0280: Die Chat-Zeile ist der Nachweis — der Streifen bleibt die Verwaltung.
+    const langerText = "vorgemerkt: " + "und weiter ".repeat(20) + "ENDE";
+    const id = await hub.createSession({ adapter: "claude", prompt: "LANGSAM erste Frage" });
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await expect(app.getByPlaceholder("Antworten…")).toBeVisible();
+    await app.getByPlaceholder("Antworten…").fill(langerText);
+    await app.getByRole("button", { name: "Vormerken" }).click();
+    await expect(app.getByTestId("pending-own-row")).toHaveCount(1);
+    await expect(app.getByTestId("pending-own-row")).toContainText(langerText);
+    await expect(app.getByTestId("pending-own-row")).toContainText("geht automatisch raus");
+
+    // Bearbeiten direkt aus der Chat-Zeile — der Hub führt die Änderung.
+    await app.getByTestId("pending-own-edit").click();
+    await app.getByTestId("pending-own-edit-input").fill("aus der Chat-Zeile korrigiert");
+    await app.getByTestId("pending-own-edit-save").click();
+    await expect(app.getByTestId("pending-own-row")).toContainText("aus der Chat-Zeile korrigiert");
+    await hub.until(async () => ((await hub.api<QueueItem[]>(`/api/sessions/${id}/queue`)).body)[0]?.text === "aus der Chat-Zeile korrigiert", "Text beim Hub geändert");
+
+    // Und streichen — ebenfalls vom Chat aus, der Streifen zieht nach.
+    await app.getByTestId("pending-own-remove").click();
+    await expect(app.getByTestId("pending-own-row")).toHaveCount(0);
+    await hub.until(async () => (await hub.api<QueueItem[]>(`/api/sessions/${id}/queue`)).body.length === 0, "Warteschlange beim Hub leer");
+  });
 });

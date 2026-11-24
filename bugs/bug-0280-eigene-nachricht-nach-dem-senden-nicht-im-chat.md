@@ -1,12 +1,12 @@
 ---
 id: BUG-0280
 slug: eigene-nachricht-verschwindet-nach-dem-senden-aus-dem-chat
-status: open
+status: done
 severity: S2
 area: pwa
 instance: dev
-commit: ""
-forge: ""
+commit: pending
+forge: "https://github.com/securesight-ai/AncientVoid/issues/416"
 epic: P7
 created: 2026-11-24
 reporter: Kai
@@ -82,3 +82,13 @@ einzige Nachweis.
 
 Windows 11, Hub 127.0.0.1:7373 (Stand `75bae8e5`), Adapter `pi`,
 Auslieferung „nächste Gelegenheit".
+
+## Behoben (2026-11-30)
+
+`PendingOwnChat` rendert vorgemerkte eigene Eingaben als eigene Zeile im Fluss
+(Chat und Verlauf — der Default-Tab ist Verlauf): voller Text, Status
+(„geht automatisch raus…" / „Annahme unklar"), Bearbeiten und Streichen — der
+Streifen bleibt die Verwaltung, der Hub führt die Reihe (ADR-0085).
+Test: `apps/pwa/test/features/session/pending-own.test.ts` (rot→grün, reine
+Funktion `pendingOwnRows`) und E2E `warteschlange-pc.spec.ts` (Zeile mit vollem
+Text, Bearbeiten und Streichen durch die UI, Hub-Zustand danach).
