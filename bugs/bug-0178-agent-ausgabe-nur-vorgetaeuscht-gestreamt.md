@@ -1,6 +1,20 @@
+---
+id: BUG-0178
+slug: agent-ausgabe-nur-vorgetaeuscht-gestreamt
+status: done
+severity: S2
+area: pwa
+instance: live
+commit: ""
+forge: "https://github.com/securesight-ai/AncientVoid/pull/37"
+epic: "ADR-0083"
+created: 2026-11-16
+reporter: "Nutzer (live auf dem Handy, 2026-11-16)"
+---
+
 # BUG-0178 — Agent-Ausgabe wird nur vorgetäuscht gestreamt (Typewriter über fertigen Blöcken)
 
-**Status:** in Arbeit · **Schweregrad:** S2 · **Bereich:** pwa/adapters · **Found on:**
+**Status:** done · **Schweregrad:** S2 · **Bereich:** pwa/adapters · **Found on:**
 live auf dem Handy-PWA-Pfad, nachgemessen am Event-Store einer echten pi-Session
 (2026-11-16)
 
@@ -74,6 +88,19 @@ wirken wie live geschrieben. Beides ist Kosmetik: echt gestreamt wird nichts.
       #N live“, während `/api/sessions/:id/events` diesen Summary noch nicht kennt und es
       keine `.event`-Zeile dazu gibt. Ohne `liveFrames` bleibt die Blase weg.
       Screenshot gesehen und nachgebessert (Beschriftung, schmalerer Cursor).
-- [ ] claude/codex/acp: ihre Provider-Deltas werden noch nicht ausgewickelt — dort
-      erscheint die Ausgabe weiterhin blockweise, ohne Streaming vorzutäuschen
+- [x] claude: `stream_event`-Deltas werden ausgewickt (`createLivePump` in
+      `packages/adapters/claude/src/index.ts:235`, ADR-0083). codex app-server
+      liefert Item-Granularität, keine Token-Deltas — dort gibt es nichts
+      auszuwickeln, Blöcke kommen als Blöcke (kein Fake-Streaming). acp-Chunks
+      gehen seit BUG-0033 live (1,5-s-Flush) als echte Events raus; ADR-0083-
+      Frames für acp bleiben Folgeauftrag.
+
+## Abschluss (2026-11-24)
+
+Kerndefekt behoben und belegt: `shared/typewriter.ts`/`typewriter-queue.ts`
+existieren nicht mehr, pi streamt echte Frames (`createLivePump`,
+`packages/adapters/pi/src/index.ts:129,213`), claude ebenso
+(`packages/adapters/claude/src/index.ts:235`), `e2e/specs/live-streaming.spec.ts`
+grün gegen den Dummy-Adapter, gemerged mit PR #37. Kein Adapter täuscht
+Streaming mehr vor — Restpunkt ist nur noch der ADR-0083-Rollout für acp.
 

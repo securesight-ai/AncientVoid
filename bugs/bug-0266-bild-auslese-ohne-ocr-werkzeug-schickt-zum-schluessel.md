@@ -1,7 +1,7 @@
 ---
 id: BUG-0266
 slug: bild-auslese-ohne-ocr-werkzeug-schickt-zum-schluessel
-status: fixed
+status: done
 severity: S2
 area: core
 instance: dev
@@ -75,3 +75,13 @@ erhalten, die Zeile zeigt nur noch „1 KB · kein Text gelesen". E2E
 
 Lokaler Hinweis: `tesseract` auf dem Hub-Rechner installieren (oder Vision am
 lokalen Modell anschließen) — dann stimmt auch der ausgelesene Text wieder.
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `hasTool` ist injizierbar und entscheidet die Meldung
+(`packages/core/src/modules/attachments/extract.ts:27`), PWA zeigt
+„kein Text gelesen" (`apps/pwa/src/features/attachments/Attachments.tsx:38`),
+`e2e/specs/anhang-bilder.spec.ts` existiert.
+`npx vitest run packages/core/test/modules/attachments/extract.test.ts` →
+7 passed, 0 skipped (tesseract hier vorhanden — auch die echten OCR-Fälle
+laufen). Fix im Stand.

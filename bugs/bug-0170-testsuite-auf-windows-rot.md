@@ -133,3 +133,9 @@ Plattform-Baseline im Gate.
 Tier A gar kein Ergebnis (BUG-0193). Attrappen-Spawns sind erledigt (BUG-0179); 
 zwei konkrete Fälle, die als echte Aussagen übrig bleiben: 
 `apps/hub/test/factory.integration.test.ts` ("Projektpfad fehlt oder ist nicht absolut", 422 statt 200) und die Anzeigefragen-Routen in `tool-permissions.test.ts`.
+
+**Entscheidung (24.11.2026, Nutzer):** BUG-0170 bleibt offen — Windows-Support
+wird nicht jetzt entschieden; kein Fix-Versuch vom Linux-Host (dort ist die
+Suite grün, die vier Ursachenklassen bleiben Windows-gebunden). Teilfolgen
+0179/0193/0198 sind längst gefixt; dieser Bug bleibt der Sammelplatz für die
+Plattform-Baseline.

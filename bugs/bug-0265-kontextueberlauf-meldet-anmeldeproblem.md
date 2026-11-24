@@ -1,7 +1,7 @@
 ---
 id: BUG-0265
 slug: kontextueberlauf-meldet-anmeldeproblem
-status: fixed
+status: done
 severity: S2
 area: core
 instance: dev
@@ -79,3 +79,10 @@ Migration. Ältere Clients zeigen den Klartext (unbekannte Kategorie fällt auf
 ## Handoff
 
 Fix im selben PR (Self-Review: `gates` → `pr-review`).
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `ProviderErrorCategory` kennt `context`, `CONTEXT_RE` prüft vor
+quota/auth (`packages/contracts/src/harness/provider-error.ts:43,61`).
+`npx vitest run packages/contracts/test/harness/provider-error.test.ts` →
+24 passed. Fix im Stand (ADR-0115).
