@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test, expect, sessionTab, hostedRunner } from "../support/fixtures.ts";
+import { manifestProject } from "../support/workspace-project.ts";
 
 /**
  * EPIC-P29 T29.7: die Workspace-Runtime als echter Ablauf — Start → Freigabe
@@ -30,20 +31,8 @@ const SVC_JS = `require('http').createServer((q, r) => {
 }).listen(Number(process.env.ANCIENTVOID_WORKSPACE_PORT), '127.0.0.1');
 `;
 
-/** Manifest-Projekt unter den Hub-Projektwurzeln; `.env` bleibt ungetrackt (Include-Fall). */
-function manifestProject(hub: { projectsDir: string }, name: string, manifest: object): string {
-  const dir = join(hub.projectsDir, name);
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, ".gitignore"), ".env\n");
-  writeFileSync(join(dir, ".env"), "KEY=e2e-wert\n");
-  writeFileSync(join(dir, "prepare.js"), PREPARE_JS);
-  writeFileSync(join(dir, "svc.js"), SVC_JS);
-  writeFileSync(join(dir, "ancientvoid.workspace.json"), JSON.stringify(manifest));
-  git(dir, "init", "-q", "-b", "main");
-  git(dir, "-c", "user.email=e2e@ancientvoid.local", "-c", "user.name=e2e", "add", "-A");
-  git(dir, "-c", "user.email=e2e@ancientvoid.local", "-c", "user.name=e2e", "commit", "-q", "-m", "init");
-  return dir;
-}
+/** Projektdateien des vollen Manifests; `.env` bleibt ungetrackt (Include-Fall). */
+const FULL_FILES = { ".gitignore": ".env\n", ".env": "KEY=e2e-wert\n", "prepare.js": PREPARE_JS, "svc.js": SVC_JS } as const;
 
 const FULL_MANIFEST = {
   schemaVersion: 1,
@@ -64,7 +53,7 @@ const workspaceEvents = (events: { seq: number; type: string; payload: Record<st
 test.describe("EPIC-P29: Workspace-Runtime (T29.7)", () => {
   test("Start → Freigabe → Fehler → Retry → bereit → Preview → Neustart → Archivieren", async ({ app, hub }) => {
     test.setTimeout(180_000);
-    const project = manifestProject(hub, "ws-projekt", FULL_MANIFEST);
+    const project = manifestProject(hub, "ws-projekt", FULL_MANIFEST, FULL_FILES);
     const id = await hub.createSession({ adapter: "opencode", prompt: "Umgebung hochziehen", project });
 
     // Freigabe über die echte Approval-Queue (Mensch via API, ADR-0021/0019).
@@ -158,6 +147,13 @@ test.describe("EPIC-P29: Workspace-Runtime (T29.7)", () => {
     // Die Session bleibt normal steuerbar — kein Warten, keine Sperre.
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await expect(app.getByPlaceholder("Antworten…")).toBeVisible();
+    // Kleinkram-Regel 2 (Umgebungs-Fix 2026-11-24): Nachweislich kein Workspace
+    // (Anfang geladen, kein workspace.*-Event) → kein „Umgebung“ unter „Mehr“.
+    const bar = app.locator(".subtabs-wrap").first();
+    await bar.locator('[aria-haspopup="menu"]').click();
+    const menu = app.getByRole("menu", { name: "Weitere Ansichten" });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: "Umgebung", exact: true })).toHaveCount(0);
   });
 
   test("P26-Regression: Loop-Session im Manifest-Projekt bekommt keinen Workspace", async ({ hub }) => {
@@ -184,7 +180,7 @@ test.describe("EPIC-P29: Workspace-Runtime (T29.7)", () => {
   });
 
   test("Offline (K10): Umgebung zeigt den letzten Stand mit seiner Zeit", async ({ app, hub }) => {
-    const project = manifestProject(hub, "ws-offline", FULL_MANIFEST);
+    const project = manifestProject(hub, "ws-offline", FULL_MANIFEST, FULL_FILES);
     const id = await hub.createSession({ adapter: "opencode", prompt: "offline-fall", project });
     let approvalId = "";
     await hub.until(async () => {

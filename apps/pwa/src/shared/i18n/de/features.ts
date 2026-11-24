@@ -1654,7 +1654,7 @@ export const de = {
   "workspace.list_opens_tiles": "Inhalte aus der Liste öffnen zusätzliche Kacheln",
   "workspace.logs": "Logs",
   "workspace.manifest_frag": "· Manifest",
-  "workspace.no_workspace": "Diese Session hat keinen Workspace — ohne `ancientvoid.workspace.json` gilt der unveränderte alte Ablauf (ADR-0051 §7).",
+  "workspace.no_workspace": "Umgebung zeigt die Laufzeit-Services dieser Session — Vorbereitung, Logs, Vorschau, Retry. Diese Session hat keinen Workspace: Im Basis-Commit des Projekts liegt kein `ancientvoid.workspace.json` (ADR-0051); ohne Manifest gilt der unveränderte alte Ablauf.",
   "workspace.port": "Port",
   "workspace.refresh": "Aktualisieren",
   "workspace.resize_tile_height": "Kachelhöhe ändern",
