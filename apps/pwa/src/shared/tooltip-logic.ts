@@ -107,9 +107,9 @@ export function tipText(source: TipSource): string {
 }
 
 /** Abstand des Tooltips zum Viewport-Rand und zum Ziel (BUG-0255). */
-export const TIP_MARGIN_PX = 8;
+const TIP_MARGIN_PX = 8;
 /** Weniger Platz darüber (CSS-px) → Tooltip unter dem Ziel. */
-export const TIP_BELOW_PX = 40;
+const TIP_BELOW_PX = 40;
 
 export interface TipAnchor {
   /** Horizontale Mitte des Ziels. */

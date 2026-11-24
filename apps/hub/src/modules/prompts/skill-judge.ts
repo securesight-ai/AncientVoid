@@ -27,7 +27,7 @@ function catalogLines(items: readonly SkillOrAgent[]): string {
     .join("\n");
 }
 
-export function parseVerdict(text: string, items: readonly SkillOrAgent[]): SkillVerdict | null {
+function parseVerdict(text: string, items: readonly SkillOrAgent[]): SkillVerdict | null {
   const json = text.match(/\{[\s\S]*\}/)?.[0];
   if (!json) return null;
   let raw: { action?: unknown; name?: unknown; reason?: unknown };

@@ -272,7 +272,7 @@ function LightboxShell({
 }
 
 /** Vollbild fuer ein Bild: ein Tipp oeffnet, ein Tipp am Rand, ✕ oder Esc schliesst. */
-export function ImageLightbox({ attachment, onClose }: { attachment: AttachmentRef; onClose: () => void }) {
+function ImageLightbox({ attachment, onClose }: { attachment: AttachmentRef; onClose: () => void }) {
   const { url, fehlgeschlagen } = useObjectUrl(attachment.id);
   return (
     <LightboxShell title={attachment.name} meta={size(attachment.bytes)} onClose={onClose} {...(url ? { download: { href: url, name: attachment.name } } : {})}>

@@ -27,7 +27,7 @@ export interface TailConnection {
 /** ADR-0083: transiente Live-Frames — kein Ereignis, nicht persistiert, kein seq des
  * Event-Protokolls. Eine Lücke ist hier ausdrücklich kein Resync-Anlass: der dauerhafte
  * Block holt alles ein. */
-export interface StreamFrameView {
+interface StreamFrameView {
   turnId: string;
   stream: "assistant" | "thinking";
   seq: number;

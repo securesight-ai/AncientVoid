@@ -10,8 +10,8 @@ export const MAX_IMAGES = 12;
 /** Ein einzelnes Bild darüber wird gar nicht erst genommen. */
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 /** Der ganze Vorrat — damit ein voller Speicher nicht die App ausbremst. */
-export const MAX_IMAGE_TOTAL_BYTES = 24 * 1024 * 1024;
-export const IMAGE_EVENT = "ancientvoid:clipboard-images";
+const MAX_IMAGE_TOTAL_BYTES = 24 * 1024 * 1024;
+const IMAGE_EVENT = "ancientvoid:clipboard-images";
 
 export interface ImageAsset {
   id: string;

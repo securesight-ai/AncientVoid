@@ -6,7 +6,7 @@
  * Verteilungen aus `vllm:*`-artigen Histogrammen. Kein Prometheus-Abhängigkeit.
  */
 
-export type Sample = { name: string; labels: string; value: number };
+type Sample = { name: string; labels: string; value: number };
 
 export type MetricFamily = { name: string; type: string; help: string; samples: Sample[] };
 

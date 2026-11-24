@@ -33,7 +33,7 @@ const REVISE_INSTRUCTION =
   "You maintain a skill/agent/workflow file for coding agents. Revise the file below so it also serves the request. Keep the frontmatter block (between the --- lines) and its name exactly; adjust the description only if the scope changes. Keep what still applies, stay concise, use the project context only as background facts and never invent paths or commands. Output ONLY the complete new file content, no preamble, no code fences.";
 
 /** A model that drops the frontmatter must not cost the file its name. */
-export function keepFrontmatter(draft: string, current: string): string {
+function keepFrontmatter(draft: string, current: string): string {
   const head = current.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/)?.[0];
   const text = draft.replace(/^\s*```[a-z]*\n([\s\S]*?)\n```\s*$/i, "$1").trim();
   if (!head || text.startsWith("---")) return text;

@@ -35,7 +35,7 @@ const DOC_TIME_BUDGET_MS = 2_500;
 /** Rollen aus einem Query-Parameter. Unbekannte Namen fallen weg — ein
  * Tippfehler soll weder eine 500 erzeugen noch heimlich die ganze Liste
  * öffnen. */
-export function parseRoles(raw: string | undefined): TranscriptRole[] | undefined {
+function parseRoles(raw: string | undefined): TranscriptRole[] | undefined {
   if (!raw) return undefined;
   const picked = raw
     .split(",")
