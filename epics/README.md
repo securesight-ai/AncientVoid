@@ -1,4 +1,4 @@
-# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P82)
+# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P83)
 
 **On hold seit 15.11.2026 (Nutzerentscheid): P30 und P31.** Beide bleiben
 im Inventar, sind aber aus Empfehlungen für die nächste Arbeit ausgeschlossen.
@@ -335,6 +335,12 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 | Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
 |---|---|---|---|
 | [P82 — Audit-Räumen: Inventar, Monolith-Schnitt, Härtungsdetails](EPIC-P82-audit-raeumen-inventar-schnitt-haertung.md) | Knip-Inventar räumen und `check:knip` ins Gate; `session-manager.ts` entlang Modulnaht teilen (reines Verschieben); WS-Revocation-Recheck aus aufgelöstem Auth; Session-Tail-Tickets nach STT-/Terminal-Muster; SQL-Whitelist-Kommentare — **Planungsentwurf (Nutzerauftrag 24.11.2026)** | keine blockierende (Quer-Epic); P81/P79/P80-Ausläufe unberührt; P30/P31 On hold unberührt; Tracker #412 | 1–2 |
+
+## Nutzerauftrag vom 24.11.2026 — AI-Arbeit-Evaluation (Harness × Modell × Skills)
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P83 — AI-Arbeit-Evaluation: Harness × Modell × Skills messbar vergleichen](EPIC-P83-ai-arbeit-evaluation-benchmark.md) | Reproduzierbarer Evaluations-Messlauf im Messlauf-Muster: eingefrorenes Aufgabenkorpus aus diesem Repo, Arme gespleißt (Harness × Modell × Skills an/aus), Split-Szenarien Plan↔Bau inkl. Kontrollarm, Metriken Fehlerquote/Wandzeit/Tokens/Kosten (Preis-Snapshot; lokal via P81-Energie)/Qualität, n ≥ 5 je Arm; Trainingsdaten-Kontamination und Skill-Kausalität gegen externe Benchmark-Kritik abgesichert; Recherche-Snapshot: [docs/2026-11-24_ai-arbeit-evaluation-recherche.md](../docs/2026-11-24_ai-arbeit-evaluation-recherche.md) — **Planungsentwurf (Nutzerauftrag 24.11.2026)** | keine blockierende (Quer-Epic); P81 (Energie-Messung) als Datengrundlage erwünscht, nicht blockierend; P30/P31 On hold unberührt | 2–3 |
 
 ## Reihenfolge & Gating
 
