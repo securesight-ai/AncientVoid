@@ -102,11 +102,13 @@ export function ToolImageView({ image, nachLaden }: { image: ToolImageRef; nachL
   const api = useApi();
   const [url, setUrl] = useState("");
   const [fehler, setFehler] = useState("");
+  const [kaputt, setKaputt] = useState(false);
   useEffect(() => {
     let lebt = true;
     let objectUrl = "";
     setUrl("");
     setFehler("");
+    setKaputt(false);
     api
       .toolImageBlobUrl(image.target, image.path)
       .then((u) => {
@@ -131,9 +133,16 @@ export function ToolImageView({ image, nachLaden }: { image: ToolImageRef; nachL
   }, [api, image.target, image.path]);
   return (
     <div class="tool-image">
-      {url ? (
+      {url && !kaputt ? (
         <a class="tool-image-link" href={url} target="_blank" rel="noopener" title={t("session.tool_image_open")}>
-          <img src={url} alt={image.name} loading="lazy" decoding="async" />
+          <img
+            src={url}
+            alt={image.name}
+            loading="lazy"
+            decoding="async"
+            onError={() => setKaputt(true)}
+            onLoad={() => nachLaden?.()}
+          />
         </a>
       ) : null}
       <div class="tool-image-meta">
@@ -144,6 +153,7 @@ export function ToolImageView({ image, nachLaden }: { image: ToolImageRef; nachL
           </a>
         ) : null}
         {fehler ? <span class="dim">{fehler}</span> : null}
+        {kaputt ? <span class="dim">{t("session.tool_image_kaputt")}</span> : null}
       </div>
     </div>
   );

@@ -27,6 +27,19 @@ Tests: `apps/pwa/test/features/tool-image.test.ts` 18/18 (neu: Argumente mit `cd
 Kürzungszahl, zwei gleich benannte Ziele), `packages/adapters/pi/test` 67/67 (neu:
 fremde `av`-Id bleibt ein Ereignis), `npm run typecheck` und `check:i18n` leer.
 
+**Zwei weitere Funde im Browser-Check (Kratz-Hub :7399, neue Fixture mit 9 Namen und
+zwei gleich benannten Dateien):**
+* Kaputte Bilddatei: Route liefert 200, Bytes kommen an (1270 B, `image/png`), aber der
+  Browser kann nicht dekodieren → bisher ein gebrochenes Bildkästchen ohne jeden Hinweis.
+  Jetzt `onError` am `<img>`: kein Kasten, dafür „Bild kam an, ließ sich aber nicht
+  anzeigen (beschädigte Datei?)". (Die Fixture selbst war porös — IHDR-Länge 17 statt 13,
+  erzeugt aus einem Shell-Herodoc; das ist ein Lehrstück: erst die Bytes prüfen, dann der
+  UI einen Fehler unterschieben.)
+* Nach dem ersten Öffnen blieb der Block 6 px zu tief (Bildhöhe wächst nach dem
+  Einhängen). Jetzt additionally `onLoad` → Block wird nach dem Dekodieren neu
+  eingehängt. Gemessen nachher: Block 189–368 bei Rahmen 155–436 (68 px Abstand),
+  beide Bildunterschriften per `elementFromPoint` erreichbar.
+
 **Bewusst offen gelassen (Limitation, nicht Fehler):** die Wurzel einer
 Schalen-Ausgabe wird als **eine** Kette berechnet — `cd A && (cd B && ls); ls` nennt
 Namen aus zwei Wurzeln, die sich nicht sauber trennen lassen. Ebenso `pushd`/`popd`.

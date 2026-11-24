@@ -1141,6 +1141,7 @@ export const en = {
 "session.tool_image_hide": "Hide preview",
 "session.tool_image_note": "Files from this tool output",
   "session.tool_image_more": "… {count} more files not listed",
+  "session.tool_image_kaputt": "Image arrived but could not be displayed (corrupt file?)",
 "session.tool_image_missing": "Image not available here — it is outside the project.",
   "session.queue_send_next": "Send queued message {n} next",
   "session.queue_send_now": "Send queued message {n} now",
