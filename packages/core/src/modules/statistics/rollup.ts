@@ -161,6 +161,7 @@ export class StatisticsRollup {
 
   /** Verfügbare Schnittwerte für die Filterauswahl — aus dem Cache, nicht aus den Quellen. */
   sliceValues(): { projects: string[]; hosts: string[]; harnesses: string[] } {
+    // SQL identifiers must come from the fixed column allowlist just below.
     const distinct = (column: string): string[] =>
       (this.db.prepare(`SELECT DISTINCT ${column} AS v FROM session_stat_facts WHERE ${column} != '' ORDER BY v`).all() as unknown as { v: string }[]).map(r => r.v);
     return { projects: distinct("project"), hosts: distinct("host_id"), harnesses: distinct("harness") };

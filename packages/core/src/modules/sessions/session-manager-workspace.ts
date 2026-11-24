@@ -1092,6 +1092,7 @@ export abstract class SessionManagerWorkspace extends SessionManagerRuntime {
 
   /** SQLite-Zeilen, die sonst nach dem Löschen als Orphans wachsen. */
   private purgeSessionSidecars(sessionId: string): void {
+    // SQL table names must come from this fixed allowlist. Bind the session id separately.
     for (const table of [
       "workspace_services",
       "workspace_operations",
