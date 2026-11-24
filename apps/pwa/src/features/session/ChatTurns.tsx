@@ -3,6 +3,7 @@ import { Fragment, type ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import type { NormalizedEvent } from "../../shared/ws.ts";
 import { EventDetail, EventRow, ToolImageView, ToolImageScan } from "./EventRow.tsx";
+import { showActorSuffix } from "./actor-display.ts";
 import { currentStep, itemTs, stepsOf, workSummary, type ChatItem, type Step, type Work } from "./turns.ts";
 import { dayLabel, needsDaySeparator } from "../../shared/i18n/day-label.ts";
 import { toolImageHits, type SessionRef } from "./tool-image.ts";
@@ -80,6 +81,10 @@ export function ChatTurns({
     });
   };
   const dividerAt = firstNewSeq === null ? -1 : items.findIndex((item) => itemLastSeq(item) >= firstNewSeq);
+  // BUG-0281: Der Kurzlabel erscheint nur, wenn mehrere verschiedene Akteure im Spiel sind.
+  const multiActor = showActorSuffix(
+    items.flatMap((item) => (item.kind === "event" ? [(item.event.payload as { actor?: string }).actor] : [])),
+  );
   /** Zeit des vorherigen Eintrags mit Zeitstempel (Sammelzeilen haben keine eigene). */
   const vorigeZeit = (i: number): string | null => {
     for (let j = i - 1; j >= 0; j--) {
@@ -103,7 +108,7 @@ export function ChatTurns({
             </div>
           )}
           {item.kind === "event" ? (
-            <EventRow event={item.event} expanded={expanded.has(item.event.seq)} onToggleExpand={() => onToggleExpand(item.event.seq)} toolResult={undefined} onJump={onJump} sessionRef={sessionRef} />
+            <EventRow event={item.event} expanded={expanded.has(item.event.seq)} onToggleExpand={() => onToggleExpand(item.event.seq)} toolResult={undefined} onJump={onJump} sessionRef={sessionRef} showActor={multiActor} />
           ) : item.kind === "unknown" ? (
             <div class="turn-unknown" data-seq={item.firstSeq}>
               <span>
