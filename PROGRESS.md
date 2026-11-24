@@ -1,7 +1,38 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
 
-## 23.11.2026 Nacht — cd-Fallstrick der Bildchips (PR #367)
+## 24.11.2026 — Nachschau über die eigenen Änderungen (PR #…)
+
+Vier echte Mängel in dem, was ich am Vorabend gebaut habe — alle behoben, nicht nur
+gefunden:
+
+1. **Chips nach Pfad, nicht nach Ziel geschaltet.** Der offene Zustand hing an
+   `path`, die Chips aber an `target/path`: `bild.png` im Projekt und `bild.png` im
+   Sitzungsordner öffneten sich immer zusammen. Jetzt ein Schlüssel (`bildpfad()`).
+2. **Einhängen zu früh gerechnet.** `zeigeBlockVollstaendig()` lief im Klick-Handler,
+   also vor dem Rendern — die Höhe des gerade erschienenen Bilds fehlte, die
+   Bildunterschrift rutschte erneut unters Eingabefeld. Jetzt nach dem Rendern
+   (`useEffect` auf dem offenen Zustand, beim Laden der Seite aus) **und** nach dem
+   Bild (`nachLaden`). Der erste Screenshot sah nur gut aus, weil schon ein anderes
+   Bild offen war.
+3. **Stillschweigend gekürzt.** Eine `ls` mit 40 Namen zeigte 6 Chips und schwieg zu
+   den anderen 34. Jetzt `nichtGezeigt` + „… {count} weitere Dateien nicht
+   aufgelistet".
+4. **Echo-Erkennung nach Präfix** (`id.startsWith("av")`) hätte auch ein echtes
+   Ereignis treffen können. Jetzt: nur Ids, die dieser Adapter wirklich vergeben hat.
+   Zusätzlich: `cd`-Erkennung verlangt eine Befehlsposition (`sed 's/cd alt/cd neu/'`
+   verschob die Wurzel sonst), Klammer/Komma am `cd`-Ziel werden abgeschnitten.
+
+Tests: `apps/pwa/test/features/tool-image.test.ts` 18/18 (neu: Argumente mit `cd`,
+Kürzungszahl, zwei gleich benannte Ziele), `packages/adapters/pi/test` 67/67 (neu:
+fremde `av`-Id bleibt ein Ereignis), `npm run typecheck` und `check:i18n` leer.
+
+**Bewusst offen gelassen (Limitation, nicht Fehler):** die Wurzel einer
+Schalen-Ausgabe wird als **eine** Kette berechnet — `cd A && (cd B && ls); ls` nennt
+Namen aus zwei Wurzeln, die sich nicht sauber trennen lassen. Ebenso `pushd`/`popd`.
+Beide Fälle laufen ins Weglassen (keine Vorschau), nicht in eine falsche Vorschau.
+
+## ## 23.11.2026 Nacht — cd-Fallstrick der Bildchips (PR #367)
 
 **Nachweis aus eigener Live-Sitzung.** 7d3df295 hat als Arbeitsverzeichnis
 `/home/kaib/repos/ancientvoid-suche`; der Befehl

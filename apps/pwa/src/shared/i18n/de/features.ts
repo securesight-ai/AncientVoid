@@ -1139,6 +1139,7 @@ export const de = {
 "session.tool_image_show": "Vorschau laden",
 "session.tool_image_hide": "Vorschau schließen",
 "session.tool_image_note": "Dateien aus dieser Werkzeug-Ausgabe",
+  "session.tool_image_more": "… {count} weitere Dateien nicht aufgelistet",
 "session.tool_image_missing": "Bild hier nicht abrufbar — es liegt außerhalb des Projekts.",
   "session.queue_send_next": "Vorgemerkte Nachricht {n} als nächstes senden",
   "session.queue_send_now": "Vorgemerkte Nachricht {n} jetzt senden",
