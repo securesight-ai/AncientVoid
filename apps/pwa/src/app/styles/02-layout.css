@@ -655,3 +655,18 @@ a {
   overflow-y: visible;
   overflow-x: auto;
 }
+
+/* BUG-0279: Die fixe Statusleiste (ab 1280 px) ueberdeckte den unteren Rand der
+ * Shell — die letzten Karten der Uebersicht lagen hinter ihr, und beim
+ * Rauszoomen wuchs die Shell sichtbar ueber den Fensterrand. Die Shell endet
+ * jetzt an der Oberkante der Leiste, in jeder Zoomstufe (docs/zoom-robuste-flaechen.md). */
+@media (min-width: 1280px) {
+  /* Die Groesse kommt hier vom Container: `#app:has(.split) .split` ist als Flex-Kind
+   * spezifischer als jede .split-Hoehe, also muss der Abzug am Container stehen. */
+  #app:has(.split) {
+    height: calc(100dvh / var(--ui-zoom) - var(--status-bar-h));
+  }
+  .app-page:has(> .dashboard) {
+    height: calc(100dvh / var(--ui-zoom) - var(--status-bar-h) - env(safe-area-inset-top));
+  }
+}

@@ -38,15 +38,15 @@ test.describe("Zoom der Oberfläche (EPIC-P20 T20.2)", () => {
     await expect.poll(() => app.evaluate(() => localStorage.getItem("ancientvoid.uiScale"))).toBeNull();
   });
 
-  test("Strg + Mausrad vergrößert und verkleinert, Grenzen 70 % und 200 %", async ({ app }) => {
+  test("Strg + Mausrad vergrößert und verkleinert, Grenzen 50 % und 200 %", async ({ app }) => {
     await app.keyboard.down("Control");
     for (let i = 0; i < 3; i++) await app.mouse.wheel(0, -120);
     await app.keyboard.up("Control");
     await expect.poll(() => scaleOf(app)).toBeGreaterThan(1);
-    await app.evaluate(() => localStorage.setItem("ancientvoid.uiScale", "0.7"));
+    await app.evaluate(() => localStorage.setItem("ancientvoid.uiScale", "0.5"));
     await app.reload();
     await app.keyboard.press("Control+Minus");
-    expect(await scaleOf(app)).toBe(0.7);
+    expect(await scaleOf(app)).toBe(0.5);
     await app.evaluate(() => localStorage.setItem("ancientvoid.uiScale", "2"));
     await app.reload();
     await app.keyboard.press("Control+Equal");

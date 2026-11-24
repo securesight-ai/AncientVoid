@@ -45,7 +45,7 @@ export function AppearanceSettings() {
         />
       </SettingRow>
       <AccentSetting />
-      <SettingRow label={t("settings.ui_zoom")} hint="Strg + Mausrad, Strg + / − , Strg + 0">
+      <SettingRow label={t("settings.ui_zoom")} hint="Strg + Mausrad, Strg + / − , Strg + 0 — 50 % bis 200 %">
         <span class="scale-control">
           <Button aria-label={t("settings.smaller")} title={t("settings.smaller")} disabled={scale <= SCALE_MIN} onClick={() => setScale(scale - SCALE_STEP)}>
             −
