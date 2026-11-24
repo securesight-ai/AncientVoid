@@ -25,6 +25,9 @@ jobs:
         run: gh pr merge "${{ github.event.pull_request.number }}" --auto --merge --delete-branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Ohne Checkout hat gh keinen Repo-Kontext — GH_REPO setzt ihn (sonst
+          # "fatal: not a git repository", gesehen 23.11. an #394/#395/#396).
+          GH_REPO: ${{ github.repository }}
       - name: Major-Bump bleibt Handarbeit
         if: steps.metadata.outputs.update-type == 'version-update:major'
         run: echo "Major-Bump erkannt — kein Auto-Merge (docs/ci-runbook.md)."
