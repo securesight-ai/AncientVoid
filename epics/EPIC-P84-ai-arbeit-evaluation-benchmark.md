@@ -1,6 +1,6 @@
-# EPIC-P83 — AI-Arbeit-Evaluation: Harness × Modell × Skills messbar vergleichen
+# EPIC-P84 — AI-Arbeit-Evaluation: Harness × Modell × Skills messbar vergleichen
 
-**Status:** Planungsentwurf (Nutzerauftrag 24.11.2026), Umsetzung offen · **Phase:** P83 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** keine blockierende (Quer-Epic wie P80/P82); P81/P82-Ausläufe bleiben unberührt, P30/P31 On hold ebenfalls. Grundlagen: [Recherche-Snapshot 2026-11-24](../docs/2026-11-24_ai-arbeit-evaluation-recherche.md); Messlauf-Muster (`scripts/messlauf-*.mjs`), Skill-Run-Extraktor `scripts/skill-runs.mjs` (P72), `turn_metrics`/ADR-0003/ADR-0006, P81 (Energie).
+**Status:** Planungsentwurf (Nutzerauftrag 24.11.2026), Umsetzung offen · **Phase:** P84 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** keine blockierende (Quer-Epic wie P80/P82); P81/P82-Ausläufe bleiben unberührt, P30/P31 On hold ebenfalls. Grundlagen: [Recherche-Snapshot 2026-11-24](../docs/2026-11-24_ai-arbeit-evaluation-recherche.md); Messlauf-Muster (`scripts/messlauf-*.mjs`), Skill-Run-Extraktor `scripts/skill-runs.mjs` (P72), `turn_metrics`/ADR-0003/ADR-0006, P81 (Energie).
 
 ## 1. Ziel
 
@@ -99,61 +99,61 @@ Skill-Zuordnung pro Lauf nachträglich.
 
 ## 4. Aufgaben
 
-- [ ] **T83.1** Aufgabenkorpus einfrieren: 12–20 nachspielbare Aufgaben aus
+- [ ] **T84.1** Aufgabenkorpus einfrieren: 12–20 nachspielbare Aufgaben aus
   diesem Repo mit deterministischer Abnahme-Prüfung; Korpus-Hash ins Repo;
   Erzeugungsdatum je Aufgabe notieren (Kontaminationsschutz, Recherche
-  §2.4). → AC-P83-1
-- [ ] **T83.2** Evaluations-Protokoll + Ergebnisspeicherung als Contract in
+  §2.4). → AC-P84-1
+- [ ] **T84.2** Evaluations-Protokoll + Ergebnisspeicherung als Contract in
   `@ancientvoid/contracts` und Core-Modul (Erweiterung `turn_metrics`-Welt,
-  K7-Recovery-Pfad dokumentiert). → AC-P83-2, AC-P83-3
-- [ ] **T83.3** Runner `npm run messlauf:eval` (`scripts/messlauf-eval.mjs`,
+  K7-Recovery-Pfad dokumentiert). → AC-P84-2, AC-P84-3
+- [ ] **T84.3** Runner `npm run messlauf:eval` (`scripts/messlauf-eval.mjs`,
   Messlauf-Muster): Arm-Definition als Datei, fährt Arme über bestehende
   Adapter durch den Hub; K8-Klasse (parallele Sessions ohne Verlust): der
-  Runner bricht laut, statt Läufe still zu droppen. → AC-P83-2
-- [ ] **T83.4** Kosten-/Energiebuchung: Preis-Snapshot je Lauf im
+  Runner bricht laut, statt Läufe still zu droppen. → AC-P84-2
+- [ ] **T84.4** Kosten-/Energiebuchung: Preis-Snapshot je Lauf im
   Datensatz; lokale Arme mit P81-Energie; Report weist beides getrennt aus.
-  → AC-P83-3
-- [ ] **T83.5** Skills-A/B innerhalb je eines Harness (an/aus auf
+  → AC-P84-3
+- [ ] **T84.5** Skills-A/B innerhalb je eines Harness (an/aus auf
   identischen Aufgaben; immer geladene Regel-Last konstant halten und
-  ausweisen). → AC-P83-4
-- [ ] **T83.6** Erste Kernserie auf der reduzierten Matrix (n ≥ 5 je Arm,
-  Median + Streuung je Metrik und Aufgabe). → AC-P83-2, AC-P83-6
-- [ ] **T83.7** Split-Szenarien (a)/(b)/(c) auf demselben Korpus,
-  Phasentrennung Plan/Bau im Protokoll. → AC-P83-5
-- [ ] **T83.8** Report-Generator + erster datierter Report
+  ausweisen). → AC-P84-4
+- [ ] **T84.6** Erste Kernserie auf der reduzierten Matrix (n ≥ 5 je Arm,
+  Median + Streuung je Metrik und Aufgabe). → AC-P84-2, AC-P84-6
+- [ ] **T84.7** Split-Szenarien (a)/(b)/(c) auf demselben Korpus,
+  Phasentrennung Plan/Bau im Protokoll. → AC-P84-5
+- [ ] **T84.8** Report-Generator + erster datierter Report
   `docs/messlauf/JJJJ-MM-DD-p83-eval-kernserie.md`; datenbasierte
-  Kombinations-Empfehlung (Anhang im Report) als Entscheidungsvorlage. → AC-P83-2…6
+  Kombinations-Empfehlung (Anhang im Report) als Entscheidungsvorlage. → AC-P84-2…6
 
 ## 5. Acceptance Criteria
 
-- **AC-P83-1 (Korpus):** Korpus eingefroren + gehasht; jede Aufgabe hat eine
+- **AC-P84-1 (Korpus):** Korpus eingefroren + gehasht; jede Aufgabe hat eine
   deterministische Abnahme-Prüfung, die an einer Referenzlösung grün und am
   unbedienten Start rot ist; Erzeugungsdatum je Aufgabe dokumentiert.
-- **AC-P83-2 (Reproduzierbarkeit):** Jeder gemeldete Arm-Wert beruht auf
+- **AC-P84-2 (Reproduzierbarkeit):** Jeder gemeldete Arm-Wert beruht auf
   n ≥ 5 Läufen und wird mit Median und Streuung berichtet; ein zweiter
   voller Lauf derselben Kernserie reproduziert die Rangfolge der Arme auf
   den aggregierten Metriken (K7: Datensatz aus JSONL + Snapshot
   rekonstruierbar).
-- **AC-P83-3 (Kosten):** Jeder Ergebnisdatensatz trägt Token (Input/Output
+- **AC-P84-3 (Kosten):** Jeder Ergebnisdatensatz trägt Token (Input/Output
   getrennt) und eine Kostenbasis (Preis-Snapshot mit Datum oder
   P81-Energie); kein Lauf mit Kosten 0.
-- **AC-P83-4 (Skills):** Der Skill-Effekt wird binnen eines Harness
+- **AC-P84-4 (Skills):** Der Skill-Effekt wird binnen eines Harness
   gemessen; ein Effekt wird nur dann berichtet, wenn er die Arm-Streuung
   überschreitet — sonst explizit „nicht messbar getrennt vom Rauschen".
-- **AC-P83-5 (Split):** Beide Split-Richtungen + Kontrollarm liegen auf
+- **AC-P84-5 (Split):** Beide Split-Richtungen + Kontrollarm liegen auf
   identischem Korpus vor; die Auswertung nennt eine datenbasierte
   Empfehlung (oder erklärt, warum die Datenlage dafür noch nicht reicht).
-- **AC-P83-6 (Variablen-Trennung):** Mindestens je ein Vergleich variiert
+- **AC-P84-6 (Variablen-Trennung):** Mindestens je ein Vergleich variiert
   nur das Modell (Harness fix) bzw. nur den Harness (Modell fix);
   verconfoundete Zeilen des Reports sind als solche gekennzeichnet.
-- **AC-P83-7 (Qualität):** Mechanische Korrektheit kommt aus
+- **AC-P84-7 (Qualität):** Mechanische Korrektheit kommt aus
   deterministischen Tests; subjektive Qualitätsurteile sind nach
   **P000 delegiert** (Eintragsformat dort) und werden hier nicht
   vorweggenommen.
 
 ## 6. Premortem
 
-**Ende P83, gescheitert. Warum?**
+**Ende P84, gescheitert. Warum?**
 
 1. **Kontamination oder Ausreißer-Aufgabe verzerren:** Eine Aufgabe dominiert
    ein Ergebnis (oder war doch in Trainingsdaten). Mitigation: n ≥ 5,
@@ -162,14 +162,14 @@ Skill-Zuordnung pro Lauf nachträglich.
    Zweitbetrachtung ohne sie gerechnet.
 2. **Kosten-Drift macht die Serie ungleich:** Modelle werden umbenannt,
    Preise bewegen sich während der Serie. Mitigation: Preis-Snapshot mit
-   Datum je Lauf (AC-P83-3); Vergleiche über Preisdatum hinweg werden im
+   Datum je Lauf (AC-P84-3); Vergleiche über Preisdatum hinweg werden im
    Report als solche markiert, nicht verschleiert.
 3. **Stichprobe zu klein / nichtreproduzierbar:** Zwei Läufe, drei Meinungen.
-   Mitigation: AC-P83-2 erzwingt n ≥ 5 + Reproduktionslauf; Einzelläufe
+   Mitigation: AC-P84-2 erzwingt n ≥ 5 + Reproduktionslauf; Einzelläufe
    erscheinen im Report nie als Ergebniszeile.
 4. **Skill-Wirkung nicht kausal trennbar:** die Harness-Installationen laden Skills
    unterschiedlich nativ, oder die immer-geladene Kontext-Last vermischt sich
-   mit dem A/B. Mitigation: A/B nur binnen Harness (AC-P83-4),
+   mit dem A/B. Mitigation: A/B nur binnen Harness (AC-P84-4),
    immer/on-demand getrennt ausgewiesen (Recherche §3.5); kein
    Harness-übergreifender Skill-Vergleich als „Ergebnis".
 5. **Runner wird zum Wissenschaftsprojekt:** Volle Kreuzmatrix, Live-

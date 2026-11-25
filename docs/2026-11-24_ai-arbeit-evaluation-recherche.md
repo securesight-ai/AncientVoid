@@ -1,7 +1,7 @@
 # Recherche: Evaluation und Kalkulation von AI-Arbeit (Harness × Modell × Skills)
 
 Datum der Recherche: **2026-11-24** (alle Webquellen an diesem Tag abgerufen).
-Grundlage für [EPIC-P83](../epics/EPIC-P83-ai-arbeit-evaluation-benchmark.md).
+Grundlage für [EPIC-P84](../epics/EPIC-P84-ai-arbeit-evaluation-benchmark.md).
 Dies ist ein datierter Snapshot und altern bewusst.
 
 ## 1. Forschungsfrage
