@@ -1,6 +1,6 @@
 # EPIC-P83 — Team: gemeinsam arbeiten über mehrere AncientVoid-Instanzen
 
-**Status:** Planungsentwurf (Nutzerauftrag 24.11.2026, Entscheide E1–E12 liegen vor), Umsetzung gesperrt bis P82 grün · **Phase:** P83 · **Dauer:** 13–18 Agenten-Wochen · **Abhängigkeit:** P82 grün (offen; Planung vorab auf ausdrücklichen Auftrag), P6/P60 fachlich umgesetzt, P45-No-go bleibt, P30/P31 On hold unberührt. Tracker-Issue: #421.
+**Status:** Planungsentwurf (Nutzerauftrag 24.11.2026, Entscheide E1–E12 liegen vor), Umsetzung wartet auf T83.0 · **Phase:** P83 · **Dauer:** 13–18 Agenten-Wochen · **Abhängigkeit:** [P82 abgeschlossen](EPIC-P82-audit-raeumen-inventar-schnitt-haertung.md) und im [Nightly auf `4f8533cf`](https://github.com/securesight-ai/AncientVoid/actions/runs/45566415645) enthalten, P6/P60 fachlich umgesetzt, P45-No-go bleibt, P30/P31 On hold unberührt. Tracker-Issue: #421.
 
 Grundlagen: [Recherche und Threat Model](../docs/2026-11-24_team-kollaboration-recherche.md) ·
 [Feinkonzept](../docs/2026-11-24_team-feinkonzept.md) ·
@@ -58,7 +58,7 @@ T83.5 (Widerruf) liegt bewusst vor jeder Nutzfunktion.
 
 ## 4. Aufgaben (Checkliste)
 
-- [ ] **T83.0** Entscheidungstor: P82 grün geprüft, Bind- und Egress-Regeln vom Betreiber bestätigt, AGENTS.md-Ergänzung zu ADR-0119 §7.6. Kein Code davor.
+- [ ] **T83.0** Entscheidungstor: P82 grün geprüft, [AGENTS.md](../AGENTS.md) ergänzt. Ausstehend ist die Betreiberbestätigung der Bind-Regeln nach [ADR-0118 §3](../docs/adr/0118-team-verbindung-identitaet-kopplung.md#entscheidung) und der Egress-Regeln nach [ADR-0122 §5](../docs/adr/0122-sandbox-fuer-worker.md#entscheidung). Kein Code davor.
 - [ ] **T83.1** Umbenennung Agenten-Team → Swarm nach ADR-0123 (reiner Rename mit Migration, eigener PR), danach Auftraggeber statt fest `"team"` und additives `Swarm.origin`. Altdaten-Fixture, Automationen, Redirect-Spec `e2e/specs/swarm.spec.ts`. **K7/K10**
 - [ ] **T83.2** Instanz und Link: Schlüssel, Listener/Dialer, Adressprüfung, Pins, Zustand in V7. Tests: Wildcard/öffentliche Adresse = Startfehler, TLS 1.2, fremder Schlüssel, Resumption, DNS-Rebinding, kein `/api`. **K9**
 - [ ] **T83.3** Kopplung über PWA und `hubctl` (Feinkonzept §5). Spec `e2e/specs/team-pairing.spec.ts`. **K1**
