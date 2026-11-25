@@ -33,6 +33,7 @@ describe("normalizeOpencodeLine — real captured `opencode run --format json` (
     // T7.7: the real capture says cost 0 (subscription plan) — not a confirmed $0.
     expect(finishes[0]!.costUsd).toBeUndefined();
     expect(finishes[0]!.tokensEst).toBe(7450);
+    expect(finishes[0]!.payload.usage).toEqual({ input: 7411, output: 39 });
     expect(finishes[1]!.tokensEst).toBe(7505);
   });
 
