@@ -1,5 +1,15 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
+## 25.11.2026 — PR-Lage klären, Flake-Fix, Hub auf neuen Stand (Sitzung f2f88190)
+
+Lage: EPIC-P82 ist über PR #423 in main gemerged (16791e7b). #420 (EPIC-P83-Doku,
+Auto-Merge aktiviert) ist BLOCKED — verify scheiterte am device-setup-Test mit
+ENOTEMPTY; #424 (p80, andere Sitzung) ist offen, CLEAN und grün. Fix läuft auf
+fix/device-setup-test-race: Tests warten auf den terminalen Zustand, bevor
+afterEach löscht. Rückfall-Stand für den Hub-Neustart: f291ce81 (ausgeliefert).
+Wiederaufnahme bei Abbruch: (1) Fix-PR mergen, (2) gh pr sync 420 (Auto-Merge
+löst aus), (3) main pullen, PWA bauen, Wachhund-Neustart nach Skill
+hub-neustart-live, (4) Nightly auf dem neuen Stand anstoßen.
 
 ## 24.11.2026 — Nachschau über die eigenen Änderungen (PR #…)
 
