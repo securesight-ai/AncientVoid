@@ -343,7 +343,7 @@ export const HubConfig = z.object({
     })
     .optional(),
   /**
-   * EPIC-P79 (ADR-0102): Token-Tempo der Inferenz-Engines fuer die Seite
+   * EPIC-P79 (ADR-0125): Token-Tempo der Inferenz-Engines fuer die Seite
    * "Inferenz". Eigene, engmaschigere Spur als `aiMetrics` (P59): Request-
    * Historie plus Verteilungen. Ohne Abschnitt: leere Quellen-Liste, die Seite
    * erklaert die Konfiguration. Schluessel nur als Dateireferenz (ADR-0011).

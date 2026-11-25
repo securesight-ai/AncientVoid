@@ -7,7 +7,7 @@ import type { Page } from "@playwright/test";
 import { freePort } from "../support/ports.ts";
 
 /**
- * EPIC-P79 (ADR-0102): Token-Tempo-Seite. Zwei Engines als Stand-ins: eine
+ * EPIC-P79 (ADR-0125): Token-Tempo-Seite. Zwei Engines als Stand-ins: eine
  * meldet Einzel-Requests (Verteilungen sind erlaubt), eine nur Gegenwerte
  * (Verteilungen müssen verweigert und erklärt werden) — plus eine tote Quelle
  * (K9) und ein API-Key, der nur als Datei vorliegt und nirgends auftauchen darf.

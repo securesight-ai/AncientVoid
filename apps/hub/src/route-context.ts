@@ -85,7 +85,7 @@ export interface RouteDeps {
   team?: HubTeam;
   /** EPIC-P59 (ADR-0078): Sampler für die Metrik-Seite; ohne Angabe leere Quelle-Liste. */
   aimetrics?: AiMetricsSampler;
-  /** EPIC-P79 (ADR-0102): Tracker für die Token-Tempo-Seite. */
+  /** EPIC-P79 (ADR-0125): Tracker für die Token-Tempo-Seite. */
   inference?: InferenceTracker;
   /** Suche (Nachschärfe 2026-11-22): Volltextindex über die Sessiontexte.
    * Ohne Angabe antworten die Session-Routen 501 — wie bei approvals, die

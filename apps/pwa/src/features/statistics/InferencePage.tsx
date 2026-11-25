@@ -7,7 +7,7 @@ import { t } from "../../shared/i18n/index.ts";
 import { alter, anteil, byteGroesse, dauer, tempo, hatVerlauf, uhrzeit, zahl } from "./inference-format.ts";
 
 /**
- * EPIC-P79 T79.4 (ADR-0102): Token-Tempo der Inferenz-Engines.
+ * EPIC-P79 T79.4 (ADR-0125): Token-Tempo der Inferenz-Engines.
  *
  * Grundregeln, die diese Seite durchziehen: `null` ist „—“, nie 0 (ADR-0023);
  * Verteilungen zeigen nur Engines, die Einzel-Requests melden (sonst steht der

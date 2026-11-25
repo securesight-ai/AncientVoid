@@ -1,6 +1,6 @@
 # ADR-0116 — Pforte pro Modell-Endpoint: ein Platz, ein Kontextbudget, ein Lease
 
-**Status:** angenommen (2026-11-23) · **Bezug:** BUG-0272 (#340), EPIC-P79 (ADR-0102), ADR-0115 (Kontextüberlauf als eigene Fehlerkategorie)
+**Status:** angenommen (2026-11-23) · **Bezug:** BUG-0272 (#340), EPIC-P79 (ADR-0125), ADR-0115 (Kontextüberlauf als eigene Fehlerkategorie)
 
 ## Kontext
 
