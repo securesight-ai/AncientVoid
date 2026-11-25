@@ -241,7 +241,7 @@ function StatistikTab() {
   }, []);
 
   const toggle = (id: string) => setCollapsed(c => ({ ...c, [id]: !(c[id] ?? !DEFAULT_OPEN.includes(id)) }));
-  const sectionIds = ["schnitt", "system", "kiserver", "sessions", "zuege", "gates", "tools", "teams", "anomalien", "vergleich"] as const;
+  const sectionIds = ["schnitt", "system", "kiserver", "sessions", "zuege", "gates", "tools", "swarms", "anomalien", "vergleich"] as const;
   const setAll = (open: boolean) => {
     const next: Record<string, boolean> = {};
     for (const id of sectionIds) next[id] = !open;
@@ -321,7 +321,7 @@ function StatistikTab() {
         )}
       </Section>
 
-      {report.sessions.length === 0 && report.team === null ? (
+      {report.sessions.length === 0 && report.swarm === null ? (
         <EmptyState text={filtered ? "Keine Session in diesem Schnitt — der Schnitt ist echt leer, nicht kaputt." : "Noch keine Session ausgewertet — der Rollup läuft mit dem ersten Abruf."} />
       ) : (
         <>
@@ -340,8 +340,8 @@ function StatistikTab() {
             <ShareBars label={t("statistics.tools")} rows={topRows(report.tools.map(x => ({ key: x.tool ?? "", label: x.tool ?? t("statistics.name_unbelegt"), value: x.calls, text: formatCount(x.calls), note: x.failureRate === null ? undefined : t("statistics.errorRate", { pct: Math.round(x.failureRate * 100) }), tone: "cpu" as const })))} />
             <ToolTable report={report} />
           </Section>
-          <Section id="teams" title={t("statistics.teams")} note="Projekt-/Zeitraum-Schnitt" collapsed={collapsed.teams ?? true} onToggle={() => toggle("teams")}>
-            <TeamTable report={report} filtered={filtered} />
+          <Section id="swarms" title={t("statistics.swarms")} note="Projekt-/Zeitraum-Schnitt" collapsed={collapsed.swarms ?? true} onToggle={() => toggle("swarms")}>
+            <SwarmTable report={report} filtered={filtered} />
           </Section>
           <Section id="anomalien" title={t("statistics.anomalies")} note="über Gruppen-p95" collapsed={collapsed.anomalien ?? true} onToggle={() => toggle("anomalien")}>
             <AnomalyTable anomalies={report.anomalies} />
@@ -410,11 +410,11 @@ function exportCsv(report: StatisticsReport): void {
   rows.push("# Recovery");
   rows.push(line(["p50_ms", "p90_ms", "p95_ms", "n", "fehlend"]));
   rows.push(line([report.recovery.p50, report.recovery.p90, report.recovery.p95, report.recovery.n, report.recovery.missing]));
-  if (report.team) {
-    const tm = report.team;
-    rows.push("# Teams (nur Projekt-/Zeitraum-Schnitt)");
-    rows.push(line(["teams", "aufgaben", "offen", "unbekannt", t("statistics.done"), "failed", "worker_ende_quote", "retry_rate"]));
-    rows.push(line([tm.teams, tm.tasks, tm.open, tm.unknown, tm.done, tm.failed, tm.workerEndRate, tm.retryRate]));
+  if (report.swarm) {
+    const tm = report.swarm;
+    rows.push("# Swarms (nur Projekt-/Zeitraum-Schnitt)");
+    rows.push(line(["swarms", "aufgaben", "offen", "unbekannt", t("statistics.done"), "failed", "worker_ende_quote", "retry_rate"]));
+    rows.push(line([tm.swarms, tm.tasks, tm.open, tm.unknown, tm.done, tm.failed, tm.workerEndRate, tm.retryRate]));
   }
   rows.push("# Anomalien (über Gruppen-p95; Klein-n-Gruppen melden keine)");
   rows.push(line(["session", "adapter", "modell", "projekt", "wall_ms", "wall_p95", "zuge", "zuge_p95"]));
@@ -548,14 +548,14 @@ function ToolTable({ report }: { report: StatisticsReport }) {
   );
 }
 
-function TeamTable({ report, filtered }: { report: StatisticsReport; filtered: boolean }) {
-  const tm = report.team;
-  if (tm === null) return <p class="stat-note">{t("statistics.no_teams")}</p>;
+function SwarmTable({ report, filtered }: { report: StatisticsReport; filtered: boolean }) {
+  const tm = report.swarm;
+  if (tm === null) return <p class="stat-note">{t("statistics.no_swarms")}</p>;
   return (
     <div>
       <div class="stat-scroll"><table>
         <tbody>
-          <tr><th scope="row">{t("statistics.teams_tasks")}</th><td>{formatCount(tm.teams)} · {formatCount(tm.tasks)}</td></tr>
+          <tr><th scope="row">{t("statistics.swarms_tasks")}</th><td>{formatCount(tm.swarms)} · {formatCount(tm.tasks)}</td></tr>
           <tr><th scope="row">{t("statistics.ends")}</th><td>{t("statistics.done")} {formatCount(tm.done)}{t("statistics.failed")} {formatCount(tm.failed)}{t("statistics.open")} {formatCount(tm.open)}{t("statistics.unknown")} {formatCount(tm.unknown)}</td></tr>
           <tr><th scope="row">{t("statistics.worker_end_rate")}</th><td>{tm.workerEndRate === null ? "—" : `${Math.round(tm.workerEndRate * 100)} %`}</td></tr>
           <tr><th scope="row">{t("statistics.retry_rate")}</th><td>{tm.retryRate === null ? "—" : `${Math.round(tm.retryRate * 100)} %`}</td></tr>

@@ -14,7 +14,7 @@ describe("policy table (T7.4)", () => {
   });
 
   it("invariant: an agent never writes directly — at most it requests", () => {
-    const READ_OP: Record<string, true> = { read: true, "team.read": true, "knowledge.read": true, "scan.read": true };
+    const READ_OP: Record<string, true> = { read: true, "swarm.read": true, "knowledge.read": true, "scan.read": true };
     for (const op of POLICY_OPERATIONS) {
       // Lese-Operationen mit demselben Allow-Set wie das generische `read`
       // der Fläche (ADR-0077 Teams, ADR-0096 Nachtrag Knowledge) — kein Schreiben.
@@ -72,7 +72,7 @@ describe("policy table (T7.4)", () => {
   });
 
   it("ADR-0048/0069: a display reads, decides write approvals, and may write drafts — nothing else", () => {
-    const allow = new Set(["read", "team.read", "knowledge.read", "scan.read", "approvals.decide", "drafts.write"]);
+    const allow = new Set(["read", "swarm.read", "knowledge.read", "scan.read", "approvals.decide", "drafts.write"]);
     for (const op of POLICY_OPERATIONS) expect(POLICY[op].display, op).toBe(allow.has(op) ? "allow" : "deny");
     expect(policyFor("approvals.decide", "display:nyx")).toBe("allow");
     expect(policyFor("drafts.write", "display:nyx")).toBe("allow");

@@ -20,7 +20,7 @@ const PLAN = {
   ],
 };
 
-describe("team routes (integration, EPIC-P40/P60)", () => {
+describe("swarm routes (integration, EPIC-P40/P60/P83)", () => {
   let base: string;
   let app: FastifyInstance;
   let human: { authorization: string };
@@ -83,14 +83,14 @@ describe("team routes (integration, EPIC-P40/P60)", () => {
   });
 
   it("Run mit gegebenem Plan: zwei Adapter, DAG, Ergebnisse — bis done (AC-P40-1/2)", async () => {
-    const res = await app.inject({ method: "POST", url: "/api/teams", headers: human, payload: startRun() });
+    const res = await app.inject({ method: "POST", url: "/api/swarms", headers: human, payload: startRun() });
     expect(res.statusCode).toBe(201);
     const id = res.json().id;
     // Beide Tasks nacheinander über zwei verschiedene Adapter ausführen; Ergebnisse landen als Delivery.
     await expect
-      .poll(async () => (await app.inject({ method: "GET", url: `/api/teams/${id}`, headers: human })).json().status, { timeout: 30_000 })
+      .poll(async () => (await app.inject({ method: "GET", url: `/api/swarms/${id}`, headers: human })).json().status, { timeout: 30_000 })
       .toBe("done");
-    const run = (await app.inject({ method: "GET", url: `/api/teams/${id}`, headers: human })).json();
+    const run = (await app.inject({ method: "GET", url: `/api/swarms/${id}`, headers: human })).json();
     expect(run.tasks.map((t: { id: string }) => t.id)).toEqual(["T1", "T2"]);
     expect(run.tasks[0].dispatches[0].adapter).toBe("dummy");
     expect(run.tasks[1].dispatches[0].adapter).toBe("zweit");
@@ -100,25 +100,25 @@ describe("team routes (integration, EPIC-P40/P60)", () => {
   });
 
   it("Agenten dürfen lesen, aber keine Runs starten/stoppen (AC-P40-3/4)", async () => {
-    const list = await app.inject({ method: "GET", url: "/api/teams", headers: agent });
+    const list = await app.inject({ method: "GET", url: "/api/swarms", headers: agent });
     expect(list.statusCode).toBe(200);
-    const start = await app.inject({ method: "POST", url: "/api/teams", headers: agent, payload: startRun() });
+    const start = await app.inject({ method: "POST", url: "/api/swarms", headers: agent, payload: startRun() });
     expect(start.statusCode).toBe(403);
     const runs = list.json() as { id: string }[];
-    const cancel = await app.inject({ method: "POST", url: `/api/teams/${runs[0]!.id}/cancel`, headers: agent, payload: { reason: "x" } });
+    const cancel = await app.inject({ method: "POST", url: `/api/swarms/${runs[0]!.id}/cancel`, headers: agent, payload: { reason: "x" } });
     expect(cancel.statusCode).toBe(403);
   });
 
   it("Loop-Adapter als Worker abgewiesen; unbekannte Abhängigkeit 422", async () => {
     const loopFrame = { ...FRAME, adapters: ["loop:securesight-factory"] };
-    const res = await app.inject({ method: "POST", url: "/api/teams", headers: human, payload: { ...startRun(), frame: loopFrame, plan: { tasks: [{ ...PLAN.tasks[0]!, adapter: "loop:securesight-factory" }] } } });
+    const res = await app.inject({ method: "POST", url: "/api/swarms", headers: human, payload: { ...startRun(), frame: loopFrame, plan: { tasks: [{ ...PLAN.tasks[0]!, adapter: "loop:securesight-factory" }] } } });
     expect(res.statusCode).toBe(422);
-    const badDeps = await app.inject({ method: "POST", url: "/api/teams", headers: human, payload: { ...startRun(), plan: { tasks: [{ ...PLAN.tasks[0]!, dependsOn: ["gibtsnicht"] }] } } });
+    const badDeps = await app.inject({ method: "POST", url: "/api/swarms", headers: human, payload: { ...startRun(), plan: { tasks: [{ ...PLAN.tasks[0]!, dependsOn: ["gibtsnicht"] }] } } });
     expect(badDeps.statusCode).toBe(422);
     // T60.8 (ADR-0077): Task-Modell außerhalb der Frame-Allowlist → 422, nie ungeprüft durch.
     const badModel = await app.inject({
       method: "POST",
-      url: "/api/teams",
+      url: "/api/swarms",
       headers: human,
       payload: { ...startRun(), frame: { ...FRAME, models: ["erlaubt-1"] }, plan: { tasks: [{ ...PLAN.tasks[0]!, model: "verboten-9" }] } },
     });
@@ -126,7 +126,7 @@ describe("team routes (integration, EPIC-P40/P60)", () => {
     expect(badModel.json().code).toBe("model_not_allowed");
     const cycle = await app.inject({
       method: "POST",
-      url: "/api/teams",
+      url: "/api/swarms",
       headers: human,
       payload: { ...startRun(), plan: { tasks: [PLAN.tasks[0]!, { ...PLAN.tasks[1]!, dependsOn: ["T2"] }] } },
     });
@@ -134,9 +134,9 @@ describe("team routes (integration, EPIC-P40/P60)", () => {
   });
 
   it("Cancel stoppt nur eigene Dispatches und erhält den Run nachvollziehbar (AC-P40-6)", async () => {
-    const res = await app.inject({ method: "POST", url: "/api/teams", headers: human, payload: startRun() });
+    const res = await app.inject({ method: "POST", url: "/api/swarms", headers: human, payload: startRun() });
     const id = res.json().id;
-    const cancel = await app.inject({ method: "POST", url: `/api/teams/${id}/cancel`, headers: human, payload: { reason: "Teststopp" } });
+    const cancel = await app.inject({ method: "POST", url: `/api/swarms/${id}/cancel`, headers: human, payload: { reason: "Teststopp" } });
     expect(cancel.statusCode).toBe(200);
     expect(cancel.json().status).toBe("cancelled");
     for (const t of cancel.json().tasks) {
@@ -147,14 +147,14 @@ describe("team routes (integration, EPIC-P40/P60)", () => {
   it("Hub-Neustart: aktive Dispatches werden unknown, kein blindes Retry (AC-P40-5)", async () => {
     // Neuer Hub auf gleichem dataDir: Recovery aus Journal+Snapshot. Poll auf das
     // Recovery-Signal (keine aktiven Dispatches mehr) — kein Uhrzeit-Sleep.
-    const res = await app.inject({ method: "POST", url: "/api/teams", headers: human, payload: startRun() });
+    const res = await app.inject({ method: "POST", url: "/api/swarms", headers: human, payload: startRun() });
     const id = res.json().id;
     await app.close();
     app = await buildApp(join(base, "hub", "hub.db"));
     await expect
       .poll(
         async () => {
-          const r = (await app.inject({ method: "GET", url: `/api/teams/${id}`, headers: human })).json();
+          const r = (await app.inject({ method: "GET", url: `/api/swarms/${id}`, headers: human })).json();
           return r.status !== "planning" && r.tasks.flatMap((t: { dispatches: { status: string }[] }) => t.dispatches).every((d: { status: string }) => d.status !== "active");
         },
         { timeout: 15_000 },
@@ -162,11 +162,16 @@ describe("team routes (integration, EPIC-P40/P60)", () => {
       .toBe(true);
     // Fortsetzung ist erlaubt (ready Tasks dürfen neu dispatchen), blindes Retry nicht:
     // kein Task erhält mehr Versuche als der Rahmen erlaubt, unknown bleibt unknown.
-    const run = (await app.inject({ method: "GET", url: `/api/teams/${id}`, headers: human })).json();
+    const run = (await app.inject({ method: "GET", url: `/api/swarms/${id}`, headers: human })).json();
     for (const t of run.tasks) {
       expect(t.dispatches.length, `Task ${t.id} Versuche`).toBeLessThanOrEqual(2);
       for (const d of t.dispatches) if (d.status === "unknown") expect(t.status).toBe("unknown");
     }
     expect(["done", "failed", "cancelled", "running"]).toContain(run.status);
+  });
+
+  it("ADR-0123 §5: /api/teams existiert nicht mehr — 404, kein stiller Alias", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/teams", headers: human });
+    expect(res.statusCode).toBe(404);
   });
 });

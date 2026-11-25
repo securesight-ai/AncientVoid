@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { TeamFrame, type TeamDispatch, type TeamPlan, type Team, type TeamTaskPlan } from "@ancientvoid/contracts";
-import { applyOutcome, cancelRun, contextPacket, nextDispatches, openGate, answerGate, tasksFromPlan, validatePlan } from "../../../src/modules/team/engine.ts";
-import { TeamStore } from "../../../src/modules/team/store.ts";
-import { TeamCoordinator, parsePlan, type TeamSessionPort } from "../../../src/modules/team/coordinator.ts";
+import { SwarmFrame, type SwarmDispatch, type SwarmPlan, type Swarm, type SwarmTaskPlan } from "@ancientvoid/contracts";
+import { applyOutcome, cancelRun, contextPacket, nextDispatches, openGate, answerGate, tasksFromPlan, validatePlan } from "../../../src/modules/swarm/engine.ts";
+import { SwarmStore } from "../../../src/modules/swarm/store.ts";
+import { SwarmCoordinator, parsePlan, type SwarmSessionPort } from "../../../src/modules/swarm/coordinator.ts";
 
-const frame = (over: Partial<TeamFrame> = {}): TeamFrame => ({
+const frame = (over: Partial<SwarmFrame> = {}): SwarmFrame => ({
   adapters: ["codex"],
   coordinatorAdapter: "hermes",
   models: [],
@@ -17,7 +17,7 @@ const frame = (over: Partial<TeamFrame> = {}): TeamFrame => ({
   ...over,
 });
 
-const taskPlan = (id: string, over: Partial<TeamTaskPlan> = {}): TeamTaskPlan => ({
+const taskPlan = (id: string, over: Partial<SwarmTaskPlan> = {}): SwarmTaskPlan => ({
   id,
   title: `Task ${id}`,
   prompt: `Prompt für ${id}`,
@@ -27,7 +27,7 @@ const taskPlan = (id: string, over: Partial<TeamTaskPlan> = {}): TeamTaskPlan =>
   ...over,
 });
 
-const dispatch = (id: string, generation: number, status: TeamDispatch["status"] = "active"): TeamDispatch => ({
+const dispatch = (id: string, generation: number, status: SwarmDispatch["status"] = "active"): SwarmDispatch => ({
   id,
   generation,
   sessionId: `s-${id}`,
@@ -39,7 +39,7 @@ const dispatch = (id: string, generation: number, status: TeamDispatch["status"]
   note: null,
 });
 
-const mkRun = (plan: TeamPlan, fr: TeamFrame = frame()): Team => ({
+const mkRun = (plan: SwarmPlan, fr: SwarmFrame = frame()): Swarm => ({
   id: "run-1",
   title: "Test-Run",
   goal: "Ein Ziel",
@@ -47,6 +47,7 @@ const mkRun = (plan: TeamPlan, fr: TeamFrame = frame()): Team => ({
   frame: fr,
   planSource: "given",
   coordinatorSessionId: null,
+  origin: null,
   status: "running",
   tasks: tasksFromPlan(plan),
   gates: [],
@@ -83,12 +84,12 @@ describe("EPIC-P40 Orchestrierung — Engine", () => {
     expect(validatePlan({ tasks: [taskPlan("T1", { model: "etwas" })] }, frame())?.code).toBe("model_not_allowed");
   });
 
-  it("T60.8: TeamFrame liest die Altedform mit model toleriert (ADR-0077 §6)", () => {
+  it("T60.8: SwarmFrame liest die Altedform mit model toleriert (ADR-0077 §6)", () => {
     const base = { adapters: ["codex"], coordinatorAdapter: "hermes", maxTasks: 8, maxDispatchesPerTask: 2, maxParallel: 2 };
-    expect(TeamFrame.parse({ ...base, model: "grok-4" })).toMatchObject({ models: ["grok-4"] });
-    expect(TeamFrame.parse({ ...base, model: null })).toMatchObject({ models: [] });
-    expect(TeamFrame.parse({ ...base })).toMatchObject({ models: [] });
-    expect(TeamFrame.parse({ ...base, models: ["a", "b"], model: "c" })).toMatchObject({ models: ["a", "b"] });
+    expect(SwarmFrame.parse({ ...base, model: "grok-4" })).toMatchObject({ models: ["grok-4"] });
+    expect(SwarmFrame.parse({ ...base, model: null })).toMatchObject({ models: [] });
+    expect(SwarmFrame.parse({ ...base })).toMatchObject({ models: [] });
+    expect(SwarmFrame.parse({ ...base, models: ["a", "b"], model: "c" })).toMatchObject({ models: ["a", "b"] });
   });
 
   it("validatePlan: zu viele Tasks", () => {
@@ -249,30 +250,30 @@ describe("EPIC-P40 Orchestrierung — Engine", () => {
   });
 });
 
-describe("EPIC-P40/P60 Teams — Store (K7)", () => {
-  it("put+update persistiert; neuer Store auf gleichem dataDir stellt Team her; kaputte Journalzeile wird gezählt", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "av-p60-"));
-    const store = new TeamStore(dir);
+describe("EPIC-P40/P60/P83 Swarms — Store (K7)", () => {
+  it("put+update persistiert; neuer Store auf gleichem dataDir stellt Swarm her; kaputte Journalzeile wird gezählt", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "av-p83-"));
+    const store = new SwarmStore(dir);
     await store.init();
     const run = mkRun({ tasks: [taskPlan("T1")] });
     await store.put(run);
     await store.update(run.id, (r) => {
       r.tasks[0]!.status = "running";
     });
-    appendFileSync(join(dir, "team", "teams.jsonl"), "{kaputt\n");
-    const store2 = new TeamStore(dir);
+    appendFileSync(join(dir, "swarm", "swarms.jsonl"), "{kaputt\n");
+    const store2 = new SwarmStore(dir);
     const report = await store2.init();
     expect(report.skippedLines).toBe(1);
-    expect(report.teams).toBe(1);
+    expect(report.swarms).toBe(1);
     const restored = store2.get(run.id);
     expect(restored?.id).toBe(run.id);
     expect(restored?.tasks[0]?.status).toBe("running");
   });
 });
 
-describe("EPIC-P60 (ADR-0077) — Journal-Migration orchestration/ → team/", () => {
+describe("EPIC-P60 (ADR-0077) — Journal-Migration orchestration/ → swarm/", () => {
   /** Altdaten-Fixture: dataDir mit historischem Layout `orchestration/runs.jsonl` (+ snapshot). */
-  function legacyDir(withSnapshot: boolean): { dir: string; run: Team } {
+  function legacyDir(withSnapshot: boolean): { dir: string; run: Swarm } {
     const dir = mkdtempSync(join(tmpdir(), "av-p60-mig-"));
     const run = mkRun({ tasks: [taskPlan("T1"), taskPlan("T2")] });
     run.id = "legacy-run-1";
@@ -284,53 +285,96 @@ describe("EPIC-P60 (ADR-0077) — Journal-Migration orchestration/ → team/", (
     return { dir, run };
   }
 
-  it("migriert Altbestand einmalig nach team/teams.jsonl; Altdaten bleiben liegen (K7)", async () => {
+  it("migriert Altbestand einmalig nach swarm/swarms.jsonl; Altdaten bleiben liegen (K7)", async () => {
     const { dir, run } = legacyDir(true);
-    const store = new TeamStore(dir);
+    const store = new SwarmStore(dir);
     const report = await store.init();
-    expect(report.migratedTeams).toBe(1);
-    expect(report.teams).toBe(1);
+    expect(report.migratedSwarms).toBe(1);
+    expect(report.swarms).toBe(1);
     expect(store.get(run.id)?.tasks.length).toBe(2);
     // Neues Journal + Snapshot existieren; alte Dateien unangetastet.
-    expect(existsSync(join(dir, "team", "teams.jsonl"))).toBe(true);
-    expect(existsSync(join(dir, "team", "snapshot.json"))).toBe(true);
+    expect(existsSync(join(dir, "swarm", "swarms.jsonl"))).toBe(true);
+    expect(existsSync(join(dir, "swarm", "snapshot.json"))).toBe(true);
     expect(existsSync(join(dir, "orchestration", "runs.jsonl"))).toBe(true);
     // Restore nach Migration: neuer Store auf gleichem dataDir findet alles im neuen Layout.
-    const store2 = new TeamStore(dir);
+    const store2 = new SwarmStore(dir);
     const report2 = await store2.init();
-    expect(report2.teams).toBe(1);
-    expect(report2.migratedTeams).toBeUndefined();
+    expect(report2.swarms).toBe(1);
+    expect(report2.migratedSwarms).toBeUndefined();
   });
 
   it("migriert nicht erneut, wenn das neue Journal schon existiert (kein Doppelimport)", async () => {
     const { dir, run } = legacyDir(false);
-    const first = new TeamStore(dir);
+    const first = new SwarmStore(dir);
     await first.init();
     // Zweiter Start nach zwischenzeitlichem Schreiben: Altbestand darf nicht doppelt zählen.
-    const second = new TeamStore(dir);
+    const second = new SwarmStore(dir);
     const report = await second.init();
-    expect(report.migratedTeams).toBeUndefined();
-    expect(report.teams).toBe(1);
+    expect(report.migratedSwarms).toBeUndefined();
+    expect(report.swarms).toBe(1);
     expect(second.get(run.id)).toBeDefined();
   });
 
   it("zählt kaputte Altzeilen, versteckt sie aber nicht", async () => {
     const { dir, run } = legacyDir(false);
     appendFileSync(join(dir, "orchestration", "runs.jsonl"), "{kaputt\n");
-    const store = new TeamStore(dir);
+    const store = new SwarmStore(dir);
     const report = await store.init();
-    expect(report.migratedTeams).toBe(1);
+    expect(report.migratedSwarms).toBe(1);
     expect(report.migratedSkippedLines).toBe(1);
     expect(store.get(run.id)).toBeDefined();
   });
+});
 
-  it("T60.8: Bestands-Teams mit altem frame.model werden beim Laden auf models normalisiert (ADR-0077 §6)", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "av-p60-frm-"));
+describe("EPIC-P83 (ADR-0123) — Journal-Migration team/ → swarm/", () => {
+  /** Altdaten-Fixture: dataDir mit P60/P83-Layout `team/teams.jsonl` (Journalschlüssel `run`) + Snapshot mit `runs`. */
+  function legacyTeamDir(): { dir: string; run: Swarm } {
+    const dir = mkdtempSync(join(tmpdir(), "av-p83-mig-"));
+    const run = mkRun({ tasks: [taskPlan("T1"), taskPlan("T2")] });
+    run.id = "legacy-team-1";
     mkdirSync(join(dir, "team"), { recursive: true });
+    writeFileSync(join(dir, "team", "teams.jsonl"), JSON.stringify({ seq: 1, at: run.createdAt, op: "put", run }) + "\n");
+    writeFileSync(join(dir, "team", "snapshot.json"), JSON.stringify({ appliedSeq: 1, runs: [run] }));
+    return { dir, run };
+  }
+
+  it("migriert Agenten-Team-Altbestand einmalig nach swarm/swarms.jsonl; Altdaten bleiben liegen (AC-P83-20)", async () => {
+    const { dir, run } = legacyTeamDir();
+    const store = new SwarmStore(dir);
+    const report = await store.init();
+    expect(report.migratedSwarms).toBe(1);
+    expect(report.swarms).toBe(1);
+    expect(store.get(run.id)?.tasks.length).toBe(2);
+    // Neues Journal existiert; die Altdateien bleiben unangetastet (K7, kein Löschen).
+    expect(existsSync(join(dir, "swarm", "swarms.jsonl"))).toBe(true);
+    expect(existsSync(join(dir, "swarm", "snapshot.json"))).toBe(true);
+    expect(existsSync(join(dir, "team", "teams.jsonl"))).toBe(true);
+    expect(existsSync(join(dir, "team", "snapshot.json"))).toBe(true);
+    // Zweiter Start: kein Doppelimport — der Altbestand zählt nur einmal.
+    const store2 = new SwarmStore(dir);
+    const report2 = await store2.init();
+    expect(report2.migratedSwarms).toBeUndefined();
+    expect(report2.swarms).toBe(1);
+  });
+
+  it("Journalzeilen mit altem Schlüssel `run` werden auch im Swarm-Verzeichnis tolerierend gelesen", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "av-p83-tol-"));
+    mkdirSync(join(dir, "swarm"), { recursive: true });
+    const run = mkRun({ tasks: [taskPlan("T1")] });
+    writeFileSync(join(dir, "swarm", "swarms.jsonl"), JSON.stringify({ seq: 1, at: run.createdAt, op: "put", run }) + "\n");
+    const store = new SwarmStore(dir);
+    const report = await store.init();
+    expect(report.swarms).toBe(1);
+    expect(store.get(run.id)).toBeDefined();
+  });
+
+  it("T60.8: Bestands-Swarms mit altem frame.model werden beim Laden auf models normalisiert (ADR-0077 §6)", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "av-p60-frm-"));
+    mkdirSync(join(dir, "swarm"), { recursive: true });
     const legacyFrame = { adapters: ["codex"], coordinatorAdapter: "hermes", model: "grok-4", maxTasks: 8, maxDispatchesPerTask: 2, maxParallel: 2 };
-    const team = { ...mkRun({ tasks: [taskPlan("T1")] }), frame: legacyFrame };
-    writeFileSync(join(dir, "team", "teams.jsonl"), JSON.stringify({ seq: 1, at: team.createdAt, op: "put", run: team }) + "\n");
-    const store = new TeamStore(dir);
+    const swarm = { ...mkRun({ tasks: [taskPlan("T1")] }), frame: legacyFrame };
+    writeFileSync(join(dir, "swarm", "swarms.jsonl"), JSON.stringify({ seq: 1, at: swarm.createdAt, op: "put", swarm }) + "\n");
+    const store = new SwarmStore(dir);
     await store.init();
     const loaded = store.get("run-1");
     expect(loaded?.frame).toMatchObject({ models: ["grok-4"] });
@@ -344,7 +388,7 @@ function fakePort() {
   const statuses = new Map<string, string>();
   const texts = new Map<string, string>();
   const created: string[] = [];
-  const port: TeamSessionPort = {
+  const port: SwarmSessionPort = {
     async create() {
       const id = `sess-${++n}`;
       created.push(id);
@@ -371,7 +415,7 @@ function fakePort() {
   return { port, statuses, texts, created };
 }
 
-const startInput = (plan: TeamPlan | null) => ({
+const startInput = (plan: SwarmPlan | null) => ({
   title: "Run",
   goal: "Ziel",
   project: "p",
@@ -379,34 +423,35 @@ const startInput = (plan: TeamPlan | null) => ({
   plan,
 });
 
-async function setup(plan: TeamPlan | null, pollMs = 3_600_000) {
+async function setup(plan: SwarmPlan | null, pollMs = 3_600_000) {
   const dir = mkdtempSync(join(tmpdir(), "av-p40-"));
-  const store = new TeamStore(dir);
+  const store = new SwarmStore(dir);
   await store.init();
   const fake = fakePort();
-  const orch = new TeamCoordinator(store, fake.port, { pollMs });
+  const orch = new SwarmCoordinator(store, fake.port, { pollMs });
   const run = await orch.start(startInput(plan), "tester");
   return { dir, store, fake, orch, run };
 }
 
+
 describe("EPIC-P60 (ADR-0077, T60.7) — Parallelitäts-Deckel 8 im Contract", () => {
   it("maxParallel 8 ist erlaubt, 9 wird abgewiesen (Zod-Deckel)", () => {
     const base = { adapters: ["codex"], coordinatorAdapter: "hermes", models: [], maxTasks: 8, maxDispatchesPerTask: 2 };
-    expect(TeamFrame.parse({ ...base, maxParallel: 8 }).maxParallel).toBe(8);
-    expect(TeamFrame.safeParse({ ...base, maxParallel: 9 }).success).toBe(false);
+    expect(SwarmFrame.parse({ ...base, maxParallel: 8 }).maxParallel).toBe(8);
+    expect(SwarmFrame.safeParse({ ...base, maxParallel: 9 }).success).toBe(false);
   });
 });
 
-describe("EPIC-P40 Orchestrierung — TeamCoordinator", () => {
+describe("EPIC-P40 Orchestrierung — SwarmCoordinator", () => {
   it("T60.7: N unabhängige Tasks mit maxParallel ≥ N laufen gleichzeitig; der Rahmen bleibt serverseitig erzwingt (K8)", async () => {
     // Drei unabhängige Tasks, Rahmen maxParallel 3 — der Fake-Port hält alle
     // Sessions in „working", sodass die Überlappung sichtbar bleibt.
     const dir = mkdtempSync(join(tmpdir(), "av-p60-par-"));
-    const store = new TeamStore(dir);
+    const store = new SwarmStore(dir);
     await store.init();
     const fake = fakePort();
-    const orch = new TeamCoordinator(store, fake.port, { pollMs: 3_600_000 });
-    const plan: TeamPlan = {
+    const orch = new SwarmCoordinator(store, fake.port, { pollMs: 3_600_000 });
+    const plan: SwarmPlan = {
       tasks: [taskPlan("T1"), taskPlan("T2"), taskPlan("T3"), taskPlan("T4")],
     };
     const run = await orch.start({ ...startInput(plan), frame: frame({ maxParallel: 3 }) }, "tester");
@@ -430,10 +475,10 @@ describe("EPIC-P40 Orchestrierung — TeamCoordinator", () => {
 
   it("T60.8: Koordinator-Plan mit unzulässigem Modell ⇒ genau eine Rückfrage mit Erneut-Planen (ADR-0077)", async () => {
     const dir = mkdtempSync(join(tmpdir(), "av-p60-mod-"));
-    const store = new TeamStore(dir);
+    const store = new SwarmStore(dir);
     await store.init();
     const fake = fakePort();
-    const orch = new TeamCoordinator(store, fake.port, { pollMs: 3_600_000 });
+    const orch = new SwarmCoordinator(store, fake.port, { pollMs: 3_600_000 });
     const run = await orch.start({ ...startInput(null), frame: frame({ models: ["erlaubt-1"] }) }, "tester");
     expect(run.coordinatorSessionId).toBe(fake.created[0]);
     fake.statuses.set(run.coordinatorSessionId!, "idle");
@@ -465,17 +510,23 @@ describe("EPIC-P40 Orchestrierung — TeamCoordinator", () => {
     expect(stored.status).toBe("done");
   });
 
-  it("Koordinator-Pfad: Plan-Session liefert ```team {…}``` ⇒ Tasks entstehen", async () => {
+  it("Koordinator-Pfad: Plan-Session liefert ```swarm {…}``` ⇒ Tasks entstehen (ADR-0123)", async () => {
     const { store, fake, orch, run } = await setup(null);
     expect(run.status).toBe("planning");
     expect(run.coordinatorSessionId).toBe(fake.created[0]);
     fake.statuses.set(run.coordinatorSessionId!, "idle");
-    fake.texts.set(run.coordinatorSessionId!, "```team\n" + JSON.stringify({ tasks: [taskPlan("T1")] }) + "\n```");
+    fake.texts.set(run.coordinatorSessionId!, "```swarm\n" + JSON.stringify({ tasks: [taskPlan("T1")] }) + "\n```");
     await orch.tick();
     const stored = store.get(run.id)!;
     expect(stored.status).toBe("running");
     expect(stored.tasks.map((t) => t.id)).toEqual(["T1"]);
     expect(stored.planSource).toBe("coordinator");
+    // Alt-Fence ```team bleibt lesbar (ADR-0123 §3).
+    const run2 = await orch.start(startInput(null), "tester");
+    fake.statuses.set(run2.coordinatorSessionId!, "idle");
+    fake.texts.set(run2.coordinatorSessionId!, "```team\n" + JSON.stringify({ tasks: [taskPlan("T2")] }) + "\n```");
+    await orch.tick();
+    expect(store.get(run2.id)?.tasks.map((t) => t.id)).toEqual(["T2"]);
   });
 
   it("unlesbarer Plan → Gate plan_unreadable", async () => {
@@ -493,10 +544,10 @@ describe("EPIC-P40 Orchestrierung — TeamCoordinator", () => {
   it("recover(): aktive Dispatches → unknown, Task/Run failed, kein neuer Dispatch beim tick", async () => {
     const { dir, run, fake } = await setup({ tasks: [taskPlan("T1")] });
     expect(run.tasks[0]?.dispatches).toHaveLength(1);
-    // „Crash“: neuer Store+TeamCoordinator ohne seen-Set auf gleichem dataDir.
-    const store2 = new TeamStore(dir);
+    // „Crash“: neuer Store+SwarmCoordinator ohne seen-Set auf gleichem dataDir.
+    const store2 = new SwarmStore(dir);
     await store2.init();
-    const orch2 = new TeamCoordinator(store2, fake.port, { pollMs: 3_600_000 });
+    const orch2 = new SwarmCoordinator(store2, fake.port, { pollMs: 3_600_000 });
     await orch2.recover();
     const rec = store2.get(run.id)!;
     expect(rec.tasks[0]?.dispatches[0]?.status).toBe("unknown");
@@ -512,8 +563,10 @@ describe("EPIC-P40 Orchestrierung — TeamCoordinator", () => {
 describe("EPIC-P40 Orchestrierung — parsePlan", () => {
   const plan = { tasks: [taskPlan("T1")] };
 
-  it("Fence-Block", () => {
+  it("Fence-Block — neu ```swarm, Alt ```team und ```orchestration bleiben lesbar (ADR-0123 §3)", () => {
+    expect(parsePlan("Vorher\n```swarm\n" + JSON.stringify(plan) + "\n```\nNachher")).toEqual(plan);
     expect(parsePlan("Vorher\n```team\n" + JSON.stringify(plan) + "\n```\nNachher")).toEqual(plan);
+    expect(parsePlan("Vorher\n```orchestration\n" + JSON.stringify(plan) + "\n```\nNachher")).toEqual(plan);
   });
 
   it("nacktes JSON", () => {

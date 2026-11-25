@@ -104,15 +104,16 @@ text (revision guard).
 
 Spec: [vault.spec.ts](../../e2e/specs/vault.spec.ts)
 
-### page:teams — Agent teams
+### page:swarms — Agent swarms
 
-![Team detail with worker cards](assets/teams-01.png)
+![Swarm detail with worker cards](assets/swarms-01.png)
 
-`#/teams`. Plan work as a team of agents: a card per running worker, DAG
+`#/swarms`. Plan work as a swarm of agents: a card per running worker, DAG
 dependencies, model allowlist per task, gates and deliveries. Only humans
-start, answer or stop a team.
+start, answer or stop a swarm. Old `#/runs` and `#/teams` links redirect
+here (ADR-0123).
 
-Spec: [team.spec.ts](../../e2e/specs/team.spec.ts)
+Spec: [swarm.spec.ts](../../e2e/specs/swarm.spec.ts)
 
 ### page:automationen — Automations
 
@@ -132,7 +133,7 @@ and `#/statistik/inferenz`; the old page links redirect permanently).
 
 **Tab Statistik** (EPIC-P56/P66): the one metrics hub — system and AI server
 sections from the unchanged aimetrics report, consolidated session,
-turn/token, gate, tool and team numbers from the rollup cache — p50/p90/p95
+turn/token, gate, tool and swarm numbers from the rollup cache — p50/p90/p95
 with n, small-sample marks, end-reason distribution, sliced by period,
 project, host and harness. Sections collapse; the state and the slice
 survive reloads. Describing, not ranking.
@@ -380,16 +381,16 @@ report. Spec: [zustandssprache.spec.ts](../../e2e/specs/zustandssprache.spec.ts)
 
 ### feature:statistics
 
-Session, turn, gate, tool and team statistics with time/project/host/harness
+Session, turn, gate, tool and swarm statistics with time/project/host/harness
 slices — see [page:statistics](#pagestatistics--statistiken). Spec: [statistik.spec.ts](../../e2e/specs/statistik.spec.ts)
 
 ### feature:stt
 
 Dictation: local speech-to-text fills the composer (Nyx FAB). Spec: [voice-local.spec.ts](../../e2e/specs/voice-local.spec.ts)
 
-### feature:team
+### feature:swarm
 
-Teams — see [page:teams](#pageteams--agent-teams). Spec: [team.spec.ts](../../e2e/specs/team.spec.ts)
+Swarms — see [page:swarms](#pageswarms--agent-swarms). Spec: [swarm.spec.ts](../../e2e/specs/swarm.spec.ts)
 
 ### feature:terminal
 

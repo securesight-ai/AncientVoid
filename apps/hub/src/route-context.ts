@@ -1,4 +1,4 @@
-import type { HubTeam } from "./modules/team/index.ts";
+import type { HubSwarm } from "./modules/swarm/index.ts";
 import { resolve, sep } from "node:path";
 import type { FastifyRequest } from "fastify";
 import type { ClaudeLive, PlannerModelConfig, SettingsStore, AttachmentStore, SessionManager, TokenService, AdapterRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, AiMetricsSampler, HostMetricsService, InferenceTracker, FleetStore, MainSyncSettingsService, ScanService } from "@ancientvoid/core";
@@ -82,7 +82,7 @@ export interface RouteDeps {
   /** EPIC-P73 (ADR-0094): externe Auto-Jobs (GitHub-Actions, Issue-Bridge) —
    * immer vorhanden; ohne Quellen antwortet der Endpunkt ehrlich leer. */
   externalJobs?: ExternalJobsService;
-  team?: HubTeam;
+  swarm?: HubSwarm;
   /** EPIC-P59 (ADR-0078): Sampler für die Metrik-Seite; ohne Angabe leere Quelle-Liste. */
   aimetrics?: AiMetricsSampler;
   /** EPIC-P79 (ADR-0125): Tracker für die Token-Tempo-Seite. */

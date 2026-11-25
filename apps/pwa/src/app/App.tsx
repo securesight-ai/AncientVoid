@@ -14,7 +14,7 @@ import { CreateSession } from "../features/new-session/CreateSession.tsx";
 import { MediaPage } from "../features/media/MediaPage.tsx";
 import { DesktopPage } from "../features/desktop/DesktopPage.tsx";
 import { VaultTabs } from "../features/vault/VaultTabs.tsx";
-import { TeamsPane } from "../features/team/TeamsPane.tsx";
+import { SwarmsPane } from "../features/swarm/SwarmsPane.tsx";
 import { AutomationsPane } from "../features/automations/AutomationsPane.tsx";
 import { StatisticsPage } from "../features/statistics/StatisticsPage.tsx";
 import { TerminalPage } from "../features/terminal/TerminalPage.tsx";
@@ -205,7 +205,7 @@ export function App({
       {shown === "pc" && <DesktopPage />}
 
       {shown === "vault" && <VaultTabs {...(vaultFile ? { initialFile: vaultFile } : {})} initialTab={vaultTab} />}
-      {shown === "teams" && <TeamsPane />}
+      {shown === "swarms" && <SwarmsPane />}
       {shown === "automationen" && <AutomationsPane />}
       {shown === "statistics" && <StatisticsPage {...(statTab ? { tab: statTab } : {})} />}
       {shown === "terminal" && <TerminalPage />}

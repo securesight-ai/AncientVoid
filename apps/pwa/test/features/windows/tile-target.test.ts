@@ -30,7 +30,7 @@ describe("tileWindowTarget (BUG-0262)", () => {
   });
 
   it("jede Werkzeugseite wird als Werkzeugfenster gelöst", () => {
-    for (const page of ["settings", "status", "teams", "statistics", "terminal"] as const) {
+    for (const page of ["settings", "status", "swarms", "statistics", "terminal"] as const) {
       expect(tileWindowTarget(tile({ sessionId: "", content: { kind: "page", page } }))).toEqual({ kind: "tool", page });
     }
   });

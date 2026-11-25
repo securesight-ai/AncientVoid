@@ -1,22 +1,23 @@
 import { t } from "../../shared/i18n/index.ts";
 import { ApiContext, useApi } from "../../shared/api-context.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import type { Team } from "@ancientvoid/contracts";
+import type { Swarm } from "@ancientvoid/contracts";
 import { getToken, hostApi, type AdapterInfo, type DiscoveredProject } from "../../shared/api.ts";
 import { sessionHash } from "../../app/route.ts";
 import { StatusDot } from "../../shared/StatusDot.tsx";
 import type { DisplayInput } from "../../shared/display-state.ts";
 import { ago } from "../../shared/status.ts";
-import { readTeamSnapshot, teamCacheKey, writeTeamSnapshot } from "./team-cache.ts";
+import { readSwarmSnapshot, swarmCacheKey, writeSwarmSnapshot } from "./swarm-cache.ts";
 import { Button, Card, ConfirmDialog } from "../../shared/ui/index.ts";
 /**
- * EPIC-P40/EPIC-P60 (ADR-0064, ADR-0077): Agenten-Teams in der P43-Sprache —
- * Karten je Worker-Task (T60.6), Rückfragen als auffällige Karten über dem
- * Raster (T60.5), K10: letzter Stand mit Zeitstempel offline.
+ * EPIC-P40/EPIC-P60 (ADR-0064, ADR-0077), EPIC-P83 (ADR-0123): Agenten-Swarms
+ * (ehemals Agenten-Teams) in der P43-Sprache — Karten je Worker-Task (T60.6),
+ * Rückfragen als auffällige Karten über dem Raster (T60.5), K10: letzter Stand
+ * mit Zeitstempel offline.
  */
 
-/** Team-/Task-Status auf den P43-Anzeigezustand heben (Contract bleibt roh in data-status). */
-function teamDisplay(status: string): DisplayInput {
+/** Swarm-/Task-Status auf den P43-Anzeigezustand heben (Contract bleibt roh in data-status). */
+function swarmDisplay(status: string): DisplayInput {
   switch (status) {
     case "planning":
     case "running":
@@ -72,76 +73,76 @@ function taskTone(status: string): "working" | "ok" | "err" | "waiting" | "quiet
   }
 }
 
-function TaskCard({ task, teamTitle }: { task: Team["tasks"][number]; teamTitle: string }) {
+function TaskCard({ task, swarmTitle }: { task: Swarm["tasks"][number]; swarmTitle: string }) {
   const current = task.dispatches[task.dispatches.length - 1];
-  const disp = teamDisplay(task.status);
+  const disp = swarmDisplay(task.status);
   return (
-    <div class={`card team-task-card st-${taskTone(task.status)}`} data-testid="team-task-card" data-task={task.id}>
+    <div class={`card swarm-task-card st-${taskTone(task.status)}`} data-testid="swarm-task-card" data-task={task.id}>
       <div class="row">
         <strong class="session-title">{task.title}</strong>
         <StatusDot {...disp} label={false} />
       </div>
       <p class="session-where dim">
-        <span class="team-chip">{task.id}</span> {task.adapter}{task.model ? ` · ${task.model}` : " · Standardmodell"}
-        {current && <> {t("team.attempt_frag")} {current.generation} ({label(current.status)})</>}
+        <span class="swarm-chip">{task.id}</span> {task.adapter}{task.model ? ` · ${task.model}` : " · Standardmodell"}
+        {current && <> {t("swarm.attempt_frag")} {current.generation} ({label(current.status)})</>}
       </p>
-      {task.dependsOn.length > 0 && <p class="session-where dim">{t("team.depends_on")} {task.dependsOn.join(" → ")}</p>}
+      {task.dependsOn.length > 0 && <p class="session-where dim">{t("swarm.depends_on")} {task.dependsOn.join(" → ")}</p>}
       <p class="session-where dim">{label(task.status)}{task.result ? ` · ${task.result.bytes} Bytes` : ""}</p>
       {task.result && (
-        <div class="team-result">
+        <div class="swarm-result">
           <pre>{task.result.text.slice(0, 400)}{task.result.text.length > 400 ? "…" : ""}</pre>
-          {task.result.blobRef && <p class="team-blob dim">{t("team.result_blob")} {task.result.blobRef}</p>}
+          {task.result.blobRef && <p class="swarm-blob dim">{t("swarm.result_blob")} {task.result.blobRef}</p>}
         </div>
       )}
       {current && (
-        <div class="team-task-card-actions">
-          <a class="link-btn row-action" href={sessionHash(current.sessionId)} title={current.sessionId}>{t("team.session_arrow")}</a>
+        <div class="swarm-task-card-actions">
+          <a class="link-btn row-action" href={sessionHash(current.sessionId)} title={current.sessionId}>{t("swarm.session_arrow")}</a>
         </div>
       )}
-      <span class="sr-only">{teamTitle}</span>
+      <span class="sr-only">{swarmTitle}</span>
     </div>
   );
 }
 
-function TeamDetail({ team, onAnswer, onCancel, busy, offline }: { team: Team; onAnswer: (gateId: string, label: string) => void; onCancel: () => void; busy: boolean; offline: boolean }) {
-  const done = team.tasks.filter((t) => t.status === "done").length;
-  const openGates = team.gates.filter((g) => !g.answeredAt);
-  const progress = team.tasks.length === 0 ? 0 : done / team.tasks.length;
+function SwarmDetail({ swarm, onAnswer, onCancel, busy, offline }: { swarm: Swarm; onAnswer: (gateId: string, label: string) => void; onCancel: () => void; busy: boolean; offline: boolean }) {
+  const done = swarm.tasks.filter((t) => t.status === "done").length;
+  const openGates = swarm.gates.filter((g) => !g.answeredAt);
+  const progress = swarm.tasks.length === 0 ? 0 : done / swarm.tasks.length;
   return (
-    <div class="team-detail" data-testid="team-detail">
-      <header class="team-detail-head">
-        <h3>{team.title}</h3>
-        <span class="team-pill-wrap">
-          <StatusDot {...teamDisplay(team.status)} label={false} />
-          <span class="status-label">{label(team.status)}</span>
+    <div class="swarm-detail" data-testid="swarm-detail">
+      <header class="swarm-detail-head">
+        <h3>{swarm.title}</h3>
+        <span class="swarm-pill-wrap">
+          <StatusDot {...swarmDisplay(swarm.status)} label={false} />
+          <span class="status-label">{label(swarm.status)}</span>
         </span>
       </header>
-      <p class="team-goal">{team.goal}</p>
-      <p class="team-meta">
-        {t("team.project_colon")} <span class="team-chip">{team.project}</span> {t("team.plan_frag")} {team.planSource === "coordinator" ? t("team.coordinator") : "übergeben"} {t("team.adapter_frag")} {team.frame.adapters.join(", ")} {t("team.parallelism_frag")} {team.frame.maxParallel}
-        {team.frame.models.length > 0 && (<> {t("team.models_frag")} {team.frame.models.join(", ")}</>)}
-        {team.coordinatorSessionId && (
-          <> · <a href={sessionHash(team.coordinatorSessionId)}>{t("team.coordinator_session")}</a></>
+      <p class="swarm-goal">{swarm.goal}</p>
+      <p class="swarm-meta">
+        {t("swarm.project_colon")} <span class="swarm-chip">{swarm.project}</span> {t("swarm.plan_frag")} {swarm.planSource === "coordinator" ? t("swarm.coordinator") : "übergeben"} {t("swarm.adapter_frag")} {swarm.frame.adapters.join(", ")} {t("swarm.parallelism_frag")} {swarm.frame.maxParallel}
+        {swarm.frame.models.length > 0 && (<> {t("swarm.models_frag")} {swarm.frame.models.join(", ")}</>)}
+        {swarm.coordinatorSessionId && (
+          <> · <a href={sessionHash(swarm.coordinatorSessionId)}>{t("swarm.coordinator_session")}</a></>
         )}
       </p>
-      <div class="card-plan" data-testid="team-progress" role="img" aria-label={`${done} von ${team.tasks.length} Aufgaben erledigt`}>
+      <div class="card-plan" data-testid="swarm-progress" role="img" aria-label={`${done} von ${swarm.tasks.length} Aufgaben erledigt`}>
         <div class="card-plan-bar"><div class="card-plan-fill" style={{ transform: `scaleX(${progress})` }} /></div>
-        <span class="dim">{done}/{team.tasks.length} {t("session.done")}</span>
+        <span class="dim">{done}/{swarm.tasks.length} {t("session.done")}</span>
       </div>
 
       {openGates.length > 0 && (
-        <div class="team-gates">
+        <div class="swarm-gates">
           {openGates.map((gate) => (
-            <Card data-testid="team-gate" key={gate.id} class="team-gate">
+            <Card data-testid="swarm-gate" key={gate.id} class="swarm-gate">
               <p>{gate.question}</p>
-              <div class="team-gate-actions">
+              <div class="swarm-gate-actions">
                 {gate.options.map((opt) => (
                   <Button disabled={busy || offline} key={opt.label} onClick={() => onAnswer(gate.id, opt.label)}>
                     {opt.label}
                   </Button>
                 ))}
-                <Button disabled={busy || offline} onClick={onCancel} class="team-cancel">
-                  {t("team.stop_team")}
+                <Button disabled={busy || offline} onClick={onCancel} class="swarm-cancel">
+                  {t("swarm.stop_swarm")}
                 </Button>
               </div>
             </Card>
@@ -149,18 +150,18 @@ function TeamDetail({ team, onAnswer, onCancel, busy, offline }: { team: Team; o
         </div>
       )}
 
-      {team.tasks.length > 0 && (
-        <div class="team-task-cards">
+      {swarm.tasks.length > 0 && (
+        <div class="swarm-task-cards">
           {/* Stabile Keys je Task-ID: der 3-s-Poll aktualisiert Karten an Ort und Stelle (K2, kein Flackern). */}
-          {team.tasks.map((task) => <TaskCard key={task.id} task={task} teamTitle={team.title} />)}
+          {swarm.tasks.map((task) => <TaskCard key={task.id} task={task} swarmTitle={swarm.title} />)}
         </div>
       )}
-      <p class="team-meta dim">{done}/{team.tasks.length} {t("team.tasks_done")} {team.deliveries.length} {t("team.deliveries")}</p>
+      <p class="swarm-meta dim">{done}/{swarm.tasks.length} {t("swarm.tasks_done")} {swarm.deliveries.length} {t("swarm.deliveries")}</p>
     </div>
   );
 }
 
-function NewTeamForm({ adapters, projects, onCreated, offline }: { adapters: AdapterInfo[]; projects: DiscoveredProject[]; onCreated: (team: Team) => void; offline: boolean }) {
+function NewSwarmForm({ adapters, projects, onCreated, offline }: { adapters: AdapterInfo[]; projects: DiscoveredProject[]; onCreated: (swarm: Swarm) => void; offline: boolean }) {
   const api = useApi();
   const [title, setTitle] = useState("");
   const [goal, setGoal] = useState("");
@@ -186,7 +187,7 @@ function NewTeamForm({ adapters, projects, onCreated, offline }: { adapters: Ada
     const models = modelsText.split(",").map((m) => m.trim()).filter((m) => m.length > 0);
     setBusy(true);
     try {
-      const team = await api.teamStart({
+      const swarm = await api.swarmStart({
         title: title.trim(),
         goal: goal.trim(),
         project,
@@ -200,7 +201,7 @@ function NewTeamForm({ adapters, projects, onCreated, offline }: { adapters: Ada
         },
         plan: null,
       });
-      onCreated(team);
+      onCreated(swarm);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Start fehlgeschlagen");
     } finally {
@@ -210,9 +211,9 @@ function NewTeamForm({ adapters, projects, onCreated, offline }: { adapters: Ada
 
   /** Schrittfolge nach dem „Neue Session"-Muster (T60.5): Ziel → Projekt → Rahmen → Start. */
   return (
-    <form class="ui-card form-grid team-new" data-testid="team-new" onSubmit={(e) => { e.preventDefault(); void start(); }}>
-      <h3>{t("team.new_team")}</h3>
-      <label>{t("team.title")} <input value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} /></label>
+    <form class="ui-card form-grid swarm-new" data-testid="swarm-new" onSubmit={(e) => { e.preventDefault(); void start(); }}>
+      <h3>{t("swarm.new_swarm")}</h3>
+      <label>{t("swarm.title")} <input value={title} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} /></label>
       <label>{t("newsession.target")} <textarea rows={3} value={goal} onInput={(e) => setGoal((e.target as HTMLTextAreaElement).value)} /></label>
       <label>{t("newsession.project")}
         <select value={project} onChange={(e) => setProject((e.currentTarget as HTMLSelectElement).value)}>
@@ -220,34 +221,34 @@ function NewTeamForm({ adapters, projects, onCreated, offline }: { adapters: Ada
         </select>
       </label>
       <fieldset>
-        <legend>{t("team.worker_adapter")}</legend>
+        <legend>{t("swarm.worker_adapter")}</legend>
         {adapters.map((a) => (
-          <label class="team-adapter">
+          <label class="swarm-adapter">
             <input type="checkbox" checked={selected.includes(a.id)} onChange={() => toggle(a.id)} /> {a.id}
           </label>
         ))}
       </fieldset>
-      <div class="team-new-row">
-        <label>{t("team.coordinator")} <input value={coordinatorAdapter} onInput={(e) => setCoordinatorAdapter((e.target as HTMLInputElement).value)} /></label>
-        <label>{t("team.parallelism")} <input type="number" min={1} max={8} value={maxParallel} onInput={(e) => setMaxParallel(Number((e.target as HTMLInputElement).value))} /></label>
+      <div class="swarm-new-row">
+        <label>{t("swarm.coordinator")} <input value={coordinatorAdapter} onInput={(e) => setCoordinatorAdapter((e.target as HTMLInputElement).value)} /></label>
+        <label>{t("swarm.parallelism")} <input type="number" min={1} max={8} value={maxParallel} onInput={(e) => setMaxParallel(Number((e.target as HTMLInputElement).value))} /></label>
       </div>
-      <label>{t("team.allowed_models")} <input value={modelsText} placeholder={t("team.empty_default")} onInput={(e) => setModelsText((e.target as HTMLInputElement).value)} /></label>
+      <label>{t("swarm.allowed_models")} <input value={modelsText} placeholder={t("swarm.empty_default")} onInput={(e) => setModelsText((e.target as HTMLInputElement).value)} /></label>
       {error && <div class="files-error" role="alert">{error}</div>}
-      <Button type="submit" disabled={busy || offline} variant="primary">{t("team.start_team")}</Button>
+      <Button type="submit" disabled={busy || offline} variant="primary">{t("swarm.start_swarm")}</Button>
     </form>
   );
 }
 
-export function TeamsPane({ initialHash = location.hash }: { initialHash?: string }) {
+export function SwarmsPane({ initialHash = location.hash }: { initialHash?: string }) {
   const host = new URLSearchParams(initialHash.split("?")[1] ?? "").get("host");
   const api = useMemo(() => hostApi(host), [host]);
-  return <ApiContext.Provider value={api}><TeamsHostPane key={host ?? "self"} initialHash={initialHash} /></ApiContext.Provider>;
+  return <ApiContext.Provider value={api}><SwarmsHostPane key={host ?? "self"} initialHash={initialHash} /></ApiContext.Provider>;
 }
 
-function TeamsHostPane({ initialHash }: { initialHash: string }) {
+function SwarmsHostPane({ initialHash }: { initialHash: string }) {
   const api = useApi();
-  const [teams, setTeams] = useState<Team[] | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(() => new URLSearchParams(initialHash.split("?")[1] ?? "").get("team"));
+  const [swarms, setSwarms] = useState<Swarm[] | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => new URLSearchParams(initialHash.split("?")[1] ?? "").get("swarm"));
   const [adapters, setAdapters] = useState<AdapterInfo[]>([]);
   const [projects, setProjects] = useState<DiscoveredProject[]>([]);
   const [showNew, setShowNew] = useState(false);
@@ -273,12 +274,12 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
   useEffect(() => {
     let alive = true;
     let timer: ReturnType<typeof setInterval> | undefined;
-    void teamCacheKey(api.teamsScope, getToken()).then((key) => {
+    void swarmCacheKey(api.swarmsScope, getToken()).then((key) => {
       if (!alive) return;
       // K10: gespeicherter Stand sofort zeigen, dann online auffrischen.
-      const cached = readTeamSnapshot(key);
+      const cached = readSwarmSnapshot(key);
       if (cached) {
-        setTeams(cached.list);
+        setSwarms(cached.list);
         setAt(cached.at);
       }
       let pending = false;
@@ -286,15 +287,15 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
         if (pending || !alive) return;
         pending = true;
         try {
-          const list = await api.teamList();
+          const list = await api.swarmList();
           if (!alive) return;
           failedPolls.current = 0;
           setHostDown(false);
-          setTeams(list);
+          setSwarms(list);
           const fetchedAt = new Date().toISOString();
           setAt(fetchedAt);
           setError("");
-          writeTeamSnapshot(key, { at: fetchedAt, list });
+          writeSwarmSnapshot(key, { at: fetchedAt, list });
         } catch (err) {
           if (!alive) return;
           // BUG-0045-Muster: erst der zweite Fehlversuch in Folge gilt als Ausfall.
@@ -312,10 +313,9 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
     });
     return () => {
       alive = false;
-      if (timer) clearInterval(timer);
+      clearInterval(timer);
     };
   }, []);
-
   useEffect(() => {
     let alive = true;
     void api.adapters().then((a) => alive && setAdapters(a)).catch(() => {});
@@ -325,17 +325,17 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
     };
   }, []);
 
-  const selected = teams?.find((t) => t.id === selectedId) ?? null;
+  const selected = swarms?.find((t) => t.id === selectedId) ?? null;
 
   const refresh = async () => {
     try {
-      const list = await api.teamList();
+      const list = await api.swarmList();
       failedPolls.current = 0;
       setHostDown(false);
       const fetchedAt = new Date().toISOString();
       setAt(fetchedAt);
-      setTeams(list);
-      void teamCacheKey(api.teamsScope, getToken()).then((key) => writeTeamSnapshot(key, { at: fetchedAt, list })).catch(() => {});
+      setSwarms(list);
+      void swarmCacheKey(api.swarmsScope, getToken()).then((key) => writeSwarmSnapshot(key, { at: fetchedAt, list })).catch(() => {});
     } catch {
       // Der nächste Poll-Tick übernimmt es.
     }
@@ -345,8 +345,8 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
     if (!selected) return;
     setBusy(true);
     try {
-      const team = await api.teamAnswer(selected.id, gateId, answerLabel);
-      setTeams((prev) => (prev ? prev.map((t) => (t.id === team.id ? team : t)) : prev));
+      const swarm = await api.swarmAnswer(selected.id, gateId, answerLabel);
+      setSwarms((prev) => (prev ? prev.map((t) => (t.id === swarm.id ? swarm : t)) : prev));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Antwort fehlgeschlagen");
     } finally {
@@ -359,13 +359,13 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
     if (!selected) return;
     setStopAsk(true);
   };
-  const stopTeam = async () => {
+  const stopSwarm = async () => {
     setStopAsk(false);
     if (!selected) return;
     setBusy(true);
     try {
-      const team = await api.teamCancel(selected.id, "Vom Nutzer gestoppt");
-      setTeams((prev) => (prev ? prev.map((t) => (t.id === team.id ? team : t)) : prev));
+      const swarm = await api.swarmCancel(selected.id, "Vom Nutzer gestoppt");
+      setSwarms((prev) => (prev ? prev.map((t) => (t.id === swarm.id ? swarm : t)) : prev));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Abbruch fehlgeschlagen");
     } finally {
@@ -374,53 +374,53 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
   };
 
   return (
-    <div class="teams-pane" data-testid="teams-pane">
-      <div class="teams-list">
-        <div class="teams-list-head">
-          <h3>{t("team.teams")}</h3>
-          <Button disabled={offline || busy} onClick={() => setShowNew((v) => !v)}>{showNew ? "Abbrechen" : t("team.new_team")}</Button>
+    <div class="swarms-pane" data-testid="swarms-pane">
+      <div class="swarms-list">
+        <div class="swarms-list-head">
+          <h3>{t("swarm.swarms")}</h3>
+          <Button disabled={offline || busy} onClick={() => setShowNew((v) => !v)}>{showNew ? "Abbrechen" : t("swarm.new_swarm")}</Button>
         </div>
-        {at && !offline && <p class="dim">{t("team.as_of")} {ago(at)}</p>}
+        {at && !offline && <p class="dim">{t("swarm.as_of")} {ago(at)}</p>}
         {offline && (
-          <p role="status" data-testid="teams-offline">
-            {t("team.offline_last")}{at ? <> {t("team.from_the")} <time dateTime={at}>{new Date(at).toLocaleString("de-DE")}</time></> : ""}{t("team.changes_locked")}
+          <p role="status" data-testid="swarms-offline">
+            {t("swarm.offline_last")}{at ? <> {t("swarm.from_the")} <time dateTime={at}>{new Date(at).toLocaleString("de-DE")}</time></> : ""}{t("swarm.changes_locked")}
           </p>
         )}
         {error && !offline && <div class="files-error" role="alert">{error}</div>}
         {showNew && (
-          <NewTeamForm
+          <NewSwarmForm
             adapters={adapters}
             projects={projects}
             offline={offline}
-            onCreated={(team) => {
+            onCreated={(swarm) => {
               setShowNew(false);
-              setSelectedId(team.id);
+              setSelectedId(swarm.id);
               void refresh();
             }}
           />
         )}
-        {teams === null ? (
+        {swarms === null ? (
           <div class="ui-empty">{offline ? "Kein gespeicherter Stand vorhanden." : "lade…"}</div>
-        ) : teams.length === 0 ? (
-          <Card data-testid="teams-empty">
-            <h3>{t("team.no_teams")}</h3>
-            <p class="dim">{t("team.team_explain")}</p>
-            <Button disabled={offline} onClick={() => setShowNew(true)} variant="primary">{t("team.create_team")}</Button>
+        ) : swarms.length === 0 ? (
+          <Card data-testid="swarms-empty">
+            <h3>{t("swarm.no_swarms")}</h3>
+            <p class="dim">{t("swarm.swarm_explain")}</p>
+            <Button disabled={offline} onClick={() => setShowNew(true)} variant="primary">{t("swarm.create_swarm")}</Button>
           </Card>
         ) : (
           <ul >
-            {/* Stabile Keys je Team-ID: Poll-Aktualisierung ohne Flackern (K2). */}
-            {teams.map((team) => {
-              const done = team.tasks.filter((t) => t.status === "done").length;
+            {/* Stabile Keys je Swarm-ID: Poll-Aktualisierung ohne Flackern (K2). */}
+            {swarms.map((swarm) => {
+              const done = swarm.tasks.filter((t) => t.status === "done").length;
               return (
-                <li key={team.id}>
-                  <button type="button" class={`card team-row ${team.id === selectedId ? "active" : ""}`} data-testid="team-row" onClick={() => setSelectedId(team.id)}>
+                <li key={swarm.id}>
+                  <button type="button" class={`card swarm-row ${swarm.id === selectedId ? "active" : ""}`} data-testid="swarm-row" onClick={() => setSelectedId(swarm.id)}>
                     <span class="row">
-                      <strong class="session-title">{team.title}</strong>
-                      <StatusDot {...teamDisplay(team.status)} label={false} />
+                      <strong class="session-title">{swarm.title}</strong>
+                      <StatusDot {...swarmDisplay(swarm.status)} label={false} />
                     </span>
-                    <span class="session-where dim">{team.project || "—"} · {done}/{team.tasks.length} {t("team.done_frag")} {team.frame.adapters.join(", ")}</span>
-                    <span class="session-ago dim">{ago(team.createdAt)}</span>
+                    <span class="session-where dim">{swarm.project || "—"} · {done}/{swarm.tasks.length} {t("swarm.done_frag")} {swarm.frame.adapters.join(", ")}</span>
+                    <span class="session-ago dim">{ago(swarm.createdAt)}</span>
                   </button>
                 </li>
               );
@@ -428,15 +428,15 @@ function TeamsHostPane({ initialHash }: { initialHash: string }) {
           </ul>
         )}
       </div>
-      {selected && <TeamDetail team={selected} onAnswer={answer} onCancel={cancel} busy={busy} offline={offline} />}
+      {selected && <SwarmDetail swarm={selected} onAnswer={answer} onCancel={cancel} busy={busy} offline={offline} />}
       <ConfirmDialog
         open={stopAsk}
         onClose={() => setStopAsk(false)}
-        onConfirm={() => void stopTeam()}
-        title={t("team.stop_team")}
-        body={t("team.stop_team_q")}
+        onConfirm={() => void stopSwarm()}
+        title={t("swarm.stop_swarm")}
+        body={t("swarm.stop_swarm_q")}
         danger
-        confirmLabel={t("team.stop_team")}
+        confirmLabel={t("swarm.stop_swarm")}
       />
     </div>
   );

@@ -4,13 +4,13 @@ import {
   AutomationService, BUILTIN_ACTIONS, detectedActions, isProjectPathAllowed,
   type AutomationLauncher, type AutomationPrechecker, type PrecheckResult, type SessionManager,
 } from "@ancientvoid/core";
-import { actionArgv, TeamStart, AUTOMATION_LIMITS, type ActionDefinition, type AutomationOutcome } from "@ancientvoid/contracts";
+import { actionArgv, SwarmStart, AUTOMATION_LIMITS, type ActionDefinition, type AutomationOutcome } from "@ancientvoid/contracts";
 import type { AutomationSkipReason } from "@ancientvoid/contracts";
-import type { HubTeam } from "../team/index.ts";
+import type { HubSwarm } from "../swarm/index.ts";
 
 export interface HubAutomationDeps {
   dataDir: string; hostId: string; sessions: SessionManager; projectRoots: string[];
-  team?: HubTeam;
+  swarm?: HubSwarm;
   actions?: ActionDefinition[];
   log?: (line: string) => void;
 }
@@ -37,22 +37,22 @@ export function createHubAutomationService(deps: HubAutomationDeps): AutomationS
   };
   const launcher: AutomationLauncher = {
     async template(id) {
-      await deps.team?.ready;
-      const source = deps.team?.store.get(id);
+      await deps.swarm?.ready;
+      const source = deps.swarm?.store.get(id);
       if (!source || source.tasks.length === 0) return null;
-      return TeamStart.parse({ title: source.title, goal: source.goal, project: source.project, frame: source.frame,
+      return SwarmStart.parse({ title: source.title, goal: source.goal, project: source.project, frame: source.frame,
         plan: { tasks: source.tasks.map(t => ({ id: t.id, title: t.title, prompt: t.prompt, adapter: t.adapter, model: t.model, dependsOn: t.dependsOn })) } });
     },
     async launch(definition, text, claimKey, kind) {
       try {
-        if (definition.target.kind === "team") {
-          if (!deps.team || !text) return { ok: false, reason: "host_down" };
-          await deps.team.ready;
-          const spec = TeamStart.parse(JSON.parse(text));
+        if (definition.target.kind === "swarm") {
+          if (!deps.swarm || !text) return { ok: false, reason: "host_down" };
+          await deps.swarm.ready;
+          const spec = SwarmStart.parse(JSON.parse(text));
           if (deps.projectRoots.length && !(await isProjectPathAllowed(spec.project, deps.projectRoots))) return { ok: false, reason: "auth", detail: "Projekt außerhalb der freigegebenen Wurzeln" };
           if (spec.frame.adapters.some(a => a.startsWith("loop:"))) return { ok: false, reason: "auth" };
-          const team = await deps.team.coordinator.start(spec, `automation:${claimKey}`);
-          return { ok: true, teamId: team.id };
+          const swarm = await deps.swarm.coordinator.start(spec, `automation:${claimKey}`);
+          return { ok: true, swarmId: swarm.id };
         }
         if (definition.target.kind === "script") {
           const target = definition.target;
@@ -82,13 +82,13 @@ export function createHubAutomationService(deps: HubAutomationDeps): AutomationS
         scriptOutcomes.delete(claim.claimKey);
         return { state: "settled", outcome: mirrored };
       }
-      if (claim.teamId) {
-        await deps.team?.ready;
-        const team = deps.team?.store.get(claim.teamId);
-        if (!team) return { state: "unknown", detail: "Referenziertes Team nicht verfügbar" };
-        if (team.status === "done") return { state: "settled", outcome: "succeeded" };
-        if (team.status === "failed") return { state: "settled", outcome: "failed" };
-        if (team.status === "cancelled") return { state: "settled", outcome: "cancelled" };
+      if (claim.swarmId) {
+        await deps.swarm?.ready;
+        const swarm = deps.swarm?.store.get(claim.swarmId);
+        if (!swarm) return { state: "unknown", detail: "Referenzierter Swarm nicht verfügbar" };
+        if (swarm.status === "done") return { state: "settled", outcome: "succeeded" };
+        if (swarm.status === "failed") return { state: "settled", outcome: "failed" };
+        if (swarm.status === "cancelled") return { state: "settled", outcome: "cancelled" };
         return { state: "running" };
       }
       // ADR-0080: ein Skript-Claim ohne Spiegel hat keine Referenz — nach einem Neustart bleibt das Ergebnis unbekannt (K7).
@@ -112,8 +112,8 @@ export function createHubAutomationService(deps: HubAutomationDeps): AutomationS
   const prechecker: AutomationPrechecker = {
     stop() { signal.abort(); },
     async run(actionId, definition, deadlineMs, templateText): Promise<PrecheckResult> {
-      const project = definition.target.kind === "team"
-        ? templateText ? TeamStart.parse(JSON.parse(templateText)).project : null
+      const project = definition.target.kind === "swarm"
+        ? templateText ? SwarmStart.parse(JSON.parse(templateText)).project : null
         : definition.target.project;
       if (!project) return "precheck";
       if (deps.projectRoots.length > 0 && !(await isProjectPathAllowed(project, deps.projectRoots))) return "auth";

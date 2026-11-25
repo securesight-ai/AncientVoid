@@ -45,8 +45,8 @@ test.describe("Navigation, Status und Einstellungen (P1.6)", () => {
   test("AC-P34-1: das Dock führt Medien statt Voice, die Kopfzeile nur Befehl und Status @desktop", async ({ app, isMobile }) => {
     const tools = ["Medien", "Notizen", "Automationen", "Einstellungen", "Statistik", "Terminal", "Release-Notes", "Pentest"];
     const labels = isMobile
-      ? ["Start", "Suchen", "Teams", "Mehr", ...tools, "Dateibaum"]
-      : ["Start", "Suchen", "Projektansicht", "Session", "Teams", ...tools];
+      ? ["Start", "Suchen", "Swarms", "Mehr", ...tools, "Dateibaum"]
+      : ["Start", "Suchen", "Projektansicht", "Session", "Swarms", ...tools];
     await expect(app.locator(".dock .lb")).toHaveText(labels);
     await expect(app.locator(".dock").getByRole("button", { name: "Voice" })).toHaveCount(0);
     const head = app.locator(".topbar").first();

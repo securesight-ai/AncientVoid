@@ -41,25 +41,25 @@ test("P41: bestehende Automation bearbeiten, freigeben, Ergebnis und Folgeoperat
   await expect.poll(async () => (await outcome(hub, definition.id))?.operationId).not.toBe(first);
 });
 
-test("P41: Team-Vorlage in der PWA wählen und zum tatsächlichen Team springen", async ({ app, hub }) => {
-  const source = await hub.api<{ id: string }>("/api/teams", { body: { title: "PWA-Vorlage", goal: "Eine Aufgabe", project: hub.alpha,
+test("P41: Swarm-Vorlage in der PWA wählen und zum tatsächlichen Swarm springen (ADR-0123)", async ({ app, hub }) => {
+  const source = await hub.api<{ id: string }>("/api/swarms", { body: { title: "PWA-Vorlage", goal: "Eine Aufgabe", project: hub.alpha,
     frame: { adapters: ["dummy"], coordinatorAdapter: null, maxTasks: 1, maxParallel: 1, maxDispatchesPerTask: 1 },
     plan: { tasks: [{ id: "T1", title: "Prüfen", prompt: "Ergebnis", adapter: "dummy" }] } } });
   expect(source.status).toBe(201);
   await app.goto(`${hub.origin}/#/automationen`);
   await app.getByRole("button", { name: "Neue Automation", exact: true }).click();
   const form = app.getByTestId("automation-form");
-  await form.getByLabel("Label", { exact: true }).fill("Team-Automation");
-  await form.getByRole("combobox", { name: "Automationart", exact: true }).selectOption("team");
-  await form.getByRole("combobox", { name: "Team-Vorlage", exact: true }).selectOption(source.body.id);
+  await form.getByLabel("Label", { exact: true }).fill("Swarm-Automation");
+  await form.getByRole("combobox", { name: "Automationart", exact: true }).selectOption("swarm");
+  await form.getByRole("combobox", { name: "Swarm-Vorlage", exact: true }).selectOption(source.body.id);
   await form.getByRole("button", { name: "Anlegen", exact: true }).click();
   await expect(form).toHaveCount(0);
   await app.getByRole("button", { name: "Jetzt starten", exact: true }).click();
   await expect(app.getByTestId("automation-history")).toContainText("erfolgt");
-  const link = app.getByTestId("automation-history").getByRole("link", { name: "Team ↗", exact: true });
-  await expect(link).toHaveAttribute("href", /team=/);
+  const link = app.getByTestId("automation-history").getByRole("link", { name: "Swarm ↗", exact: true });
+  await expect(link).toHaveAttribute("href", /swarm=/);
   await link.click();
-  await expect(app.getByTestId("team-detail")).toBeVisible();
+  await expect(app.getByTestId("swarm-detail")).toBeVisible();
 });
 
 test("P41: ein Fehler beim Verlauf bleibt als Fehler sichtbar", async ({ app, hub }) => {

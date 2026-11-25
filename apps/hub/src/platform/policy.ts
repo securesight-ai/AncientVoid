@@ -37,9 +37,9 @@ export function operationOf(method: string, url: string, body: unknown): PolicyO
   // der Scan selbst ist die Tat (Policy-Tabelle: Agent erfragt, Mensch/Fleet tun).
   if (path === "/api/pentest/scan" && method === "POST") return "scan.run";
   if (path.startsWith("/api/pentest/")) return "scan.read";
-  // EPIC-P40/EPIC-P60 (ADR-0064 §4, ADR-0077): Teams steuern nur Menschen;
+  // EPIC-P40/EPIC-P60 (ADR-0064 §4, ADR-0077), EPIC-P83 (ADR-0123): Swarms steuern nur Menschen;
   // Lesen ist eine eigene Operation mit dem Allow-Set des bisherigen generischen `read`.
-  if (path.startsWith("/api/teams")) return method === "GET" || method === "HEAD" ? "team.read" : "team.manage";
+  if (path.startsWith("/api/swarms")) return method === "GET" || method === "HEAD" ? "swarm.read" : "swarm.manage";
   // EPIC-P75 (ADR-0097): Sprachausgabe — Status wie Synthese sind die Fläche
   // eines Menschen; Agenten/Flotte/Displays beschallen den Dienst nicht.
   if (path === "/api/tts") return "voice.speak";

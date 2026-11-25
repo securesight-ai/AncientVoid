@@ -28,11 +28,11 @@ export function buildAutomationDefinition(jsonText: string, promptText: string |
   }
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error(t("def_json_object"));
   const target = raw.target as { kind?: string; promptBlobSha256?: string; project?: unknown; actionId?: unknown } | undefined;
-  if (!target || (target.kind !== "session" && target.kind !== "team" && target.kind !== "run" && target.kind !== "script")) {
+  if (!target || (target.kind !== "session" && target.kind !== "swarm" && target.kind !== "team" && target.kind !== "run" && target.kind !== "script")) {
     throw new Error(t("def_json_target"));
   }
-  // ADR-0077: CLI-Alias — altes kind "run" wird auf "team" normalisiert.
-  if (target.kind === "run") target.kind = "team";
+  // ADR-0077/ADR-0123 §6: CLI-Alias — alte kind "run" (bis P60) und "team" (bis P83) werden auf "swarm" normalisiert.
+  if (target.kind === "run" || target.kind === "team") target.kind = "swarm";
   // ADR-0080: Skript-Ziele referenzieren eine registrierte argv-Aktion — project und actionId sind Pflicht.
   if (target.kind === "script" && (typeof target.project !== "string" || target.project.trim() === "" || typeof target.actionId !== "string" || target.actionId.trim() === "")) {
     throw new Error(t("script_target_needs"));
@@ -62,7 +62,7 @@ export function formatAutomationLine(info: AutomationInfo): string {
 
 /** Verlaufszeile; `unknown`/Missed tragen ihre Begründung, damit Unsicherheit im CLI nicht unsichtbar bleibt (AC-P41-3). */
 export function formatHistoryLine(h: AutomationHistoryEntry): string {
-  return `${h.at}  ${h.occurrenceUtc}  ${h.state}${h.reason ? `/${h.reason}` : ""}${h.outcome ? ` ${h.outcome}` : ""}${h.kind ? `  ${h.kind}` : ""}${h.sessionId ? `  session ${h.sessionId}` : ""}${h.teamId ? `  team ${h.teamId}` : ""}${h.missedThroughUtc ? `  ${t("verpasst_bis")} ${h.missedThroughUtc}` : ""}${h.detail ? `  — ${h.detail}` : ""}`;
+  return `${h.at}  ${h.occurrenceUtc}  ${h.state}${h.reason ? `/${h.reason}` : ""}${h.outcome ? ` ${h.outcome}` : ""}${h.kind ? `  ${h.kind}` : ""}${h.sessionId ? `  session ${h.sessionId}` : ""}${h.swarmId ? `  swarm ${h.swarmId}` : ""}${h.missedThroughUtc ? `  ${t("verpasst_bis")} ${h.missedThroughUtc}` : ""}${h.detail ? `  — ${h.detail}` : ""}`;
 }
 
 export function buildAutomationUpdate(jsonText: string, previous: AutomationDefinition, promptText: string | null): Record<string, unknown> {
@@ -100,7 +100,7 @@ export async function runAutomationsCommand(args: string[]): Promise<void> {
       const info = await findAutomation(id);
       console.log(JSON.stringify(info.definition, null, 2));
       for (const next of info.nextOccurrences) console.log(t("next_occurrence", { local: next.local, utc: next.utc }));
-      if (info.definition.target.kind === "team") console.log(JSON.stringify(await api(`/api/automations/${encodeURIComponent(info.definition.id)}/template`), null, 2));
+      if (info.definition.target.kind === "swarm") console.log(JSON.stringify(await api(`/api/automations/${encodeURIComponent(info.definition.id)}/template`), null, 2));
       const { history } = await api<{ history: AutomationHistoryEntry[] }>(`/api/automations/${encodeURIComponent(info.definition.id)}/history`);
       if (history.length === 0) {
         console.log(t("no_history"));

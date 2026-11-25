@@ -35,7 +35,7 @@ Werkzeugseiten füllen die Detailspalte.
 | G02 | Neue Session | Dock-Haupttaste „＋“ | — | inventar |
 | G04 | Entdeckt (gefundene Sessions) | Start → Chip „Gefunden“ rechts vom Archiv-Button | T43.3 | inventar |
 | G05 | Medien | Dock „Mehr“ → „Medien“; PC: Leiste | — | inventar |
-| G06 | Teams | Dock „Teams“ | — | inventar |
+| G06 | Swarms | Dock „Swarms“ | — | inventar |
 | G07 | Notizen | Dock „Mehr“ → „Notizen“; PC: Leiste | — | inventar |
 | G08 | Automationen | Dock „Mehr“ → „Automationen“; PC: Leiste | — | inventar |
 | G09 | Einstellungen: Darstellung (Erscheinungsbild, Akzent, Größe) | Dock „Mehr“ → „Einstellungen“; PC: Leiste | — | inventar |
@@ -82,7 +82,7 @@ Werkzeugseiten füllen die Detailspalte.
 | G48 | Factory-Lauf | Neue Session → Loop „Factory“ | — | spec:factory.spec.ts |
 | G49 | Gefundene Session übernehmen oder beobachten | Entdeckt | — | spec:discovery.spec.ts |
 | G50 | Video analysieren und in Session verwenden | Medien | — | spec:media.spec.ts |
-| G51 | Teams anlegen und verfolgen | Teams | — | spec:team.spec.ts |
+| G51 | Swarms anlegen und verfolgen | Swarms | — | spec:swarm.spec.ts |
 | G52 | Notiz anlegen, lesen, bearbeiten | Notizen | — | spec:vault.spec.ts |
 | G53 | Automation anlegen, pausieren, jetzt senden | Automationen | — | spec:automations.spec.ts |
 | G54 | Flotte: Sessions anderer Hosts | Start bzw. Hosts | — | spec:fleet.spec.ts |
@@ -98,7 +98,7 @@ Werkzeugseiten füllen die Detailspalte.
 | G64 | Schnellsuche: Springen zu Sessions, Projekten, Dateien, Werkzeugen, Befehlen | Strg+K bzw. Dock „Suchen“ → Treffer. **Bewusste Grenze (P51 T51.11):** tiefe Sprungziele unterhalb der Werkzeug-/Session-Ebene (z. B. einzelne Notizen, Graph/Galaxie einer Session, Host-Detail) sind absichtlich nicht eigene Schnellsuche-Treffer — sie liegen einen Sprung + einen Tap entfernt (Werkzeug/Session → Tab), eine zweite Navigationsschicht wäre Doppelstruktur; Vault-Suche bleibt minimal (ADR-0063) | T43.6 + P51 T51.11 | spec:schnellsuche.spec.ts |
 | G65 | Nyx: Gesamtzustand in der Kopfzeile; Blatt mit allen wartenden Freigaben und Fragen (Vorauswahl, Ja/Nein mit einem Tipp, Begründung/Passkey → Session); am PC auch als eigenes Fenster | Kopfzeile → Nyx | T43.8 | spec:nyx-blatt.spec.ts |
 | G66 | Echtes Live-Streaming: Teiltexte erscheinen im Chat, bevor der Block eintrifft — die Antwort als „antwortet“-Blase, das Denken als Denk-Notiz wie jede andere (BUG-0195); der Block rückt beim Eintreffen ein (kein Nacherzählen fertiger Bloecke) | Sitzung → Chat | BUG-0178, ADR-0083, BUG-0195 | spec:live-streaming.spec.ts |
-| G67 | Team-Detail: Karten je Worker-Task (Adapter/Modell, Versuch, Fortschritt, Session-Link, Ergebnis-Vorschau), Rückfragen als Karten mit Stopp, Offline-Stand mit Zeitstempel | Teams → Team | P60 | spec:team.spec.ts |
+| G67 | Swarm-Detail: Karten je Worker-Task (Adapter/Modell, Versuch, Fortschritt, Session-Link, Ergebnis-Vorschau), Rückfragen als Karten mit Stopp, Offline-Stand mit Zeitstempel | Swarms → Swarm | P60/P83 | spec:swarm.spec.ts |
 | G68 | Quellenchips: Code-Befund, Review-Notiz, Browser-Element, CI-Befund als sichtbare Quelle im Composer — Vorschau zeigt den `<quellen>`-Block, der beim bewussten Absenden mitgeht (kein Auto-Send, K5-gekappt) | Befund „In den Composer“ → Composer der Session | P43.5 T43.5-1 | spec:quellenchips.spec.ts |
 | G69 | Quellen und eigene Statusnotizen in der Schnellsuche; Tastatur-/Touch-Sprung bewahrt Entwurf und Verbindung | Suchen → Quelle/Statusnotiz | P43.5 T43.5-2 | spec:quellenchips.spec.ts |
 | G70 | Versionierte lokale Darstellungs-Presets: Dichte, Chatbreite, getrennte Codegröße, Kontrastprüfung, Rasterbild, Import/Export/Reset | Einstellungen → Darstellungs- und Layout-Presets | P43.5 T43.5-3 | spec:appearance-presets.spec.ts |

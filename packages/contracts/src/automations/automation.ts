@@ -126,7 +126,7 @@ export const AutomationGrant = z.object({
 });
 export type AutomationGrant = z.infer<typeof AutomationGrant>;
 
-/** Das Ziel: vorhandener Session-Start (P31/P35-Kataloge bleiben Wahrheit), vorhandene Team-Vorlage (P40, ehemals Run) oder registrierte Miniskript-Aktion (ADR-0080). */
+/** Das Ziel: vorhandener Session-Start (P31/P35-Kataloge bleiben Wahrheit), vorhandene Swarm-Vorlage (P40, ehemals Run/Team) oder registrierte Miniskript-Aktion (ADR-0080). */
 const AutomationTargetBase = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("session"),
@@ -138,7 +138,7 @@ const AutomationTargetBase = z.discriminatedUnion("kind", [
     promptBlobSha256: BlobRef,
   }),
   z.object({
-    kind: z.literal("team"),
+    kind: z.literal("swarm"),
     templateId: z.string().min(1).max(64),
     templateBlobSha256: BlobRef.optional(),
   }),
@@ -149,9 +149,13 @@ const AutomationTargetBase = z.discriminatedUnion("kind", [
     actionId: z.string().regex(/^[a-z0-9][a-z0-9-]{0,40}$/),
   }),
 ]);
-/** ADR-0077: persistierte Ziele mit `kind: "run"` werden toleriert gelesen und auf `"team"` normalisiert. */
+/** ADR-0077/ADR-0123: persistierte Ziele mit `kind: "run"` (bis P60) oder `"team"` (bis P83) werden toleriert gelesen und auf `"swarm"` normalisiert. */
 export const AutomationTarget = z.preprocess(
-  (v) => (typeof v === "object" && v !== null && (v as { kind?: unknown }).kind === "run" ? { ...(v as object), kind: "team" } : v),
+  (v) => {
+    if (typeof v !== "object" || v === null || !("kind" in v)) return v;
+    if (v.kind !== "run" && v.kind !== "team") return v;
+    return { ...v, kind: "swarm" };
+  },
   AutomationTargetBase,
 );
 export type AutomationTarget = z.infer<typeof AutomationTarget>;
@@ -175,19 +179,23 @@ export const AutomationDefinition = z.object({
 export type AutomationDefinition = z.infer<typeof AutomationDefinition>;
 
 /** ADR-0065: gemeinsamer Verlaufsvertrag; optionale Felder erhalten alte Journale.
- * ADR-0077: `teamId` (ehemals `runId`) — alte Journalzeilen werden tolerierend übernommen. */
+ * ADR-0077/ADR-0123: `swarmId` (ehemals `runId`, dann `teamId`) — alte Journalzeilen werden tolerierend übernommen. */
 const AutomationHistoryEntryBase = z.object({
   claimKey: z.string(), automationId: z.string(), generation: z.number().int().positive(),
   occurrenceUtc: z.iso.datetime(), at: z.iso.datetime(), state: AutomationClaimState,
   reason: AutomationSkipReason.optional(), outcome: AutomationOutcome.optional(),
-  teamId: z.string().optional(), sessionId: z.string().optional(),
+  swarmId: z.string().optional(), sessionId: z.string().optional(),
   kind: z.enum(["due", "catchup", "run_now"]).optional(),
   operationId: z.string().optional(), missedThroughUtc: z.iso.datetime().optional(),
   detail: z.string().max(500).optional(),
 });
 export const AutomationHistoryEntry = z.preprocess(
-  (v) => (typeof v === "object" && v !== null && (v as { teamId?: unknown; runId?: unknown }).teamId === undefined && typeof (v as { runId?: unknown }).runId === "string"
-    ? { ...(v as object), teamId: (v as { runId: string }).runId } : v),
+  (v) => {
+    if (typeof v !== "object" || v === null) return v;
+    if (!("swarmId" in v) && "teamId" in v) return { ...v, swarmId: v.teamId };
+    if (!("swarmId" in v) && !("teamId" in v) && "runId" in v && typeof v.runId === "string") return { ...v, swarmId: v.runId };
+    return v;
+  },
   AutomationHistoryEntryBase,
 );
 export type AutomationHistoryEntry = z.infer<typeof AutomationHistoryEntry>;
@@ -202,7 +210,7 @@ export const AutomationInfo = z.object({
     state: AutomationClaimState,
     reason: AutomationSkipReason.nullish(),
     outcome: AutomationOutcome.nullish(),
-    teamId: z.string().nullish(),
+    swarmId: z.string().nullish(),
     sessionId: z.string().nullish(),
   }).nullish(),
 });

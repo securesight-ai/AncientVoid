@@ -54,7 +54,7 @@ export * from "./git-graph/git-graph.ts";
 export * from "./vault/vault.ts";
 export * from "./automations/automation.ts";
 export * from "./automations/external.ts";
-export * from "./team/team.ts";
+export * from "./swarm/swarm.ts";
 export * from "./aimetrics/aimetrics.ts";
 export * from "./hostmetrics/hostmetrics.ts";
 export * from "./inference/index.ts";

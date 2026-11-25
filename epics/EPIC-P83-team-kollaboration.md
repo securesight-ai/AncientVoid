@@ -1,6 +1,6 @@
 # EPIC-P83 — Team: gemeinsam arbeiten über mehrere AncientVoid-Instanzen
 
-**Status:** Planungsentwurf (Nutzerauftrag 24.11.2026, Entscheide E1–E12 liegen vor), Umsetzung wartet auf T83.0 · **Phase:** P83 · **Dauer:** 13–18 Agenten-Wochen · **Abhängigkeit:** [P82 abgeschlossen](EPIC-P82-audit-raeumen-inventar-schnitt-haertung.md) und im [Nightly auf `4f8533cf`](https://github.com/securesight-ai/AncientVoid/actions/runs/45566415645) enthalten, P6/P60 fachlich umgesetzt, P45-No-go bleibt, P30/P31 On hold unberührt. Tracker-Issue: #421.
+**Status:** In Umsetzung — Starttor T83.0 am 25.11.2026 genommen (Betreiberbestätigung der Bind-Regeln nach ADR-0118 §3 und der Egress-Regeln nach ADR-0122 §5 liegt vor; Aufgabenbündelung je PR freigegeben, Tests je Aufgabe getrennt) · **Phase:** P83 · **Dauer:** 13–18 Agenten-Wochen · **Abhängigkeit:** [P82 abgeschlossen](EPIC-P82-audit-raeumen-inventar-schnitt-haertung.md) und im [Nightly auf `4f8533cf`](https://github.com/securesight-ai/AncientVoid/actions/runs/45566415645) enthalten, P6/P60 fachlich umgesetzt, P45-No-go bleibt, P30/P31 On hold unberührt. Tracker-Issue: #421.
 
 Grundlagen: [Recherche und Threat Model](../docs/2026-11-24_team-kollaboration-recherche.md) ·
 [Feinkonzept](../docs/2026-11-24_team-feinkonzept.md) ·
@@ -58,8 +58,8 @@ T83.5 (Widerruf) liegt bewusst vor jeder Nutzfunktion.
 
 ## 4. Aufgaben (Checkliste)
 
-- [ ] **T83.0** Entscheidungstor: P82 grün geprüft, [AGENTS.md](../AGENTS.md) ergänzt. Ausstehend ist die Betreiberbestätigung der Bind-Regeln nach [ADR-0118 §3](../docs/adr/0118-team-verbindung-identitaet-kopplung.md#entscheidung) und der Egress-Regeln nach [ADR-0122 §5](../docs/adr/0122-sandbox-fuer-worker.md#entscheidung). Kein Code davor.
-- [ ] **T83.1** Umbenennung Agenten-Team → Swarm nach ADR-0123 (reiner Rename mit Migration, eigener PR), danach Auftraggeber statt fest `"team"` und additives `Swarm.origin`. Altdaten-Fixture, Automationen, Redirect-Spec `e2e/specs/swarm.spec.ts`. **K7/K10**
+- [x] **T83.0** Entscheidungstor: P82 grün geprüft, [AGENTS.md](../AGENTS.md) ergänzt. Betreiberbestätigung der Bind-Regeln nach [ADR-0118 §3](../docs/adr/0118-team-verbindung-identitaet-kopplung.md#entscheidung) und der Egress-Regeln nach [ADR-0122 §5](../docs/adr/0122-sandbox-fuer-worker.md#entscheidung) erteilt am 25.11.2026 (Betreiber; beide Regelwerke unverändert bestätigt). Kein Code davor.
+- [x] **T83.1** Umbenennung Agenten-Team → Swarm nach ADR-0123 (reiner Rename mit Migration, eigener PR), danach Auftraggeber statt fest `"team"` und additives `Swarm.origin`. Altdaten-Fixture, Automationen, Redirect-Spec `e2e/specs/swarm.spec.ts`. **K7/K10** — umgesetzt 25.11.2026: Module/Routen/Assets in `swarm/` umbenannt, `data/team/`→`data/swarm/`-Migration mit `run`/`teamId`-Toleranz, `#/runs`+`#/teams`→`#/swarms`-Redirects, `/api/teams` 404, Swarm-Ursprung mit Auftraggeber-Akteur; belegt durch `swarm.test.ts` (32, inkl. Altdaten-Fixture), Integrationstests, E2E `swarm.spec.ts` (Redirects), Tier-A-Suite, Lint, Typecheck.
 - [ ] **T83.2** Instanz und Link: Schlüssel, Listener/Dialer, Adressprüfung, Pins, Zustand in V7. Tests: Wildcard/öffentliche Adresse = Startfehler, TLS 1.2, fremder Schlüssel, Resumption, DNS-Rebinding, kein `/api`. **K9**
 - [ ] **T83.3** Kopplung über PWA und `hubctl` (Feinkonzept §5). Spec `e2e/specs/team-pairing.spec.ts`. **K1**
 - [ ] **T83.4** Journal, Signatur, Abgleich, Verlauf. Spec `team-verlauf.spec.ts`. **K5/K7**

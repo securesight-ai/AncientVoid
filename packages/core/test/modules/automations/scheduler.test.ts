@@ -174,7 +174,7 @@ describe("automations scheduler (T41.3)", () => {
     const store = new AutomationStore(root);
     store.upsertDefinition(definition(), "2026-01-05T11:50:00.000Z");
     const claim = store.claim("aut-1", 1, "2026-01-05T11:00:00.000Z", "2026-01-05T12:00:30.000Z");
-    store.updateClaim(claim!.claimKey, { state: "settled", outcome: "succeeded", teamId: "run-9" }, "2026-01-05T12:05:00.000Z");
+    store.updateClaim(claim!.claimKey, { state: "settled", outcome: "succeeded", swarmId: "run-9" }, "2026-01-05T12:05:00.000Z");
     store.saveSnapshot();
     store.claim("aut-1", 1, "2026-01-06T11:00:00.000Z", "2026-01-06T12:00:30.000Z"); // Journal-Zeile nach dem Snapshot
     const reopened = new AutomationStore(root);

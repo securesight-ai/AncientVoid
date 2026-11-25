@@ -1,4 +1,4 @@
-import type { HubTeam } from "./modules/team/index.ts";
+import type { HubSwarm } from "./modules/swarm/index.ts";
 import type { ActionDefinition } from "@ancientvoid/contracts";
 import type { HostMetricsService, Pforte } from "@ancientvoid/core";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
@@ -46,7 +46,7 @@ export interface HubAppDeps {
   knowledge?: KnowledgeService;
   /** EPIC-P73 (ADR-0094): externe Auto-Jobs (GitHub-Actions, Issue-Bridge). */
   externalJobs?: ExternalJobsService;
-  team?: HubTeam;
+  swarm?: HubSwarm;
   sessions: SessionManager;
   tokens: TokenService;
   registry: AdapterRegistry;

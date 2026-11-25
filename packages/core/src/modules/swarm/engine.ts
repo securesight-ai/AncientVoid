@@ -1,8 +1,8 @@
-import type { TeamPlan} from "@ancientvoid/contracts";
-import { type TeamDelivery, type TeamFrame, type TeamGate, type Team, type TeamTaskPlan } from "@ancientvoid/contracts";
+import type { SwarmPlan} from "@ancientvoid/contracts";
+import { type SwarmDelivery, type SwarmFrame, type SwarmGate, type Swarm, type SwarmTaskPlan } from "@ancientvoid/contracts";
 
 /**
- * EPIC-P40 (ADR-0064 §2): deterministische Übergänge und Invarianten der Agenten-Teams (Run→Team, ADR-0077).
+ * EPIC-P40 (ADR-0064 §2): deterministische Übergänge und Invarianten der Swarms (Run→Team→Swarm, ADR-0077/0123).
  * Pure Funktionen — Persistenz und Session-Seite leben in Store/Coordinator; jede Regel
  * hier ist mit Unit-Tests belegt (T40.2, Orca-Testvorlage auf AV umgesetzt).
  */
@@ -11,12 +11,12 @@ import { type TeamDelivery, type TeamFrame, type TeamGate, type Team, type TeamT
 export type EngineError = { code: string; message: string };
 export type EngineResult<T> = { ok: true; value: T } | { ok: false; error: EngineError };
 /** DAG prüfen: unbekannte Abhängigkeiten, Zyklen (Kahn), Rahmen-Verstoß. */
-export function validatePlan(plan: TeamPlan, frame: TeamFrame): EngineError | null {
+export function validatePlan(plan: SwarmPlan, frame: SwarmFrame): EngineError | null {
   const tasks = plan.tasks;
   if (tasks.length === 0) return { code: "plan_invalid", message: "Plan ohne Aufgaben." };
   if (tasks.length > frame.maxTasks) return { code: "too_many_tasks", message: `Plan hat ${tasks.length} Aufgaben, Rahmen erlaubt ${frame.maxTasks}.` };
   const ids = new Set(tasks.map((t) => t.id));
-  if (ids.size !== tasks.length) return { code: "plan_invalid", message: "Task-IDs sind im Team nicht eindeutig." };
+  if (ids.size !== tasks.length) return { code: "plan_invalid", message: "Task-IDs sind im Swarm nicht eindeutig." };
   for (const t of plan.tasks) {
     if (!frame.adapters.includes(t.adapter)) {
       return { code: "adapter_not_allowed", message: `Adapter „${t.adapter}“ von Task ${t.id} ist im Rahmen nicht freigegeben.` };
@@ -51,8 +51,8 @@ export function validatePlan(plan: TeamPlan, frame: TeamFrame): EngineError | nu
   return null;
 }
 
-/** Plan in Team-Tasks überführen (Status aus Abhängigkeiten abgeleitet). */
-export function tasksFromPlan(plan: TeamPlan): Team["tasks"] {
+/** Plan in Swarm-Tasks überführen (Status aus Abhängigkeiten abgeleitet). */
+export function tasksFromPlan(plan: SwarmPlan): Swarm["tasks"] {
   return plan.tasks.map((t) => ({
     id: t.id,
     title: t.title,
@@ -69,7 +69,7 @@ export function tasksFromPlan(plan: TeamPlan): Team["tasks"] {
 const terminal = (s: string): boolean => s === "done" || s === "failed" || s === "unknown";
 
 /** Frisch laufende Dispatches und offene Ready-Tasks im Rahmen-Limit zählen. */
-function runningCount(run: Team): number {
+function runningCount(run: Swarm): number {
   return run.tasks.reduce((n, t) => n + t.dispatches.filter((d) => d.status === "active").length, 0);
 }
 
@@ -77,7 +77,7 @@ function runningCount(run: Team): number {
  * Abschluss eines Versuchs: nur der AKTIVE Dispatch der HÖCHSTEN Generation darf seinen Task
  * abschließen — verspätete Ergebnisse alter Generationen werden `stale` verworfen (AC-P40-2).
  */
-export function applyOutcome(run: Team, taskId: string, dispatchId: string, outcome: { ok: boolean; text: string; bytes?: number; blobRef?: string | null; note?: string }): EngineResult<Team> {
+export function applyOutcome(run: Swarm, taskId: string, dispatchId: string, outcome: { ok: boolean; text: string; bytes?: number; blobRef?: string | null; note?: string }): EngineResult<Swarm> {
   const task = run.tasks.find((t) => t.id === taskId);
   if (!task) return { ok: false, error: { code: "not_found", message: `Task ${taskId} unbekannt.` } };
   const dispatch = task.dispatches.find((d) => d.id === dispatchId);
@@ -95,7 +95,7 @@ export function applyOutcome(run: Team, taskId: string, dispatchId: string, outc
   dispatch.endedAt = now;
   if (outcome.ok) {
     dispatch.status = "done";
-    const delivery: TeamDelivery = {
+    const delivery: SwarmDelivery = {
       taskId,
       dispatchId,
       generation: dispatch.generation,
@@ -124,7 +124,7 @@ export function applyOutcome(run: Team, taskId: string, dispatchId: string, outc
 }
 
 /** Abhängigkeiten nachziehen: erledigte Deps machen pending → ready; gescheiterte Deps sperren nicht still. */
-function updateDownstream(run: Team): void {
+function updateDownstream(run: Swarm): void {
   for (const t of run.tasks) {
     if (t.status !== "pending") continue;
     const deps = t.dependsOn.map((d) => run.tasks.find((x) => x.id === d)!);
@@ -133,8 +133,8 @@ function updateDownstream(run: Team): void {
   }
 }
 
-/** Team-Ende: alle Tasks terminal → done/failed; sonst running. */
-function updateRunStatus(run: Team): void {
+/** Swarm-Ende: alle Tasks terminal → done/failed; sonst running. */
+function updateRunStatus(run: Swarm): void {
   if (run.status === "awaiting_gate" || run.status === "cancelled") return;
   if (run.tasks.every((t) => terminal(t.status))) {
     run.status = run.tasks.some((t) => t.status === "failed" || t.status === "unknown") ? "failed" : "done";
@@ -145,16 +145,16 @@ function updateRunStatus(run: Team): void {
 }
 
 /** Nächste Dispatch-Kandidaten: ready Tasks, solange Parallelität im Rahmen bleibt. */
-export function nextDispatches(run: Team): Team["tasks"] {
+export function nextDispatches(run: Swarm): Swarm["tasks"] {
   if (run.status !== "running") return [];
   const free = run.frame.maxParallel - runningCount(run);
   if (free <= 0) return [];
   return run.tasks.filter((t) => t.status === "ready").slice(0, free);
 }
 
-/** Gate öffnen: Team pausiert (keine neuen Dispatches), Frage sichtbar. */
-export function openGate(run: Team, gate: Omit<TeamGate, "openedAt" | "answeredAt" | "answer">): TeamGate {
-  const g: TeamGate = { ...gate, openedAt: new Date().toISOString(), answeredAt: null, answer: null };
+/** Gate öffnen: Swarm pausiert (keine neuen Dispatches), Frage sichtbar. */
+export function openGate(run: Swarm, gate: Omit<SwarmGate, "openedAt" | "answeredAt" | "answer">): SwarmGate {
+  const g: SwarmGate = { ...gate, openedAt: new Date().toISOString(), answeredAt: null, answer: null };
   run.gates.push(g);
   run.status = "awaiting_gate";
   run.updatedAt = g.openedAt;
@@ -162,7 +162,7 @@ export function openGate(run: Team, gate: Omit<TeamGate, "openedAt" | "answeredA
 }
 
 /** Gate beantworten: nur einmal, Antwort wirkt je Aktion (ADR-0064 §6). */
-export function answerGate(run: Team, gateId: string, label: string): EngineResult<Team> {
+export function answerGate(run: Swarm, gateId: string, label: string): EngineResult<Swarm> {
   const gate = run.gates.find((g) => g.id === gateId);
   if (!gate) return { ok: false, error: { code: "not_found", message: `Frage ${gateId} unbekannt.` } };
   if (gate.answeredAt !== null) return { ok: false, error: { code: "gate_closed", message: "Frage ist bereits beantwortet." } };
@@ -178,7 +178,7 @@ export function answerGate(run: Team, gateId: string, label: string): EngineResu
     case "retry_plan":
     case "continue":
     case "retry_task":
-      // Der Koordinator setzt den Zustand fort; Team zurück auf running, sofern nicht terminal.
+      // Der Koordinator setzt den Zustand fort; Swarm zurück auf running, sofern nicht terminal.
       if (run.status === "awaiting_gate") {
         run.status = run.tasks.every((t) => terminal(t.status)) ? (run.tasks.some((t) => t.status !== "done") ? "failed" : "done") : "running";
       }
@@ -187,8 +187,8 @@ export function answerGate(run: Team, gateId: string, label: string): EngineResu
   return { ok: true, value: run };
 }
 
-/** Stopp: keine neuen Dispatches; nur Team-eigene Dispatches werden markiert; Worktrees bleiben (AC-P40-6). */
-export function cancelRun(run: Team, reason: string): Team {
+/** Stopp: keine neuen Dispatches; nur Swarm-eigene Dispatches werden markiert; Worktrees bleiben (AC-P40-6). */
+export function cancelRun(run: Swarm, reason: string): Swarm {
   const now = new Date().toISOString();
   for (const t of run.tasks) {
     for (const d of t.dispatches) {
@@ -207,9 +207,9 @@ export function cancelRun(run: Team, reason: string): Team {
 }
 
 /** Kontextpaket für einen Worker-Dispatch: Ziel + Teilaufgabe + Dep-Ergebnis-Vorschauen, nie Vollchat (ADR-0064 §3.5). */
-export function contextPacket(run: Team, task: TeamTaskPlan): string {
-  const parts = [`# Agenten-Team: ${run.title}`, "", `## Ziel`, run.goal, "", `## Deine Teilaufgabe (${task.id})`, task.prompt];
-  const deps = task.dependsOn.map((d) => run.tasks.find((t) => t.id === d)?.result).filter((r): r is TeamDelivery => r !== null && r !== undefined);
+export function contextPacket(run: Swarm, task: SwarmTaskPlan): string {
+  const parts = [`# Swarm-Auftrag: ${run.title}`, "", `## Ziel`, run.goal, "", `## Deine Teilaufgabe (${task.id})`, task.prompt];
+  const deps = task.dependsOn.map((d) => run.tasks.find((t) => t.id === d)?.result).filter((r): r is SwarmDelivery => r !== null && r !== undefined);
   if (deps.length > 0) {
     parts.push("", "## Ergebnisse vorheriger Aufgaben");
     for (const d of deps) parts.push(`### ${d.taskId} (Versuch ${d.generation})`, d.text.slice(0, 2048));

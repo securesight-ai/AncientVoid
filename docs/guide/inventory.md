@@ -34,7 +34,7 @@ Regeln:
 | page:media | Media library: uploads and video analyses | `#/medien` | media |
 | page:pc | PC workspace: session tiles and layouts | `#/pc` | desktop |
 | page:vault | Notes vault with folder picker | `#/notizen` | vault |
-| page:teams | Agent teams: plan, dispatch, gates, deliveries | `#/teams` | team |
+| page:swarms | Agent swarms: plan, dispatch, gates, deliveries | `#/swarms` | swarm |
 | page:automationen | Automations: schedules and run history | `#/automationen` | automations |
 | page:statistics | One analysis page with tabs: session/turn/gate/tool statistics, host monitoring, AI server metrics, inference token tempo | `#/statistik` (+`/hosts`, `/hosts/<id>`, `/metriken`, `/inferenz`) | statistik |
 | page:terminal | Allowlisted SSH/local shell in the PWA | `#/terminal` | terminal |
@@ -94,7 +94,7 @@ Regeln:
 | feature:status | Status line language (measured vs unknown) | zustandssprache |
 | feature:statistics | One analysis page: metrics hub (system, AI server, sessions/turns/tools) plus inference token/tempo adapters with request history and percentiles | statistik |
 | feature:stt | Speech-to-text dictation | voice-local |
-| feature:team | Team cards, DAG view, model choice | team |
+| feature:swarm | Swarm cards, DAG view, model choice | swarm |
 | feature:terminal | Allowlisted hub SSH/local terminal (xterm) | terminal |
 | feature:vault | Vault notes: editor, folders, popout | vault |
 | feature:windows | Popout windows and window targets | windows |

@@ -7,7 +7,7 @@ import {
   type AutomationInfo,
   type AutomationOutcome,
   type AutomationTarget,
-  TeamStart,
+  SwarmStart,
   AUTOMATION_LIMITS,
 } from "@ancientvoid/contracts";
 import { AutomationStore, type ClaimState } from "./store.ts";
@@ -26,7 +26,7 @@ type DefinitionInput = Parameters<typeof DefinitionSchema.parse>[0];
 
 export interface AutomationLauncher {
   /** Start beim Ausführungseigentümer. `dispatched` heißt Startauftrag, nie Erfolg. */
-  template?(id: string): Promise<TeamStart | null>;
+  template?(id: string): Promise<SwarmStart | null>;
   inspect?(claim: ClaimState): Promise<ExecutionStatus>;
   launch(definition: AutomationDefinition, promptText: string | null, claimKey: string, kind: "due" | "run_now" | "catchup"): Promise<DispatchResult>;
 }
@@ -73,7 +73,7 @@ export class AutomationService {
       now: this.now,
       log: this.log,
       ...(this.launcher.inspect ? { inspect: (claim: ClaimState) => this.launcher.inspect!(claim) } : {}),
-      precheck: (definition, deadlineMs) => this.prechecker.run(definition.precheckActionId!, definition, deadlineMs, definition.target.kind === "team" ? this.blobText(definition.target.templateBlobSha256!)! : undefined),
+      precheck: (definition, deadlineMs) => this.prechecker.run(definition.precheckActionId!, definition, deadlineMs, definition.target.kind === "swarm" ? this.blobText(definition.target.templateBlobSha256!)! : undefined),
       dispatch: (definition, claimKey, occurrenceUtc, kind) => this.launcher.launch(definition, this.targetBlobText(definition.target), claimKey, kind),
     });
   }
@@ -82,10 +82,10 @@ export class AutomationService {
   async prepare(input: DefinitionInput): Promise<AutomationDefinition> {
     const definition = DefinitionSchema.parse(input);
     if (definition.hostId !== this.hostId) throw new Error("Automation gehört zu einem anderen Host");
-    if (definition.target.kind === "team") {
+    if (definition.target.kind === "swarm") {
       const template = await this.launcher.template?.(definition.target.templateId);
-      if (!template) throw new Error("Run-Vorlage unbekannt oder noch ohne vollständigen Plan");
-      const text = JSON.stringify(TeamStart.parse(template));
+      if (!template) throw new Error("Swarm-Vorlage unbekannt oder noch ohne vollständigen Plan");
+      const text = JSON.stringify(SwarmStart.parse(template));
       definition.target.templateBlobSha256 = this.writeBlob(text);
     }
     return definition;
@@ -110,15 +110,15 @@ export class AutomationService {
       return {
         definition,
         nextOccurrences: nextOccurrences(definition.schedule, nowIso, 5).map((o) => ({ utc: o.utc, local: o.local })),
-        lastOccurrence: last === null ? null : { utc: last.occurrenceUtc, state: last.state, ...(last.reason ? { reason: last.reason } : {}), ...(last.outcome ? { outcome: last.outcome } : {}), ...(last.teamId ? { teamId: last.teamId } : {}), ...(last.sessionId ? { sessionId: last.sessionId } : {}) },
+        lastOccurrence: last === null ? null : { utc: last.occurrenceUtc, state: last.state, ...(last.reason ? { reason: last.reason } : {}), ...(last.outcome ? { outcome: last.outcome } : {}), ...(last.swarmId ? { swarmId: last.swarmId } : {}), ...(last.sessionId ? { sessionId: last.sessionId } : {}) },
       };
     });
   }
 
-  template(id: string): TeamStart | null {
+  template(id: string): SwarmStart | null {
     const definition = this.store.definition(id);
-    if (definition?.target.kind !== "team" || !definition.target.templateBlobSha256) return null;
-    return TeamStart.parse(JSON.parse(this.blobText(definition.target.templateBlobSha256)!));
+    if (definition?.target.kind !== "swarm" || !definition.target.templateBlobSha256) return null;
+    return SwarmStart.parse(JSON.parse(this.blobText(definition.target.templateBlobSha256)!));
   }
 
   history(id: string): ClaimState[] {
@@ -183,7 +183,7 @@ export class AutomationService {
     const claim = this.store.claimsFor(id).find((c) => c.claimKey === claimKey);
     if (!claim) return null;
     if (claim.state !== "unknown") throw new Error(`Nur ein unklarer Start lässt sich aufgeben (Zustand: ${claim.state})`);
-    if (claim.sessionId || claim.teamId) throw new Error("Der Start hat eine Referenz; sein Ergebnis kommt aus dem Abgleich");
+    if (claim.sessionId || claim.swarmId) throw new Error("Der Start hat eine Referenz; sein Ergebnis kommt aus dem Abgleich");
     this.log(`unknown aufgegeben ${claimKey}: ${note}`);
     return this.store.updateClaim(claimKey, { state: "settled", outcome: "abandoned", detail: `manuell aufgegeben: ${note}`.slice(0, 500) }, new Date(this.now()).toISOString());
   }
@@ -201,8 +201,8 @@ export class AutomationService {
   private validatePrompt(definition: AutomationDefinition, promptText: string | undefined, isNew: boolean): void {
     // ADR-0080: Skript-Ziele führen eine registrierte argv-Aktion aus — kein Blob-Abgleich nötig.
     if (definition.target.kind === "script") return;
-    if (definition.target.kind === "team") {
-      if (!definition.target.templateBlobSha256 || this.blobText(definition.target.templateBlobSha256) === null) throw new Error("Run-Vorlage muss vor Anlage vorbereitet werden");
+    if (definition.target.kind === "swarm") {
+      if (!definition.target.templateBlobSha256 || this.blobText(definition.target.templateBlobSha256) === null) throw new Error("Swarm-Vorlage muss vor Anlage vorbereitet werden");
       return;
     }
     if (definition.target.kind === "session") {

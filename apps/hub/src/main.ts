@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createHubTeam } from "./modules/team/index.ts";
+import { createHubSwarm } from "./modules/swarm/index.ts";
 import { sttModuleConfig } from "./modules/voice/stt-wiring.ts";
 /**
  * AncientVoid hub daemon entry.
@@ -372,11 +372,10 @@ async function main(): Promise<void> {
     },
   });
 
-  const team = createHubTeam({ sessions, dataDir });
-  await team.ready;
+  const swarm = createHubSwarm({ sessions, dataDir });
+  await swarm.ready;
   const automations = createHubAutomationService({
-    team,
-    actions: config.actions,
+    swarm,
     dataDir,
     hostId: config.hostId ?? toHostId(hostname()),
     sessions,
@@ -659,7 +658,7 @@ async function main(): Promise<void> {
     forgeTokens: {
       ...(ghTokenFile ? { githubTokenFile: ghTokenFile } : {}),
     },
-    team,
+    swarm,
     ...(aimetrics ? { aimetrics, aimetricsMergePeers: config.aiMetrics?.mergePeers !== false } : {}),
     ...(hostMetrics ? { hostMetrics } : {}),
     hostMetricsMergePeers: config.hostMetrics.mergePeers,
@@ -669,7 +668,7 @@ async function main(): Promise<void> {
     search: { transcript },
     // EPIC-P56 T56.3: Statistik-Rollup — hält die Fakten-Caches frisch und
     // liest sie für die Statistik-Seite (Journal bleibt Wahrheit, K7).
-    statistics: new StatisticsService(db, sessions, team),
+    statistics: new StatisticsService(db, sessions, swarm),
     terminals: [
       ...config.terminals.map((t) => ({
         id: t.id,

@@ -29,7 +29,7 @@ export const en: Record<keyof typeof de, string> = {
   "settings.language.hint": "Per-device setting; follows the system on first use. Changing it reloads the app — drafts are kept.",
   "settings.language.auto": "Automatic",
 
-  "error.adapter_not_allowed": "Loop adapters are not allowed as team workers.",
+  "error.adapter_not_allowed": "Loop adapters are not allowed as swarm workers.",
   "error.rate_limited.one": "Too many requests — retry in {n} second.",
   "error.rate_limited.other": "Too many requests — retry in {n} seconds.",
 };

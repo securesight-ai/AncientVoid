@@ -40,7 +40,7 @@ export const DEMO_PROMPTS = [
 ] as const;
 export const DEMO_AUTOMATION = {
   name: "demo-weekly-audit",
-  kind: "team",
+  kind: "swarm",
   schedule: "weekly",
 } as const;
 

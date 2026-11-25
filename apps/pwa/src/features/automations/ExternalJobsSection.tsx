@@ -62,17 +62,17 @@ export function ExternalJobsSection({ offline, cacheKey }: { offline: boolean; c
 
   const jobs = data?.jobs ?? [];
   return <section class="automation-external" data-testid="external-jobs-section">
-    <div class="teams-list-head"><h4>{t("automations.external_automations")}</h4>{data && <span class="team-row-meta">{t("automations.as_of")} <time dateTime={data.atUtc}>{new Date(data.atUtc).toLocaleString("de-DE")}</time></span>}</div>
+    <div class="swarms-list-head"><h4>{t("automations.external_automations")}</h4>{data && <span class="swarm-row-meta">{t("automations.as_of")} <time dateTime={data.atUtc}>{new Date(data.atUtc).toLocaleString("de-DE")}</time></span>}</div>
     {offline && <p role="status">{t("automations.offline_saved")}</p>}
     {data?.staleError && <div class="files-error" role="alert" data-testid="external-jobs-stale">{data.staleError}</div>}
     {readError && !data && <div class="files-error" role="alert">{readError}</div>}
     {jobs.length === 0
       ? <div class="ui-empty" data-testid="external-jobs-empty">{data ? "Keine externen Automatismen konfiguriert — GitHub-Token (issues-Sektion) bzw. Issue-Bridge fehlt." : "lade…"}</div>
       : <ul class="automation-external-list">{jobs.map((job, i) => <li key={`${job.source}:${job.name}:${i}`}>
-        <span class="team-pill" data-testid="external-job-status">{STATUS_LABEL[job.status]}</span>
-        <span class="team-row-title">{job.name}</span>
-        <span class="team-row-meta">{SOURCE_LABEL[job.source]}{job.detail ? ` · ${job.detail}` : ""}</span>
-        {job.url && <a class="team-row-meta" href={job.url} target="_blank" rel="noreferrer">{t("automations.open")}</a>}
+        <span class="swarm-pill" data-testid="external-job-status">{STATUS_LABEL[job.status]}</span>
+        <span class="swarm-row-title">{job.name}</span>
+        <span class="swarm-row-meta">{SOURCE_LABEL[job.source]}{job.detail ? ` · ${job.detail}` : ""}</span>
+        {job.url && <a class="swarm-row-meta" href={job.url} target="_blank" rel="noreferrer">{t("automations.open")}</a>}
       </li>)}</ul>}
   </section>;
 }

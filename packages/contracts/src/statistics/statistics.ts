@@ -109,11 +109,11 @@ export const ToolStatistics = z.object({
 export type ToolStatistics = z.infer<typeof ToolStatistics>;
 
 /**
- * P56 T56.1b: Team-Fakten über alle Teams. `done` ist worker_done und kein
+ * P56 T56.1b: Swarm-Fakten über alle Swarms. `done` ist worker_done und kein
  * bestandenes Gate (P40-Regel); eine Gate-Erfolgsquote ist nicht belegt.
  */
-export const TeamTaskStatistics = z.object({
-  teams: count.refine(n => n > 0),
+export const SwarmTaskStatistics = z.object({
+  swarms: count.refine(n => n > 0),
   tasks: count,
   /** pending/ready/running — noch kein auswertbares Ende. */
   open: count,
@@ -135,8 +135,8 @@ export const TeamTaskStatistics = z.object({
   t.staleDispatches <= t.dispatches &&
   (t.tasksWithDispatches === 0 ? t.retryRate === null : t.retryRate === t.retryTasks / t.tasksWithDispatches) &&
   (t.done + t.failed === 0 ? t.workerEndRate === null : t.workerEndRate === t.done / (t.done + t.failed)),
-"Team-Zahlen oder Quoten widersprechen sich.");
-export type TeamTaskStatistics = z.infer<typeof TeamTaskStatistics>;
+"Swarm-Zahlen oder Quoten widersprechen sich.");
+export type SwarmTaskStatistics = z.infer<typeof SwarmTaskStatistics>;
 
 /**
  * P56 T56.4: eine Session, die in Wallzeit oder Zugzahl über dem p95 ihrer
@@ -186,7 +186,7 @@ export const StatisticsReport = z.object({
   gateWait: GateWaitStatistics.nullable(),
   tools: z.array(ToolStatistics),
   recovery: StatisticsDistribution,
-  team: TeamTaskStatistics.nullable(),
+  swarm: SwarmTaskStatistics.nullable(),
   /** T56.4: über dem Gruppen-p95 liegende Sessions (Klein-n-Gruppen melden keine). */
   anomalies: z.array(SessionAnomaly),
 }).strict();

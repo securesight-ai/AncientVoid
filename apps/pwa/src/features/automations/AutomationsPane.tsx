@@ -1,6 +1,6 @@
 import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useMemo, useState } from "preact/hooks";
-import type { AutomationInfo, Team } from "@ancientvoid/contracts";
+import type { AutomationInfo, Swarm } from "@ancientvoid/contracts";
 import { getToken, hostApi, remoteHost, type AdapterInfo, type DiscoveredProject } from "../../shared/api.ts";
 import { sessionHash } from "../../app/route.ts";
 import { ApiContext, useApi } from "../../shared/api-context.ts";
@@ -30,7 +30,7 @@ function AutomationsHostPane({ host }: { host: string | null }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adapters, setAdapters] = useState<AdapterInfo[]>([]);
   const [projects, setProjects] = useState<DiscoveredProject[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [swarms, setSwarms] = useState<Swarm[]>([]);
   const [showNew, setShowNew] = useState(false);
   const [editing, setEditing] = useState<AutomationInfo | null>(null);
   const [error, setError] = useState("");
@@ -76,8 +76,8 @@ function AutomationsHostPane({ host }: { host: string | null }) {
 
   useEffect(() => {
     let alive = true;
-    void Promise.all([api.adapters(), api.projects(), api.teamList()]).then(([a, p, r]) => {
-      if (alive) { setAdapters(a); setProjects(p.projects); setTeams(r); }
+    void Promise.all([api.adapters(), api.projects(), api.swarmList()]).then(([a, p, r]) => {
+      if (alive) { setAdapters(a); setProjects(p.projects); setSwarms(r); }
     }).catch(err => { if (alive) setError(err instanceof Error ? err.message : "Ziele nicht lesbar"); });
     return () => { alive = false; };
   }, [api]);
@@ -100,26 +100,26 @@ function AutomationsHostPane({ host }: { host: string | null }) {
     finally { setBusy(false); }
   };
 
-  return <div class="teams-pane" data-testid="automations-pane">
-    <div class="teams-list">
-      <div class="teams-list-head"><h3>{t("common.automations")}</h3><Button disabled={offline || busy} onClick={() => { setShowNew(value => !value); setEditing(null); }}>{showNew ? "Abbrechen" : "Neue Automation"}</Button></div>
+  return <div class="swarms-pane" data-testid="automations-pane">
+    <div class="swarms-list">
+      <div class="swarms-list-head"><h3>{t("common.automations")}</h3><Button disabled={offline || busy} onClick={() => { setShowNew(value => !value); setEditing(null); }}>{showNew ? "Abbrechen" : "Neue Automation"}</Button></div>
       {at && <p>{t("app.data_from")} <time data-testid="automations-asof" dateTime={at}>{new Date(at).toLocaleString("de-DE")}</time></p>}
       {offline && <p role="status" data-testid="automations-offline">{t("automations.offline_locked")}</p>}
       {readError && <div class="files-error" role="alert">{readError}</div>}
       {error && <div class="files-error" role="alert" data-testid="automations-error">{error}</div>}
-      {(showNew || editing) && <AutomationForm key={editing?.definition.id ?? "new"} adapters={adapters.map(a => a.id)} projects={projects.map(p => p.path)} teams={teams} editing={editing} disabled={offline}
+      {(showNew || editing) && <AutomationForm key={editing?.definition.id ?? "new"} adapters={adapters.map(a => a.id)} projects={projects.map(p => p.path)} swarms={swarms} editing={editing} disabled={offline}
         onSaved={() => { setShowNew(false); setEditing(null); void refresh().catch(err => setError(String(err))); }} onCancel={() => { setShowNew(false); setEditing(null); }} />}
       {/* Nutzerfinding: spontaner Lauf ohne Plan — normale Session, kein Automations-Claim (ADR-0080). */}
       <TempSessionCard adapters={adapters} projects={projects} disabled={offline} />
       <ExternalJobsSection offline={offline} cacheKey={cacheKey} />
       {automations === null ? <div class="ui-empty">{offline && readError ? "Keine gespeicherte Projektion vorhanden." : "lade…"}</div>
         : automations.length === 0 ? <div class="ui-empty">{t("automations.none_yet")}</div>
-        : <ul>{automations.map(info => <li key={info.definition.id}><div class={`team-row ${info.definition.id === selectedId ? "active" : ""}`}>
+        : <ul>{automations.map(info => <li key={info.definition.id}><div class={`swarm-row ${info.definition.id === selectedId ? "active" : ""}`}>
           <button type="button" class="automation-row-main" onClick={() => setSelectedId(info.definition.id)}>
-            <span class="team-row-title">{info.definition.label}</span><span class="team-pill" data-testid="automation-kind">{info.definition.target.kind === "session" ? "Cron-Job" : info.definition.target.kind === "team" ? "Service" : "Skript"}</span><span class="team-pill" data-testid="automation-state">{info.definition.enabled ? "aktiv" : "aus"}</span>
-            <span class="team-row-meta">{scheduleText(info)} {t("automations.host_frag")} {info.definition.hostId}</span>
-            <span class="team-row-meta">{t("automations.next_occurrence")} {info.nextOccurrences[0]?.local ?? "—"}</span>
-            {info.lastOccurrence && <span class="team-row-meta">{t("automations.last ")} {STATE_LABEL[info.lastOccurrence.state]} {info.lastOccurrence.reason ? REASON_LABEL[info.lastOccurrence.reason] : ""} {info.lastOccurrence.outcome ? outcomeLabel(info.lastOccurrence.outcome) : ""}</span>}
+            <span class="swarm-row-title">{info.definition.label}</span><span class="swarm-pill" data-testid="automation-kind">{info.definition.target.kind === "session" ? "Cron-Job" : info.definition.target.kind === "swarm" ? "Service" : "Skript"}</span><span class="swarm-pill" data-testid="automation-state">{info.definition.enabled ? "aktiv" : "aus"}</span>
+            <span class="swarm-row-meta">{scheduleText(info)} {t("automations.host_frag")} {info.definition.hostId}</span>
+            <span class="swarm-row-meta">{t("automations.next_occurrence")} {info.nextOccurrences[0]?.local ?? "—"}</span>
+            {info.lastOccurrence && <span class="swarm-row-meta">{t("automations.last ")} {STATE_LABEL[info.lastOccurrence.state]} {info.lastOccurrence.reason ? REASON_LABEL[info.lastOccurrence.reason] : ""} {info.lastOccurrence.outcome ? outcomeLabel(info.lastOccurrence.outcome) : ""}</span>}
           </button>
           <div class="automation-row-actions">
             <Button disabled={busy || offline} onClick={() => void perform(info, "run")}>{t("automations.start_now")}</Button>

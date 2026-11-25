@@ -30,16 +30,18 @@ describe("buildAutomationDefinition", () => {
     expect(def.target.promptBlobSha256).toBe(createHash("sha256").update("Mein Prompt").digest("hex"));
   });
 
-  it("übernimmt vorhandene id/createdAt und lässt Team-Ziele ohne Prompt zu (ADR-0077: run-Alias normalisiert)", () => {
+  it("übernimmt vorhandene id/createdAt und lässt Swarm-Ziele ohne Prompt zu (ADR-0123: run- und team-Aliase normalisieren)", () => {
     const def = buildAutomationDefinition(
       JSON.stringify({ ...SESSION_JSON, id: "fest-1", createdAtUtc: "2026-11-12T08:00:00.000Z", target: { kind: "run", templateId: "tpl-1" } }),
       null,
     ) as { id: string; createdAtUtc: string; target: { kind: string } };
     expect(def.id).toBe("fest-1");
     expect(def.createdAtUtc).toBe("2026-11-12T08:00:00.000Z");
-    expect(def.target.kind).toBe("team");
-    const native = buildAutomationDefinition(JSON.stringify({ ...SESSION_JSON, target: { kind: "team", templateId: "tpl-2" } }), null) as { target: { kind: string } };
-    expect(native.target.kind).toBe("team");
+    expect(def.target.kind).toBe("swarm");
+    const viaTeam = buildAutomationDefinition(JSON.stringify({ ...SESSION_JSON, target: { kind: "team", templateId: "tpl-2" } }), null) as { target: { kind: string } };
+    expect(viaTeam.target.kind).toBe("swarm");
+    const native = buildAutomationDefinition(JSON.stringify({ ...SESSION_JSON, target: { kind: "swarm", templateId: "tpl-3" } }), null) as { target: { kind: string } };
+    expect(native.target.kind).toBe("swarm");
   });
 
   it("verweigert Session-Ziel ohne Prompt-Text und ohne vorhandenen Blob-Verweis", () => {
@@ -133,6 +135,6 @@ describe("formatHistoryLine", () => {
   it("zeigt Grund, Ergebnis, Referenzen, Art und zusammengefasste verpasste Termine", () => {
     expect(formatHistoryLine({ ...base, state: "skipped", reason: "missed", missedThroughUtc: "2026-11-12T07:29:00.000Z", kind: "catchup" }))
       .toMatch(/skipped\/missed {2}catchup {2}verpasst bis 2026-11-12T07:29:00.000Z/);
-    expect(formatHistoryLine({ ...base, state: "settled", outcome: "failed", teamId: "r-1" })).toMatch(/settled failed {2}team r-1/);
+    expect(formatHistoryLine({ ...base, state: "settled", outcome: "failed", swarmId: "r-1" })).toMatch(/settled failed {2}swarm r-1/);
   });
 });

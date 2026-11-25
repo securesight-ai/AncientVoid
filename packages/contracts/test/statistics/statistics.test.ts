@@ -49,7 +49,7 @@ describe("P56 Statistik-Vertrag", () => {
       gateWait: null,
       tools: [],
       recovery: { n: 0, missing: 0, p50: null, p90: null, p95: null, smallSample: true },
-      team: null,
+      swarm: null,
       anomalies: [],
     });
     expect(report.sessions).toHaveLength(1);

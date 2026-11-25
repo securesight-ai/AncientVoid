@@ -131,9 +131,9 @@ describe("EPIC-P61 T61.7: error.<code>-Mapping", () => {
   it("bekannter Code → Katalogtext; unbekannter Code → Hub-Text unverändert", () => {
     fakeStorage();
     setLanguageSetting("en");
-    expect(errorText("adapter_not_allowed", "Loop-Adapter sind als Team-Worker nicht freigegeben.")).toBe("Loop adapters are not allowed as team workers.");
+    expect(errorText("adapter_not_allowed", "Loop-Adapter sind als Swarm-Worker nicht freigegeben.")).toBe("Loop adapters are not allowed as swarm workers.");
     setLanguageSetting("de");
-    expect(errorText("adapter_not_allowed", "Loop-Adapter sind als Team-Worker nicht freigegeben.")).toBe("Loop-Adapter sind als Team-Worker nicht freigegeben.");
+    expect(errorText("adapter_not_allowed", "Loop-Adapter sind als Swarm-Worker nicht freigegeben.")).toBe("Loop-Adapter sind als Swarm-Worker nicht freigegeben.");
     setLanguageSetting("en");
     expect(errorText("brandneuer_code", "Der Hub-Text bleibt, was er ist.")).toBe("Der Hub-Text bleibt, was er ist.");
     expect(errorText(undefined, "plain hub text")).toBe("plain hub text");
