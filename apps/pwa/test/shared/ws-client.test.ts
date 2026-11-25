@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { connectTail } from "../../src/shared/ws.ts";
 
 class FakeSocket {
@@ -21,12 +21,18 @@ class FakeSocket {
 }
 
 describe("connectTail delivers each event once (BUG-0023)", () => {
+  beforeEach(() => {
+    FakeSocket.last = undefined;
+    vi.stubGlobal("WebSocket", FakeSocket);
+    vi.stubGlobal("fetch", async () => Response.json({ ticket: "one-time-ticket", expiresAt: Date.now() + 30_000 }));
+  });
+
   afterEach(() => vi.unstubAllGlobals());
 
-  it("drops the overlap of a resync or hello replay", () => {
-    vi.stubGlobal("WebSocket", FakeSocket);
+  it("drops the overlap of a resync or hello replay", async () => {
     const seen: number[] = [];
     const tail = connectTail({ url: "http://hub", token: "t", sessionId: "s", onEvents: (e) => seen.push(...e.map((x) => x.seq)), onState: () => undefined });
+    await vi.waitFor(() => expect(FakeSocket.last?.onopen).toBeTypeOf("function"));
     FakeSocket.last!.onopen?.();
     FakeSocket.last!.push([1, 2, 3, 4]);
     FakeSocket.last!.push([3, 4, 5]);
@@ -35,8 +41,7 @@ describe("connectTail delivers each event once (BUG-0023)", () => {
     tail.close();
   });
 
-  it("ADR-0083: Live-Frames kommen getrennt an und stoeren die seq-Buchfuehrung nicht", () => {
-    vi.stubGlobal("WebSocket", FakeSocket);
+  it("ADR-0083: Live-Frames kommen getrennt an und stoeren die seq-Buchfuehrung nicht", async () => {
     const seen: number[] = [];
     const frames: { text: string; final: boolean }[] = [];
     const tail = connectTail({
@@ -47,6 +52,7 @@ describe("connectTail delivers each event once (BUG-0023)", () => {
       onFrames: (f) => frames.push(...f.map((x) => ({ text: x.text, final: x.final }))),
       onState: () => undefined,
     });
+    await vi.waitFor(() => expect(FakeSocket.last?.onopen).toBeTypeOf("function"));
     FakeSocket.last!.onopen?.();
     FakeSocket.last!.push([1]);
     FakeSocket.last!.onmessage?.({
@@ -58,10 +64,10 @@ describe("connectTail delivers each event once (BUG-0023)", () => {
     tail.close();
   });
 
-  it("ADR-0083: ein Frame ohne Abo wirft nichts — Frames sind Wegwerfware", () => {
-    vi.stubGlobal("WebSocket", FakeSocket);
+  it("ADR-0083: ein Frame ohne Abo wirft nichts — Frames sind Wegwerfware", async () => {
     const seen: number[] = [];
     const tail = connectTail({ url: "http://hub", token: "t", sessionId: "s", onEvents: (e) => seen.push(...e.map((x) => x.seq)), onState: () => undefined });
+    await vi.waitFor(() => expect(FakeSocket.last?.onopen).toBeTypeOf("function"));
     FakeSocket.last!.onopen?.();
     FakeSocket.last!.onmessage?.({ data: JSON.stringify({ type: "stream", sessionId: "s", frames: [{ turnId: "t1", stream: "assistant", seq: 0, text: "x", final: true }] }) });
     FakeSocket.last!.push([1]);
@@ -69,10 +75,10 @@ describe("connectTail delivers each event once (BUG-0023)", () => {
     tail.close();
   });
 
-  it("BUG-0026: takes a baseline page as its start instead of resyncing", () => {
-    vi.stubGlobal("WebSocket", FakeSocket);
+  it("BUG-0026: takes a baseline page as its start instead of resyncing", async () => {
     const seen: number[] = [];
     const tail = connectTail({ url: "http://hub", token: "t", sessionId: "s", onEvents: (e) => seen.push(...e.map((x) => x.seq)), onState: () => undefined });
+    await vi.waitFor(() => expect(FakeSocket.last?.onopen).toBeTypeOf("function"));
     FakeSocket.last!.onopen?.();
     FakeSocket.last!.push([401, 402, 403], { baseline: true });
     FakeSocket.last!.push([404]);

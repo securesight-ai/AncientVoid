@@ -1,3 +1,4 @@
+import type { SessionTailTicket } from "@ancientvoid/contracts";
 import { newEvents, resyncDelayMs, shouldResync } from "./ws-protocol.ts";
 
 /**
@@ -55,20 +56,57 @@ export function connectTail(opts: TailOptions): TailConnection {
   let resyncedFrom = -1;
   let resyncAttempts = 0;
   let resyncTimer: ReturnType<typeof setTimeout> | null = null;
+  let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  let ticketRequest: AbortController | undefined;
+  const wsBase = opts.url.replace(/^http/, "ws");
+  const scope = opts.hostId ? `/api/hosts/${encodeURIComponent(opts.hostId)}` : "/api";
+  const path = `${scope}/events/${encodeURIComponent(opts.sessionId)}/tail`;
 
-  const open = () => {
-    opts.onState(lastSeq === 0 ? "connecting" : "reconnecting");
-    const proto = opts.url.startsWith("https") ? "wss" : "ws";
-    const base = opts.url.replace(/^https?/, proto);
-    const scope = opts.hostId ? `/api/hosts/${encodeURIComponent(opts.hostId)}` : "/api";
-    socket = new WebSocket(`${base}${scope}/events/${opts.sessionId}/tail?token=${encodeURIComponent(opts.token)}`);
+  const reconnect = () => {
+    if (closedByUser) return;
+    opts.onState("reconnecting");
+    reconnectTimer = setTimeout(() => void open(), backoffMs);
+    backoffMs = Math.min(backoffMs * 2, 10_000);
+  };
+
+  const open = async () => {
+    if (closedByUser) return;
+    const request = new AbortController();
+    ticketRequest = request;
+    const timeout = setTimeout(() => request.abort(), 10_000);
+    try {
+      const response = await fetch(`${opts.url}${path}-ticket`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${opts.token}` },
+        signal: request.signal,
+      });
+      if (closedByUser) return;
+      if ([401, 403, 404].includes(response.status)) {
+        opts.onState("closed");
+        return;
+      }
+      if (!response.ok) {
+        reconnect();
+        return;
+      }
+      const { ticket } = (await response.json()) as SessionTailTicket;
+      if (closedByUser) return;
+      if (typeof ticket !== "string" || !ticket) throw new Error("missing tail ticket");
+      socket = new WebSocket(`${wsBase}${path}?ticket=${encodeURIComponent(ticket)}`);
+    } catch {
+      reconnect();
+      return;
+    } finally {
+      clearTimeout(timeout);
+      ticketRequest = undefined;
+    }
 
     socket.onopen = () => {
-      backoffMs = 500;
       socket?.send(JSON.stringify({ type: "hello", lastSeq }));
     };
 
     socket.onmessage = (msg) => {
+      if (closedByUser) return;
       try {
         const data = JSON.parse(String(msg.data)) as
           | { type: "events"; events: NormalizedEvent[]; highWater: number; dropped: boolean; baseline?: boolean }
@@ -76,6 +114,7 @@ export function connectTail(opts: TailOptions): TailConnection {
           | { type: "error"; message: string }
           | { type: "pong" }
           | { type: "stream"; sessionId: string; frames: StreamFrameView[] };
+        if (data.type === "events" || data.type === "welcome") backoffMs = 500;
         if (data.type === "events") {
           // BUG-0026: an opening view starts at the newest history page.
           if (data.baseline && lastSeq === 0 && data.events[0]) lastSeq = data.events[0].seq - 1;
@@ -119,20 +158,19 @@ export function connectTail(opts: TailOptions): TailConnection {
     socket.onclose = () => {
       if (resyncTimer) clearTimeout(resyncTimer);
       resyncTimer = null;
-      if (closedByUser) {
-        opts.onState("closed");
-        return;
-      }
-      setTimeout(open, backoffMs);
-      backoffMs = Math.min(backoffMs * 2, 10_000);
+      socket = null;
+      reconnect();
     };
   };
 
-  open();
+  opts.onState("connecting");
+  void open();
 
   return {
     close() {
       closedByUser = true;
+      ticketRequest?.abort();
+      clearTimeout(reconnectTimer);
       if (resyncTimer) clearTimeout(resyncTimer);
       socket?.close();
     },

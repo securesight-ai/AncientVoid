@@ -131,8 +131,8 @@ async function pair(item) {
 
 function openTail(session) {
   return new Promise((resolve, reject) => {
-    const url = `${HOME.replace(/^http/, "ws")}/api/hosts/${session.hostId}/events/${session.id}/tail?token=${encodeURIComponent(TOKEN)}`;
-    const socket = new WebSocket(url);
+    const url = `${HOME.replace(/^http/, "ws")}/api/hosts/${session.hostId}/events/${session.id}/tail`;
+    const socket = new WebSocket(url, { headers: { authorization: `Bearer ${TOKEN}` } });
     streams.push(socket);
     streamBySession.set(session.id, socket);
     const timeout = setTimeout(() => {

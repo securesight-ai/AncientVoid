@@ -1,9 +1,9 @@
-import { createHash, randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { STT_STREAM_MAX_ACTIVE, STT_STREAM_MAX_AUDIO_BYTES, STT_STREAM_MAX_AUDIO_SECONDS, STT_STREAM_MAX_BUFFERED_BYTES, STT_STREAM_MAX_EVENT_BYTES, STT_STREAM_MAX_PENDING_TICKETS, STT_STREAM_MAX_TEXT_BYTES, STT_STREAM_TICKET_TTL_MS, type SttStreamEvent, type SttStreamTicket } from "@ancientvoid/contracts";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import WebSocket, { type RawData } from "ws";
 import { extractToken } from "../../platform/auth.ts";
+import { StreamTickets } from "../../platform/stream-tickets.ts";
 
 export interface SttStreamingConfig {
   url: string;
@@ -16,8 +16,6 @@ export interface SttStreamingConfig {
   apiKeyUnreadable?: boolean;
   speechContext: () => Promise<string[]>;
 }
-
-const hashTicket = (ticket: string): string => createHash("sha256").update(ticket).digest("hex");
 
 function sttPreviewEvent(socket: WebSocket, event: SttStreamEvent): void {
   const payload = JSON.stringify(event);
@@ -37,42 +35,27 @@ function parseRaw(raw: RawData): string {
 export function registerSttStreamRoutes(app: FastifyInstance, config: SttStreamingConfig | undefined): void {
   if (!config) return;
 
-  const tickets = new Map<string, number>();
+  const tickets = new StreamTickets<true>(STT_STREAM_TICKET_TTL_MS, STT_STREAM_MAX_PENDING_TICKETS);
   let active = 0;
-
-  const pruneTickets = (now: number): void => {
-    for (const [hash, expiresAt] of tickets) if (expiresAt <= now) tickets.delete(hash);
-  };
 
   app.addHook("preClose", async () => {
     tickets.clear();
   });
 
   app.post("/api/stt/stream-ticket", async (req: FastifyRequest, reply) => {
-    const now = Date.now();
-    pruneTickets(now);
-    if (tickets.size >= STT_STREAM_MAX_PENDING_TICKETS) return reply.code(503).send({ error: "Zu viele offene STT-Streams." });
     const token = extractToken(req);
     if (!token) return reply.code(401).send({ error: "device token required" });
-    const ticket = randomBytes(32).toString("base64url");
-    const expiresAt = now + STT_STREAM_TICKET_TTL_MS;
-    tickets.set(hashTicket(ticket), expiresAt);
-    const result: SttStreamTicket = { ticket, expiresAt };
+    const result: SttStreamTicket | undefined = tickets.issue(true);
+    if (!result) return reply.code(503).send({ error: "Zu viele offene STT-Streams." });
     return reply.header("cache-control", "no-store").code(201).send(result);
   });
 
   app.get("/api/stt/stream", { websocket: true }, (browser, req) => {
     const query = req.query as { ticket?: unknown } | undefined;
-    const ticket = query?.ticket;
-    const now = Date.now();
-    pruneTickets(now);
-    const ticketHash = typeof ticket === "string" ? hashTicket(ticket) : "";
-    const expiresAt = tickets.get(ticketHash);
-    if (!expiresAt || expiresAt <= now) {
+    if (!tickets.consume(query?.ticket)) {
       browser.close(4401, "invalid or expired STT ticket");
       return;
     }
-    tickets.delete(ticketHash);
     if (active >= STT_STREAM_MAX_ACTIVE) {
       browser.close(1013, "too many STT streams");
       return;
