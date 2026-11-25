@@ -1142,6 +1142,9 @@ export class SessionManager extends SessionManagerWorkspace {
     // Ein Macrotask-Yield + Re-Check schließt das Fenster, bevor etwas
     // Gesendetes in einen längst begonnenen Zug läuft (Occupant-Pinning).
     await new Promise<void>((resolve) => setImmediate(resolve));
+    // BUG-0286: Der Flip selbst wartet auf Journal-I/O — erst die schon
+    // gemeldeten Zugwechsel abarbeiten, dann entscheiden.
+    await session.lifecycle;
     if (!this.canDrain(session)) return;
     const item = this.queue.list(sessionId)[0];
     if (!item) return;

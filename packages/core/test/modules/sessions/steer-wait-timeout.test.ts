@@ -118,7 +118,8 @@ async function waitFor(check: () => boolean, ms = 4000): Promise<void> {
 async function setup(registry: AdapterRegistry, steerWaitMs: number) {
   const dir = await mkdtemp(join(tmpdir(), "ancientvoid-steerwait-"));
   const db = new HubDatabase(":memory:");
-  const sessions = new SessionManager(db, new EventStore(dir), registry, new ProcessRunner(), undefined, undefined, undefined, null, [], { steerWaitMs });
+  const store = new EventStore(dir);
+  const sessions = new SessionManager(db, store, registry, new ProcessRunner(), undefined, undefined, undefined, null, [], { steerWaitMs });
   const done = async () => {
     await sessions.shutdown();
     db.close();
@@ -126,7 +127,7 @@ async function setup(registry: AdapterRegistry, steerWaitMs: number) {
     // dem Testende (Adapter-Ack nach 60 ms) — rm darf das abwarten statt ENOTEMPTY.
     await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   };
-  return { sessions, done };
+  return { sessions, store, done };
 }
 
 describe("Steer-Wait-Timeout (AC-P17-3)", () => {
@@ -209,6 +210,29 @@ describe("Steer-Wait-Timeout (AC-P17-3)", () => {
       // nahm ihn der alte Drain mit und sendete ihn in den laufenden Zug.
       expect(prompts()).toEqual(["schneller neuer Zug"]);
 
+      endTurn(rec.id);
+      await waitFor(() => prompts().length === 2);
+      expect(prompts()).toEqual(["schneller neuer Zug", "danach bitte"]);
+    } finally {
+      await done();
+    }
+  });
+
+  it("BUG-0286: langsames Journal hinter turn(working) lässt nichts Vorgemerktes in den laufenden Zug", async () => {
+    const { registry, endTurn, prompts } = laggingTurnAdapter(60);
+    const { sessions, store, done } = await setup(registry, 5_000);
+    const append = store.append.bind(store);
+    store.append = async (id, events) => {
+      if (events.some((e) => e.payload.kind === "session.main_turn_start")) await new Promise((r) => setTimeout(r, 150));
+      return append(id, events);
+    };
+    try {
+      const rec = await sessions.create({ adapter: "turny2", project: process.cwd() });
+      await sessions.steer(rec.id, { kind: "prompt", text: "danach bitte" }, "jan", { queue: true });
+      endTurn(rec.id);
+      await sessions.steer(rec.id, { kind: "prompt", text: "schneller neuer Zug" });
+      await new Promise((r) => setTimeout(r, 400));
+      expect(prompts()).toEqual(["schneller neuer Zug"]);
       endTurn(rec.id);
       await waitFor(() => prompts().length === 2);
       expect(prompts()).toEqual(["schneller neuer Zug", "danach bitte"]);
