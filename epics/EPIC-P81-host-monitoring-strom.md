@@ -1,6 +1,6 @@
 # EPIC-P81 — Host-Monitoring und Strom: alle Werte aller Hosts, schick und ehrlich
 
-**Status:** in Umsetzung seit 23.11.2026 (T81.1–T81.13 liegen), Abschluss-Gate offen · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen, P79 offen nur mit T79.6. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
+**Status:** Abgeschlossen (25.11.2026) · **Phase:** P81 · **Dauer:** 3–4 Agenten-Wochen (grobe Schätzung) · **Abhängigkeit:** keine blockierende (Quer-Epic wie P59/P66); P59 und P66 abgeschlossen. P30/P31 On hold bleiben unberührt. Tracker-Issue: #361.
 
 ## 1. Ziel & Entscheidung
 
@@ -154,7 +154,7 @@ Jeder Hub speichert nur sich selbst, der Home-Hub zusätzlich das NAS.
 - [x] **T81.12** Reiter Statistik überarbeiten; Filter-/Klapp-Zustand (P66) bleibt. **K10**
 - [x] **T81.13** Roll-out auf drei Hubs und NAS (23.11.2026), `docs/host-monitoring.md`, Guide-Inventar,
   Host-Liste in `~/AGENTS.md`. Sensor- und RAPL-Freigabe mit sudo auf omarchy/evox2 und Geräteabnahme: nach P000 verschoben (T000.33).
-- [ ] **T81.14** Abschluss-Gate: volle Suite (`nightly.yml` bzw. `npm run gate`) auf dem Stand mit allen P81-PRs grün.
+- [x] **T81.14** Abschluss-Gate: [Nightly 45566415645](https://github.com/securesight-ai/AncientVoid/actions/runs/45566415645) auf `4f8533cf` enthält alle P81-PRs bis zum Roll-out (#390). Volle Vitest-Suite, alle vier E2E-Shards und K8 grün.
 
 Reihenfolge: T81.1 sofort; T81.3 → T81.4/6/7 → T81.10; T81.9 parallel.
 
@@ -236,6 +236,16 @@ gleicht es aus. 2, 4, 5, 7, 8 nicht eingetreten; 3 widerlegt (AC-P81-7).
 
 **Action Items**
 
-- AI-P81-1: Abschluss-Gate fahren — zurück als: T81.14.
-- AI-P81-2: sudo-Schritte und Geräteabnahme — zurück als: T000.33.
+- AI-P81-1: Abschluss-Gate gefahren, siehe T81.14.
+- AI-P81-2: Sensorfreigabe, Live-Abgleich je Host (AC-P81-1) und Geräteabnahme nach P000 verschoben, T000.33.
+
+## Abschlussnachtrag (25.11.2026)
+
+**AC-P81-2:** Auf omarchy den produktiven Collector direkt gegen `sensors -u`
+gemessen. Beide Abfragen starteten pro Probe parallel, ohne die bis zu fünf
+Sekunden alte Hub-Historie. Zehn Messpaare in jeweils höchstens 42,4 ms:
+Collector 60,512–61,707 W, `sensors` 60,328–61,715 W, maximale
+Einzelabweichung 0,522 % (Grenze 5 %). Jede Probe lieferte 131 Punkte ohne
+Quellenfehler. Der durchgängige Abgleich der freigeschalteten Sensoren in
+der Live-Oberfläche bleibt Teil von T000.33.
 - AI-P81-3: AC-P81-1/-2 gegen `sensors` zeitgleich messen — zurück als: T81.14 (Teil der Abschlussprüfung).
