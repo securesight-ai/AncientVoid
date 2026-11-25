@@ -14,6 +14,7 @@ import { en as common } from "./en/common.ts";
 import { en as features } from "./en/features.ts";
 import { en as inference } from "./en/inference.ts";
 import { en as hosts } from "./en/hosts.ts";
+import { en as pentest } from "./en/pentest.ts";
 
 export const en: Record<keyof typeof de, string> = {
   ...dock,
@@ -22,6 +23,7 @@ export const en: Record<keyof typeof de, string> = {
   ...features,
   ...inference,
   ...hosts,
+  ...pentest,
 
   "settings.language.title": "Language",
   "settings.language.hint": "Per-device setting; follows the system on first use. Changing it reloads the app — drafts are kept.",

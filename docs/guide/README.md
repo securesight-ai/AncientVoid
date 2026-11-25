@@ -169,6 +169,16 @@ notation stay visible, raw and marked.
 
 Spec: [release-notes.spec.ts](../../e2e/specs/release-notes.spec.ts)
 
+### page:pentest — Pentest
+
+`#/pentest`. Scan allowlisted targets through the attached pentest backend
+(EPIC-P80, ADR-0118): the hub proxies jobs and parses results
+deterministically — backend text is data, never an instruction. Allowlist
+and approval gate are the security boundary, not the UI; without a backend
+configured the page explains why (K10). How-to: [pentest-seite.md](../pentest-seite.md).
+
+Spec: [pentest-seite.spec.ts](../../e2e/specs/pentest-seite.spec.ts)
+
 ## Views
 
 ### view:list — The list shell
@@ -331,6 +341,12 @@ notification center; background pushes reach a locked phone. Spec: [notification
 
 Nyx, the in-app assistant: the sheet holds the conversation, the FAB opens
 it from anywhere. Spec: [nyx-blatt.spec.ts](../../e2e/specs/nyx-blatt.spec.ts)
+
+### feature:pentest
+
+The pentest page's own feature folder: status card, scan form, findings list
+and hub job history — see [page:pentest](#pagepentest--pentest).
+Spec: [pentest-seite.spec.ts](../../e2e/specs/pentest-seite.spec.ts)
 
 ### feature:overview
 

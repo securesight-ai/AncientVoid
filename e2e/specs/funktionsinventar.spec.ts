@@ -204,8 +204,7 @@ const SESSION: Entry[] = [
   { id: "S32", name: "Dateibaum (Reiter Befehle)", from: "session", reach: async (c) => { await c.tap(tab(c, "Befehle")); await c.tap(card(c).getByRole("button", { name: "Dateibaum öffnen" })); await expect(c.page.getByTestId("files-sidebar")).toBeVisible(); } },
   { id: "S33", name: "Browser-Arbeitsplatz (Mehr)", from: "session", reach: async (c) => { await more(c, "Browser"); await expect(c.page.getByTestId("browser-panel")).toBeVisible(); } },
   { id: "S34", name: "Graph in eigenes Fenster", forms: PC, from: "session", reach: async (c) => { await more(c, "Graph"); await expect(card(c).getByRole("button", { name: "Graph in eigenes Fenster" })).toBeVisible(); } },
-  // EPIC-P42: Android-Testgeräte — ohne SDK sichtbar blockiert, das Panel selbst ist immer erreichbar.
-  { id: "S65", name: "Android-Testgeräte (Mehr)", from: "session", reach: async (c) => { await more(c, "Geräte"); await expect(c.page.getByTestId("device-panel")).toBeVisible(); } },
+  // EPIC-P42: Android-Testgeräte — Nachweis führt jetzt nach spec:device-setup.spec.ts (In-App-Setup, 2026-11-24).
   { id: "S66", name: "Android-Testgeräte in eigenes Fenster", forms: PC, from: "session", reach: async (c) => { await more(c, "Geräte"); await expect(c.page.getByRole("button", { name: "Geräte in eigenes Fenster" })).toBeVisible(); } },
 ];
 

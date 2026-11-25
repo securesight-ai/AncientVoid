@@ -49,6 +49,7 @@ Usage:
   hubctl automations disable <id>                   stops future occurrences, running work unchanged
   hubctl automations run-now <id>                   own run now; the result comes from the referenced execution
   hubctl automations resolve <id> <claimKey> --note <text>  abandon an unclear start without a reference, releases the plan (ADR-0072)
+  hubctl scan <target> [--profile quick|services|full]   scan via the pentest backend — same route as the PWA (EPIC-P80)
   hubctl backup create --config <hub.config.json> --out <file> --key-file <file>
   hubctl backup restore --archive <file> --data-dir <empty-dir> --config-out <file> --key-file <file>
   hubctl backup prune --dir <archive-dir> --keep <count> [--apply]   preview unless --apply

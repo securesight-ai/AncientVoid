@@ -23,7 +23,7 @@ interface Body {
   detail?: string;
   jobs?: { id: string; state: string }[];
   job?: { id: string; state: string };
-  parsed?: { hosts?: { ip: string; status: string }[] } | null;
+  parsed?: { parsed?: { hosts?: { ip: string; status: string }[] } } | null;
   approvalId?: string;
   error?: string;
   summary?: string;
@@ -76,7 +76,7 @@ describe("Pentest-Routen (/api/pentest)", () => {
           probeIntervalMs: 30_000,
           timeoutMs: 10_000,
           windowHours: 720,
-          targets: [{ target: TARGET, note: null }],
+          targets: [{ label: "Test", target: TARGET, kind: "frei" }],
           tools: [],
         },
         {

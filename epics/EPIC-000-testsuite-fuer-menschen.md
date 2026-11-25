@@ -216,6 +216,16 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   auf omarchy ist eine Zahl statt „keine Berechtigung“, alle vier Hosts stehen unter
   Statistik → Hosts, Kurven füllen sich. Beleg: Checklisten-Zeile mit Datum.
 
+### Übernommen aus EPIC-P80 (2026-11-25)
+
+- [ ] **T000.34 — Pentest-Seite am Handy abnehmen.**
+  (Herkunft: EPIC-P80-pentest-scanseite.md, DoD)
+  Hub mit `pentest`-Block gegen das laufende SiLenT-Deck starten, am Handy
+  „Mehr“ → „Pentest“ öffnen und ein gelistetes Ziel mit Profil `quick` scannen:
+  Statuskarte grün, Fundliste und Rohoutput da, Job im Verlauf. Dazu ein Ziel
+  außerhalb der Allowliste: sichtbarer Abbruch, kein White-Screen. Beleg:
+  Checklisten-Zeile mit Datum.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine
