@@ -113,6 +113,9 @@ describe("DeviceSetup (In-App-Setup)", () => {
     expect(st.reason).toContain("Lizenzen fehlgeschlagen");
     expect(st.phase).toBe("licenses");
     expect((await setup.start(join(root, "android-sdk"))).started).toBe(true);
+    // Der Wiederholungslauf arbeitet im Hintergrund weiter — erst terminal werden lassen,
+    // sonst räumt afterEach gegen phaseJdk-Schreibzugriffe (ENOTEMPTY, CI-Flake).
+    await expect.poll(() => setup.status().state, { timeout: 5_000 }).toBe("failed");
   });
 
   it("busy: während des Laufs startet kein zweites Setup", async () => {
@@ -140,6 +143,8 @@ describe("DeviceSetup (In-App-Setup)", () => {
     expect(second.started).toBe(false);
     expect(second.status.state).toBe("running");
     release();
+    // Gleiche Aufräum-Race: Lauf terminal abwarten, bevor afterEach löscht.
+    await expect.poll(() => setup.status().state, { timeout: 5_000 }).toBe("failed");
   });
 
   it("K7: `running` ohne lebenden Lauf wird nach Neustart failed; done-Wurzel gilt als SDK-Wurzel", async () => {

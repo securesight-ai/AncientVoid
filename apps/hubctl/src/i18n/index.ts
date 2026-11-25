@@ -25,7 +25,7 @@ export function setCliLang(value: string | undefined): void {
   cliLang = value;
 }
 
-export function currentLang(): HubctlLang {
+function currentLang(): HubctlLang {
   return resolveLang(cliLang, process.env.AV_LANG, process.env.LANG);
 }
 

@@ -19,6 +19,11 @@ Supervisions-Nichtziel in §1.3 und Cursor-read-only in §5 beschreiben den
 bisherigen Scope; P11 plant eine explizite Erweiterung, keine bereits
 verfügbare Fähigkeit. Bestehende Messlatten und Umsetzungsgates bleiben bestehen.
 
+**Planungserweiterung 2026-11-24 (Nutzerentscheid):** Mehrere Menschen dürfen über gekoppelte,
+selbst betriebene Hubs zusammenarbeiten ([EPIC-P83](EPIC-P83-team-kollaboration.md)). §1.1 und §2
+beschreiben weiter den bisherigen Einzelnutzer-Scope; „kein Cloud-Dienst, kein öffentlicher Port“
+bleibt, als privater Weg sind neben Tailscale auch WireGuard und LAN vorgesehen. Geplant, nicht verfügbar.
+
 Dieses PRD konsolidiert die Machbarkeitsstudie vom 11.09.2026 mit einer kritischen MCP-vs.-CLI-Recherche (zusammengefasst in Abschnitt 3) zu einem umsetzungsfähigen Produktdokument. Es ersetzt keine Engineering-Spezifikation, definiert aber alle Produktfunktions- und Architekturentscheidungen, die Messlatten und das Provider-Mapping.
 
 **Drei wesentliche Korrekturen gegenüber dem Vorbericht:**

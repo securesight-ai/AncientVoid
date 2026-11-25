@@ -110,7 +110,10 @@ describe("fleet routing (T6.4, ADR-0017)", () => {
 
   it("streams a remote session's events through the home hub", async () => {
     const created = await call<{ id: string }>(home, "/api/hosts/home-server/sessions", { body: { adapter: "dummy", project: peer.dir } });
-    const ws = new WebSocket(`${home.url.replace("http", "ws")}/api/hosts/home-server/events/${created.body.id}/tail?token=${home.token}`);
+    const path = `/api/hosts/home-server/events/${created.body.id}/tail`;
+    const issued = await call<{ ticket: string }>(home, `${path}-ticket`, { method: "POST" });
+    expect(issued.status).toBe(201);
+    const ws = new WebSocket(`${home.url.replace("http", "ws")}${path}?ticket=${issued.body.ticket}`);
     const seqs: number[] = [];
     await new Promise<void>((resolve, reject) => {
       ws.on("error", reject);

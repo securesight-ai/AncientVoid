@@ -57,11 +57,15 @@ test.describe("Pause und Warteschlange", () => {
     await app.getByRole("button", { name: "Vormerken" }).click();
     await expect(app.locator(".queue-list")).toContainText("kurze Zwischenfrage");
 
-    // Der Hub lehnt das sofortige Senden ab, statt einen zweiten Prozess auf
-    // dieselbe native Session zu setzen (ADR-0074). Die Nachricht bleibt
-    // sichtbar vorgemerkt.
-    await app.getByRole("button", { name: /Vorgemerkte Nachricht 1 jetzt senden/ }).click();
-    await expect(app.locator(".queue-list .reply-error")).toContainText("keine weitere Nachricht annehmen");
+    // Ein Knopf, der nur scheitern kann, wird nicht angeboten — der Grund steht da.
+    await expect(app.getByRole("button", { name: /Vorgemerkte Nachricht 1 jetzt senden/ })).toHaveCount(0);
+    await expect(app.locator(".queue-list .queue-wait")).toHaveText("geht automatisch raus, wenn der Zug fertig ist");
+    // Der Hub lehnt das sofortige Senden trotzdem ab, statt einen zweiten Prozess
+    // auf dieselbe native Session zu setzen (ADR-0074).
+    const [queued] = (await hub.api<{ id: string }[]>(`/api/sessions/${id}/queue`)).body;
+    const denied = await hub.api<{ detail: string }>(`/api/sessions/${id}/queue/${queued!.id}/send`, { method: "POST", body: {} });
+    expect(denied.status).toBe(422);
+    expect(denied.body.detail).toContain("keine weitere Nachricht annehmen");
     await expect(app.locator(".queue-list")).toContainText("kurze Zwischenfrage");
     expect((await hub.api<unknown[]>(`/api/sessions/${id}/queue`)).body).toHaveLength(1);
   });

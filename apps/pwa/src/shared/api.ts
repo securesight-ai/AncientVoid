@@ -120,7 +120,7 @@ export interface ToolAssessment {
 
 /** T3.8: one real qmd hit — `file` is relative to `project`, `line` is
  * the real anchor `qmd get`/a file viewer can jump to. */
-export interface SearchResult {
+interface SearchResult {
   file: string;
   line: number;
   title: string;
@@ -141,7 +141,7 @@ interface SearchResponse {
 }
 
 /** Suche (Nachschärfe 2026-11-22): Parameter der beiden neuen Endpunkte. */
-export interface SearchInput {
+interface SearchInput {
   q: string;
   /** Projekt der Dokuchecke. */
   project?: string;
@@ -784,7 +784,7 @@ export interface QueuedPrompt {
 }
 
 /** ADR-0085: nachtraegliche Aenderung an einer vorgemerkten Meldung. */
-export interface QueuePatch {
+interface QueuePatch {
   text?: string;
   move?: "front" | "back";
 }

@@ -27,7 +27,7 @@ export const availableLanguages: LanguageEntry[] = [
   { code: "en", label: "English", aliases: ["en"], catalog: en, complete: true },
 ];
 
-export const LANGUAGE_SETTING_KEY = "ancientvoid.language";
+const LANGUAGE_SETTING_KEY = "ancientvoid.language";
 export type LanguageSetting = "auto" | LanguageCode;
 
 // ADR-0101: Geräte-Einstellung wie die Presets, try/catch-Fallback auf

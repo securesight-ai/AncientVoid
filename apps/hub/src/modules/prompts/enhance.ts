@@ -1,5 +1,5 @@
 import type { RewriteEngine as EngineRef, SkippedEngine } from "@ancientvoid/contracts";
-export type { EngineRef, SkippedEngine };
+export type { SkippedEngine };
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 
@@ -79,12 +79,12 @@ export interface RewriteTask {
   user: string;
 }
 
-export function enhanceTask(rawText: string, context?: string): RewriteTask {
+function enhanceTask(rawText: string, context?: string): RewriteTask {
   return { instruction: INSTRUCTION, ...(context ? { context } : {}), user: rawText };
 }
 
 /** The single-string form the CLIs get. */
-export function cliPrompt(task: RewriteTask): string {
+function cliPrompt(task: RewriteTask): string {
   return `${task.context ? `${task.context}\n\n` : ""}${task.instruction}\n\n---\n${task.user}`;
 }
 

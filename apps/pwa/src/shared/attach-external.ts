@@ -3,7 +3,7 @@
  * zum Composer (Büroklammer), die Ablage ist appweit — deshalb ein Ereignis statt
  * Import über die Paketgrenze hinweg.
  */
-export const ATTACH_EXTERNAL_EVENT = "ancientvoid:attach-external";
+const ATTACH_EXTERNAL_EVENT = "ancientvoid:attach-external";
 
 export function requestAttach(file: File): void {
   if (typeof window === "undefined") return;

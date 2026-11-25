@@ -9,7 +9,7 @@ const MARK = "@@ ";
  * Auswertung des Abzugs aus `scripts/host-monitoring-probe.sh` (ADR-0117 §7). Das
  * Skript liegt auf dem Zielhost hinter `command=`; der Hub schickt nichts mit.
  */
-export function parseProbe(output: string): Map<string, string> {
+function parseProbe(output: string): Map<string, string> {
   const files = new Map<string, string>();
   let path: string | null = null;
   let lines: string[] = [];

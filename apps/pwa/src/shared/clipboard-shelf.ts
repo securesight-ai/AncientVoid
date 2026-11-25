@@ -98,11 +98,6 @@ export function openClipboardShelf(): void {
   window.dispatchEvent(new CustomEvent(OPEN_SHELF_EVENT));
 }
 
-/** Ablage schliessen (Esc wie Klick) — das Blatt hört auf dieses Ereignis. */
-export function closeClipboardShelf(): void {
-  window.dispatchEvent(new CustomEvent(`${OPEN_SHELF_EVENT}:close`));
-}
-
 function nextId(): string {
   counter += 1;
   return `ablage-${Date.now().toString(36)}-${counter}`;

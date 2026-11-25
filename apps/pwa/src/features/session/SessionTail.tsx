@@ -448,6 +448,8 @@ export function SessionTail({
   >("mehr" /* i18n-ignore: Daten-Key */);
   /** BUG-0208: Seq des Blocks, der einen Live-Strom eingeholt hat — an seinen Anfang rollen. */
   const jumpSeqRef = useRef<number | null>(null);
+  /** Nur der Sprung zur Fundstelle hält die Ansicht; das Einrücken nach einem Strom nicht. */
+  const jumpIsHitRef = useRef(false);
   /** Suche: derselbe Sprung, aber von außen gesetzt (Fundstelle in der Suche).
    * Der Zähler ist der einzige Weg, den Roll-Effekt neu anzustoßen — ohne ihn
    * ändert sich an den Abhängigkeiten nichts. */
@@ -762,10 +764,16 @@ export function SessionTail({
           if (assistantBlocks.length) {
             // BUG-0208: die Nachricht ist fertig gestreamt — ihr Anfang wird vorgemerkt,
             // damit die Ansicht dorthin rueckt statt am Strom-Ende stehenzubleiben.
-            if (liveLensRef.current.assistant > 0)
+            // Eine Fundstelle, die gesucht oder gerade gelesen wird, hat Vorrang.
+            const hitHolds =
+              (jumpSeqRef.current !== null && jumpIsHitRef.current) ||
+              Date.now() <= jumpHoldUntilRef.current;
+            if (liveLensRef.current.assistant > 0 && !hitHolds) {
+              jumpIsHitRef.current = false;
               jumpSeqRef.current = Math.min(
                 ...assistantBlocks.map((e) => e.seq),
               );
+            }
             liveLensRef.current.assistant = 0;
             setLiveText((p) => (p.assistant ? { ...p, assistant: "" } : p));
           }
@@ -1187,18 +1195,20 @@ export function SessionTail({
           (tries > 8 ? resolveSeqNode(seq) : null);
         if (node) {
           jumpSeqRef.current = null;
+          const hit = jumpIsHitRef.current;
           const box = tailRef.current?.getBoundingClientRect();
           // Nur springen, wenn der Anfang oberhalb der Lesespitze liegt — ist die
           // Nachricht ganz sichtbar, waere ein Sprung nur Flackern.
           if (box && node.getBoundingClientRect().top < box.top - 8) {
             stickRef.current = false;
-            jumpHoldUntilRef.current = Date.now() + 8_000;
+            if (hit) jumpHoldUntilRef.current = Date.now() + 8_000;
             node.scrollIntoView({ behavior: "auto", block: "start" });
-          } else {
+          } else if (hit) {
             jumpHoldUntilRef.current = Date.now() + 4_000;
           }
           // Nachleuchten: die Fundstelle ist gefunden, sie muss aber auch als solche
           // zu sehen sein — 2,2 s, damit das Auge sie erkennt.
+          if (!hit) return;
           node.classList.add("hit-target");
           window.setTimeout(() => node.classList.remove("hit-target"), 2200);
           return;
@@ -1289,6 +1299,7 @@ export function SessionTail({
       lastFloor = floor;
       await loadOlder();
     }
+    jumpIsHitRef.current = true;
     jumpSeqRef.current = seq;
     setJumpTick((n) => n + 1);
     jumpHoldRef.current = null;

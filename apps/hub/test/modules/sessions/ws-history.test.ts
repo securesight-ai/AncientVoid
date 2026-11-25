@@ -16,9 +16,9 @@ interface EventsMsg {
 }
 
 /** Collects frames until no new one arrived for `quietMs`. */
-function collect(url: string, hello: number, quietMs = 600): Promise<EventsMsg[]> {
+function collect(url: string, token: string, hello: number, quietMs = 600): Promise<EventsMsg[]> {
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(url);
+    const ws = new WebSocket(url, { headers: { authorization: `Bearer ${token}` } });
     const frames: EventsMsg[] = [];
     let timer: NodeJS.Timeout | undefined;
     const settle = () => {
@@ -78,7 +78,7 @@ describe("WS history beyond one page (BUG-0026)", () => {
   it("an opened session gets its newest events, up to the end", async () => {
     const id = await sessionWith(250);
     const last = sessions.get(id)!.lastSeq;
-    const got = seqs(await collect(`${base}/api/events/${id}/tail?token=${token}`, 0));
+    const got = seqs(await collect(`${base}/api/events/${id}/tail`, token, 0));
     expect(got.at(-1)).toBe(last);
     expect(got).toEqual(Array.from({ length: got.length }, (_, i) => got[0]! + i));
     expect(got.length).toBe(last);
@@ -87,7 +87,7 @@ describe("WS history beyond one page (BUG-0026)", () => {
   it("a very long session starts at the newest 500, marked as baseline", async () => {
     const id = await sessionWith(620);
     const last = sessions.get(id)!.lastSeq;
-    const frames = await collect(`${base}/api/events/${id}/tail?token=${token}`, 0);
+    const frames = await collect(`${base}/api/events/${id}/tail`, token, 0);
     const got = seqs(frames);
     expect(got.length).toBe(500);
     expect(got.at(-1)).toBe(last);
@@ -97,7 +97,7 @@ describe("WS history beyond one page (BUG-0026)", () => {
   it("a reconnect gets everything it missed", async () => {
     const id = await sessionWith(180);
     const last = sessions.get(id)!.lastSeq;
-    const got = seqs(await collect(`${base}/api/events/${id}/tail?token=${token}`, 30));
+    const got = seqs(await collect(`${base}/api/events/${id}/tail`, token, 30));
     expect(got[0]).toBe(31);
     expect(got.at(-1)).toBe(last);
   });

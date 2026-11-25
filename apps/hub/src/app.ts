@@ -27,6 +27,7 @@ import { registerMediaRoutes, type MediaRouteDeps } from "./modules/media/media.
 import { registerDesktopRoutes } from "./modules/desktop/desktop.routes.ts";
 import { policyHook } from "./platform/policy.ts";
 import { registerWs } from "./modules/sessions/ws.ts";
+import { TailAccess } from "./modules/sessions/tail-access.ts";
 import { registerFleetRoutes } from "./modules/fleet/fleet.routes.ts";
 import { registerFleetProxy } from "./modules/fleet/fleet-proxy.ts";
 
@@ -141,8 +142,7 @@ export async function createHubApp(deps: HubAppDeps): Promise<FastifyInstance> {
     logger: {
       level: process.env.ANCIENTVOID_LOG ?? "info",
       ...(deps.logStream ? { stream: deps.logStream } : {}),
-      // BUG-0028: WebSocket clients authenticate with ?token= — the default
-      // request serializer logged it verbatim.
+      // BUG-0028: Keep URL credentials out of the request log.
       serializers: {
         req: (req: FastifyRequest) => ({
           method: req.method,
@@ -198,8 +198,9 @@ export async function createHubApp(deps: HubAppDeps): Promise<FastifyInstance> {
   if (deps.settings) registerInferenceModelRoutes(app, { settings: deps.settings, ...(deps.inferenceFetch ? { fetch: deps.inferenceFetch } : {}), ...(deps.inferenzPforte ? { pforte: deps.inferenzPforte } : {}) });
   registerTerminalRoutes(app, deps.terminals ?? []);
   registerFleetRoutes(app, { fleet, tokens: deps.tokens, hostId, ...(deps.hostLabel ? { hostLabel: deps.hostLabel } : {}) });
-  registerFleetProxy(app, { fleet, hostId, sessions: deps.sessions, tokens: deps.tokens, ...(deps.metrics ? { metrics: deps.metrics } : {}) });
-  registerWs(app, deps.sessions, deps.metrics, deps.tokens);
+  const tailAccess = new TailAccess(app, deps.tokens);
+  registerFleetProxy(app, { fleet, hostId, sessions: deps.sessions, tailAccess, ...(deps.metrics ? { metrics: deps.metrics } : {}) });
+  registerWs(app, deps.sessions, tailAccess, deps.metrics);
 
   if (deps.pwaDir) {
     const resolvedPwaDir = resolve(deps.pwaDir);

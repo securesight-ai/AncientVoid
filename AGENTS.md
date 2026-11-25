@@ -66,6 +66,7 @@ npm run test:slow        # vitest Tier B: die langsamen Dateien (VITEST_SET=slow
 npm run test:e2e         # Playwright-E2E-Gate gegen einen echten Hub (docs/testing-e2e.md)
 npm run lint             # eslint
 npm run typecheck        # tsc --noEmit
+npm run check:knip       # Inventar für Dateien, Abhängigkeiten und Exporte (Teil von gate)
 npm run gate             # check:* + typecheck + lint + volle Suite + test:e2e
 npm run skills:curate    # Skill-Kur: Run-Auswertung, Regeln, Mining (kein LLM; docs/skill-curation.md)
 npm run loadtest         # K8: 20 Sessions × 30 ev/s
