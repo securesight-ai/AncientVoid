@@ -1,4 +1,4 @@
-# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P84)
+# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P85)
 
 **On hold seit 15.11.2026 (Nutzerentscheid): P30 und P31.** Beide bleiben
 im Inventar, sind aber aus Empfehlungen für die nächste Arbeit ausgeschlossen.
@@ -342,6 +342,12 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 | Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
 |---|---|---|---|
 | [P84 — AI-Arbeit-Evaluation: Harness × Modell × Skills messbar vergleichen](EPIC-P84-ai-arbeit-evaluation-benchmark.md) | Reproduzierbarer Evaluations-Messlauf im Messlauf-Muster: eingefrorenes Aufgabenkorpus aus diesem Repo, Arme gespleißt (Harness × Modell × Skills an/aus), Split-Szenarien Plan↔Bau inkl. Kontrollarm, Metriken Fehlerquote/Wandzeit/Tokens/Kosten (Preis-Snapshot; lokal via P81-Energie)/Qualität, n ≥ 5 je Arm; Trainingsdaten-Kontamination und Skill-Kausalität gegen externe Benchmark-Kritik abgesichert; Recherche-Snapshot: [docs/2026-11-24_ai-arbeit-evaluation-recherche.md](../docs/2026-11-24_ai-arbeit-evaluation-recherche.md) — **Planungsentwurf (Nutzerauftrag 24.11.2026)** | keine blockierende (Quer-Epic); P81 (Energie-Messung) als Datengrundlage erwünscht, nicht blockierend; P30/P31 On hold unberührt | 2–3 |
+
+## Nutzerauftrag vom 25.11.2026 — Links im Standardbrowser, Bildvorschau modular
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P85 — Externe Links im Standardbrowser; Bildvorschau modular für alle Adapter](EPIC-P85-links-und-bildvorschau-fuer-alle-adapter.md) | Zentrale Link-Klick-Policy (eigener Ursprung → in-app, extern → Standardbrowser inkl. Plattformwege für installierte Clients; BUG-0287) + deklarativen Visualizer-Registry für die Bildvorschau: das Pi-Feature (`tool-image.ts`, nur exakt `name:"read"`) auf alle Familien mit feingranularen Events ausweiten (claude/cursor `Read`, codex `view_image`, `tool`-Schlüssel-Familie, ACP-`kind:read`) — **Planungsentwurf (Nutzerauftrag 25.11.2026)** | keine blockierende (Quer-Epic); P30/P31 On hold unberührt; Geräteläufe nach P000; Tracker #441 | 1–2 |
 
 ## Reihenfolge & Gating
 
