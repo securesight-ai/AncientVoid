@@ -7,8 +7,9 @@ import {
   type NormalizedEvent,
   type WsServerMessage,
 } from "@ancientvoid/contracts";
-import type { SessionManager, TokenService } from "@ancientvoid/core";
+import type { SessionManager } from "@ancientvoid/core";
 import type { HubMetrics } from "@ancientvoid/contracts";
+import type { TailAccess } from "./tail-access.ts";
 
 /**
  * BUG-0007: a socket that can't drain fast enough (throttled network, not
@@ -31,20 +32,9 @@ const MAX_WS_BUFFERED_BYTES = 64 * 1024;
  *    dropped:true — the client resyncs from the store. No backpressure
  *    lag, ever (K2), and no silent loss under a slow real network.
  */
-/** ADR-0017: an open stream stops within this time after its token is revoked. */
-const TOKEN_RECHECK_MS = 2000;
-
-export function createTailHandler(sessions: SessionManager, metrics?: HubMetrics, tokens?: TokenService) {
-  return (socket: WebSocket, req: { params: unknown; query?: unknown }) => {
+export function createTailHandler(sessions: SessionManager, metrics?: HubMetrics) {
+  return (socket: WebSocket, req: { params: unknown }) => {
     metrics?.inc("ws_connects");
-    const raw = (req.query as { token?: unknown } | undefined)?.token;
-    const recheck =
-      tokens && typeof raw === "string"
-        ? setInterval(() => {
-            if (!tokens.identify(raw)) socket.close(4401, "token revoked");
-          }, TOKEN_RECHECK_MS)
-        : undefined;
-    socket.on("close", () => clearInterval(recheck));
     const sessionId = (req.params as { id: string }).id;
     const send = (msg: WsServerMessage) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg));
@@ -191,6 +181,11 @@ export function createTailHandler(sessions: SessionManager, metrics?: HubMetrics
   };
 }
 
-export function registerWs(app: FastifyInstance, sessions: SessionManager, metrics?: HubMetrics, tokens?: TokenService): void {
-  app.get("/api/events/:id/tail", { websocket: true }, createTailHandler(sessions, metrics, tokens));
+export function registerWs(app: FastifyInstance, sessions: SessionManager, access: TailAccess, metrics?: HubMetrics): void {
+  const handle = createTailHandler(sessions, metrics);
+  access.registerTicket(app, "/api/events/:id/tail", (req) =>
+    sessions.get((req.params as { id: string }).id) ? null : "unknown session");
+  app.get("/api/events/:id/tail", { websocket: true, config: { sessionTail: "upgrade" } }, (socket, req) => {
+    if (access.authorize(socket, req)) handle(socket, req);
+  });
 }

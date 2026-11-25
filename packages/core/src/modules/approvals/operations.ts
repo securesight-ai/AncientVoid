@@ -79,6 +79,7 @@ export class OperationStore {
   }
 
   list(states: readonly OperationState[], sessionId?: string): PendingOperation[] {
+    // Only literal placeholders belong in SQL. Bind all states separately.
     const marks = states.map(() => "?").join(",");
     const rows = (
       sessionId
@@ -91,6 +92,7 @@ export class OperationStore {
   /** Moves `id` to `to` only if it is in one of `from`. False: someone else
    * got there first (or the state never allowed it). */
   transition(id: string, from: readonly OperationState[], to: OperationState, outcome?: string): boolean {
+    // Same placeholder-only rule as list(); state values are bound below.
     const marks = from.map(() => "?").join(",");
     const res = this.db
       .prepare(`UPDATE operations SET state = ?, outcome = COALESCE(?, outcome), updated_at = ? WHERE id = ? AND state IN (${marks})`)

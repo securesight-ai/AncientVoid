@@ -90,7 +90,7 @@ function visibleToasts<T extends { level: string }>(toasts: T[]): T[] {
 /** Nutzerwunsch 2026-11-20: vier Abschnitte mit fester Farbbedeutung —
  * Fehler (rot), Rückfrage (blau), Fertig (grün), Sonstiges (gelb); die Farbe
  * trägt die CSS-Klasse je Abschnitt (14-notifications.css). */
-export const SECTION_LABEL: Record<SectionKey, string> = { errors: t("notifications.section_errors"), questions: t("notifications.section_question"), done: t("notifications.section_done"), rest: t("notifications.section_rest") };
+const SECTION_LABEL: Record<SectionKey, string> = { errors: t("notifications.section_errors"), questions: t("notifications.section_question"), done: t("notifications.section_done"), rest: t("notifications.section_rest") };
 export function NotificationCenter({ corner = false, flow = false }: { corner?: boolean; flow?: boolean }) {
   const [items, setItems] = useState<FleetNotification[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);

@@ -40,6 +40,30 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
     expect(record?.adapter).toBe("opencode");
   });
 
+  test("der Session-Tail verbindet sich nach einem Abbruch mit einem frischen Ticket", async ({ app, hub }) => {
+    const prompt = "Tail nach Verbindungsabbruch";
+    const id = await hub.createSession({ adapter: "opencode", prompt });
+    const streamPath = `/api/events/${id}/tail`;
+    const queries: URLSearchParams[] = [];
+    await app.routeWebSocket((url) => url.pathname === streamPath, (route) => {
+      queries.push(new URL(route.url()).searchParams);
+      const upstream = route.connectToServer();
+      if (queries.length === 1) {
+        upstream.onMessage(() => route.close({ code: 1012 }));
+      }
+    });
+
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await sessionTab(app, "Chat");
+    await expect.poll(() => queries.length).toBe(2);
+    for (const query of queries) {
+      expect([...query.keys()]).toEqual(["ticket"]);
+      expect(query.get("ticket")).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    }
+    expect(queries[1]?.get("ticket")).not.toBe(queries[0]?.get("ticket"));
+    await expect(app.locator(".tail-scroll").getByText(/Antwort auf: Tail nach Verbindungsabbruch/)).toBeVisible();
+  });
+
   test("Projektauswahl zuerst: Pfad wird vorbelegt, folgt der Auswahl und bleibt überschreibbar @desktop", async ({ app, hub }) => {
     await app.getByRole("button", { name: "Neue Session" }).click();
     // Ohne Host-Auswahl kommt das Projekt vor Loop und Adapter, auch im zweispaltigen Formular.

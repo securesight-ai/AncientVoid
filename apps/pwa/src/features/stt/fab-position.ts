@@ -39,7 +39,7 @@ export function defaultFabPos(bp: FabBreakpoint, vw: number, vh: number, dockTop
   };
 }
 
-export function storedFabPos(bp: FabBreakpoint): FabPos | null {
+function storedFabPos(bp: FabBreakpoint): FabPos | null {
   try {
     const stored = (JSON.parse(localStorage.getItem(KEY) ?? "{}") as Partial<Record<FabBreakpoint, FabPos>>)[bp];
     if (stored && Number.isFinite(stored.x) && Number.isFinite(stored.y)) return stored;

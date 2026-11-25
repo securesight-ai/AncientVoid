@@ -2,7 +2,7 @@ import { t } from "../../shared/i18n/index.ts";
 import { openWorkspaceContent } from "../workspace/open-content.ts";
 import { readStatusNote, STATUS_NOTE_EVENT } from "../../shared/status-notes.ts";
 import { jumpToSource, sourcesOf, SOURCES_EVENT } from "../../shared/sources.ts";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { hubApi, remoteHost, type CommandPlan, type StepResult } from "../../shared/api.ts";
 import { commandContext, currentField, field, getHere, type FieldId } from "../../shared/command-context.ts";
 import { pageHash, sessionHash, type ListPage } from "../../app/route.ts";
@@ -79,7 +79,8 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
       alive = false;
     };
   }, [open, active]);
-  useEffect(() => setSelected(-1), [text]);
+  // Vor dem Zeichnen: sonst verwirft der Rücksetzer eine schon gedrückte Pfeiltaste.
+  useLayoutEffect(() => setSelected(-1), [text]);
   useEffect(() => {
     const sync = () => setSourceTick(n => n + 1);
     window.addEventListener(SOURCES_EVENT, sync);

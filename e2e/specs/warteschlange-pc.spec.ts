@@ -49,6 +49,20 @@ test.describe("Warteschlange am PC bearbeiten", () => {
     await expect(app.locator(".queue-item")).toContainText("verbesserte Meldung");
   });
 
+  test("Stop verwirft Vorgemerktes: „Jetzt senden“ räumt die alte Zeile ab und sendet nichts @desktop", async ({ app, hub }) => {
+    const id = await hub.createSession({ adapter: "claude", prompt: "LANGSAM erste Frage" });
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await app.getByPlaceholder("Antworten…").fill("spätere Meldung");
+    await app.getByRole("button", { name: "Vormerken" }).click();
+    await expect(app.locator(".queue-item")).toHaveCount(1);
+    await hub.api(`/api/sessions/${id}/stop`, { method: "POST", body: {} });
+    await hub.until(async () => (await hub.sessions()).find((s) => s.id === id)?.status === "stopped", "Sitzung gestoppt");
+    await app.getByRole("button", { name: /Vorgemerkte Nachricht 1 jetzt senden/ }).click();
+    await expect(app.locator(".queue-item")).toHaveCount(0);
+    await expect(app.locator(".queue-error")).toHaveCount(0);
+    expect((await hub.events(id)).filter((e) => e.summary.includes("spätere Meldung"))).toHaveLength(0);
+  });
+
   test("eine abgelehnte Aktion nennt den Grund und bietet Erneut versuchen @desktop", async ({ app, hub }) => {
     const id = await hub.createSession({ adapter: "claude", prompt: "LANGSAM erste Frage" });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
@@ -57,12 +71,12 @@ test.describe("Warteschlange am PC bearbeiten", () => {
     await app.getByRole("button", { name: "Vormerken" }).click();
     await expect(app.locator(".queue-item")).toHaveCount(1);
 
-    // Zug beenden, dann „jetzt senden“ in einer Sitzung ohne laufenden Zug.
-    await hub.api(`/api/sessions/${id}/stop`, { method: "POST", body: {} });
-    await hub.until(async () => (await hub.sessions()).find((s) => s.id === id)?.status === "stopped", "Sitzung gestoppt");
+    // Stop verwirft die Warteschlange (T15.3) und taugt nicht als Ablehnung —
+    // die 422 des Hubs wird deshalb hier gestellt.
+    await app.route("**/api/sessions/*/queue/*/send", (route) => route.fulfill({ status: 422, json: { ok: false, detail: "Session nicht aktiv" } }));
     await app.getByRole("button", { name: /Vorgemerkte Nachricht 1 jetzt senden/ }).click();
     await expect(app.locator(".queue-error")).toBeVisible();
-    await expect(app.locator(".queue-error")).toContainText("bleibt vorgemerkt");
+    await expect(app.locator(".queue-error")).toContainText("Session nicht aktiv — die Nachricht bleibt vorgemerkt");
     await expect(app.getByTestId("queue-retry")).toBeVisible();
 
     // Die Nachricht ist nicht verloren: sie steht weiter in der Liste und lässt sich streichen.

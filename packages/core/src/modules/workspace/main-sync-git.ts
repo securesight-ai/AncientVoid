@@ -63,6 +63,6 @@ export function classifyFetchError(err: unknown): { reason: "timeout" | "auth" |
 }
 
 /** K5-Nachschub: Detailtexte kappen (Contract erlaubt max. 500 Zeichen). */
-export function capDetail(text: string): string {
+function capDetail(text: string): string {
   return text.length > 500 ? `${text.slice(0, 497)}…` : text;
 }

@@ -1,6 +1,6 @@
 import { BRIDGE_TOKEN_PREFIX, COMPANION_TOKEN_PREFIX, DISPLAY_TOKEN_PREFIX, FLEET_TOKEN_PREFIX, bridgeTokenAllows, companionTokenAllows, displayTokenAllows, isFleetRoutable } from "@ancientvoid/contracts";
 import type { FastifyRequest, FastifyReply } from "fastify";
-import type { TokenService } from "@ancientvoid/core";
+import { hashToken, type TokenService } from "@ancientvoid/core";
 
 /**
  * Auth (PRD §8): Tailnet-only deployment, device-token bearer auth.
@@ -10,6 +10,15 @@ import type { TokenService } from "@ancientvoid/core";
 export interface AuthOptions {
   tokens: TokenService;
   enforceTailnetIdentity: boolean;
+}
+
+declare module "fastify" {
+  interface FastifyContextConfig {
+    sessionTail?: "ticket" | "upgrade";
+  }
+  interface FastifyRequest {
+    authenticatedTokenHash?: string;
+  }
 }
 
 const TAILSCALE_LOGIN_HEADER = "tailscale-user-login";
@@ -35,6 +44,7 @@ export function isWorkspaceProxyTicketRequest(method: string, url: string): bool
 export function extractToken(req: FastifyRequest): string | null {
   const header = req.headers.authorization;
   if (header?.startsWith("Bearer ")) return header.slice("Bearer ".length).trim();
+  if (req.routeOptions.config.sessionTail) return null;
   const q = (req.query as Record<string, string> | undefined)?.token;
   return typeof q === "string" && q.length > 0 ? q : null;
 }
@@ -53,7 +63,7 @@ function checkAuth(req: FastifyRequest, opts: AuthOptions): { ok: true } | { ok:
   if (!token) return { ok: false, status: 401, reason: "missing device token" };
   if (!opts.tokens.verify(token)) return { ok: false, status: 401, reason: "invalid device token" };
   // ADR-0017: a hub's fleet token only reaches what a home hub may forward.
-  const label = opts.tokens.identify(token)?.label ?? "";
+  const label = tokenLabel;
   const path = req.url.split("?")[0] ?? req.url;
   if (label.startsWith(FLEET_TOKEN_PREFIX) && !isFleetRoutable(path) && path !== "/api/fleet/pairing") {
     return { ok: false, status: 403, reason: "fleet token not allowed here" };
@@ -71,6 +81,7 @@ function checkAuth(req: FastifyRequest, opts: AuthOptions): { ok: true } | { ok:
   if (label.startsWith(DISPLAY_TOKEN_PREFIX) && !displayTokenAllows(req.method, path)) {
     return { ok: false, status: 403, reason: "display token not allowed here" };
   }
+  if (req.routeOptions.config.sessionTail) req.authenticatedTokenHash = hashToken(token);
   return { ok: true };
 }
 
@@ -79,6 +90,9 @@ export function authHook(opts: AuthOptions) {
     // health/ready stay open for tailnet and process probes (ADR-0010).
     // Strip the query string — `/api/health?foo` must not fall through to 401.
     const path = req.url.split("?")[0] ?? req.url;
+    // A ticket upgrade proves its authorization in the stream route. Requests
+    // with a Bearer header still take the full auth and policy path.
+    if (req.ws && req.routeOptions.config.sessionTail === "upgrade" && !req.headers.authorization) return;
     // STT WebSocket upgrades authenticate with a short-lived, single-use
     // ticket instead of putting the reusable device token in the URL.
     if (req.method === "GET" && path === "/api/stt/stream") return;

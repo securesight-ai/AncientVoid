@@ -1,19 +1,27 @@
 {
   "$schema": "https://unpkg.com/knip@6.45.1/schema.json",
-  "rules": { "unlisted": "warn", "unresolved": "warn" },
-  "ignore": ["apps/pwa/public/**"],
-  "ignoreUnresolved": ["scripts/hub.sh"],
+  "ignore": [
+    "apps/pwa/public/**",
+    "scripts/fixtures/check-i18n/*.tsx",
+    "scripts/fixtures/check-i18n-keys/*.tsx",
+    "e2e/fixtures/ds-probe/DsProbe.tsx"
+  ],
+  "ignoreUnresolved": [
+    "scripts/hub.sh"
+  ],
   "ignoreBinaries": [
     "adb",
     "chromium",
     "codex",
     "dsh",
+    "ffmpeg",
     "foot",
-    "mkfifo",
     "mosquitto",
     "mosquitto_passwd",
     "opencode",
     "rg",
+    "script",
+    "tesseract",
     "wl-copy",
     "yt-dlp"
   ],
@@ -23,14 +31,22 @@
         "scripts/**/*.{mjs,ts,cjs,sh,mts,d.mts}",
         "e2e/**/*.ts",
         "playwright.live.config.ts",
-        "examples/**/*.{ts,mjs}"
+        "examples/**/*.{ts,mjs}",
+        "e2e/support/ralph-agent.mjs"
       ]
     },
     "apps/pwa": {
-      "ignoreDependencies": ["@fontsource/*"]
+      "ignoreDependencies": [
+        "@fontsource/*"
+      ]
     },
     "apps/hub": {
-      "entry": ["test/fixtures/**"]
+      "entry": [
+        "test/fixtures/**"
+      ],
+      "ignoreDependencies": [
+        "@ancientvoid/loop-ralph-hub"
+      ]
     }
   }
 }
