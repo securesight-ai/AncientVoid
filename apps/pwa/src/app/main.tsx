@@ -7,7 +7,7 @@ import { peekView, popEntry, popView, rememberView } from "../shared/nav-history
 import { initPresentation, type DevicePreset } from "../features/settings/presets.ts";
 import { TooltipLayer } from "../shared/Tooltip.tsx";
 import { render } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { App } from "./App.tsx";
 import { SessionTail } from "../features/session/SessionTail.tsx";
 import { getToken, isAuthError, setToken, hubApi, hostApi, remoteHost, setSelfHostId, type SessionRecord } from "../shared/api.ts";
@@ -482,7 +482,8 @@ function Main() {
     changeWorkspace(focused ?? (opts?.newTile ? openAdditionalTile(base, ref) : openInNewTile(base, ref)));
   };
   // Every route has its own remembered target. Existing cards never consume new route props.
-  useEffect(() => {
+  // Vor dem Zeichnen: ein verspäteter Effekt holte den Fokus zurück, wenn dazwischen Alt+1 kam.
+  useLayoutEffect(() => {
     if (!wide) return;
     const current = latest.current.ws;
     let ref: TileRef;
