@@ -337,6 +337,12 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 | [P82 — Audit-Räumen: Inventar, Monolith-Schnitt, Härtungsdetails](EPIC-P82-audit-raeumen-inventar-schnitt-haertung.md) | Knip-Inventar räumen und `check:knip` ins Gate; `session-manager.ts` entlang Modulnaht teilen (reines Verschieben); WS-Revocation-Recheck aus aufgelöstem Auth; Session-Tail-Tickets nach STT-/Terminal-Muster; SQL-Whitelist-Kommentare — **Abgeschlossen (25.11.2026)** | keine blockierende (Quer-Epic); P81/P79/P80-Ausläufe unberührt; P30/P31 On hold unberührt; Tracker #412 | 1–2 |
 | [P83 — Team: gemeinsam arbeiten über mehrere Instanzen](EPIC-P83-team-kollaboration.md) | Nutzerauftrag 24.11.2026: gekoppelte Hubs mehrerer Menschen (mTLS im Overlay, kein öffentlicher Port), Aufgaben, Räume, Agentengrenze, geteilte Sessions, Chat mit animierten Begleitern; ADR-0118–0123 — **Planungsentwurf, Start nach grünem P82** | P82 grün; P45-No-go bleibt; Tracker #421 | 13–18 |
 
+## Nutzerauftrag vom 24.11.2026 — AI-Arbeit-Evaluation (Harness × Modell × Skills)
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P83 — AI-Arbeit-Evaluation: Harness × Modell × Skills messbar vergleichen](EPIC-P83-ai-arbeit-evaluation-benchmark.md) | Reproduzierbarer Evaluations-Messlauf im Messlauf-Muster: eingefrorenes Aufgabenkorpus aus diesem Repo, Arme gespleißt (Harness × Modell × Skills an/aus), Split-Szenarien Plan↔Bau inkl. Kontrollarm, Metriken Fehlerquote/Wandzeit/Tokens/Kosten (Preis-Snapshot; lokal via P81-Energie)/Qualität, n ≥ 5 je Arm; Trainingsdaten-Kontamination und Skill-Kausalität gegen externe Benchmark-Kritik abgesichert; Recherche-Snapshot: [docs/2026-11-24_ai-arbeit-evaluation-recherche.md](../docs/2026-11-24_ai-arbeit-evaluation-recherche.md) — **Planungsentwurf (Nutzerauftrag 24.11.2026)** | keine blockierende (Quer-Epic); P81 (Energie-Messung) als Datengrundlage erwünscht, nicht blockierend; P30/P31 On hold unberührt | 2–3 |
+
 ## Reihenfolge & Gating
 
 Reihenfolge: **P0 → P1 → P1.5 → P1.6 → P2 → P3 → P4 → P4.5 → P5 → P6 → P7 → P8 → P9 → P10 → P10.5 → P11 → P12 → P13 → P14 → P15 → P16 → P17 → P18 → P19 → P21 → P22 → P23 → P24 → P26** (P13/P14/P17/P18/P19 unabhängig: Adaptermuster aus P3, Worktree-Hygiene bzw. Laufzeit-Robustheit auf bestehendem P5/P7/P15-Code; P16 ist die Handy-Liste, kein Start vor geklärter P12-Abnahme).
