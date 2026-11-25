@@ -299,7 +299,7 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 
 | Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
 |---|---|---|---|
-| [P61 — Mehrsprachigkeit: Englisch/Spracheinstellung](EPIC-P61-mehrsprachigkeit-englisch.md) | Eigen-i18n der PWA (typisierte Kataloge `de`/`en`, `t()`, Sprachwahl pro Gerät, **Default Browsersprache** mit Fallback Englisch, manuell wählbar+persistiert — entschieden 17.11.2026, Sprachliste modular für weitere Sprachen), Nachrichtenschlüssel für Notifications/Push/API-Fehler (ADR vor Contract), `hubctl --lang`, STT-Sprache, Ratchet-Gate gegen hart codierte Strings; gemessen ~2.660 Text-Kandidaten in 134 PWA-Dateien — **Code steht, Exit offen (AC-Nachweise im Epic §8; K6 nach P000 T000.29)** | keine fachliche offene (Quer-Epic; P60 umgesetzt) | 4–6 |
+| [P61 — Mehrsprachigkeit: Englisch/Spracheinstellung](EPIC-P61-mehrsprachigkeit-englisch.md) | Eigen-i18n der PWA (typisierte Kataloge `de`/`en`, `t()`, Sprachwahl pro Gerät, **Default Browsersprache** mit Fallback Englisch, manuell wählbar+persistiert — entschieden 17.11.2026, Sprachliste modular für weitere Sprachen), Nachrichtenschlüssel für Notifications/Push/API-Fehler (ADR vor Contract), `hubctl --lang`, STT-Sprache, Ratchet-Gate gegen hart codierte Strings; gemessen ~2.660 Text-Kandidaten in 134 PWA-Dateien — **Code steht, K2-Langlauf offen (§8), K6 nach P000 T000.29** | keine fachliche offene (Quer-Epic; P60 umgesetzt) | 4–6 |
 
 ## Nutzerauftrag vom 16.11.2026 — Öffentliche Anleitung, Videos, Promo-Seite (nach GitHub-Umzug)
 
