@@ -214,7 +214,10 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   omarchy: `scripts/host-monitoring-setup.sh` mit `modules drivetemp nct6775` und
   `rapl <benutzer>`, danach Neustart; evox2: `modules nct6775 it87`. Prüfen: CPU-Watt
   auf omarchy ist eine Zahl statt „keine Berechtigung“, alle vier Hosts stehen unter
-  Statistik → Hosts, Kurven füllen sich. Beleg: Checklisten-Zeile mit Datum.
+  Statistik → Hosts, Kurven füllen sich. Für AC-P81-1 die Sensoren aus P81
+  §3.2 je Host mit `sensors` bzw. `nvidia-smi` abgleichen und dokumentieren,
+  welche als Wert oder mit einem sichtbaren Grund für fehlende Daten erscheinen.
+  Handy und Tablet prüfen. Beleg: Datum und Ergebnis je Host und Gerät.
 
 ### Übernommen aus EPIC-P80 (2026-11-25)
 
