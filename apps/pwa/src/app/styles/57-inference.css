@@ -1,4 +1,4 @@
-/* EPIC-P79 (ADR-0102): Token-Tempo-Seite. Phone zuerst; ab 700 px (Z-Fold-inner)
+/* EPIC-P79 (ADR-0125): Token-Tempo-Seite. Phone zuerst; ab 700 px (Z-Fold-inner)
    zweispaltig, ab 1280 px dreispaltig. Nur Tokens und Breakpoint-Leiter
    (css-tokens.test.ts). */
 

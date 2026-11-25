@@ -67,7 +67,7 @@ export interface HubOptions {
   forgeCommand?: string;
   /** EPIC-P59 (ADR-0078): aiMetrics-Abschnitt für die Hub-Config (Test-Server, Intervall). */
   aiMetrics?: Record<string, unknown>;
-  /** EPIC-P79 (ADR-0102): inference-Abschnitt für die Hub-Config (Engine-Stand-ins). */
+  /** EPIC-P79 (ADR-0125): inference-Abschnitt für die Hub-Config (Engine-Stand-ins). */
   inference?: Record<string, unknown>;
   /** EPIC-P80 (ADR-0118): pentest-Abschnitt für die Hub-Config (Deck-Fassade im Prozess). */
   pentest?: Record<string, unknown>;

@@ -244,6 +244,15 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   EPIC-P83-team-kollaboration.md AC-P83-13) Werkstatt bedienen, gleiche Namen, hell/dunkel
   und Graustufen: Zuordnung aller Agenten fehlerfrei. Beleg: Screenshot mit Datum.
 
+### Übernommen aus EPIC-P79 (2026-11-25)
+
+- [ ] **T000.38 — Inferenz auf Cover- und Falt-Display abnehmen.**
+  (Herkunft: [EPIC-P79 T79.6](EPIC-P79-inferenz-token-tempo.md))
+  Statistik → Inferenz mit einer konfigurierten Engine öffnen. Auf beiden
+  Displays Quelle und Zeitfenster wechseln und die Lesbarkeit der Tempo-Kacheln
+  und Request-Tabelle prüfen. Bei einer reinen Zähler-Engine den Hinweis zu
+  fehlenden Verteilungen prüfen. Beleg: Datum, Geräte und Ergebnis.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine

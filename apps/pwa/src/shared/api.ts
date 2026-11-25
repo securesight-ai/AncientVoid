@@ -997,7 +997,7 @@ function createHubApi(P: (path: string) => string) {
   hostMetricsDetail: (id: string) => api<HostMetricsDetail>(P(`/api/hostmetrics/host?id=${encodeURIComponent(id)}`)),
   hostMetricsHistory: (id: string, range: HostMetricRange, key?: string) =>
     api<HostMetricsHistory>(P(`/api/hostmetrics/history?id=${encodeURIComponent(id)}&range=${range}${key ? `&key=${encodeURIComponent(key)}` : ""}`)),
-  /** EPIC-P79 (ADR-0102): Token-Tempo der Inferenz-Engines (REST, gekappt — K5). */
+  /** EPIC-P79 (ADR-0125): Token-Tempo der Inferenz-Engines (REST, gekappt — K5). */
   inferenceSources: () => api<InferenceSourceList>(P("/api/inference/sources")),
   inferenceSnapshot: (id: string, fensterH?: number) =>
     api<InferenceSnapshot>(P(`/api/inference/snapshot?id=${encodeURIComponent(id)}${fensterH ? `&fenster=${fensterH}` : ""}`)),

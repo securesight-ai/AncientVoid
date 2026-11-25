@@ -145,6 +145,7 @@ Spec: [ki-server-metriken.spec.ts](../../e2e/specs/ki-server-metriken.spec.ts)
 first token, KV reuse and the request distribution (p10/median/p90/peak,
 outliers called out). Counter-only engines (llama.cpp, Halogen) refuse a
 distribution and say why; a failed probe stays visible.
+Setup: [Inference engines and their metrics](../inference-token-tempo.md) (German).
 Spec: [inference-tempo.spec.ts](../../e2e/specs/inference-tempo.spec.ts)
 
 Spec: [statistik.spec.ts](../../e2e/specs/statistik.spec.ts)
