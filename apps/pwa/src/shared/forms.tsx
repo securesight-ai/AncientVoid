@@ -4,4 +4,4 @@
  * lang bestehen, damit bestehende Imports nicht brechen — neue Ansichten
  * importieren aus `shared/ui/index.ts`.
  */
-export { Field, Select, Switch, Segmented } from "./ui/forms.tsx";
+export { Select, Switch, Segmented } from "./ui/forms.tsx";

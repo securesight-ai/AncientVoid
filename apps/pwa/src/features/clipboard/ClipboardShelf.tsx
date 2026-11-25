@@ -12,7 +12,6 @@ import { discardReplay, reRecognize } from "../stt/replay-recognize.ts";
 import { listRecordings, REPLAY_EVENT, type ReplaySummary } from "../../shared/stt-replay.ts";
 import {
   clearShelf,
-  closeClipboardShelf,
   dropShelf,
   OPEN_SHELF_EVENT,
   SHELF_EVENT,
@@ -121,13 +120,10 @@ export function ClipboardShelf() {
       setArmed(false);
       setOpen(true);
     };
-    const close = () => setOpen(false);
     window.addEventListener(OPEN_SHELF_EVENT, open_);
-    window.addEventListener(`${OPEN_SHELF_EVENT}:close`, close);
     window.addEventListener(SHELF_EVENT, sync);
     return () => {
       window.removeEventListener(OPEN_SHELF_EVENT, open_);
-      window.removeEventListener(`${OPEN_SHELF_EVENT}:close`, close);
       window.removeEventListener(SHELF_EVENT, sync);
     };
   }, []);
@@ -355,4 +351,4 @@ export function ClipboardShelf() {
   );
 }
 
-export { ShelfGlyph, closeClipboardShelf };
+export { ShelfGlyph };

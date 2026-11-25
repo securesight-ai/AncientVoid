@@ -122,7 +122,7 @@ export function policyHook(tokens: TokenService) {
       return;
     }
     if (!label) return; // public routes (auth already let them through)
-    const operation = operationOf(req.method, req.url, req.body);
+    const operation = req.routeOptions.config.sessionTail === "ticket" ? "read" : operationOf(req.method, req.url, req.body);
 
     const decision: PolicyDecision = operation ? policyFor(operation, label) : policyFor("tokens.manage", label) === "allow" ? "allow" : "deny";
     if (decision === "deny") {

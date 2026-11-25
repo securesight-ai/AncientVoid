@@ -70,7 +70,7 @@ const NOTES: Record<SoundCategory, Record<string, Note[]>> = {
   },
 };
 
-export interface CategorySound {
+interface CategorySound {
   enabled: boolean;
   variant: string;
   volume: number;

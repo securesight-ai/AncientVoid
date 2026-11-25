@@ -212,7 +212,7 @@ export function normalizeClaudeLine(raw: unknown, mainModel?: string): EmittedEv
  * everything else) keeps the fail-loud envelope report for unknown shapes while
  * the adapter pumps the real text to `ctx.stream`.
  */
-export type ClaudeStreamKind = "assistant" | "thinking";
+type ClaudeStreamKind = "assistant" | "thinking";
 export interface ClaudeStreamPart {
   inner: "start" | "delta" | "stop";
   index: number;

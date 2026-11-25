@@ -49,8 +49,6 @@ export type EngineReading = {
 
 export const NO_HISTORY: InferenceHistory = { decodeTokS: [], prefillTokS: [], ramUsedBytes: [] };
 
-export const NO_FEATURES: InferenceFeatures = { perRequest: false, hardware: false, history: false, totals: false };
-
 /** Zahl oder null — „nicht gemeldet“ ist nie 0 (ADR-0023). */
 export function num(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;

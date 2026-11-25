@@ -58,7 +58,7 @@ export function checkedAgo(ms: number): { key: "tts.checked_ago_sec" | "tts.chec
 
 const LRU_MAX = 4;
 
-export interface TtsHandle {
+interface TtsHandle {
   stop(): void;
   /** Löst mit "finished" wenn der Clip durchgespielt ist, "stopped" bei Stop. */
   ended: Promise<"finished" | "stopped">;

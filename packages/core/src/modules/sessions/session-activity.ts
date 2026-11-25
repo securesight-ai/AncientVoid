@@ -54,7 +54,8 @@ export class SessionActivities {
     const allowed = session && (["working", "idle", "waiting_approval"].includes(session.record.status) || activity.state !== "running");
     if (!session || !allowed) return { ok: false, detail: "Session nimmt keine Hintergrundarbeit an." };
     const run = (session.lifecycle ?? Promise.resolve()).then(() => this.record(session, activity, "external"));
-    session.lifecycle = run;
+    // Der Aufrufer sieht den Fehler; die Kette darf daran nicht den nächsten Zugwechsel verlieren.
+    session.lifecycle = run.catch(() => undefined);
     await run;
     return { ok: true };
   }

@@ -3,7 +3,7 @@ import { createPortal } from "preact/compat";
 import type { ComponentChildren } from "preact";
 import { useOverlayFocus } from "../../shared/overlay-focus.ts";
 import { Sheet, Button } from "../../shared/ui/index.ts";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { useApi } from "../../shared/api-context.ts";
 import type { AttachmentRecord } from "../../shared/api.ts";
 import { onExternalAttach } from "../../shared/attach-external.ts";
@@ -229,7 +229,8 @@ function LightboxShell({
   children: ComponentChildren;
 }) {
   const { ref } = useOverlayFocus<HTMLDivElement>(true);
-  useEffect(() => {
+  // Vor dem Zeichnen: sonst geht ein Escape gleich nach dem Öffnen ins Leere.
+  useLayoutEffect(() => {
     const auf = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -272,7 +273,7 @@ function LightboxShell({
 }
 
 /** Vollbild fuer ein Bild: ein Tipp oeffnet, ein Tipp am Rand, ✕ oder Esc schliesst. */
-export function ImageLightbox({ attachment, onClose }: { attachment: AttachmentRef; onClose: () => void }) {
+function ImageLightbox({ attachment, onClose }: { attachment: AttachmentRef; onClose: () => void }) {
   const { url, fehlgeschlagen } = useObjectUrl(attachment.id);
   return (
     <LightboxShell title={attachment.name} meta={size(attachment.bytes)} onClose={onClose} {...(url ? { download: { href: url, name: attachment.name } } : {})}>

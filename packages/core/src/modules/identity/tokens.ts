@@ -67,6 +67,11 @@ export class TokenService {
     return true;
   }
 
+  /** Revocation check without retaining the raw token or updating last_used_at. */
+  hasHash(hash: string): boolean {
+    return this.db.prepare("SELECT 1 FROM device_tokens WHERE token_hash = ?").get(hash) !== undefined;
+  }
+
   /** T2.4: like `verify()`, but returns the matched token's label instead
    * of a bare boolean — used to attribute an approval decision to a real
    * device (`ApprovalRequest.decidedByLabel`) without ever persisting the

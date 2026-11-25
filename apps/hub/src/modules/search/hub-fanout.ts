@@ -14,7 +14,7 @@ import { peerGetJson } from "../fleet/fleet-proxy.ts";
 
 /** Die Suche braucht antwortende Rechner, aber kein Warten auf tote: acht Sekunden
  * pro Peer, parallel, danach ist die Runde fertig. */
-export const PEER_SEARCH_TIMEOUT_MS = 8_000;
+const PEER_SEARCH_TIMEOUT_MS = 8_000;
 
 export interface PeerLike {
   hostId: string;

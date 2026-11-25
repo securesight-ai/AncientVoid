@@ -218,13 +218,28 @@ Entscheidungstore bleiben offen), Doku-Pflege.
 
 ### Übernommen aus EPIC-P80 (2026-11-25)
 
-- [ ] **T000.34 — Pentest-Seite am Handy abnehmen.**
+- [ ] **T000.37 — Pentest-Seite am Handy abnehmen.**
   (Herkunft: EPIC-P80-pentest-scanseite.md, DoD)
   Hub mit `pentest`-Block gegen das laufende SiLenT-Deck starten, am Handy
   „Mehr“ → „Pentest“ öffnen und ein gelistetes Ziel mit Profil `quick` scannen:
   Statuskarte grün, Fundliste und Rohoutput da, Job im Verlauf. Dazu ein Ziel
   außerhalb der Allowliste: sichtbarer Abbruch, kein White-Screen. Beleg:
   Checklisten-Zeile mit Datum.
+
+### Übernommen aus EPIC-P83 (2026-11-24, ausführbar nach Umsetzung)
+
+- [ ] **T000.34 — Team zwischen zwei Standorten.** (Herkunft:
+  EPIC-P83-team-kollaboration.md AC-P83-15) Zwei Menschen mit getrennten Tailnets und
+  Rechnern: Node teilen, ACL nur auf Team-Ports, koppeln mit vorgelesenen Codes und
+  Passkey, Aufgabe Ende-zu-Ende, Session gemeinsam verfolgen und steuern, Widerruf. Messlatte: Kopplung ≤ 5 min ohne Hilfe, Ereignis
+  p95 ≤ 1 s direkt / ≤ 2 s über Relay, Widerruf ≤ 5 s. Beleg: Messlauf mit Datum.
+- [ ] **T000.35 — Team-Ansicht an echten Geräten.** (Herkunft:
+  EPIC-P83-team-kollaboration.md AC-P83-12) Handy und Desktop, TalkBack/Orca, reduzierte
+  Bewegung, Flugmodus; beide erklären ohne Hilfe, wer woran arbeitet und was auf sie wartet.
+  K2/K10. Beleg: Checklisten-Zeile mit Datum.
+- [ ] **T000.36 — Begleiter unterscheiden.** (Herkunft:
+  EPIC-P83-team-kollaboration.md AC-P83-13) Werkstatt bedienen, gleiche Namen, hell/dunkel
+  und Graustufen: Zuordnung aller Agenten fehlerfrei. Beleg: Screenshot mit Datum.
 
 ## 5. Acceptance Criteria
 

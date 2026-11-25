@@ -10,11 +10,11 @@ import {
 import type { SettingsStore } from "@ancientvoid/core";
 
 /** Hivemind `/tts` speaks `"German"|"English"` — our settings say `de`/`en`. */
-export function ttsUpstreamLanguage(language: "de" | "en"): "German" | "English" {
+function ttsUpstreamLanguage(language: "de" | "en"): "German" | "English" {
   return language === "en" ? "English" : "German";
 }
 
-export class TtsQueueFullError extends Error {
+class TtsQueueFullError extends Error {
   constructor() {
     super("TTS-Wartebereich voll");
   }
@@ -25,7 +25,7 @@ export class TtsQueueFullError extends Error {
  * Telegram-Setup — der Hub serialisiert Synthesen (FIFO) statt sie zu stampeden.
  * Über den Wartebereich hinaus wird sofort 429, nichts wartet heimlich ewig.
  */
-export class TtsQueue {
+class TtsQueue {
   private active = 0;
   private waiting: Array<() => void> = [];
   run<T>(job: () => Promise<T>): Promise<T> {

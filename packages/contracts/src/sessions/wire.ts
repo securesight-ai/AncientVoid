@@ -14,6 +14,12 @@ export const MAX_WS_BUFFER = 100;
  * in pages of MAX_WS_BUFFER (the PWA keeps 500). */
 export const WS_HISTORY_EVENTS = 500;
 
+/** ADR-0124: single-use upgrade credential, scoped to the requested tail. */
+export interface SessionTailTicket {
+  ticket: string;
+  expiresAt: number;
+}
+
 /** Client → server. */
 export const WsClientMessage = z.discriminatedUnion("type", [
   z.object({

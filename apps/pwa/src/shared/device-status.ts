@@ -51,7 +51,7 @@ const MANIFEST_PATH = "/manifest.webmanifest";
 
 /** Der aktive Service Worker fragt seine eigene Cache-Version — eine Nachricht, eine
  * Antwort, ein Zeitlimit. Ohne Worker (oder ohne Antwort) ist das `null`, keine Lüge. */
-export function askServiceWorker(timeoutMs = 1500): Promise<string | null> {
+function askServiceWorker(timeoutMs = 1500): Promise<string | null> {
   const sw = typeof navigator !== "undefined" ? navigator.serviceWorker : undefined;
   const controller = sw?.controller ?? null;
   if (!controller) return Promise.resolve(null);

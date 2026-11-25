@@ -20,7 +20,7 @@ const FEEDBACK_HIDE_MS = 10_000;
 
 /**
  * BUG-0177: Diktat soll auch nach einer Minute noch laufen — und nach fünf.
- * Früher endete die Browser-Erkennung nach 10 s von selbst (recognizeOnce mit
+ * Früher endete die Browser-Erkennung nach 10 s von selbst (Einzelerkennung mit
  * `continuous = false`), was als "bricht schon wieder ab" ankam. 15 Minuten sind
  * die obere Grenze, damit ein vergessenes Mikrofon nicht stundenlang mitläuft.
  */
