@@ -93,10 +93,14 @@ test.describe("Drehen und Querformat (BUG-0181)", () => {
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await sessionTab(app, "Chat");
 
+    // Chat-Höhe erst messen, wenn der Umbau gesetzt ist — auf langsamen Runnern dauert
+    // der Übergang länger als einen Frame (Nachtly-Flake: 72 statt ≥ 90).
+    await expect
+      .poll(async () => (await app.evaluate(layout)).chatHöhe, "der Chat muss im Querformat Zeilen behalten")
+      .toBeGreaterThanOrEqual(90);
     const q = await app.evaluate(layout);
     // Vor dem Fix: Dock 278 von 412 px, Laufleiste 66 px, Chat 48 px.
     expect(q.dockHöhe, "der Dock darf ein niedriges Fenster nicht dominieren").toBeLessThanOrEqual(200);
-    expect(q.chatHöhe, "der Chat muss im Querformat Zeilen behalten").toBeGreaterThanOrEqual(90);
     expect(q.tabsImScreen, "keine abgeschnittene Tab-Leiste").toBe(true);
     expect(q.horizontalesScrollen, "kein horizontales Scrollen").toBeLessThanOrEqual(0);
     expect(q.laufleiste, "Laufleiste ist im Querformat ausgeblendet").toBe("none");

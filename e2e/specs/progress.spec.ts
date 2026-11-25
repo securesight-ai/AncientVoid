@@ -34,7 +34,9 @@ test.describe("Fortschritt und Kontingent im Lauf", () => {
     await hub.until(async () => (await hub.api<{ status: string }>(`/api/sessions/${id}`)).body.status === "idle", "turn 1 idle");
     await hub.api(`/api/sessions/${id}/steer`, { body: { kind: "prompt", text: "Zweiter WARTE2" } });
     await hub.until(async () => (await hub.api<{ status: string }>(`/api/sessions/${id}`)).body.status === "idle", "turn 2 idle");
-    await hub.api(`/api/sessions/${id}/steer`, { body: { kind: "prompt", text: "Dritter WARTE12" } });
+    // WARTE30: Reload und Asserts müssen bis zum Ende des dritten Zugs passen — WARTE12
+    // kippte auf langsamen Runnern in „Element nach Zugende weg“ (Nachtly-Flake).
+    await hub.api(`/api/sessions/${id}/steer`, { body: { kind: "prompt", text: "Dritter WARTE30" } });
     await app.goto(`${hub.origin}/#/sessions/${id}`);
     await expect(app.locator(".run-progress")).toContainText("läuft seit");
     await expect(app.locator(".run-progress")).toContainText(/Zug hier meist .+ \(2 gelaufen\)/);

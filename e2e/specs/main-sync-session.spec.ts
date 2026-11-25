@@ -77,6 +77,9 @@ test.describe("Session: Main-Sync-Indikator und Menü (EPIC-P67 T67.8)", () => {
     const other = join(dirname(hub.alpha), "mainsyncbadge-konflikt");
     const origin = join(dirname(hub.alpha), "mainsyncbadge-origin.git");
     await execFileAsync("git", ["clone", "-q", origin, other]);
+    // Hosted-Runner haben keine globale Git-Identität — wie in withOrigin lokal setzen.
+    await execFileAsync("git", ["-C", other, "config", "user.email", "e2e@ancientvoid.local"]);
+    await execFileAsync("git", ["-C", other, "config", "user.name", "ancientvoid e2e"]);
     await writeFile(join(other, "gemeinsam.txt"), "origin\n");
     await execFileAsync("git", ["-C", other, "add", "-A"]);
     await execFileAsync("git", ["-C", other, "commit", "-q", "-m", "origin-seite-datei"]);

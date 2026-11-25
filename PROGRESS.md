@@ -11,6 +11,12 @@ Wiederaufnahme bei Abbruch: (1) Fix-PR mergen, (2) gh pr sync 420 (Auto-Merge
 löst aus), (3) main pullen, PWA bauen, Wachhund-Neustart nach Skill
 hub-neustart-live, (4) Nightly auf dem neuen Stand anstoßen.
 
+Schritte 1–4 erledigt (PR #425, #420 gemergt, Hub läuft auf 4e9675f6, Health 200,
+deployment consistent). Nightly 45559850100 auf dem Stand: vitest-full und k8 grün,
+E2E rot in Shard 1+2 — device-setup (Runner-SDK ohne emulator-Binary, kein /dev/kvm),
+main-sync (Git-Identität im Konflikt-Klon), progress/querformat (Flakes). Fix läuft
+auf fix/nightly-e2e-runner; danach Nightly neu anstoßen — grün schließt #402–#404.
+
 ## 24.11.2026 — Nachschau über die eigenen Änderungen (PR #…)
 
 Vier echte Mängel in dem, was ich am Vorabend gebaut habe — alle behoben, nicht nur

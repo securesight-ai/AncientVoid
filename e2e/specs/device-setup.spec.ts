@@ -94,7 +94,8 @@ exit 0
   spawnSync("chmod", ["+x", path]);
 }
 
-test.use({ hubOptions: { devices: { setup: { jdkUrl: `file://${join(dir, "jdk.tar.gz")}`, toolsUrl: `file://${join(dir, "tools.zip")}` } } } });
+// kvmPath /dev/null: Hosted-Runner haben kein /dev/kvm, der Fake-Emulator braucht keins.
+test.use({ hubOptions: { devices: { kvmPath: "/dev/null", setup: { jdkUrl: `file://${join(dir, "jdk.tar.gz")}`, toolsUrl: `file://${join(dir, "tools.zip")}` } } } });
 
 test.describe("Simulator-Setup in der App (In-App-Setup 2026-11-24)", () => {
   test("Einrichtung → AVD anlegen → Start → Lease → Schließen — ganz ohne CLI", async ({ app, hub }) => {
