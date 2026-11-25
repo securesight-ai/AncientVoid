@@ -4,7 +4,7 @@
  * itself stays in the approvals table (ADR-0007); this is what the
  * decision releases and what became of it.
  */
-export const OPERATION_KINDS = ["steer.prompt", "budget.increase", "tool.permission", "session.create", "session.stop", "session.park", "workspace.setup", "knowledge.add"] as const;
+export const OPERATION_KINDS = ["steer.prompt", "budget.increase", "tool.permission", "session.create", "session.stop", "session.park", "workspace.setup", "knowledge.add", "scan.run"] as const;
 export type OperationKind = (typeof OPERATION_KINDS)[number];
 
 /**

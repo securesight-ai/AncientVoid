@@ -380,6 +380,48 @@ export const HubConfig = z.object({
     })
     .optional(),
   /**
+   * EPIC-P80 (ADR-0118): Pentest-Scan — Anbindung ans SiLenT-Deck
+   * (Übergang: HTTP-API, Ziel: MCP-Fassade). Ohne Abschnitt oder ohne
+   * backendUrl: die Seite erklärt sichtbar die Konfigurationslosigkeit (K10),
+   * sie wird nicht still tot. Secrets nur als Dateireferenz (ADR-0011).
+   */
+  pentest: z
+    .object({
+      enabled: z.boolean().default(true),
+      /** Backend-URL (https?://host:port ohne Pfad); fehlt sie: Grund sichtbar. */
+      backendUrl: z.string().url().optional(),
+      /** Datei mit `user:pass` für die Basic-Auth des Decks (ADR-0011). */
+      credentialsFile: z.string().min(1).optional(),
+      /** Prüfzyklus — K9: Ausfall muss binnen 60 s sichtbar sein. */
+      probeIntervalMs: z.number().int().min(2_000).max(60_000).default(30_000),
+      /** Hub-Job-Timeout: größer als das Backend-Timeout (300 s), sonst hängt der Job sichtbar statt still (K9). */
+      jobTimeoutMs: z.number().int().min(1_000).max(600_000).default(310_000),
+      /** Aufbewahrungsfenster der Scan-Historie (K7: JSONL+Snapshot). */
+      windowHours: z.number().int().min(1).max(8_760).default(720),
+      /** Ziel-Allowliste (D5): die Sicherheitsgrenze, nicht die UI. */
+      targets: z
+        .array(
+          z.object({
+            label: z.string().min(1).max(80),
+            target: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9.:/_-]{0,254}$/),
+            kind: z.enum(["frei", "inventar"]).default("frei"),
+          }),
+        )
+        .max(100)
+        .default([]),
+      /** Deklarierte Tools (D4); riskante laufen nur über die Freigabe. */
+      tools: z
+        .array(
+          z.object({
+            tool: z.enum(["nmap", "hydra", "sqlmap", "nuclei"]),
+            risky: z.boolean().default(false),
+          }),
+        )
+        .max(20)
+        .default([{ tool: "nmap", risky: false }]),
+    })
+    .optional(),
+  /**
    * ADR-0087: Allowlist für den PWA-Terminal-Tab.
    * Jedes Ziel: `ssh` (OpenSSH-Host/Alias) oder `local: true` (Hub-Host).
    * Lokale Ziele starten optional eine konkrete Shell (Pfad oder Name,
