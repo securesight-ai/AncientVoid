@@ -360,6 +360,7 @@ async function main(): Promise<void> {
     dataDir,
     ...(config.devices.sdkRoot ? { sdkRoot: config.devices.sdkRoot } : {}),
     ...(config.devices.avdHome ? { avdHome: config.devices.avdHome } : {}),
+    ...(config.devices.kvmPath ? { kvmPath: config.devices.kvmPath } : {}),
     avdAllowlist: config.devices.avdAllowlist,
     maxEmulators: config.devices.maxEmulators,
     ...(config.devices.setup.jdkUrl || config.devices.setup.toolsUrl || config.devices.setup.packages

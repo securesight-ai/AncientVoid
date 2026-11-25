@@ -111,6 +111,9 @@ export const HubConfig = z.object({
       avdHome: z.string().optional(),
       avdAllowlist: z.array(z.string().min(1).max(64)).max(10).default([]),
       maxEmulators: z.number().int().min(1).max(2).default(1),
+      /** KVM-Gerät der Bereitschaftsprüfung (Standard /dev/kvm) — Override für Umgebungen
+       * ohne KVM (Container/CI): z. B. auf ein Dummy-Gerät zeigen, wenn nur Fake-Emulatoren laufen. */
+      kvmPath: z.string().optional(),
       /** In-App-Setup (2026-11-24): Download-Quellen und Paketliste — Overrides für
        * Spiegel/Offline-Installationen; ohne Angabe gelten die angepinnten Defaults. */
       setup: z
