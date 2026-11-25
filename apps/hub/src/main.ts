@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+import { loadOrCreateTeamIdentity, teamListenBindAddress } from "@ancientvoid/core";
 import { createHubSwarm } from "./modules/swarm/index.ts";
+import { startTeamListener, type TeamListener } from "./modules/team/team-listener.ts";
 import { sttModuleConfig } from "./modules/voice/stt-wiring.ts";
 /**
  * AncientVoid hub daemon entry.
@@ -371,6 +373,25 @@ async function main(): Promise<void> {
       return Boolean(rec) && !rec!.archived && !["stopped", "error"].includes(rec!.status);
     },
   });
+
+  // EPIC-P83 T83.2 (ADR-0118): Team-Identität laden/erzeugen (Rechte/0600 sind
+  // Startfehler); ohne `team.listen` wird kein Team-Socket geöffnet.
+  const teamIdentity = await loadOrCreateTeamIdentity(dataDir);
+  logger.info("team identity ready", { instanceId: teamIdentity.identity.instanceId });
+  let teamListener: TeamListener | null = null;
+  if (config.team.listen) {
+    const { address, port, pairPort } = config.team.listen;
+    const bindAddress = await teamListenBindAddress(address, port);
+    teamListener = await startTeamListener({
+      address: bindAddress,
+      port,
+      material: { identity: teamIdentity.identity, privateKey: teamIdentity.privateKey, publicKey: teamIdentity.publicKey },
+      pins: [], // Pins entstehen mit der Kopplung (T83.3); bis dahin weist der Socket jeden ab.
+      onLink: () => undefined, // Nachrichtenvektorisierung kommt mit dem Journal (T83.4).
+      log: (line) => logger.info(`team: ${line}`),
+    });
+    logger.info("team listener bound", { address: bindAddress, port, pairPort });
+  }
 
   const swarm = createHubSwarm({ sessions, dataDir });
   await swarm.ready;
@@ -774,7 +795,7 @@ async function main(): Promise<void> {
     logger.info("stopping hub", { keepWorkers });
     await browser.closeAll().catch(() => undefined);
     await sessions.shutdown({ keepWorkers }).catch(() => undefined);
-    await app.close().catch(() => undefined);
+    await teamListener?.close().catch(() => undefined);
     db.close();
     await releaseHubPidLock?.();
     process.exit(0);

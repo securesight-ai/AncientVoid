@@ -117,4 +117,7 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `pentest.targets` | array<object> | [] |
 | `pentest.tools` | array<object> | [{"tool":"nmap","risky":false}] |
 | `terminals` | array<object> | [] |
+| `team.listen` | object \\| null | null |
+| `team.dialTimeoutMs` | integer | 10000 |
+| `team.maxTeams` | integer | 8 |
 | `terminalAutodetect` | boolean | true |

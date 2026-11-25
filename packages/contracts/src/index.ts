@@ -55,6 +55,7 @@ export * from "./vault/vault.ts";
 export * from "./automations/automation.ts";
 export * from "./automations/external.ts";
 export * from "./swarm/swarm.ts";
+export * from "./team/identity.ts";
 export * from "./aimetrics/aimetrics.ts";
 export * from "./hostmetrics/hostmetrics.ts";
 export * from "./inference/index.ts";

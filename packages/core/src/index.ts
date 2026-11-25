@@ -37,6 +37,7 @@ export * from "./modules/automations/index.ts";
 export * from "./modules/issues/index.ts";
 export * from "./modules/swarm/index.ts";
 
+export * from "./modules/team/index.ts";
 export * from "./modules/aimetrics/index.ts";
 export * from "./modules/hostmetrics/index.ts";
 export * from "./modules/inference/index.ts";

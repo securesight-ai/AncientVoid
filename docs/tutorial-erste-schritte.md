@@ -2,16 +2,13 @@
 
 **Art:** tutorial
 
-Stand 2026-11-23 (Frischhalte-Review, drift 33 > 30 nach Toast-Overlay-
-(BUG-0271) und Status-Fix (BUG-0270); Erststart-Ablauf unberührt — davor:
-drift 31 > 30 nach BUG-0255/0256- und Ralph-PRs): Wizard-Pfad (`./setup.sh --yes --adapter=dummy`), Device-Token und
-`/api/ready` unverändert; der Erststart-Ablauf (Dock → Session → Nachricht)
-bleibt derselbe. Neue Oberflächen-Details ändern ihn nicht: Icon-Leisten-
-Tooltips stehen rechts neben dem Icon (BUG-0255), die Glocke trägt ihre
-Zahl links außen (BUG-0256), und `ralph-hub` ist der zu registrierende
-Ralph-Loop für freie Adapterwahl ([loops.md](loops.md)) — alles nach dem
-Erststart-Thema dieses Tutorials. Main-Sync, Statuspunkte und
-Prompt-Verbessern bleiben wie zuvor beschrieben.
+Stand 2026-11-25 (Frischhalte-Review, drift 31 > 30 nach P80/P81/P82-Ausläufen
+und dem Swarm-Rename (ADR-0123): Wizard-Pfad (`./setup.sh --yes --adapter=dummy`),
+Device-Token und `/api/ready` unverändert; der Erststart-Ablauf (Dock → Session →
+Nachricht) bleibt derselbe. Der Dock-Eintrag „Teams" heißt jetzt „Swarms" — für
+diesen Ablauf ohne Bedeutung, er startet wie bisher eine einzelne Session.
+Icon-Leisten-Tooltips, Glocke, `ralph-hub`, Main-Sync, Statuspunkte und
+Prompt-Verbessern unverändert.
 
 Ziel: Du hast einen laufenden Hub, dein Handy zeigt ihn an, und du hast von
 dort aus eine Nachricht an eine laufende Agent-Session geschickt. Wir nehmen
