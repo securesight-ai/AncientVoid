@@ -32,4 +32,4 @@ Strg-Klick auf eine Sitzung und sofort Alt+1; die Taste muss vor dem nächsten Z
 
 ## Eingrenzung
 
-Passive Effekte liefen erst nach dem Zeichnen: `main.tsx` (Routen-Effekt), `Attachments.tsx`, `Sheet.tsx`, `CommandBar.tsx`. Jetzt `useLayoutEffect`.
+Passive Effekte liefen erst nach dem Zeichnen: `main.tsx` (Routen-Effekt), `Attachments.tsx`, `CommandBar.tsx`. Jetzt `useLayoutEffect`.

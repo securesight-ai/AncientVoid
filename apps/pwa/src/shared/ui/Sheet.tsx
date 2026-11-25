@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "preact/hooks";
+import { useEffect } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { useOverlayFocus } from "../overlay-focus.ts";
 
@@ -26,7 +26,7 @@ export interface SheetProps {
 
 export function Sheet({ open, onClose, label, variant = "sheet", preferred, testid, class: cls, children }: SheetProps) {
   const { ref } = useOverlayFocus<HTMLDivElement>(open, { preferred });
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
