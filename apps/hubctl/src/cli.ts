@@ -298,6 +298,11 @@ async function main(): Promise<void> {
       }
       break;
     }
+    case "scan": {
+      const { scanCommand } = await import("./scan.ts");
+      await scanCommand(args);
+      break;
+    }
     case "backup": {
       const sub = args[0] ?? usage();
       const option = (name: string): string => {

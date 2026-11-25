@@ -26,6 +26,7 @@ import { registerFactoryRoutes } from "./modules/factory/factory.routes.ts";
 import { registerCommandRoutes } from "./modules/commands/commands.routes.ts";
 import { registerConnectionRoutes } from "./modules/connections/connections.routes.ts";
 import { registerKnowledgeRoutes } from "./modules/knowledge/knowledge.routes.ts";
+import { registerScanRoutes } from "./modules/scan/scan.routes.ts";
 import { registerReviewsRoutes } from "./modules/reviews/reviews.routes.ts";
 import { registerForgeRoutes } from "./modules/forge/forge.routes.ts";
 import { registerAutomationsRoutes } from "./modules/automations/automations.routes.ts";
@@ -78,4 +79,5 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
   registerStatisticsRoutes(app, ctx);
   registerConnectionRoutes(app, ctx);
   registerKnowledgeRoutes(app, ctx);
+  registerScanRoutes(app, ctx);
 }

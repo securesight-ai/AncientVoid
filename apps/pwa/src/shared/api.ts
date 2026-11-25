@@ -2,6 +2,7 @@ import { compactionSettingsPath, type CompactionSettings } from "@ancientvoid/co
 import { errorText } from "./i18n/index.ts";
 import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity } from "@ancientvoid/contracts";
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
+import type { PentestJobDetail, PentestScanJob, PentestStatus, ScanTargetEntry, ScanToolDecl } from "@ancientvoid/contracts";
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
 import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, HostMetricRange, HostMetricsDetail, HostMetricsHistory, HostMetricsReport, InferenceAskResult, InferenceModelStatus, InferenceModelView, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, AvdDescriptor, DeviceAction, DeviceSetupStatus, DeviceImageList, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
 export type { TerminalTarget };
@@ -1095,6 +1096,13 @@ function createHubApi(P: (path: string) => string) {
   /** T74.6: Schreiben geht nur als Freigabe — 202 mit approvalId, entschieden wird in der Queue. */
   addKnowledge: (id: string, body: { text: string; ref?: string }) =>
     api<{ ok: boolean; detail: string; approvalId: string; summary: string }>(P(`/api/knowledge/sources/${id}/add`), { method: "POST", body: JSON.stringify(body) }),
+  /** EPIC-P80 (ADR-0118): Pentest — dieselben Routen wie hubctl (D6); Fehler kommen als 4xx/5xx und erscheinen sichtbar. */
+  pentestStatus: () => api<PentestStatus>(P("/api/pentest/status")),
+  pentestTargets: () => api<{ configured: boolean; targets: ScanTargetEntry[]; tools: ScanToolDecl[] }>(P("/api/pentest/targets")),
+  pentestJobs: () => api<{ configured: boolean; jobs: PentestScanJob[] }>(P("/api/pentest/jobs")),
+  pentestJob: (id: string) => api<PentestJobDetail>(P(`/api/pentest/jobs/${id}`)),
+  pentestScan: (body: { target: string; profile?: "quick" | "services" | "full"; tool?: "nmap" | "hydra" | "sqlmap" | "nuclei" }) =>
+    api<{ job?: PentestScanJob; approvalId?: string; summary?: string; ok?: boolean; detail?: string }>(P("/api/pentest/scan"), { method: "POST", body: JSON.stringify(body) }),
   adapterUsage: (id: string) => api<AdapterUsage>(P(`/api/adapters/${id}/usage`)),
   projects: () => api<ProjectDiscoveryResult>(P("/api/projects")),
   /** T-PJ1: create a project (git init) in the first projectRoot. */

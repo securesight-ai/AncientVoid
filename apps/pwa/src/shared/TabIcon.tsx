@@ -5,6 +5,7 @@ const PATHS = {
   bericht: "M5 20V10M12 20V4M19 20v-7",
   diff: "M8 4v16M4 8h8M14 16h6M17 4l-3 3 3 3M17 20l3-3-3-3",
   suche: "M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM15.5 15.5 20 20",
+  scan: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8.5v7M8.5 12h7",
   code: "M9 7l-5 5 5 5M15 7l5 5-5 5",
   umgebung: "M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10",
   uebersicht: "M4 5h7v7H4zM13 5h7v4h-7zM13 11h7v8h-7zM4 14h7v5H4z",

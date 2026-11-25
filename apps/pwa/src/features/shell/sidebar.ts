@@ -14,6 +14,7 @@ export const SIDEBAR_ENTRIES: readonly { id: string; label: string; icon: TabIco
   { id: "statistics", label: "Statistik", icon: "bericht", page: "statistics" },
   { id: "terminal", label: "Terminal", icon: "terminal", page: "terminal" },
   { id: "releasenotes", label: "Release-Notes", icon: "verlauf", page: "releasenotes" },
+  { id: "pentest", label: "Pentest", icon: "scan", page: "pentest" },
 ];
 export interface SidebarPreferences { order: string[]; hidden: string[]; minimized: boolean }
 export const SIDEBAR_KEY = "ancientvoid.sidebar.v1";

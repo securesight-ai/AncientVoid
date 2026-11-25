@@ -69,6 +69,8 @@ export interface HubOptions {
   aiMetrics?: Record<string, unknown>;
   /** EPIC-P79 (ADR-0102): inference-Abschnitt für die Hub-Config (Engine-Stand-ins). */
   inference?: Record<string, unknown>;
+  /** EPIC-P80 (ADR-0118): pentest-Abschnitt für die Hub-Config (Deck-Fassade im Prozess). */
+  pentest?: Record<string, unknown>;
   /** ADR-0087: Allowlist für den PWA-Terminal-Tab. */
   terminals?: Array<{ id: string; label: string; ssh?: string; local?: boolean; shell?: string }>;
   /** ADR-0087 Nachtrag 2026-11-23: Auto-Erkennung der Host-Shells (Default: an). */
@@ -211,6 +213,7 @@ export class TestHub {
       ...(this.options.assistantUrl ? { assistant: { model: { url: this.options.assistantUrl, model: "e2e-model" } } } : {}),
       ...(this.options.aiMetrics ? { aiMetrics: this.options.aiMetrics } : {}),
       ...(this.options.inference ? { inference: this.options.inference } : {}),
+      ...(this.options.pentest ? { pentest: this.options.pentest } : {}),
       ...(this.options.terminals ? { terminals: this.options.terminals } : {}),
       ...(this.options.terminalAutodetect === false ? { terminalAutodetect: false } : {}),
       media: { ytDlp: standIn("yt-dlp") },

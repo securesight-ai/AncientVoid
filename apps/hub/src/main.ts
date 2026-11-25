@@ -9,11 +9,11 @@ import { sttModuleConfig } from "./modules/voice/stt-wiring.ts";
  * Boot order (P0): config → db → adapters → recovery (K7) → HTTP/WS → PWA.
  */
 import { chmodSync, mkdirSync, existsSync } from "node:fs";
-import { appendFile, readFile, readdir } from "node:fs/promises";
+import { appendFile, readFile, readdir, mkdir, writeFile } from "node:fs/promises";
 import { homedir, hostname, loadavg, cpus, totalmem, freemem } from "node:os";
 import { compactionSettingsKey, LOOP_ARG, toHostId, sessionMainSyncPath } from "@ancientvoid/contracts";
-import { projectName } from "@ancientvoid/core";
-import { resolve } from "node:path";
+import { projectName, ScanService } from "@ancientvoid/core";
+import { resolve, dirname } from "node:path";
 import type { WorkerRunner, DiscoverySource } from "@ancientvoid/contracts";
 import {
   Gatekeeper,
@@ -547,6 +547,46 @@ async function main(): Promise<void> {
     logger.info(`inference: ${engines.length} Engine-Quellen (${engines.map((e) => e.kind).join(", ")})`);
   }
 
+  // EPIC-P80 (ADR-0118): Pentest-Scan — der Hub ist Auftraggeber und Anzeiger,
+  // Ausführungswerk bleibt beim Backend. Ohne Konfiguration baut derDienst
+  // trotzdem (Routen erklären die Lage, K10) — gebaut wird er nur mit Backend.
+  let scan: ScanService | undefined;
+  if (config.pentest?.backendUrl) {
+    scan = new ScanService(
+      {
+        backendUrl: config.pentest.backendUrl,
+        credentialsFile: config.pentest.credentialsFile ? resolve(config.pentest.credentialsFile.replace(/^~(?=\/)/, homedir())) : null,
+        enabled: config.pentest.enabled,
+        probeIntervalMs: config.pentest.probeIntervalMs,
+        timeoutMs: config.pentest.jobTimeoutMs,
+        windowHours: config.pentest.windowHours,
+        targets: config.pentest.targets,
+        tools: config.pentest.tools,
+      },
+      {
+        readFile: async (path: string) => readFile(path, "utf8").catch(() => null),
+        appendFile: async (path: string, data: string) => {
+          await appendFile(path, data, "utf8");
+        },
+        writeFile: async (path: string, data: string) => {
+          await mkdir(dirname(path), { recursive: true });
+          await writeFile(path, data, "utf8");
+        },
+        now: () => new Date(),
+        ...(approvals ? { approvals } : {}),
+        operations: sessions.operations(),
+        logger: {
+          info: (m: string) => logger.info(`scan: ${m}`),
+          warn: (m: string) => logger.warn(`scan: ${m}`),
+          error: (m: string) => logger.error(`scan: ${m}`),
+        },
+      },
+      resolve(dataDir, "scan"),
+    );
+    await scan.load();
+    logger.info(`scan: Backend ${config.pentest.backendUrl} (${config.pentest.targets.length} Ziele gelistet)`);
+  }
+
   // Suche (Nachschärfe 2026-11-22): Volltext über die Sessiontexte — Fragen,
   // Antworten, Denk- und Werkzeugspuren. Der Index ist ableitbar (K7: er folgt
   // dem JSONL-Schwanz über `byte_offset` pro Session) und braucht kein qmd.
@@ -624,6 +664,7 @@ async function main(): Promise<void> {
     ...(hostMetrics ? { hostMetrics } : {}),
     hostMetricsMergePeers: config.hostMetrics.mergePeers,
     ...(inference ? { inference } : {}),
+    ...(scan ? { scan } : {}),
     ...(config.inference?.gate ? { inferenzPforte } : {}),
     search: { transcript },
     // EPIC-P56 T56.3: Statistik-Rollup — hält die Fakten-Caches frisch und
@@ -653,6 +694,7 @@ async function main(): Promise<void> {
   issueBridge?.start();
   aimetrics?.start();
   hostMetrics?.start();
+  scan?.start();
   // EPIC-P67 T67.5/T67.6: laufende Main-Synchronisation — ein Fetch je Projekt
   // je Takt (K8). Meldungen werden persistente Benachrichtigungen (mit
   // Aktionsknopf im ask-Modus) und gehen über onNotification an Web-Push.
@@ -724,6 +766,7 @@ async function main(): Promise<void> {
     aimetrics?.stop();
     hostMetrics?.stop();
   inference?.stop();
+  scan?.stop();
     mainSyncScheduler.stop();
     logger.info("shutting down", { signal: sig });
     // tmux workers outlive the hub: a planned restart keeps them running and

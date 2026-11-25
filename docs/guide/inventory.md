@@ -39,6 +39,7 @@ Regeln:
 | page:statistics | One analysis page with tabs: session/turn/gate/tool statistics, host monitoring, AI server metrics, inference token tempo | `#/statistik` (+`/hosts`, `/hosts/<id>`, `/metriken`, `/inferenz`) | statistik |
 | page:terminal | Allowlisted SSH/local shell in the PWA | `#/terminal` | terminal |
 | page:releasenotes | Release notes: merged PRs with what changed and why | `#/releasenotes` | release-notes |
+| page:pentest | Pentest page: scan allowlisted targets through the attached pentest backend; profiles, findings, hub job history | `#/pentest` | pentest-seite |
 
 ## Views (Hauptansichten)
 
@@ -84,6 +85,7 @@ Regeln:
 | feature:notifications | Notification bell and center | notifications |
 | feature:nyx | Nyx assistant: sheet and FAB | nyx-blatt |
 | feature:overview | Overview lists and view switch (sessions/projects/hosts/discovery) | overview-shell |
+| feature:pentest | Pentest scan form, status card, findings and hub job history for the attached pentest backend | pentest-seite |
 | feature:release-notes | Release notes list with per-PR collapsible details | release-notes |
 | feature:search | Quick search across inventory and files | schnellsuche |
 | feature:session | Session chat, steering, turns and tabs | session |

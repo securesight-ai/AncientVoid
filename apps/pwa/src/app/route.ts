@@ -78,14 +78,14 @@ export type TailTab = "graph" | "git" | "datei";
  * EPIC-P47 §3.4: `discovery` ist kein Page mehr — `#/gefunden` bleibt als Alias auf die
  * Übersicht (die schaltet dort auf den Discovery-Zustand); Dashboards `FOUND_HASH_ALIAS`.
  * EPIC-P60 (ADR-0077): `orchestrierung` heißt `teams`, Slug `#/teams` (ehemals `#/runs`). */
-export type ListPage = "dashboard" | "new" | "settings" | "approvals" | "status" | "media" | "pc" | "vault" | "teams" | "automationen" | "statistics" | "terminal" | "releasenotes";
+export type ListPage = "dashboard" | "new" | "settings" | "approvals" | "status" | "media" | "pc" | "vault" | "teams" | "automationen" | "statistics" | "terminal" | "releasenotes" | "pentest";
 export const FOUND_HASH_ALIAS = "#/gefunden";
 // EPIC-P62 T62.1: exportiert — der Guide-Inventar-Test (AC-P62-1) macht
 // jede neue Seite ohne docs/guide/inventory.md-Zeile rot.
-export const PAGE_SLUG: Record<ListPage, string> = { dashboard: "", new: "neu", settings: "einstellungen", approvals: "freigaben", status: "status", media: "medien", pc: "pc", vault: "notizen", teams: "teams", automationen: "automationen", statistics: "statistik", terminal: "terminal", releasenotes: "releasenotes" };
+export const PAGE_SLUG: Record<ListPage, string> = { dashboard: "", new: "neu", settings: "einstellungen", approvals: "freigaben", status: "status", media: "medien", pc: "pc", vault: "notizen", teams: "teams", automationen: "automationen", statistics: "statistik", terminal: "terminal", releasenotes: "releasenotes", pentest: "pentest" };
 
 /** EPIC-P34 T34.2: Seiten, die am Desktop die Detailspalte füllen. Übersicht, Neu und Freigaben bleiben in der Liste (K1-Weg). */
-export const TOOL_PAGE_IDS = ["settings", "media", "pc", "status", "vault", "teams", "automationen", "statistics", "terminal", "releasenotes"] as const;
+export const TOOL_PAGE_IDS = ["settings", "media", "pc", "status", "vault", "teams", "automationen", "statistics", "terminal", "releasenotes", "pentest"] as const;
 export type ToolPageId = (typeof TOOL_PAGE_IDS)[number];
 const TOOL_PAGES: ReadonlySet<ListPage> = new Set<ListPage>(TOOL_PAGE_IDS);
 

@@ -26,4 +26,6 @@ export const de = {
   "dock.releasenotes": "Release-Notes",
   "dock.releasenotesTitle": "Release-Notes: pro PR was geändert wurde und warum (EPIC-P68)",
   "dock.providerStatus": "Provider-Status",
+  "dock.pentest": "Pentest",
+  "dock.pentestTitle": "Pentest: Scans der erlaubten Ziele über das Pentest-Backend (EPIC-P80)",
 } as const;

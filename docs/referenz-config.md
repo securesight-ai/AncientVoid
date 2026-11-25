@@ -108,5 +108,13 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `inference.minReadPrefill` | integer | 4000 |
 | `inference.engines` | array<object> | [] |
 | `inference.gate.engines` | array<object> | [] |
+| `pentest.enabled` | boolean | true |
+| `pentest.backendUrl` | string | — |
+| `pentest.credentialsFile` | string | — |
+| `pentest.probeIntervalMs` | integer | 30000 |
+| `pentest.jobTimeoutMs` | integer | 310000 |
+| `pentest.windowHours` | integer | 720 |
+| `pentest.targets` | array<object> | [] |
+| `pentest.tools` | array<object> | [{"tool":"nmap","risky":false}] |
 | `terminals` | array<object> | [] |
 | `terminalAutodetect` | boolean | true |

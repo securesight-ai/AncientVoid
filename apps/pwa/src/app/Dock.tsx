@@ -23,6 +23,7 @@ const MORE: readonly { page: Page; icon: TabIconName; label: string; title: stri
   { page: "statistics", icon: "bericht", label: t("dock.statistics"), title: t("dock.statisticsTitle") },
   { page: "terminal", icon: "terminal", label: t("dock.terminal"), title: t("dock.terminalTitle") },
   { page: "releasenotes", icon: "verlauf", label: t("dock.releasenotes"), title: t("dock.releasenotesTitle") },
+  { page: "pentest", icon: "scan", label: t("dock.pentest"), title: t("dock.pentestTitle") },
 ];
 
 /**

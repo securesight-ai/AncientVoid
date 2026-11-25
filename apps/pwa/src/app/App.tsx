@@ -19,6 +19,7 @@ import { AutomationsPane } from "../features/automations/AutomationsPane.tsx";
 import { StatisticsPage } from "../features/statistics/StatisticsPage.tsx";
 import { TerminalPage } from "../features/terminal/TerminalPage.tsx";
 import { ReleaseNotesPage } from "../features/release-notes/ReleaseNotesPage.tsx";
+import { PentestPage } from "../features/pentest/PentestPage.tsx";
 import { publishHubStatus } from "../features/shell/hub-status.ts";
 import { getLastSession } from "../features/shell/last-session.ts";
 import { DetachButton } from "../features/windows/DetachButton.tsx";
@@ -209,6 +210,7 @@ export function App({
       {shown === "statistics" && <StatisticsPage {...(statTab ? { tab: statTab } : {})} />}
       {shown === "terminal" && <TerminalPage />}
       {shown === "releasenotes" && <ReleaseNotesPage />}
+      {shown === "pentest" && <PentestPage />}
       {shown === "dashboard" &&
         (sessions === null ? (
           <div class="empty">{t("common.loading_short")}</div>
