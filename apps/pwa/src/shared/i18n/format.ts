@@ -53,5 +53,3 @@ export function fmtDateTime(value: Date | number | string, opts: Intl.DateTimeFo
 export function fmtNumber(value: number, opts: Intl.NumberFormatOptions = {}): string {
   return numberFmt(opts).format(value);
 }
-
-;
