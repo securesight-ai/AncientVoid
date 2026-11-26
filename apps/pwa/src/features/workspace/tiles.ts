@@ -157,25 +157,6 @@ export function openAdditionalTile(ws: Workspace, ref: TileRef): Workspace {
   return openInNewTile({ ...ws, layout: (GROW[visible] ?? "2x2") as Layout }, ref);
 }
 
-/** BUG-0244: feste Kachel (Neue Session → Index 0). Belegte Kachel wird verschoben, nicht verworfen. */
-export function openInTile(ws: Workspace, ref: TileRef, index: number): Workspace {
-  if (index < 0) return openInNewTile(ws, ref);
-  const at = ws.slots.findIndex((t) => same(t, ref));
-  if (at === index) return { ...ws, focus: index };
-  const slots = Array.from({ length: Math.max(4, ws.slots.length, index + 1) }, (_, i) => ws.slots[i] ?? null);
-  if (at >= 0) slots[at] = null;
-  const displaced = slots[index];
-  slots[index] = at >= 0 ? (ws.slots[at] as TileRef) : ref;
-  if (displaced && !(at >= 0 && same(displaced, ref))) {
-    const empty = slots.findIndex((t, i) => i !== index && t === null);
-    if (empty >= 0) slots[empty] = displaced;
-    else slots.push(displaced);
-  }
-  const needed = slots.reduce((last, t, i) => (t === null ? last : i + 1), 0);
-  const layout = !isLayoutFixed(ws) && needed > COUNT[ws.layout] ? (GROW[needed - 1] ?? "2x2") : ws.layout;
-  return { ...ws, slots, layout, focus: index };
-}
-
 /** BUG-0245: Lücken nach Ablösen/Schließen schließen und Layout auf die belegten Kacheln schrumpfen. */
 export function compactTiles(ws: Workspace): Workspace {
   const filled = ws.slots.filter((t): t is TileRef => t !== null);
@@ -298,6 +279,9 @@ function tileRef(raw: unknown): TileRef | null {
   const { sessionId, hostId, content: value } = raw as { sessionId?: unknown; hostId?: unknown; content?: unknown };
   const content = parseContent(value);
   if (value !== undefined && !content) return null;
+  // BUG-0291: „Neue Session“ ist kein Kachelinhalt mehr (Modal über allem) —
+  // gespeicherte Formular-Kacheln aus Vor-Ständen fallen beim Laden still weg.
+  if (content?.kind === "page" && content.page === "new") return null;
   if (typeof sessionId !== "string" || (!sessionId && !content)) return null;
   return { sessionId, ...(typeof hostId === "string" && hostId ? { hostId } : {}), ...(content ? { content } : {}) };
 }
@@ -313,6 +297,12 @@ export function parseWorkspace(raw: string | null): Workspace {
   }
   const { layout, slots, focus, sizes, detached, layoutFixed } = (data ?? {}) as { layout?: unknown; slots?: unknown; focus?: unknown; sizes?: unknown; detached?: unknown; layoutFixed?: unknown };
   if (!LAYOUTS.includes(layout as Layout) || !Array.isArray(slots)) return emptyWorkspace();
+  // BUG-0291: gefallene Neu-Kacheln lassen Lücken — kompaktieren (BUG-0245-Regel),
+  // sonst startet das Raster nach dem Update mit einer leeren Kachel 1.
+  const droppedNeu = slots.some((s) => {
+    const content = (s as { content?: { kind?: string; page?: string } } | null | undefined)?.content;
+    return content?.kind === "page" && content.page === "new";
+  });
   const ws: Workspace = { layout: layout as Layout, slots: Array.from({ length: Math.max(4, slots.length) }, (_, i) => tileRef(slots[i])), focus: 0 };
   const sized =
     sizes && typeof sizes === "object"
@@ -323,10 +313,11 @@ export function parseWorkspace(raw: string | null): Workspace {
         }
       : undefined;
   const away = Array.isArray(detached) ? detached.map(tileRef).filter((r): r is TileRef => r !== null) : [];
-  return focusTile({
+  const base = focusTile({
     ...ws,
     ...(sized && (sized.col !== undefined || sized.row !== undefined || sized.col2 !== undefined) ? { sizes: sized } : {}),
     ...(away.length > 0 ? { detached: away } : {}),
     layoutFixed: layoutFixed !== false,
   }, typeof focus === "number" ? focus : 0);
+  return droppedNeu ? compactTiles(base) : base;
 }

@@ -1,4 +1,4 @@
-import { useEffect } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { useOverlayFocus } from "../overlay-focus.ts";
 
@@ -10,6 +10,11 @@ import { useOverlayFocus } from "../overlay-focus.ts";
  * `variant="sheet"` (Standard): unten am Rand (Skill/Nyx/Mehr).
  * `variant="modal"`: zentrierte Karte (Sammelversand, Modell-Dialog, Trace).
  */
+
+/** BUG-0291: Esc schließt bei geschachtelten Blättern/Modals (z. B.
+ * Neue-Session-Modal mit eigenem Modell-Dialog darin) nur das zuoberst
+ * geöffnete — vorher nahm ein Tastendruck alle gleichzeitig mit. */
+const escStack: { fire: () => void }[] = [];
 export interface SheetProps {
   open: boolean;
   onClose: () => void;
@@ -26,14 +31,31 @@ export interface SheetProps {
 
 export function Sheet({ open, onClose, label, variant = "sheet", preferred, testid, class: cls, children }: SheetProps) {
   const { ref } = useOverlayFocus<HTMLDivElement>(open, { preferred });
+  // BUG-0291: onClose über Ref — die Stapelreihenfolge (oben = zuletzt
+  // geöffnet) darf durch Neu-Render mit neuer Callback-Identität nicht
+  // umsortiert werden.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
+    const entry = { fire: () => closeRef.current() };
+    escStack.push(entry);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (escStack[escStack.length - 1] !== entry) return;
+      // Konvention der Shortcut-Registry: preventDefault markiert „erledigt“ —
+      // darunterliegende Esc-Handler (z. B. tool.close der Werkzeugfläche)
+      // schließen nicht mit (ein Esc, eine Ebene).
+      e.preventDefault();
+      entry.fire();
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      const at = escStack.indexOf(entry);
+      if (at >= 0) escStack.splice(at, 1);
+    };
+  }, [open]);
   if (!open) return null;
   const classes = ["ui-sheet", variant === "modal" ? "ui-sheet--modal" : null, cls].filter(Boolean).join(" ");
   return (

@@ -26,10 +26,45 @@ test.describe("Werkzeugfläche am Desktop (EPIC-P34)", () => {
     await expect(app.locator(".tool-pane [data-testid=desktop-setup], .tool-pane .desktop-head").first()).toBeVisible();
     await app.goto(`${hub.origin}/#/status`);
     await expect(app.locator(".tool-pane .provider-card").first()).toBeVisible();
-    // Auch Neu bleibt neben den bereits geöffneten Werkzeugen erreichbar.
+    // BUG-0291: „Neu“ ist kein Kachelinhalt mehr — das Modal liegt über den
+    // geöffneten Werkzeugen, das Raster bleibt unverändert.
     await app.locator(".dock").getByRole("button", { name: "Neue Session" }).click();
-    await expect(app.locator(".tile .tool-pane")).toHaveCount(5);
-    await expect(app.locator(".tile").getByRole("button", { name: "Starten" })).toBeVisible();
+    const neu = app.getByRole("dialog", { name: "Neue Session" });
+    await expect(neu).toBeVisible();
+    await expect(neu.getByRole("button", { name: "Starten" })).toBeVisible();
+    await expect(app.locator(".tile .tool-pane")).toHaveCount(4);
+    await app.keyboard.press("Escape");
+    await expect(neu).toHaveCount(0);
+    await expect(app.locator(".tile .tool-pane")).toHaveCount(4);
+  });
+
+  test("BUG-0291: Neue Session als Modal über allem — Starten schließt es von selbst, die Session-Kachel bleibt @desktop", async ({ app }) => {
+    await app.locator(".dock").getByRole("button", { name: "Neue Session" }).click();
+    const neu = app.getByRole("dialog", { name: "Neue Session" });
+    await expect(neu).toBeVisible();
+    // Kein Kachelinhalt: das Formular liegt nur im Modal.
+    await expect(app.locator(".tile .new-session-form")).toHaveCount(0);
+    await expect(neu.getByRole("button", { name: "Starten" })).toBeVisible();
+    await neu.getByRole("button", { name: "Starten" }).click();
+    // Der Hash springt auf die neue Session, das Raster öffnet sie — und das
+    // Modal geht damit von selbst zu.
+    await expect(app.locator(".split-detail .session-top-title")).toBeVisible();
+    await expect(neu).toHaveCount(0);
+    await expect(app.locator(".tile .new-session-form")).toHaveCount(0);
+  });
+
+  test("BUG-0291: Esc im verschachtelten Dialog schließt nur diesen, nicht das Modal @desktop", async ({ app }) => {
+    await app.locator(".dock").getByRole("button", { name: "Neue Session" }).click();
+    const neu = app.getByRole("dialog", { name: "Neue Session" });
+    await expect(neu).toBeVisible();
+    await neu.getByLabel("Adapter").selectOption("pi");
+    await neu.getByRole("button", { name: /Eigenes Modell/ }).click();
+    const dialog = app.getByRole("dialog", { name: /Eigenes Modell oder Endpunkt/ });
+    await expect(dialog).toBeVisible();
+    await app.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    // Ohne Esc-Stapel nahm derselbe Tastendruck das Neue-Session-Modal mit.
+    await expect(neu).toBeVisible();
   });
 
   test("AC-P34-2: Öffnen und Schließen baut keine Kachel-Verbindung neu auf, der Entwurf bleibt @desktop", async ({ app, hub }) => {

@@ -340,7 +340,7 @@ button.badge-stale {
   min-width: 0;
 }
 
-/* BUG-0244: Neue Session — Breite der Kachel zählt (wie settings-cols), nicht die Fensterbreite. */
+/* BUG-0244: Neue Session — Breite des Containers zählt (Kachel wie Modal), nicht die Fensterbreite. */
 .new-session-form {
   container-type: inline-size;
   align-items: start;
@@ -362,6 +362,30 @@ button.badge-stale {
   .new-session-span {
     grid-column: 1 / -1;
   }
+}
+
+/* BUG-0291: „Neue Session“ am PC/Tablet als Modal (Sheet --modal) über allem.
+ * Die Form-Card liegt direkt auf dem Modal-Grund — eigene Fläche wäre
+ * Karte in der Karte. Der Kopf trägt Titel und ✕ wie die Werkzeugfläche. */
+.new-session-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.new-session-modal-head h3 {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.new-session-modal .new-session-form {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
 }
 
 /* EPIC-P63 T63.9: statische CreateSession-Styles statt style={{…}} */

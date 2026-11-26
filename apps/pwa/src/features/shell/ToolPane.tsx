@@ -1,8 +1,6 @@
 import { t } from "../../shared/i18n/index.ts";
 import { StatisticsPage } from "../statistics/StatisticsPage.tsx";
-import { CreateSession } from "../new-session/CreateSession.tsx";
 import { ApprovalQueuePane } from "../approvals/Approvals.tsx";
-import { sessionHash } from "../../app/route.ts";
 import { useEffect, useLayoutEffect } from "preact/hooks";
 import type { ListPage } from "../../app/route.ts";
 import { registerShortcut, comboLabel, ariaCombo } from "../../shared/shortcuts/registry.ts";
@@ -19,7 +17,6 @@ import { PentestPage } from "../pentest/PentestPage.tsx";
 import { useHubStatus } from "./hub-status.ts";
 
 export const TITLES: Partial<Record<ListPage, string>> = {
-  new: t("common.new_session"),
   approvals: "Freigaben",
   statistics: "Statistik",
   settings: "Einstellungen",
@@ -104,7 +101,6 @@ export function ToolPane({
         </span>
       </header>
       <div class="tool-pane-body">
-        {page === "new" && <CreateSession adapters={hub.adapters} hosts={hub.hosts} onCreated={(session) => { location.hash = sessionHash(session.id, session.hostId); }} />}
         {page === "approvals" && <ApprovalQueuePane />}
         {page === "statistics" && <StatisticsPage {...(statTab ? { tab: statTab } : {})} />}
         {page === "settings" && <SettingsPage onSwitchToken={onSwitchToken} />}
