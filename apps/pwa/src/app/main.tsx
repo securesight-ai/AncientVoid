@@ -352,6 +352,7 @@ function Main() {
     const before = ws.slots.filter(Boolean).length;
     const after = next.slots.filter(Boolean).length;
     let restored = next;
+    let vorwaerts = false;
     if (after < before) {
       for (let guard = 0; guard < 8; guard++) {
         const entry = popEntry();
@@ -370,6 +371,7 @@ function Main() {
       }
     } else if (contentHash(visibleTiles(restored)[restored.focus]) !== contentHash(visibleTiles(ws)[ws.focus])) {
       rememberView(contentHash(visibleTiles(ws)[ws.focus]), visibleTiles(ws)[ws.focus] ?? undefined);
+      vorwaerts = true;
     }
     setWs(restored);
     localStorage.setItem(WORKSPACE_KEY, serializeWorkspace(restored));
@@ -377,7 +379,16 @@ function Main() {
     rememberSession(focused?.sessionId ? focused : null);
     const hash = contentHash(focused);
     // Each card owns its target, so focusing a chat must also clear another card's file suffix.
-    if (location.hash !== hash) history.replaceState(null, "", hash);
+    // **Vor** dem Zurückknopf der Welt (Handy-Geste, Browser-Leiste, Alt+←) darf nur
+    // stehen, was wirklich hintereinander besucht wurde. Nutzt eine neue Ansicht die
+    // gleiche Kachel, war das bisher ein `replaceState` — die Historie blieb leer, und
+    // Zurück warf Nutzer aus der App oder auf eine uralte Seite (Nutzerfund 24.11.2026:
+    // „Zurück-Taste funktioniert nicht, ich muss die App schließen“). Reine Fokus-
+    // Sprünge zwischen offenen Kacheln bleiben `replace` (wie oben dokumentiert).
+    if (location.hash !== hash) {
+      if (vorwaerts) history.pushState(null, "", hash);
+      else history.replaceState(null, "", hash);
+    }
     letzterHash.current = hash;
   };
   // EPIC-P34 T34.10: eigene Fenster. Der Kanal-Handler läuft über Referenzen, damit er immer den neuesten Stand sieht.

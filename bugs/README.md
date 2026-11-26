@@ -318,6 +318,8 @@ Ein Bug ist **ein** Verhalten. Zwei Symptome → zwei Dateien.
 | [BUG-0279](bug-0279-shell-unter-der-statusleiste-und-zoom-bis-50-prozent.md) | Shell endet 28 px unter der Statusleiste — und Rauszoomen war bei 70 % zu Ende | fixed | S2 | pwa | — |
 | [BUG-0280](bug-0280-eigene-nachricht-nach-dem-senden-nicht-im-chat.md) | Nach dem Senden fehlt die eigene Nachricht im Chat; sie steckt nur als Warteschlangen-Streifen unterhalb | open | S2 | pwa | — |
 | [BUG-0281](bug-0281-geraetekennung-am-desktop-heisst-handy.md) | Am Desktop steht „Du · handy“ über der eigenen Nachricht, weil der Browser dasselbe Token wie das Telefon nutzt | open | S3 | pwa | — |
+| [BUG-0282](bug-0282-asynchrone-kachelschreibueberschreibt-die-historie.md) | Nach dem Zurücktippen schreibt eine spaete Kachel-Aktualisierung die Adresse der verlassenen Sitzung wieder in die Historie | open | S2 | pwa | — |
+| [BUG-0283](bug-0283-denk-block-streamt-nicht-im-browser.md) | Im Browser waechst der Denk-Block nicht mit, in der Native-App auf dem Handy schon | open | S2 | pwa | — |
 
 Die nächste freie Nummer ist **0282** (Nummern zuerst auf `origin/main` pruefen — 0274 Host-Watt mit PR #365 gemerged; 0275 Wissen-Tab-Route, von 1ce6cf1f verloren; 0276 Ralph-Stand-in-Review; 0277 extract-Test-Gemini-Hinweis; 0268 war hier bereits von PR #327 belegt, 0272 wurde daraus; 0270 Status-Lag nach turn_end mit PR #335 gemerged; 0271 Toast-Layout-Shift; 0269 Statistik-Schnitt-Reload — zuerst als 0263, 0268 parallel in PR #327 für Strg-Klick; 0265 Kontextüberlauf als Anmeldepleite — ADR-0115, 0266 Bild-Auslese ohne OCR-Werkzeug, 0267 eingefügtes Bild ohne Oeffnen-Hinweis im Prompt; gemerged, 0260 mit PR #297 gemerged,
 0178/0179 mit PR #37 gemerged, 0181 mit PR #41 und 0182 mit PR #26 gemerged,

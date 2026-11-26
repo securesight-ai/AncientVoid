@@ -83,6 +83,18 @@ export function App({
 
   useEffect(() => {
     let alive = true;
+    // **Eigene Sitzungen sofort**, die Flotten-Sicht dahinter. Die eigene Liste liegt in
+    // Millisekunden vor (gemessen 6 ms gegen `/api/sessions`), die Flotten-Sicht muss
+    // jeden Partner befragen (gemessen 3,0 s; bei einem abwesenden Rechner deutlich
+    // länger). Ohne diesen Schritt hing die Liste nach dem Zurücktippen auf dem Handy
+    // sekundenlang bei „loading…“ und war nicht mehr zu brauchen — Nutzerfund
+    // 24.11.2026: „Zurück-Taste funktioniert nicht, ich muss die App schließen“.
+    hubApi
+      .sessions()
+      .then((eigene) => {
+        if (alive) setSessions((vorher) => vorher ?? eigene);
+      })
+      .catch(() => undefined);
     const tick = async () => {
       try {
         const [fleet, a] = await Promise.all([

@@ -1,6 +1,39 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
 
+## 24.11.2026 Vormittag — Zurück-Knopf im Browser und hängende Sitzungsliste
+
+**Fund (Nutzer, Handy):** „Die Zurück-Taste funktioniert hier gar nicht, ich muss die App
+schließen und komplett neu öffnen.“
+
+1. **Leere Historie.** `changeWorkspace()` schrieb jede neue Ansicht mit `replaceState` über
+   die aktuelle Adresse, und viele Ansichten (Bild-/Dateivorschau, Plananzeige) änderten die
+   Adresse überhaupt nicht. Vor dem Zurückknopf der Welt standen damit nur Seiten, die die
+   Adresszeile zufällig hinterlassen hatte — Zurück warf in uralte Ansichten oder aus der App.
+   Jetzt: echter Vorwärtsschritt (neue Seite, neue Sitzung, neue Vorschau, neuer Plan) →
+   `pushState`; Fokus zwischen offenen Kacheln, Kachel schließen und Seitentausch bleiben
+   `replaceState` (`apps/pwa/src/app/main.tsx`).
+   *Nachweis (ViewPort 430×900, echter Klick auf eine Sitzungszeile):* Adresse wechselt auf
+   die Sitzung, `history.length` wächst um eins, `history.back()` → `#/` mit Liste und
+   geschlossener Sitzung, weiter zurück `#/notizen`, weiter zurück die zuvor besuchte Sitzung.
+2. **Hängende Liste nach dem Zurück.** Die Seitenliste hängt an `/api/fleet` — gemessen
+   **3,0 s** pro Abruf (jeder Partner wird befragt), bei abwesendem Rechner deutlich länger:
+   nach dem Zurück stand **über 10 s** nur „loading…“ da, ohne Konsolenfehler. Die eigene
+   Liste kommt in **6 ms** (`/api/sessions`). Jetzt wird sie zuerst gesetzt, die Flotten-Sicht
+   ergänzt sie danach (`apps/pwa/src/app/App.tsx`). *Nachweis:* Liste beim Öffnen sofort
+   (3 Zeilen), nach dem Zurück die Gruppen „Arbeitet 1“ / „Ruhig 4“ statt Ladeköder.
+
+**Neu aufgeschrieben (offen, mit Messung in der Datei):**
+* `bugs/bug-0282-…` — eine späte Kachel-Aktualisierung schreibt die Adresse der verlassenen
+  Sitzung zurück in die Historie (direkt nach `history.back()` steht `#/`, 1,5 s später
+  wieder die Sitzungs-Adresse). Richtung: Navigations-Marke beim popstate.
+* `bugs/bug-0283-…` — der Denk-Block wächst im Browser nicht mit, in der Native-App schon.
+  20 s Messung in der eigenen laufenden Pi-Sitzung: kein `.chat-live-thinking`, kein
+  `.tail-scroll`. Client kann es (`ChatTurns.tsx:122-131`, Mitlauf-Scrollen hängt an
+  `liveText`), der Hub meldet Denk-Fenster. **Nächster Schritt: zählen, welche
+  WebSocket-Rahmen während eines laufenden Zugs im Browser ankommen.**
+
+
 ## 24.11.2026 — Nachschau über die eigenen Änderungen (PR #…)
 
 Vier echte Mängel in dem, was ich am Vorabend gebaut habe — alle behoben, nicht nur
