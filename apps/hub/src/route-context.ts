@@ -1,4 +1,5 @@
-import type { HubTeam } from "./modules/team/index.ts";
+import type { HubSwarm } from "./modules/swarm/index.ts";
+import type { TeamPairingService } from "./modules/team/team-pairing-service.ts";
 import { resolve, sep } from "node:path";
 import type { FastifyRequest } from "fastify";
 import type { ClaudeLive, PlannerModelConfig, SettingsStore, AttachmentStore, SessionManager, TokenService, AdapterRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, AiMetricsSampler, HostMetricsService, InferenceTracker, FleetStore, MainSyncSettingsService, ScanService } from "@ancientvoid/core";
@@ -11,7 +12,6 @@ import type { ActionDefinition, HubMetrics, DiscoverySource, SessionRecord } fro
 import { TMUX_PREFIX } from "@ancientvoid/workers";
 import { extractToken } from "./platform/auth.ts";
 import { createWebAuthnRoutes, type WebAuthnConfig } from "./modules/identity/webauthn.ts";
-
 /** What the HTTP modules get from the hub (ADR-0020). */
 export interface RouteDeps {
   pwaDir?: string;
@@ -82,7 +82,9 @@ export interface RouteDeps {
   /** EPIC-P73 (ADR-0094): externe Auto-Jobs (GitHub-Actions, Issue-Bridge) —
    * immer vorhanden; ohne Quellen antwortet der Endpunkt ehrlich leer. */
   externalJobs?: ExternalJobsService;
-  team?: HubTeam;
+  swarm?: HubSwarm;
+  /** EPIC-P83 (ADR-0118 §7): Kopplungsdienst — nur mit `team.listen` vorhanden. */
+  teamPairing?: TeamPairingService;
   /** EPIC-P59 (ADR-0078): Sampler für die Metrik-Seite; ohne Angabe leere Quelle-Liste. */
   aimetrics?: AiMetricsSampler;
   /** EPIC-P79 (ADR-0125): Tracker für die Token-Tempo-Seite. */

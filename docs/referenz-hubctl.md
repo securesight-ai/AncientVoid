@@ -25,6 +25,7 @@ Usage:
   hubctl token revoke <label> [--db <hub.db>]
   hubctl fleet invite [--db <hub.db>]     one-time code for another hub to pair (10 min)
   hubctl fleet peers [--db <hub.db>]      hubs this one is paired with
+  hubctl team invite|join|confirm|status|complete|pins   Team pairing (EPIC-P83)
   hubctl workers list                     show orphaned ancientvoid workers (local, BUG-0034)
   hubctl workers prune                    remove orphaned ancientvoid workers (local)
   hubctl worktrees [--db <hub.db>]        session worktrees with state and size (local, EPIC-P14)

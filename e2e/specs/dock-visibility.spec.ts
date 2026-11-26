@@ -11,7 +11,7 @@ test.describe("Dock bleibt bedienbar", () => {
     const dock = app.locator(".dock");
     for (const width of [412, 320]) {
       await app.setViewportSize({ width, height: 850 });
-      await expect(dock.getByRole("button")).toHaveText(["Start", "Suchen", "", "Teams", "Mehr"]);
+      await expect(dock.getByRole("button")).toHaveText(["Start", "Suchen", "", "Swarms", "Mehr"]);
       const size = await dock.evaluate((el) => ({ width: el.clientWidth, content: el.scrollWidth }));
       expect(size.content, `${width} px: das Dock scrollt nicht`).toBeLessThanOrEqual(size.width + 1);
       for (const button of await dock.getByRole("button").all()) {

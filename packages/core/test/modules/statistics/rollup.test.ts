@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NormalizedEvent, Team } from "@ancientvoid/contracts";
+import { NormalizedEvent, Swarm } from "@ancientvoid/contracts";
 import { HubDatabase } from "../../../src/platform/db.ts";
 import {
   StatisticsRollup,
@@ -28,7 +28,7 @@ const journal = (sessionId: string): NormalizedEvent[] => [
   event(10, 3000, { sessionId, payload: { kind: "session.turn_end", code: 0 } }),
 ];
 
-const team = (id: string, updatedAt: string, status: Team["status"] = "done"): Team => Team.parse({
+const swarm = (id: string, updatedAt: string, status: Swarm["status"] = "done"): Swarm => Swarm.parse({
   id, title: "T", goal: "G", project: "p",
   frame: { adapters: ["dummy"], coordinatorAdapter: null },
   planSource: "given", status,
@@ -78,10 +78,10 @@ describe("P56 T56.2 Statistik-Rollup", () => {
     const rollup = new StatisticsRollup(db, {
       records: () => [ref("s1", events.length)],
       events: async () => events,
-      teams: () => [team("team1", "2026-11-17T10:00:00.000Z")],
+      swarms: () => [swarm("team1", "2026-11-17T10:00:00.000Z")],
     });
     const result = await rollup.run();
-    expect(result).toEqual({ sessionsUpdated: 1, sessionsRemoved: 0, teamsUpdated: 1 });
+    expect(result).toEqual({ sessionsUpdated: 1, sessionsRemoved: 0, swarmsUpdated: 1 });
 
     const direct = aggregateSessionStatistics([deriveSessionFacts(events, { sessionId: "s1", adapter: "codex", model: "m1" })!]);
     expect(rollup.sessionStatistics()).toEqual(direct);
@@ -90,7 +90,7 @@ describe("P56 T56.2 Statistik-Rollup", () => {
       { tool: "Bash", calls: 1, results: 1, failed: 1, ok: 0, errorStatusUnknown: 0, unanswered: 0, failureRate: 1 },
     ]);
     expect(rollup.recoveryDistribution()).toMatchObject({ n: 1, missing: 0, p50: 1500 });
-    expect(rollup.teamTaskStatistics()).toMatchObject({ teams: 1, tasks: 1, done: 1, workerEndRate: 1 });
+    expect(rollup.swarmTaskStatistics()).toMatchObject({ swarms: 1, tasks: 1, done: 1, workerEndRate: 1 });
     db.close();
   });
 
@@ -104,25 +104,25 @@ describe("P56 T56.2 Statistik-Rollup", () => {
         ref("s2", s2.length, { model: null }),
       ],
       events: async id => (id === "s1" ? s1 : s2),
-      teams: () => [],
+      swarms: () => [],
     };
     const rollup = new StatisticsRollup(db, source);
     expect(await rollup.run()).toMatchObject({ sessionsUpdated: 2 });
 
     // Nichts verändert: kein Update.
-    expect(await rollup.run()).toEqual({ sessionsUpdated: 0, sessionsRemoved: 0, teamsUpdated: 0 });
+    expect(await rollup.run()).toEqual({ sessionsUpdated: 0, sessionsRemoved: 0, swarmsUpdated: 0 });
 
     // Journal wächst (lastSeq steigt): genau diese Session wird neu abgeleitet.
     s1 = [...s1, event(11, 4000, { sessionId: "s1", type: "user" }), event(12, 4500, { sessionId: "s1", payload: { kind: "session.turn_end", code: 0 } })];
     const changed = source.records().map(r => r.id === "s1" ? { ...r, lastSeq: s1.length } : r);
     (source as { records: () => typeof changed }).records = () => changed;
-    expect(await rollup.run()).toEqual({ sessionsUpdated: 1, sessionsRemoved: 0, teamsUpdated: 0 });
+    expect(await rollup.run()).toEqual({ sessionsUpdated: 1, sessionsRemoved: 0, swarmsUpdated: 0 });
     expect(rollup.sessionStatistics()[0]).toMatchObject({ sessions: 2, turnsPerSession: { p50: 3.5 } });
 
     // Quelle verschwindet: Cache-Zeilen werden entfernt, nicht erfunden.
     const only2 = changed.filter(r => r.id === "s2");
     (source as { records: () => typeof only2 }).records = () => only2;
-    expect(await rollup.run()).toEqual({ sessionsUpdated: 0, sessionsRemoved: 1, teamsUpdated: 0 });
+    expect(await rollup.run()).toEqual({ sessionsUpdated: 0, sessionsRemoved: 1, swarmsUpdated: 0 });
     expect(rollup.sessionStatistics()[0]).toMatchObject({ sessions: 1 });
     db.close();
   });
@@ -133,25 +133,25 @@ describe("P56 T56.2 Statistik-Rollup", () => {
     const rollup = new StatisticsRollup(db, {
       records: () => [ref("s1", events.length, { model: null })],
       events: async () => events,
-      teams: () => [team("team1", "2026-11-17T10:00:00.000Z")],
+      swarms: () => [swarm("team1", "2026-11-17T10:00:00.000Z")],
     });
     await rollup.run();
-    const before = [rollup.sessionStatistics(), rollup.toolStatistics(), rollup.recoveryDistribution(), rollup.teamTaskStatistics()];
+    const before = [rollup.sessionStatistics(), rollup.toolStatistics(), rollup.recoveryDistribution(), rollup.swarmTaskStatistics()];
     await rollup.rebuild();
-    expect([rollup.sessionStatistics(), rollup.toolStatistics(), rollup.recoveryDistribution(), rollup.teamTaskStatistics()]).toEqual(before);
+    expect([rollup.sessionStatistics(), rollup.toolStatistics(), rollup.recoveryDistribution(), rollup.swarmTaskStatistics()]).toEqual(before);
     expect(rollup.gateWaitStatistics()).not.toBeNull();
     db.close();
   });
 
   it("bleibt ehrlich ohne jede Quelle: leere Leseseite statt erfundener Zahlen", async () => {
     const db = new HubDatabase(":memory:");
-    const rollup = new StatisticsRollup(db, { records: () => [], events: async () => [], teams: () => [] });
-    expect(await rollup.run()).toEqual({ sessionsUpdated: 0, sessionsRemoved: 0, teamsUpdated: 0 });
+    const rollup = new StatisticsRollup(db, { records: () => [], events: async () => [], swarms: () => [] });
+    expect(await rollup.run()).toEqual({ sessionsUpdated: 0, sessionsRemoved: 0, swarmsUpdated: 0 });
     expect(rollup.sessionStatistics()).toEqual([]);
     expect(rollup.gateWaitStatistics()).toBeNull();
     expect(rollup.toolStatistics()).toEqual([]);
     expect(rollup.recoveryDistribution()).toMatchObject({ n: 0, missing: 0, p50: null });
-    expect(rollup.teamTaskStatistics()).toBeNull();
+    expect(rollup.swarmTaskStatistics()).toBeNull();
     db.close();
   });
 
@@ -166,7 +166,7 @@ describe("P56 T56.2 Statistik-Rollup", () => {
         ref("s2", b.length, { project: "/repo/zwei", hostId: "host-b", createdAt: "2026-11-16T09:00:00.000Z" }),
       ],
       events: async id => (id === "s1" ? a : b),
-      teams: () => [],
+      swarms: () => [],
     });
     await rollup.run();
 
@@ -199,17 +199,17 @@ describe("P56 T56.2 Statistik-Rollup", () => {
     db.close();
   });
 
-  it("T56.3: Team-Zahlen folgen dem Projekt-/Zeitraum-Schnitt, nicht Host/Harness", async () => {
+  it("T56.3: Swarm-Zahlen folgen dem Projekt-/Zeitraum-Schnitt, nicht Host/Harness", async () => {
     const db = openDb();
-    const eins = team("team1", "2026-11-17T10:00:00.000Z");
-    const zwei = { ...team("team2", "2026-11-17T10:00:00.000Z"), project: "/repo/zwei", createdAt: "2026-11-16T08:00:00.000Z" };
-    const rollup = new StatisticsRollup(db, { records: () => [], events: async () => [], teams: () => [eins, zwei] });
+    const eins = swarm("team1", "2026-11-17T10:00:00.000Z");
+    const zwei = { ...swarm("team2", "2026-11-17T10:00:00.000Z"), project: "/repo/zwei", createdAt: "2026-11-16T08:00:00.000Z" };
+    const rollup = new StatisticsRollup(db, { records: () => [], events: async () => [], swarms: () => [eins, zwei] });
     await rollup.run();
-    expect(rollup.teamTaskStatistics()).toMatchObject({ teams: 2, tasks: 2 });
-    expect(rollup.teamTaskStatistics({ project: "p" })).toMatchObject({ teams: 1, tasks: 1 });
-    expect(rollup.teamTaskStatistics({ since: "2026-11-17T00:00:00.000Z" })).toMatchObject({ teams: 1 });
-    // Host-/Harness-Schnitt wirkt auf Teams bewusst nicht.
-    expect(rollup.teamTaskStatistics({ hostId: "irgendwo" })).toMatchObject({ teams: 2 });
+    expect(rollup.swarmTaskStatistics()).toMatchObject({ swarms: 2, tasks: 2 });
+    expect(rollup.swarmTaskStatistics({ project: "p" })).toMatchObject({ swarms: 1, tasks: 1 });
+    expect(rollup.swarmTaskStatistics({ since: "2026-11-17T00:00:00.000Z" })).toMatchObject({ swarms: 1 });
+    // Host-/Harness-Schnitt wirkt auf Swarms bewusst nicht.
+    expect(rollup.swarmTaskStatistics({ hostId: "irgendwo" })).toMatchObject({ swarms: 2 });
     db.close();
   });
 
@@ -219,7 +219,7 @@ describe("P56 T56.2 Statistik-Rollup", () => {
     const rollup = new StatisticsRollup(db, {
       records: () => [ref("s1", events.length, { project: "/repo/neu" })],
       events: async () => events,
-      teams: () => [],
+      swarms: () => [],
     });
     await rollup.run();
     // Simuliere den alten Stand: Dimensionen geleert, Basis bleibt frisch.
@@ -228,7 +228,7 @@ describe("P56 T56.2 Statistik-Rollup", () => {
     const row = db.prepare("SELECT project FROM session_stat_facts WHERE session_id = 's1'").get() as { project: string };
     expect(row.project).toBe("/repo/neu");
     // Konvergiert: der zweite Lauf tut nichts mehr.
-    expect(await rollup.run()).toEqual({ sessionsUpdated: 0, sessionsRemoved: 0, teamsUpdated: 0 });
+    expect(await rollup.run()).toEqual({ sessionsUpdated: 0, sessionsRemoved: 0, swarmsUpdated: 0 });
     db.close();
   });
 
@@ -238,7 +238,7 @@ describe("P56 T56.2 Statistik-Rollup", () => {
     const rollup = new StatisticsRollup(db, {
       records: () => [ref("s1", events.length)],
       events: async () => events,
-      teams: () => [],
+      swarms: () => [],
     });
     expect(rollup.updatedAt()).toBeNull();
     await rollup.run();
@@ -258,7 +258,7 @@ describe("P56 T56.2 Statistik-Rollup", () => {
     const rollup = new StatisticsRollup(db, {
       records: () => records,
       events: async id => journals.get(id)!,
-      teams: () => [],
+      swarms: () => [],
     });
     await rollup.run();
 
@@ -277,7 +277,7 @@ describe("P56 T56.2 Statistik-Rollup", () => {
     const rollup2 = new StatisticsRollup(db, {
       records: () => three,
       events: async id => journals.get(id as string)!,
-      teams: () => [],
+      swarms: () => [],
     });
     await rollup2.run();
     expect(rollup2.sessionAnomalies()).toEqual([]);

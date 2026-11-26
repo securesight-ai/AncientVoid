@@ -6,7 +6,7 @@ export const SIDEBAR_ENTRIES: readonly { id: string; label: string; icon: TabIco
   { id: "search", label: "Suchen", icon: "suche" },
   { id: "projects", label: "Projektansicht", icon: "baum" },
   { id: "new", label: "Session", icon: "neu", page: "new" },
-  { id: "teams", label: "Teams", icon: "teams", page: "teams" },
+  { id: "swarms", label: "Swarms", icon: "teams", page: "swarms" },
   { id: "media", label: "Medien", icon: "medien", page: "media" },
   { id: "vault", label: "Notizen", icon: "notizen", page: "vault" },
   { id: "automationen", label: "Automationen", icon: "automationen", page: "automationen" },

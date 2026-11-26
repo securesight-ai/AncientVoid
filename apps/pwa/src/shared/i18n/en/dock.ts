@@ -7,7 +7,7 @@ export const en: Record<keyof typeof deDock, string> = {
   "dock.search": "Search",
   "dock.searchTitle": "Search and voice command ({combo})",
   "dock.newSession": "New session",
-  "dock.teams": "Teams (agent teams)",
+  "dock.swarms": "Swarms (agent swarm)",
   "dock.more": "More",
   "dock.filetree": "File tree",
   "dock.filetreeTitle": "File tree ({combo})",

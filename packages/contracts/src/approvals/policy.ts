@@ -100,13 +100,15 @@ export const POLICY_OPERATIONS = [
   "automations.runNow",
   "desktop.act",
   "desktop.companion",
-  /** EPIC-P40 (ADR-0064 §4), EPIC-P60 (ADR-0077): Teams starten/antworten/stopen darf nur der Mensch; Lesen dürfen Agenten. */
-  "team.manage",
-  /** EPIC-P60 (ADR-0077): Lese-Seite der Teams — Allow-Set identisch zum bisherigen generischen `read` der Fläche (reine Benennung). */
+  /** EPIC-P40 (ADR-0064 §4), EPIC-P60 (ADR-0077), EPIC-P83 (ADR-0123): Swarms starten/antworten/stopen darf nur der Mensch; Lesen dürfen Agenten. */
+  "swarm.manage",
+  /** EPIC-P60 (ADR-0077): Lese-Seite der Swarms — Allow-Set identisch zum bisherigen generischen `read` der Fläche (reine Benennung). */
+  "swarm.read",
+  /** EPIC-P83 (ADR-0119 §6): Team lesen — Agenten dürfen die Fläche der ihnen
+   *  freigegebenen Aufgabe sehen (Server filtert), der Rest ist Menschen-Sache. */
   "team.read",
-  /** EPIC-P74 (ADR-0096 Nachtrag, T74.7): Wissens-Quellen lesen und befragen —
-   * Agenten dürfen (via gateway-mcp), die Quellen-VERWALTUNG (CRUD, Geheimnisse)
-   * bleibt settings.manage. */
+  /** EPIC-P83 (ADR-0119 §6): Team verwalten (anlegen, koppeln, Rollen, Widerruf) — nur der Mensch. */
+  "team.manage",
   "knowledge.read",
   /** EPIC-P74: Notiz in eine Wissens-Quelle schreiben — schreibt in ein fremdes,
    * ggf. geteiltes Backend: IMMER Freigabe, auch für den Menschen am Panel
@@ -201,10 +203,14 @@ export const POLICY: Readonly<Record<PolicyOperation, Readonly<Record<ActorKind,
   "desktop.act": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** EPIC-P11: the companion fetches its work and reports — its only job. */
   "desktop.companion": { human: "deny", fleet: "deny", agent: "deny", bridge: "deny", companion: "allow", display: "deny" },
-  /** EPIC-P40/EPIC-P60 (ADR-0064 §4, ADR-0077): Teams verwalten — nur der Mensch. */
-  "team.manage": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
-  /** EPIC-P60 (ADR-0077): Teams lesen — wie das bisherige generische `read` der Fläche. */
+  /** EPIC-P40/EPIC-P60 (ADR-0064 §4, ADR-0077): Swarms verwalten — nur der Mensch. */
+  "swarm.manage": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
+  /** EPIC-P60 (ADR-0077): Swarms lesen — wie das bisherige generische `read` der Fläche. */
+  "swarm.read": { human: HUMAN, fleet: "allow", agent: "allow", bridge: "deny", companion: "deny", display: "allow" },
+  /** EPIC-P83 (ADR-0119 §6): Team lesen — Agent gefiltert (nur Aufgabe der eigenen Session), Rest wie `read`. */
   "team.read": { human: HUMAN, fleet: "allow", agent: "allow", bridge: "deny", companion: "deny", display: "allow" },
+  /** EPIC-P83 (ADR-0119 §6): Team verwalten — nur der Mensch; Einladung und Rechteausweitung brauchen Passkey/hubctl. */
+  "team.manage": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** EPIC-P74 (ADR-0096 Nachtrag): Lesen/Befragen wie das generische `read`
    * der Fläche — Quellen-Verwaltung bleibt settings.manage (deny für Agenten). */
   "knowledge.read": { human: HUMAN, fleet: "allow", agent: "allow", bridge: "deny", companion: "deny", display: "allow" },

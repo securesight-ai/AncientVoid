@@ -46,7 +46,7 @@ const TOOLS: readonly { page: ListPage; key: string; hash?: string }[] = [
   { page: "dashboard", key: "quick.tool_start" },
   { page: "new", key: "common.new_session" },
   { page: "approvals", key: "common.approvals" },
-  { page: "teams", key: "app.teams" },
+  { page: "swarms", key: "app.swarms" },
   // EPIC-P47 §3.4: kein eigener Page mehr — der Sprung geht über den Alias auf den Übersichtszustand.
   { page: "dashboard", key: "quick.tool_discovered", hash: "#/gefunden" },
   { page: "media", key: "common.media" },

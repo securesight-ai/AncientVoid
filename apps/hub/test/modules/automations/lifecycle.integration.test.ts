@@ -8,9 +8,9 @@ import { AdapterRegistry, EventStore, HubDatabase, SessionManager, TokenService,
 import { ProcessRunner } from "@ancientvoid/workers";
 import { createAdapter as createDummy } from "@ancientvoid/adapter-dummy";
 import { createHubApp } from "../../../src/app.ts";
-import { createHubTeam } from "../../../src/modules/team/index.ts";
+import { createHubSwarm, type HubSwarm } from "../../../src/modules/swarm/index.ts";
 import { createHubAutomationService } from "../../../src/modules/automations/automations-service.ts";
-import type { AutomationDefinition, TeamStart } from "@ancientvoid/contracts";
+import type { AutomationDefinition, SwarmStart } from "@ancientvoid/contracts";
 
 const prompt = "Ermittle das Ergebnis.";
 const sha = createHash("sha256").update(prompt).digest("hex");
@@ -22,7 +22,7 @@ describe("P41 real execution owners", () => {
   let db: HubDatabase;
   let app: Awaited<ReturnType<typeof createHubApp>>;
   let automations: ReturnType<typeof createHubAutomationService>;
-  let runtime: ReturnType<typeof createHubTeam>;
+  let runtime: HubSwarm;
   let token: string;
   const auth = () => ({ authorization: `Bearer ${token}` });
   const def = (target?: AutomationDefinition["target"]): AutomationDefinition => ({ id: randomUUID(), label: "Integration", generation: 1, enabled: false, hostId: "host",
@@ -43,9 +43,9 @@ describe("P41 real execution owners", () => {
     registry.register("dummy", createDummy, { eventsPerSecond: 100, autoStopAfterEvents: 2, cycleTypes: false });
     sessions = new SessionManager(db, store, registry, new ProcessRunner(), undefined, new WorktreeManager(join(root, "worktrees")));
     const tokens = new TokenService(db); token = tokens.issue("test-device").token;
-    runtime = createHubTeam({ sessions, dataDir: root }); await runtime.ready;
-    automations = createHubAutomationService({ dataDir: root, hostId: "host", sessions, team: runtime, projectRoots: [root] });
-    app = await createHubApp({ sessions, tokens, registry, dataDir: root, store, hostId: "host", automations, team: runtime, auth: { tokens, enforceTailnetIdentity: false } });
+    runtime = createHubSwarm({ sessions, dataDir: root }); await runtime.ready;
+    automations = createHubAutomationService({ dataDir: root, hostId: "host", sessions, swarm: runtime, projectRoots: [root] });
+    app = await createHubApp({ sessions, tokens, registry, dataDir: root, store, hostId: "host", automations, swarm: runtime, auth: { tokens, enforceTailnetIdentity: false } });
     await app.ready();
   });
   afterAll(async () => {
@@ -71,12 +71,12 @@ describe("P41 real execution owners", () => {
   });
 
   it("freezes a P40 plan and starts runs through the shared orchestrator", async () => {
-    const spec: TeamStart = { title: "Vorlage", goal: "Kleine Aufgabe", project,
+    const spec: SwarmStart = { title: "Vorlage", goal: "Kleine Aufgabe", project,
       frame: { adapters: ["dummy"], coordinatorAdapter: null, models: [], maxTasks: 1, maxParallel: 1, maxDispatchesPerTask: 1 },
       plan: { tasks: [{ id: "T1", title: "Prüfen", prompt, adapter: "dummy", model: null, dependsOn: [] }] },
     };
     const source = await runtime.coordinator.start(spec, "human");
-    const definition = def({ kind: "team", templateId: source.id });
+    const definition = def({ kind: "swarm", templateId: source.id });
     const created = await app.inject({ method: "POST", url: "/api/automations", headers: auth(), payload: { definition } });
     expect(created.statusCode).toBe(201);
     expect(created.json().target.templateBlobSha256).toMatch(/^[a-f0-9]{64}$/);
@@ -84,15 +84,15 @@ describe("P41 real execution owners", () => {
     const started = await app.inject({ method: "POST", url: `/api/automations/${definition.id}/run-now`, headers: auth(), payload: { generation: 1 } });
     expect(started.statusCode).toBe(202);
     let runId = "";
-    await expect.poll(async () => { runId = automations.history(definition.id)[0]?.teamId ?? ""; return runId; }).toBeTruthy();
+    await expect.poll(async () => { runId = automations.history(definition.id)[0]?.swarmId ?? ""; return runId; }).toBeTruthy();
     expect(runtime.store.get(runId)?.tasks[0]?.prompt).toBe(prompt);
     await expect.poll(async () => { await runtime.coordinator.tick(); await automations.tick(); return automations.history(definition.id)[0]?.outcome; }).toBe("succeeded");
-    const apiRun = await app.inject({ method: "GET", url: `/api/teams/${runId}`, headers: auth() });
+    const apiRun = await app.inject({ method: "GET", url: `/api/swarms/${runId}`, headers: auth() });
     expect(apiRun.json().status).toBe("done");
   });
   it("starts exactly one dispatch per task when automations launch concurrently", async () => {
     const source = runtime.store.list().find(r => r.title === "Vorlage")!;
-    const definitions = [def({ kind: "team", templateId: source.id }), def({ kind: "team", templateId: source.id })];
+    const definitions = [def({ kind: "swarm", templateId: source.id }), def({ kind: "swarm", templateId: source.id })];
     for (const definition of definitions) {
       expect((await app.inject({ method: "POST", url: "/api/automations", headers: auth(), payload: { definition } })).statusCode).toBe(201);
     }
@@ -100,7 +100,7 @@ describe("P41 real execution owners", () => {
     for (const started of starts) expect(started.statusCode).toBe(202);
     for (const definition of definitions) {
       let runId = "";
-      await expect.poll(async () => { runId = automations.history(definition.id)[0]?.teamId ?? ""; return runId; }).toBeTruthy();
+      await expect.poll(async () => { runId = automations.history(definition.id)[0]?.swarmId ?? ""; return runId; }).toBeTruthy();
       expect(runtime.store.get(runId)!.tasks[0]!.dispatches).toHaveLength(1);
     }
   });

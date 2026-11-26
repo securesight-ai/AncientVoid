@@ -4,5 +4,5 @@ export { deriveSessionFacts, deriveRecoveryIntervals, type SessionFacts, type Re
 export { aggregateSessionStatistics } from "./session-statistics.ts";
 export { deriveGateWaitIntervals, aggregateGateWaitStatistics, type GateWaitInterval } from "./gate-wait.ts";
 export { deriveToolCallFacts, aggregateToolStatistics, toolStatisticsOf, type ToolCallFact, type ToolCallResult, type ToolCallCounts } from "./tool-statistics.ts";
-export { aggregateTeamTaskStatistics, teamTaskCounts, sumTeamTaskCounts, type TeamTaskCounts } from "./team-statistics.ts";
+export { aggregateSwarmTaskStatistics, swarmTaskCounts, sumSwarmTaskCounts, type SwarmTaskCounts } from "./swarm-statistics.ts";
 export { StatisticsRollup, type RollupSource, type RollupResult, type StatisticsFilter } from "./rollup.ts";

@@ -4,7 +4,7 @@ import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine,
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
 import type { PentestJobDetail, PentestScanJob, PentestStatus, ScanTargetEntry, ScanToolDecl } from "@ancientvoid/contracts";
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
-import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, HostMetricRange, HostMetricsDetail, HostMetricsHistory, HostMetricsReport, InferenceAskResult, InferenceModelStatus, InferenceModelView, InferenceSnapshot, InferenceSourceList, StatisticsReport, Team, TeamStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, AvdDescriptor, DeviceAction, DeviceSetupStatus, DeviceImageList, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
+import type { DeploymentIdentity, QueueDeliveryState, AiMetricsReport, HostMetricRange, HostMetricsDetail, HostMetricsHistory, HostMetricsReport, InferenceAskResult, InferenceModelStatus, InferenceModelView, InferenceSnapshot, InferenceSourceList, StatisticsReport, Swarm, SwarmStart, AutomationDefinition, AutomationInfo, AutomationHistoryEntry, ExternalJobsResponse, BrowserAction, BrowserFeedbackInput, BrowserPick, BrowserStatus, BrowserTestCase, BrowserTestRun, AvdDescriptor, DeviceAction, DeviceSetupStatus, DeviceImageList, DeviceStatus, DeviceTestCase, DeviceTestRun, DiagnosticsResult, FileMeta, GitGraphReport, GraphDiagnosis, GraphReport, ProjectTrust, FileRange, TreeListing, LoopInfo, LoopOnboardResult, LoopSpec, ReleaseNotesDetail, ReleaseNotesListReport, SttStreamTicket, TerminalList, TerminalTarget, TerminalTicket, VaultBrowse, VaultFile, VaultListing, VaultRead, VaultState, WorkspacePreviewTicket, WorkspaceServiceLogs, WorkspaceStatus } from "@ancientvoid/contracts";
 export type { TerminalTarget };
 import type { TtsSettingsPatch, TtsSettingsView, TtsStatusResponse } from "@ancientvoid/contracts";
 import type { SessionTextSearchResponse, TranscriptRole, UnifiedSearchResponse } from "@ancientvoid/contracts";
@@ -418,6 +418,27 @@ export interface FleetPeer {
   url: string;
   protocolVersion: number;
   pairedAt: string;
+}
+
+/** EPIC-P83 T83.3 — Status des Team-Kopplungsfensters. */
+export interface TeamPairingStatus {
+  teamId: string;
+  state: "idle" | "waiting" | "joined" | "confirmed";
+  codeA: string | null;
+  peerLabel: string | null;
+  peerInstanceId: string | null;
+  error: string | null;
+  inviteText: string | null;
+  /** false wenn `team.listen` fehlt — Kopplung nicht erreichbar. */
+  configured?: boolean;
+}
+
+/** EPIC-P83 T83.3 — gespeicherter Peer-Pin nach beidseitiger Bestätigung. */
+export interface TeamPeerPin {
+  instanceId: string;
+  spkiSha256: string;
+  state: string;
+  pinnedAt: string;
 }
 
 /** ADR-0015 — cross-session notification from the hub. */
@@ -1147,6 +1168,17 @@ function createHubApi(P: (path: string) => string) {
   fleet: () => api<FleetOverview>(P("/api/fleet")),
   fleetHello: () => api<{ hostId: string; protocolVersion: number }>(P("/api/fleet/hello")),
   fleetInvite: () => api<{ code: string; expiresAt: string }>(P("/api/fleet/invites"), { method: "POST", body: "{}" }),
+  /** EPIC-P83 T83.3: Team-Kopplung (ADR-0118 §7) — nur mit `team.listen`. */
+  teamPairingStatus: () => api<TeamPairingStatus>(P("/api/teams/pairing")),
+  teamPins: async (): Promise<TeamPeerPin[]> => (await api<{ pins: TeamPeerPin[] }>(P("/api/teams/pins"))).pins,
+  teamInvite: (label: string) =>
+    api<{ teamId: string; inviteText: string }>(P("/api/teams"), { method: "POST", body: JSON.stringify({ label }) }),
+  teamJoin: (inviteText: string, label: string) =>
+    api<TeamPairingStatus>(P("/api/teams/join"), { method: "POST", body: JSON.stringify({ inviteText, label }) }),
+  teamConfirmCodeB: (code: string) =>
+    api<TeamPairingStatus>(P("/api/teams/pairings/current/confirm"), { method: "POST", body: JSON.stringify({ code }) }),
+  teamConfirmCodeA: (code: string) =>
+    api<TeamPairingStatus>(P("/api/teams/join/confirm"), { method: "POST", body: JSON.stringify({ code }) }),
   fleetPeers: () => api<FleetPeer[]>(P("/api/fleet/peers")),
   fleetAddPeer: (url: string, code: string) =>
     api<FleetPeer>(P("/api/fleet/peers"), { method: "POST", body: JSON.stringify({ url, code }) }),
@@ -1675,16 +1707,16 @@ function createHubApi(P: (path: string) => string) {
   /** ADR-0085: eine vorgemerkte Meldung nachtraeglich aendern — Text und/oder Stelle. */
   editQueued: (id: string, queueId: string, patch: QueuePatch) =>
     api<Ack>(P(`/api/sessions/${id}/queue/${queueId}`), { method: "PATCH", body: JSON.stringify(patch) }),
-  /** EPIC-P40/EPIC-P60: Agenten-Teams (Run→Team, ADR-0077). */
-  teamsScope: P("/api/teams"),
-  teamList: () => api<Team[]>(P("/api/teams")),
-  teamStart: (input: TeamStart) =>
-    api<Team>(P("/api/teams"), { method: "POST", body: JSON.stringify(input) }),
-  teamGet: (id: string) => api<Team>(P(`/api/teams/${encodeURIComponent(id)}`)),
-  teamAnswer: (id: string, gateId: string, label: string) =>
-    api<Team>(P(`/api/teams/${encodeURIComponent(id)}/answer`), { method: "POST", body: JSON.stringify({ gateId, label }) }),
-  teamCancel: (id: string, reason: string) =>
-    api<Team>(P(`/api/teams/${encodeURIComponent(id)}/cancel`), { method: "POST", body: JSON.stringify({ reason }) }),
+  /** EPIC-P40/EPIC-P60/EPIC-P83: Agenten-Swarms (Run→Team→Swarm, ADR-0077/0123). */
+  swarmsScope: P("/api/swarms"),
+  swarmList: () => api<Swarm[]>(P("/api/swarms")),
+  swarmStart: (input: SwarmStart) =>
+    api<Swarm>(P("/api/swarms"), { method: "POST", body: JSON.stringify(input) }),
+  swarmGet: (id: string) => api<Swarm>(P(`/api/swarms/${encodeURIComponent(id)}`)),
+  swarmAnswer: (id: string, gateId: string, label: string) =>
+    api<Swarm>(P(`/api/swarms/${encodeURIComponent(id)}/answer`), { method: "POST", body: JSON.stringify({ gateId, label }) }),
+  swarmCancel: (id: string, reason: string) =>
+    api<Swarm>(P(`/api/swarms/${encodeURIComponent(id)}/cancel`), { method: "POST", body: JSON.stringify({ reason }) }),
   /** EPIC-P41 (ADR-0064): Automationen — Verwaltung, Run-now und Verlauf. */
   automationsScope: P("/api/automations"),
   automations: async (): Promise<AutomationInfo[]> => (await api<{ automations: AutomationInfo[] }>(P("/api/automations"))).automations,
@@ -1694,7 +1726,7 @@ function createHubApi(P: (path: string) => string) {
   automationActions: (project: string) => api<{ actions: ActionDefinition[] }>(P(`/api/automations/actions?project=${encodeURIComponent(project)}`)),
   automationCreate: (definition: AutomationDefinition, promptText?: string) =>
     api<AutomationDefinition>(P("/api/automations"), { method: "POST", body: JSON.stringify({ definition, ...(promptText === undefined ? {} : { promptText }) }) }),
-  automationTemplate: (id: string) => api<TeamStart>(P(`/api/automations/${encodeURIComponent(id)}/template`)),
+  automationTemplate: (id: string) => api<SwarmStart>(P(`/api/automations/${encodeURIComponent(id)}/template`)),
   automationUpdate: (id: string, definition: AutomationDefinition, promptText?: string) =>
     api<AutomationDefinition>(P(`/api/automations/${encodeURIComponent(id)}`), { method: "PATCH", body: JSON.stringify({ definition, ...(promptText === undefined ? {} : { promptText }) }) }),
   automationSetEnabled: (id: string, enabled: boolean, generation: number) =>

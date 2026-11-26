@@ -1,14 +1,14 @@
-import { TeamStore, TeamCoordinator, type TeamSessionPort, type SessionManager } from "@ancientvoid/core";
+import { SwarmStore, SwarmCoordinator, type SwarmSessionPort, type SessionManager } from "@ancientvoid/core";
 
-export interface HubTeam {
-  store: TeamStore;
-  coordinator: TeamCoordinator;
+export interface HubSwarm {
+  store: SwarmStore;
+  coordinator: SwarmCoordinator;
   ready: Promise<void>;
 }
 
-/** P40/P41 teilen einen Ausführungseigentümer (ADR-0065); Run→Team umbenannt in EPIC-P60 (ADR-0077). */
-export function createHubTeam(deps: { sessions: SessionManager; dataDir?: string }): HubTeam {
-  const port: TeamSessionPort = {
+/** P40/P41 teilen einen Ausführungseigentümer (ADR-0065); Run→Team→Swarm (ADR-0077/0123). */
+export function createHubSwarm(deps: { sessions: SessionManager; dataDir?: string }): HubSwarm {
+  const port: SwarmSessionPort = {
     async create(spec, actor) {
       const record = await deps.sessions.create(
         {
@@ -51,8 +51,8 @@ export function createHubTeam(deps: { sessions: SessionManager; dataDir?: string
     },
   };
 
-  const store = new TeamStore(deps.dataDir ?? ".");
-  const coordinator = new TeamCoordinator(store, port, { pollMs: 2000 });
+  const store = new SwarmStore(deps.dataDir ?? ".");
+  const coordinator = new SwarmCoordinator(store, port, { pollMs: 2000 });
   const ready = store.init().then(() => coordinator.recover()).then(() => coordinator.startLoop());
   return { store, coordinator, ready };
 }

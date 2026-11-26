@@ -1,9 +1,9 @@
 import type { NormalizedEvent, StatisticsReport } from "@ancientvoid/contracts";
 import { StatisticsRollup, type HubDatabase, type RollupSource, type SessionManager, type StatisticsFilter } from "@ancientvoid/core";
-import type { HubTeam } from "../team/index.ts";
+import type { HubSwarm } from "../swarm/index.ts";
 
 /**
- * EPIC-P56 T56.3: Der Rollup-Job als Hub-Dienst. Journal und Team-Record
+ * EPIC-P56 T56.3: Der Rollup-Job als Hub-Dienst. Journal und Swarm-Record
  * bleiben Wahrheit (K7) — der Dienst hält nur den Cache frisch: Beim ersten
  * Abruf und danach spätestens alle REFRESH_MS läuft ein inkrementeller Lauf
  * (nur veränderte Quellen werden neu abgeleitet). Parallele Abrufe teilen
@@ -29,7 +29,7 @@ export class StatisticsService {
   private lastRunAt = 0;
   private inFlight: Promise<void> | null = null;
 
-  constructor(db: HubDatabase, sessions: SessionManager, team: HubTeam | undefined) {
+  constructor(db: HubDatabase, sessions: SessionManager, swarm: HubSwarm | undefined) {
     const source: RollupSource = {
       records: () =>
         sessions.list().map(r => ({
@@ -43,7 +43,7 @@ export class StatisticsService {
           createdAt: r.createdAt,
         })),
       events: id => replayAll(sessions, id),
-      teams: () => (team ? team.store.list() : []),
+      swarms: () => (swarm ? swarm.store.list() : []),
     };
     this.rollup = new StatisticsRollup(db, source);
   }
@@ -81,7 +81,7 @@ export class StatisticsService {
       gateWait: this.rollup.gateWaitStatistics(filter),
       tools: this.rollup.toolStatistics(filter),
       recovery: this.rollup.recoveryDistribution(filter),
-      team: this.rollup.teamTaskStatistics(filter),
+      swarm: this.rollup.swarmTaskStatistics(filter),
       anomalies: this.rollup.sessionAnomalies(filter),
     };
   }

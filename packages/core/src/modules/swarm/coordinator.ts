@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
-import { TeamPlan, type TeamDispatch, type Team, type TeamStart } from "@ancientvoid/contracts";
+import { SwarmPlan, type SwarmDispatch, type Swarm, type SwarmStart, type SwarmOrigin } from "@ancientvoid/contracts";
 import { answerGate as engineAnswer, applyOutcome, cancelRun, contextPacket, nextDispatches, openGate, tasksFromPlan, validatePlan } from "./engine.ts";
-import type { TeamStore } from "./store.ts";
+import type { SwarmStore } from "./store.ts";
 
 /**
  * EPIC-P40 (ADR-0064): Session-Seite als Ports — der Hub injiziert den echten
  * SessionManager; das Core-Modul kennt keine Adapter und keinen Server.
  */
-export interface TeamSessionPort {
+export interface SwarmSessionPort {
   create(spec: { adapter: string; project: string; prompt: string; model?: string | null; workspaceMode?: "worktree" | "direct"; title?: string }, actor: string): Promise<{ id: string }>;
   steer(sessionId: string, prompt: string, actor: string): Promise<unknown>;
   stop(sessionId: string, actor: string): Promise<unknown>;
@@ -18,32 +18,32 @@ export interface TeamSessionPort {
   writeBlob(sessionId: string, text: string): Promise<string>;
 }
 
-export interface TeamOptions {
+export interface SwarmOptions {
   /** Poll-Intervall des tick-Loops (Tests: klein). */
   pollMs?: number;
 }
 
-/** Koordinator: Team-Lifecycle über Ports — Planerkennung, Dispatch, Ende-Erkennung, Gates, Cancel (ADR-0064 §3/§5). */
-export class TeamCoordinator {
-  private readonly store: TeamStore;
-  private readonly port: TeamSessionPort;
-  private readonly opts: Required<TeamOptions>;
+/** Koordinator: Swarm-Lifecycle über Ports — Planerkennung, Dispatch, Ende-Erkennung, Gates, Cancel (ADR-0064 §3/§5). */
+export class SwarmCoordinator {
+  private readonly store: SwarmStore;
+  private readonly port: SwarmSessionPort;
+  private readonly opts: Required<SwarmOptions>;
   private timer: ReturnType<typeof setInterval> | undefined;
   private activeTick: Promise<void> | null = null;
   private tickRequested = false;
   /** Laufzeitbeobachtung: welche Dispatches schon working/starting gesehen wurden (Erste-idle-Erkennung). */
   private readonly seen = new Set<string>();
 
-  constructor(store: TeamStore, port: TeamSessionPort, opts: TeamOptions = {}) {
+  constructor(store: SwarmStore, port: SwarmSessionPort, opts: SwarmOptions = {}) {
     this.store = store;
     this.port = port;
     this.opts = { pollMs: opts.pollMs ?? 2000 };
   }
 
-  async start(input: TeamStart, actor: string): Promise<Team> {
+  async start(input: SwarmStart, actor: string): Promise<Swarm> {
     const id = randomUUID();
     const now = new Date().toISOString();
-    let run: Team = {
+    let run: Swarm = {
       id,
       title: input.title,
       goal: input.goal,
@@ -51,6 +51,8 @@ export class TeamCoordinator {
       frame: input.frame,
       planSource: input.plan ? "given" : "coordinator",
       coordinatorSessionId: null,
+      /** ADR-0119 §9: Auftraggeber — der Dispatch trägt ihn statt des festen Literals "team". */
+      origin: { teamTaskRef: null, actor } satisfies SwarmOrigin,
       status: "planning",
       tasks: [],
       gates: [],
@@ -61,14 +63,14 @@ export class TeamCoordinator {
     };
     if (input.plan) {
       const err = validatePlan(input.plan, input.frame);
-      if (err) throw new TeamError(err.message, err.code);
+      if (err) throw new SwarmError(err.message, err.code);
       run.tasks = tasksFromPlan(input.plan);
       run.status = "running";
       run = await this.store.put(run);
     } else {
       run = await this.store.put(run);
       const prompt = [
-        `# Team-Auftrag: ${input.title}`,
+        `# Swarm-Auftrag: ${input.title}`,
         "",
         input.goal,
         "",
@@ -79,7 +81,7 @@ export class TeamCoordinator {
           : "Für Aufgaben ist nur das Standardmodell des jeweiligen Adapters freigegeben (model: null).",
         "Gliedere den Auftrag so breit wie möglich, so tief wie nötig: Unabhängige Teilaufgaben gehören NEBENEINANDER (ohne dependsOn), damit sie parallel arbeiten; dependsOn nur bei echtem Informationsbedarf.",
         `Erzeuge einen Aufgabenplan mit höchstens ${input.frame.maxTasks} Aufgaben als JSON — z. B. zwei parallele Tasks:`,
-        "```team",
+        "```swarm",
         JSON.stringify({ tasks: [
           { id: "T1", title: "…", prompt: "…", adapter: input.frame.adapters[0], model: null, dependsOn: [] },
           { id: "T2", title: "…", prompt: "…", adapter: input.frame.adapters[1] ?? input.frame.adapters[0], model: null, dependsOn: [] },
@@ -131,7 +133,7 @@ export class TeamCoordinator {
         question: `Der Koordinator lieferte keinen lesbaren Aufgabenplan. Letzte Antwort: ${text.slice(0, 300) || "(leer)"}`,
         options: [
           { label: "Erneut versuchen", action: "retry_plan" },
-          { label: "Team abbrechen", action: "cancel" },
+          { label: "Swarm abbrechen", action: "cancel" },
         ],
         taskId: null,
       });
@@ -151,10 +153,10 @@ export class TeamCoordinator {
         options: modelIssue
           ? [
               { label: "Erneut planen", action: "retry_plan" },
-              { label: "Team abbrechen", action: "cancel" },
+              { label: "Swarm abbrechen", action: "cancel" },
             ]
           : [
-              { label: "Team abbrechen", action: "cancel" },
+              { label: "Swarm abbrechen", action: "cancel" },
               { label: "Trotzdem weiter (nach Korrektur)", action: "continue" },
             ],
         taskId: null,
@@ -205,18 +207,18 @@ export class TeamCoordinator {
       const prompt = contextPacket(run, plan);
       let session: { id: string };
       try {
-        session = await this.port.create({ adapter: task.adapter, project: run.project, prompt, model: task.model, workspaceMode: "worktree", title: `${run.title} · ${task.id}` }, "team");
+        session = await this.port.create({ adapter: task.adapter, project: run.project, prompt, model: task.model, workspaceMode: "worktree", title: `${run.title} · ${task.id}` }, run.origin?.actor ?? "human");
       } catch (err) {
         openGate(run, {
           id: randomUUID(),
           reason: "unknown_outcome",
           question: `Worker für ${task.id} konnte nicht gestartet werden: ${err instanceof Error ? err.message : String(err)}`,
-          options: [{ label: "Team abbrechen", action: "cancel" }],
+          options: [{ label: "Swarm abbrechen", action: "cancel" }],
           taskId: task.id,
         });
         continue;
       }
-      const dispatch: TeamDispatch = {
+      const dispatch: SwarmDispatch = {
         id: randomUUID(),
         generation,
         sessionId: session.id,
@@ -233,25 +235,25 @@ export class TeamCoordinator {
     await this.store.update(runId, () => undefined);
   }
 
-  async answer(runId: string, gateId: string, label: string, actor: string): Promise<Team | null> {
+  async answer(runId: string, gateId: string, label: string, actor: string): Promise<Swarm | null> {
     const run = this.store.get(runId);
     if (!run) return null;
     const gate = run.gates.find((g) => g.id === gateId);
     const res = engineAnswer(run, gateId, label);
-    if (!res.ok) throw new TeamError(res.error.message, res.error.code);
+    if (!res.ok) throw new SwarmError(res.error.message, res.error.code);
     if (gate?.options.find((o) => o.label === label)?.action === "retry_plan" && run.coordinatorSessionId) {
-      await this.port.steer(run.coordinatorSessionId, "Dein letzter Plan war nicht lesbar. Antworte ausschließlich mit dem ```team JSON-Block.", actor);
+      await this.port.steer(run.coordinatorSessionId, "Dein letzter Plan war nicht lesbar. Antworte ausschließlich mit dem ```swarm JSON-Block.", actor);
     }
     await this.store.update(runId, () => undefined);
     await this.tick();
     return run;
   }
 
-  async cancel(runId: string, reason: string, actor: string): Promise<Team | null> {
+  async cancel(runId: string, reason: string, actor: string): Promise<Swarm | null> {
     const run = this.store.get(runId);
     if (!run) return null;
     cancelRun(run, reason);
-    // Nur Team-eigene Sessions stoppen (Koordinator + aktive Dispatches); Worktrees bleiben (AC-P40-6).
+    // Nur Swarm-eigene Sessions stoppen (Koordinator + aktive Dispatches); Worktrees bleiben (AC-P40-6).
     for (const t of run.tasks) {
       for (const d of t.dispatches) {
         if (d.status === "cancelled") await this.port.stop(d.sessionId, actor).catch(() => undefined);
@@ -296,7 +298,7 @@ export class TeamCoordinator {
   }
 }
 
-export class TeamError extends Error {
+export class SwarmError extends Error {
   readonly code: string;
   constructor(message: string, code: string) {
     super(message);
@@ -304,16 +306,16 @@ export class TeamError extends Error {
   }
 }
 
-/** JSON-Plan aus einer Koordinator-Antwort lesen: ```team …``` Block, sonst erstes {tasks:…}-Objekt. */
-export function parsePlan(text: string): TeamPlan | null {
-  const fence = /```(?:team|orchestration)\s*([\s\S]*?)```/.exec(text);
+/** JSON-Plan aus einer Koordinator-Antwort lesen: ```swarm …``` Block (Alt-Fences `team`/`orchestration` bleiben lesbar, ADR-0123), sonst erstes {tasks:…}-Objekt. */
+export function parsePlan(text: string): SwarmPlan | null {
+  const fence = /```(?:swarm|team|orchestration)\s*([\s\S]*?)```/.exec(text);
   const candidates: string[] = [];
   if (fence?.[1]) candidates.push(fence[1]);
   const brace = /\{[\s\S]*"tasks"[\s\S]*\}/.exec(text);
   if (brace?.[0]) candidates.push(brace[0]);
   for (const c of candidates) {
     try {
-      const parsed = TeamPlan.safeParse(JSON.parse(c));
+      const parsed = SwarmPlan.safeParse(JSON.parse(c));
       if (parsed.success) return parsed.data;
     } catch {
       // nächster Kandidat

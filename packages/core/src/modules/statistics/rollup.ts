@@ -6,8 +6,8 @@ import {
   type SessionStatistics,
   STATISTICS_MIN_SAMPLE,
   type StatisticsDistribution,
-  type Team,
-  type TeamTaskStatistics,
+  type Swarm,
+  type SwarmTaskStatistics,
   type ToolStatistics,
   type TurnStatistics,
 } from "@ancientvoid/contracts";
@@ -18,7 +18,7 @@ import { deriveRecoveryIntervals, type RecoveryInterval } from "./session-facts.
 import { type SessionFacts, deriveSessionFacts } from "./session-facts.ts";
 import { aggregateSessionStatistics } from "./session-statistics.ts";
 import { aggregateTurnStatistics } from "./turn-statistics.ts";
-import { type TeamTaskCounts, sumTeamTaskCounts, teamTaskCounts } from "./team-statistics.ts";
+import { type SwarmTaskCounts, sumSwarmTaskCounts, swarmTaskCounts } from "./swarm-statistics.ts";
 import { type ToolCallFact, deriveToolCallFacts, toolStatisticsOf } from "./tool-statistics.ts";
 
 interface SessionRecordRef {
@@ -42,17 +42,17 @@ export interface StatisticsFilter {
   until?: string;
 }
 
-/** Was der Rollup an Quellen braucht — Journal und Team-Record bleiben Wahrheit (K7). */
+/** Was der Rollup an Quellen braucht — Journal und Swarm-Record bleiben Wahrheit (K7). */
 export interface RollupSource {
   records(): SessionRecordRef[];
   events(id: string): Promise<readonly NormalizedEvent[]>;
-  teams(): readonly Team[];
+  swarms(): readonly Swarm[];
 }
 
 export interface RollupResult {
   sessionsUpdated: number;
   sessionsRemoved: number;
-  teamsUpdated: number;
+  swarmsUpdated: number;
 }
 
 /**
@@ -70,7 +70,7 @@ export class StatisticsRollup {
     this.source = source;
   }
 
-  /** Inkrementeller Lauf: nur veränderte Sessions/Teams werden neu abgeleitet. */
+  /** Inkrementeller Lauf: nur veränderte Sessions/Swarms werden neu abgeleitet. */
   async run(): Promise<RollupResult> {
     const now = new Date().toISOString();
     const sessionBasis = this.db.prepare("SELECT basis_last_seq, project, created_at FROM session_stat_facts WHERE session_id = ?");
@@ -84,16 +84,16 @@ export class StatisticsRollup {
       this.writeSession(record, now, deriveSessionFacts(events, { sessionId: record.id, adapter: record.adapter, model: record.model }), deriveGateWaitIntervals(events), deriveToolCallFacts(events, { sessionId: record.id }), deriveRecoveryIntervals(events, record.id));
       sessionsUpdated++;
     }
-    const teamBasis = this.db.prepare("SELECT basis_updated_at, project, created_at FROM team_stat_facts WHERE team_id = ?");
-    let teamsUpdated = 0;
-    for (const team of this.source.teams()) {
-      const cached = teamBasis.get(team.id) as { basis_updated_at: string; project: string; created_at: string } | undefined;
-      if (cached !== undefined && cached.basis_updated_at === team.updatedAt && cached.project !== "" && cached.created_at !== "") continue;
-      this.writeTeam(team, teamTaskCounts(team), now);
-      teamsUpdated++;
+    const swarmBasis = this.db.prepare("SELECT basis_updated_at, project, created_at FROM team_stat_facts WHERE team_id = ?");
+    let swarmsUpdated = 0;
+    for (const swarm of this.source.swarms()) {
+      const cached = swarmBasis.get(swarm.id) as { basis_updated_at: string; project: string; created_at: string } | undefined;
+      if (cached !== undefined && cached.basis_updated_at === swarm.updatedAt && cached.project !== "" && cached.created_at !== "") continue;
+      this.writeSwarm(swarm, swarmTaskCounts(swarm), now);
+      swarmsUpdated++;
     }
     const sessionsRemoved = this.prune();
-    return { sessionsUpdated, sessionsRemoved, teamsUpdated };
+    return { sessionsUpdated, sessionsRemoved, swarmsUpdated };
   }
 
   /** Vollständiger Neuaufbau aus den Quellen — deterministisch, gleiche Eingabe ⇒ gleiche Fakten. */
@@ -126,10 +126,10 @@ export class StatisticsRollup {
     }
   }
 
-  private writeTeam(team: Team, counts: TeamTaskCounts, now: string): void {
+  private writeSwarm(swarm: Swarm, counts: SwarmTaskCounts, now: string): void {
     this.db.prepare(
       "INSERT OR REPLACE INTO team_stat_facts (team_id, tasks, open_tasks, unknown_tasks, done_tasks, failed_tasks, tasks_with_dispatches, retry_tasks, dispatches, stale_dispatches, basis_updated_at, updated_at, project, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    ).run(team.id, counts.tasks, counts.openTasks, counts.unknownTasks, counts.doneTasks, counts.failedTasks, counts.tasksWithDispatches, counts.retryTasks, counts.dispatches, counts.staleDispatches, team.updatedAt, now, team.project, team.createdAt);
+    ).run(swarm.id, counts.tasks, counts.openTasks, counts.unknownTasks, counts.doneTasks, counts.failedTasks, counts.tasksWithDispatches, counts.retryTasks, counts.dispatches, counts.staleDispatches, swarm.updatedAt, now, swarm.project, swarm.createdAt);
   }
 
   /** Räumt Zeilen weg, deren Quelle nicht mehr existiert — der Cache erfindet keine Sessions. */
@@ -288,10 +288,10 @@ export class StatisticsRollup {
   }
 
   /**
-   * Team-Zahlen folgen dem Projekt-/Zeitraum-Schnitt. Host und Harness sind
-   * keine Team-Dimensionen (ein Team gehört zum Hub, nicht zu einem Harness) —
+   * Swarm-Zahlen folgen dem Projekt-/Zeitraum-Schnitt. Host und Harness sind
+   * keine Swarm-Dimensionen (ein Swarm gehört zum Hub, nicht zu einem Harness) —
    * solche Filter wirken hier bewusst nicht.
-   */  teamTaskStatistics(filter: StatisticsFilter = {}): TeamTaskStatistics | null {
+   */  swarmTaskStatistics(filter: StatisticsFilter = {}): SwarmTaskStatistics | null {
     const conditions: string[] = [];
     const params: string[] = [];
     if (filter.project !== undefined) {
@@ -314,7 +314,7 @@ export class StatisticsRollup {
       tasks_with_dispatches: number; retry_tasks: number; dispatches: number; stale_dispatches: number;
     }[];
     if (rows.length === 0) return null;
-    return sumTeamTaskCounts(rows.length, rows.map(r => ({
+    return sumSwarmTaskCounts(rows.length, rows.map(r => ({
       tasks: r.tasks,
       openTasks: r.open_tasks,
       unknownTasks: r.unknown_tasks,

@@ -298,6 +298,12 @@ async function main(): Promise<void> {
       }
       break;
     }
+    case "team": {
+      // EPIC-P83 T83.3: Team-Kopplung über die Hub-API (ohne Passkey/PWA).
+      const { teamCommand } = await import("./team.ts");
+      await teamCommand(args);
+      break;
+    }
     case "scan": {
       const { scanCommand } = await import("./scan.ts");
       await scanCommand(args);

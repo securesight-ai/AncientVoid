@@ -22,7 +22,7 @@ export const de = {
   "settings.language.hint": "Gerät-Einstellung; folgt dem System beim ersten Start. Ein Wechsel lädt neu — Entwürfe bleiben erhalten.",
   "settings.language.auto": "Automatisch",
 
-  "error.adapter_not_allowed": "Loop-Adapter sind als Team-Worker nicht freigegeben.",
+  "error.adapter_not_allowed": "Loop-Adapter sind als Swarm-Worker nicht freigegeben.",
   "error.rate_limited.one": "Zu viele Anfragen — noch {n} Sekunde bis zum nächsten Versuch.",
   "error.rate_limited.other": "Zu viele Anfragen — noch {n} Sekunden bis zum nächsten Versuch.",
 } as const;

@@ -77,15 +77,17 @@ export type TailTab = "graph" | "git" | "datei";
 /** T8.1: every page has a URL, so Back in the browser goes back.
  * EPIC-P47 §3.4: `discovery` ist kein Page mehr — `#/gefunden` bleibt als Alias auf die
  * Übersicht (die schaltet dort auf den Discovery-Zustand); Dashboards `FOUND_HASH_ALIAS`.
- * EPIC-P60 (ADR-0077): `orchestrierung` heißt `teams`, Slug `#/teams` (ehemals `#/runs`). */
-export type ListPage = "dashboard" | "new" | "settings" | "approvals" | "status" | "media" | "pc" | "vault" | "teams" | "automationen" | "statistics" | "terminal" | "releasenotes" | "pentest";
+ * EPIC-P60 (ADR-0077): `orchestrierung` hieß `teams` (ehemals `runs`);
+ * EPIC-P83 (ADR-0123): die Fläche heißt `swarms`, Slug `#/swarms`.
+ * `#/teams` wird ab T83.3 die Fläche der Menschen-Teams (neu `?id=`). */
+export type ListPage = "dashboard" | "new" | "settings" | "approvals" | "status" | "media" | "pc" | "vault" | "swarms" | "automationen" | "statistics" | "terminal" | "releasenotes" | "pentest";
 export const FOUND_HASH_ALIAS = "#/gefunden";
 // EPIC-P62 T62.1: exportiert — der Guide-Inventar-Test (AC-P62-1) macht
 // jede neue Seite ohne docs/guide/inventory.md-Zeile rot.
-export const PAGE_SLUG: Record<ListPage, string> = { dashboard: "", new: "neu", settings: "einstellungen", approvals: "freigaben", status: "status", media: "medien", pc: "pc", vault: "notizen", teams: "teams", automationen: "automationen", statistics: "statistik", terminal: "terminal", releasenotes: "releasenotes", pentest: "pentest" };
+export const PAGE_SLUG: Record<ListPage, string> = { dashboard: "", new: "neu", settings: "einstellungen", approvals: "freigaben", status: "status", media: "medien", pc: "pc", vault: "notizen", swarms: "swarms", automationen: "automationen", statistics: "statistik", terminal: "terminal", releasenotes: "releasenotes", pentest: "pentest" };
 
 /** EPIC-P34 T34.2: Seiten, die am Desktop die Detailspalte füllen. Übersicht, Neu und Freigaben bleiben in der Liste (K1-Weg). */
-export const TOOL_PAGE_IDS = ["settings", "media", "pc", "status", "vault", "teams", "automationen", "statistics", "terminal", "releasenotes", "pentest"] as const;
+export const TOOL_PAGE_IDS = ["settings", "media", "pc", "status", "vault", "swarms", "automationen", "statistics", "terminal", "releasenotes", "pentest"] as const;
 export type ToolPageId = (typeof TOOL_PAGE_IDS)[number];
 const TOOL_PAGES: ReadonlySet<ListPage> = new Set<ListPage>(TOOL_PAGE_IDS);
 
@@ -97,12 +99,13 @@ export function pageHash(page: ListPage): string {
   return `#/${PAGE_SLUG[page]}`;
 }
 
-/** EPIC-P60 (ADR-0077, AC-P60-1): alte Run-Links permanent auf Team-Links
- * umleiten — `#/runs…` → `#/teams…`, Query-Schlüssel `?run=` → `?team=`
+/** EPIC-P60 (ADR-0077, AC-P60-1) / EPIC-P83 (ADR-0123 §5): alte Run- und
+ * Team-Links permanent auf Swarm-Links umleiten — `#/runs…` und `#/teams…`
+ * → `#/swarms…`, Query-Schlüssel `?run=`/`?team=` → `?swarm=`
  * (`?host=` und alles andere bleibt). null = kein Altlink. */
 export function redirectLegacyRunHash(hash: string): string | null {
-  if (!hash.startsWith("#/runs")) return null;
-  return hash.replace(/^#\/runs/, "#/teams").replace(/([?&])run=/, "$1team=");
+  if (!/^#\/(runs|teams)/.test(hash)) return null;
+  return hash.replace(/^#\/(runs|teams)/, "#/swarms").replace(/([?&])(run|team)=/, "$1swarm=");
 }
 
 /** BUG-0257: alte Links der drei Einzelseiten leiten permanent auf die
@@ -148,10 +151,11 @@ export function parseAppHash(hash: string): AppRoute {
   if (/^#\/notizen\/wissen\/?$/.test(hash)) return { view: "list", page: "vault", vaultTab: "wissen" };
   const vaultFile = /^#\/notizen\/datei\/(.+)$/.exec(hash);
   if (vaultFile?.[1]) return { view: "list", page: "vault", vaultFile: vaultFile[1].split("/").map(decodeURIComponent).join("/") };
-  // EPIC-P60: Query-Hashes (Slug-Regex greift dort nicht) — `#/teams?team=…` neu,
-  // `#/runs?…` bleibt als Alias vor dem Redirect (parse sicherheitshalber).
-  if (/^#\/teams\?/.test(hash)) return { view: "list", page: "teams" };
-  if (/^#\/runs\?/.test(hash)) return { view: "list", page: "teams" };
+  // EPIC-P60/P83: Query-Hashes (Slug-Regex greift dort nicht) — `#/swarms?swarm=…` neu,
+  // `#/teams?…` und `#/runs?…` bleiben als Alias vor dem Redirect (parse sicherheitshalber).
+  if (/^#\/swarms\?/.test(hash)) return { view: "list", page: "swarms" };
+  if (/^#\/teams\?/.test(hash)) return { view: "list", page: "swarms" };
+  if (/^#\/runs\?/.test(hash)) return { view: "list", page: "swarms" };
   // Ein Anhang als eigenes Fenster — vor dem Slug-Match (der Slug-Regex traegt keine Pfade).
   const anhang = /^#\/anhang\/([^/?#]+)\/?$/.exec(hash);
   if (anhang?.[1]) return { view: "attachment", attachmentId: decodeURIComponent(anhang[1]) };

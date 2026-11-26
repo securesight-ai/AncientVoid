@@ -35,12 +35,12 @@ describe("P56 T56.1b Gate-Wartezeiten", () => {
     });
   });
 
-  it("nimmt auch Team-Gate-Intervalle an und verwirft nichts still", () => {
-    const teamIntervals = [
+  it("nimmt auch Swarm-Gate-Intervalle an und verwirft nichts still", () => {
+    const swarmIntervals = [
       { gateId: "g1", toolName: null, waitMs: 4000, status: "answered" as const },
       { gateId: "g2", toolName: null, waitMs: null, status: "open" as const },
     ];
-    const stats = aggregateGateWaitStatistics(teamIntervals);
+    const stats = aggregateGateWaitStatistics(swarmIntervals);
     expect(GateWaitStatistics.parse(stats)).toBeTruthy();
     expect(() => deriveGateWaitIntervals([answered(1, 0, "orphans")])).toThrow(/zusammengehöriges Öffnen/i);
     expect(() => deriveGateWaitIntervals([requested(1, 0, "a1", "Bash"), requested(2, 1, "a1", "Bash")])).toThrow(/Doppeltes/i);

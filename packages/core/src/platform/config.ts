@@ -455,10 +455,27 @@ export const HubConfig = z.object({
     .max(20)
     .default([]),
   /**
-   * ADR-0087 Nachtrag 2026-11-23: auf dem Hub-Host installierte Shells
-   * automatisch als lokale Terminal-Ziele anbieten (/etc/shells, mit
-   * Fallback-Sonde). false = nur die Allowlist, wie vor dem Nachtrag.
+   * EPIC-P83 (ADR-0118 §3, Feinkonzept §1.2): Team-Kopplung. Standard `null`
+   * — ohne `listen` ist kein Team-Socket offen; die Instanz kann trotzdem
+   * wählen. Erlaubte Adressen: Loopback, RFC 1918, 100.64.0.0/10, fc00::/7;
+   * Wildcard/öffentlich = Startfehler (prüfung in main, unabhängig von
+   * server.host). `pairPort` lauscht nur im offenen Kopplungsfenster (T83.3).
    */
+  team: z
+    .object({
+      listen: z
+        .object({
+          address: z.string().min(1).max(253),
+          port: z.number().int().min(1).max(65535),
+          pairPort: z.number().int().min(1).max(65535),
+        })
+        .nullable()
+        .default(null),
+      dialTimeoutMs: z.number().int().min(1000).max(120_000).default(10_000),
+      maxTeams: z.number().int().min(1).max(8).default(8),
+    })
+    .prefault({}),
+  /** ADR-0087 Nachtrag 2026-11-23: installierte Shells des Hub-Hosts automatisch als lokale Terminal-Ziele anbieten. */
   terminalAutodetect: z.boolean().default(true),
 });
 export type HubConfig = z.infer<typeof HubConfig>;

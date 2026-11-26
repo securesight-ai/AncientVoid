@@ -273,8 +273,8 @@ function Main() {
     const openFromHash = () => {
       const navigated = fromPopstate;
       fromPopstate = false;
-      // EPIC-P60 (AC-P60-1): alte `#/runs…`-Links permanent auf `#/teams…`
-      // umleiten — der Hash-Replace löst einen neuen hashchange aus.
+      // EPIC-P60 (AC-P60-1) / EPIC-P83 (ADR-0123 §5): alte `#/runs…`- und
+      // `#/teams…`-Links permanent auf `#/swarms…` umleiten — der Hash-Replace löst einen neuen hashchange aus.
       const redirected = redirectLegacyRunHash(location.hash) ?? redirectLegacyStatHash(location.hash);
       if (redirected !== null && redirected !== location.hash) {
         location.hash = redirected;

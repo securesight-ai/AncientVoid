@@ -4,7 +4,7 @@ import type { AutomationStore, ClaimState } from "./store.ts";
 import { nextOccurrences, previousOccurrence } from "./schedule.ts";
 
 export type DispatchResult =
-  | { ok: true; sessionId?: string; teamId?: string }
+  | { ok: true; sessionId?: string; swarmId?: string }
   | { ok: false; reason: AutomationSkipReason; uncertain?: boolean; detail?: string };
 export type PrecheckResult = "ok" | null | AutomationSkipReason;
 export type ExecutionStatus =
@@ -66,7 +66,7 @@ export class AutomationsScheduler {
     for (const def of this.deps.store.listDefinitions()) {
       if (def.hostId !== this.deps.hostId) continue;
       for (const claim of this.deps.store.claimsFor(def.id)) {
-        if (claim.state !== "dispatched" && !(claim.state === "unknown" && (claim.sessionId || claim.teamId))) continue;
+        if (claim.state !== "dispatched" && !(claim.state === "unknown" && (claim.sessionId || claim.swarmId))) continue;
         try {
           const status = await this.deps.inspect(claim);
           if (status.state === "running") continue;
@@ -156,7 +156,7 @@ export class AutomationsScheduler {
     if (current.generation !== def.generation || store.revision(def.id) !== revision) return skip("changed");
     try {
       const result = await this.deps.dispatch(def, claim.claimKey, occurrenceUtc, kind);
-      if (result.ok) return store.updateClaim(claim.claimKey, { state: "dispatched", ...(result.sessionId ? { sessionId: result.sessionId } : {}), ...(result.teamId ? { teamId: result.teamId } : {}) }, now());
+      if (result.ok) return store.updateClaim(claim.claimKey, { state: "dispatched", ...(result.sessionId ? { sessionId: result.sessionId } : {}), ...(result.swarmId ? { swarmId: result.swarmId } : {}) }, now());
       if (result.uncertain) return store.updateClaim(claim.claimKey, { state: "unknown", detail: result.detail?.slice(0, 500) ?? "Startauftrag ohne eindeutige Bestätigung" }, now());
       return skip(result.reason, result.detail);
     } catch (err) {

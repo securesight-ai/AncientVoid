@@ -1,6 +1,6 @@
 import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
-import type { AutomationInfo, AutomationSchedule, AutomationTarget, Team } from "@ancientvoid/contracts";
+import type { AutomationInfo, AutomationSchedule, AutomationTarget, Swarm } from "@ancientvoid/contracts";
 import type { ActionDefinition } from "../../shared/api.ts";
 import { useApi } from "../../shared/api-context.ts";
 import { sha256Hex } from "./automation-labels.ts";
@@ -8,10 +8,10 @@ import { Button } from "../../shared/ui/index.ts";
 
 const TZ_SUGGESTIONS = ["Europe/Berlin", "Europe/London", "UTC", "America/New_York"];
 
-export function AutomationForm({ adapters, projects, teams, editing, disabled, onSaved, onCancel }: {
+export function AutomationForm({ adapters, projects, swarms, editing, disabled, onSaved, onCancel }: {
   adapters: string[];
   projects: string[];
-  teams: Team[];
+  swarms: Swarm[];
   editing: AutomationInfo | null;
   disabled: boolean;
   onSaved: () => void;
@@ -20,8 +20,8 @@ export function AutomationForm({ adapters, projects, teams, editing, disabled, o
   const api = useApi();
   const existing = editing?.definition ?? null;
   const target = existing?.target;
-  const [targetKind, setTargetKind] = useState<"session" | "team" | "script">(target?.kind ?? "session");
-  const [templateId, setTemplateId] = useState(target?.kind === "team" ? target.templateId : "");
+  const [targetKind, setTargetKind] = useState<"session" | "swarm" | "script">(target?.kind ?? "session");
+  const [templateId, setTemplateId] = useState(target?.kind === "swarm" ? target.templateId : "");
   const [actionId, setActionId] = useState(target?.kind === "script" ? target.actionId : "");
   const [actions, setActions] = useState<ActionDefinition[] | null>(null);
   const [actionsLoading, setActionsLoading] = useState(false);
@@ -75,7 +75,7 @@ export function AutomationForm({ adapters, projects, teams, editing, disabled, o
     setError("");
     if (disabled || !navigator.onLine) { setError("Offline — Speichern ist gesperrt."); return; }
     if (!label.trim() || (targetKind === "session" && (!harness || !project.trim() || ((!existing || target?.kind !== "session") && !promptText.trim())))
-      || (targetKind === "team" && !templateId) || (targetKind === "script" && (!project.trim() || !actionId))) {
+      || (targetKind === "swarm" && !templateId) || (targetKind === "script" && (!project.trim() || !actionId))) {
       setError("Label und vollständiges Ziel sind Pflicht. Neue Sessions brauchen einen Prompt; Skripte brauchen Projekt und Aktion.");
       return;
     }
@@ -96,7 +96,7 @@ export function AutomationForm({ adapters, projects, teams, editing, disabled, o
         enabled: false, // Neuanfang/Zurücksetzung: die Aktivierung ist die separate Freigabe.
         hostId,
         schedule,
-        target: (targetKind === "team" ? { kind: "team", templateId }
+        target: (targetKind === "swarm" ? { kind: "swarm", templateId }
           : targetKind === "script" ? { kind: "script", project: project.trim(), actionId }
           : { kind: "session", harness, ...(model.trim() ? { model: model.trim() } : {}), workdir, project: project.trim(), promptBlobSha256 }) satisfies AutomationTarget,
         ...(precheckActionId.trim() ? { precheckActionId: precheckActionId.trim() } : {}),
@@ -124,8 +124,8 @@ export function AutomationForm({ adapters, projects, teams, editing, disabled, o
       <label>{t("automations.label")}
         <input value={label} onInput={(e) => setLabel(e.currentTarget.value)} maxlength={80} placeholder={t("automations.morning_briefing")} required />
       </label>
-      <label>{t("automations.automation_type")}<select value={targetKind} onChange={e => setTargetKind(e.currentTarget.value as "session" | "team" | "script")}><option value="session">{t("automations.cron_session_trigger")}</option><option value="team">{t("automations.service_agent_team")}</option><option value="script">{t("automations.script_start")}</option></select></label>
-      {targetKind === "team" ? <label>{t("automations.team_template")}<select value={templateId} onChange={e => setTemplateId(e.currentTarget.value)} required><option value="">{t("automations.choose_existing_team")}</option>{teams.filter(team => team.tasks.length > 0).map(team => <option key={team.id} value={team.id}>{team.title}</option>)}</select></label> : targetKind === "script" ? <>
+      <label>{t("automations.automation_type")}<select value={targetKind} onChange={e => setTargetKind(e.currentTarget.value as "session" | "swarm" | "script")}><option value="session">{t("automations.cron_session_trigger")}</option><option value="swarm">{t("automations.service_agent_swarm")}</option><option value="script">{t("automations.script_start")}</option></select></label>
+      {targetKind === "swarm" ? <label>{t("automations.swarm_template")}<select value={templateId} onChange={e => setTemplateId(e.currentTarget.value)} required><option value="">{t("automations.choose_existing_swarm")}</option>{swarms.filter(swarm => swarm.tasks.length > 0).map(swarm => <option key={swarm.id} value={swarm.id}>{swarm.title}</option>)}</select></label> : targetKind === "script" ? <>
       <label>{t("newsession.project")}
         <input list="automation-projects" value={project} onInput={(e) => setProject(e.currentTarget.value)} placeholder={t("automations.path_to_repo")} required />
       </label>
@@ -136,8 +136,8 @@ export function AutomationForm({ adapters, projects, teams, editing, disabled, o
         </select>
       </label>
       {actionsError && <div class="files-error" role="alert">{actionsError}</div>}
-      {!actionsError && !actionsLoading && actions?.length === 0 && project.trim() && <p class="team-meta">{t("automations.no_registered_actions")}</p>}
-      <p class="team-meta">{t("automations.script_start_desc")}</p>
+      {!actionsError && !actionsLoading && actions?.length === 0 && project.trim() && <p class="swarm-meta">{t("automations.no_registered_actions")}</p>}
+      <p class="swarm-meta">{t("automations.script_start_desc")}</p>
       </> : <>
       <div class="form-grid">
         <label>{t("status.harness")}
@@ -213,7 +213,7 @@ export function AutomationForm({ adapters, projects, teams, editing, disabled, o
       {targetKind === "session" && <label>{t("automations.prompt_keep")}
         <textarea rows={4} value={promptText} onInput={(e) => setPromptText(e.currentTarget.value)} placeholder={t("automations.what_run_should")} required={!existing} />
       </label>}
-      <p class="team-meta">{t("automations.new_disabled")}</p>
+      <p class="swarm-meta">{t("automations.new_disabled")}</p>
       <div class="automation-form-actions">
         <Button type="submit" disabled={busy || disabled}>{existing ? "Speichern" : "Anlegen"}</Button>
         <Button onClick={onCancel}>{t("common.cancel")}</Button>

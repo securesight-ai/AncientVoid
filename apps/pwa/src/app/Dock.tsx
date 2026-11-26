@@ -76,8 +76,8 @@ export function GlobalDock({ active, onNavigate }: { active: Page | null; onNavi
       <button class={`dock-item dock-main ${active === "new" ? "active" : ""}`} type="button" title={t("dock.newSession")} aria-label={t("dock.newSession")} onClick={() => go("new")}>
         <TabIcon name="neu" />
       </button>
-      <button class={`dock-item ${active === "teams" ? "active" : ""}`} type="button" title={t("dock.teams")} onClick={() => go("teams")}>
-        <TabIcon name="teams" /><span class="lb">{t("app.teams")}</span>
+      <button class={`dock-item ${active === "swarms" ? "active" : ""}`} type="button" title={t("dock.swarms")} onClick={() => go("swarms")}>
+        <TabIcon name="teams" /><span class="lb">{t("app.swarms")}</span>
       </button>
       <button class={`dock-item dock-more ${inMore ? "active" : ""}`} type="button" title={t("dock.more")} aria-haspopup="dialog" aria-expanded={more} onClick={() => setMore((on) => !on)}>
         <TabIcon name="mehr" /><span class="lb">{t("dock.more")}</span>

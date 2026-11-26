@@ -11,7 +11,7 @@ import { MediaPage } from "../media/MediaPage.tsx";
 import { SettingsPage } from "../settings/SettingsPage.tsx";
 import { StatusPage } from "../status/StatusPage.tsx";
 import { VaultTabs } from "../vault/VaultTabs.tsx";
-import { TeamsPane } from "../team/TeamsPane.tsx";
+import { SwarmsPane } from "../swarm/SwarmsPane.tsx";
 import { AutomationsPane } from "../automations/AutomationsPane.tsx";
 import { TerminalPage } from "../terminal/TerminalPage.tsx";
 import { ReleaseNotesPage } from "../release-notes/ReleaseNotesPage.tsx";
@@ -27,7 +27,7 @@ export const TITLES: Partial<Record<ListPage, string>> = {
   pc: "Am PC eintippen",
   status: "Provider-Status",
   vault: "Notizen",
-  teams: "Agenten-Teams",
+  swarms: "Agenten-Swarms",
   automationen: "Automationen",
   terminal: t("common.terminal"),
   releasenotes: t("common.release_notes"),
@@ -112,7 +112,7 @@ export function ToolPane({
         {page === "pc" && <DesktopPage />}
         {page === "status" && <StatusPage adapters={hub.adapters} usage={hub.usage} />}
         {page === "vault" && <VaultTabs {...(vaultFile ? { initialFile: vaultFile } : {})} initialTab={vaultTab} />}
-        {page === "teams" && <TeamsPane initialHash={initialHash} />}
+        {page === "swarms" && <SwarmsPane initialHash={initialHash} />}
         {page === "automationen" && <AutomationsPane />}
         {page === "terminal" && <TerminalPage />}
         {page === "releasenotes" && <ReleaseNotesPage />}

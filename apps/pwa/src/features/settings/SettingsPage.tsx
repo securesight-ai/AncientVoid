@@ -1,5 +1,6 @@
 import { SidebarSettings } from "./SidebarSettings.tsx";
 import { FleetSettings } from "../fleet/Fleet.tsx";
+import { TeamPairingSettings } from "../team/TeamPairingSettings.tsx";
 import { KnowledgeSettings } from "../knowledge/KnowledgeSettings.tsx";
 import { PresetSettings } from "./PresetSettings.tsx";
 import { AppearanceSettings } from "./AppearanceSettings.tsx";
@@ -38,6 +39,7 @@ export function SettingsPage({ onSwitchToken }: { onSwitchToken: () => void }) {
         <div class="settings-col">
           <DevicesSettings />
           <FleetSettings />
+          <TeamPairingSettings />
           <ConnectionsSettings />
           <KnowledgeSettings />
           <MainSyncSettings />

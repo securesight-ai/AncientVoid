@@ -5,7 +5,7 @@ export const de = {
   "dock.search": "Suchen",
   "dock.searchTitle": "Suchen und Auftrag in Worten ({combo})",
   "dock.newSession": "Neue Session",
-  "dock.teams": "Teams (Agenten-Teams)",
+  "dock.swarms": "Swarms (Agenten-Schwarm)",
   "dock.more": "Mehr",
   "dock.filetree": "Dateibaum",
   "dock.filetreeTitle": "Dateibaum ({combo})",
