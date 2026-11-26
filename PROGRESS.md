@@ -1,5 +1,36 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
+## 26.11.2026 — Der Denk-Strom gehört zum Schwanz (BUG-0288, PR #446, main 5aab9b8a)
+
+Lage: main = `5aab9b8a`, Hub ausgeliefert (`health=200`,
+`runtimeSha == checkoutSha == pwaSha == 5aab9b8a`, `runtimeDirty false`, Bundle
+`index-CeBE9rCF.js`). Neustart über den Wächter aus dem Skill
+`ancientvoid-hub-ausliefern` (30 s ohne Kindprozess, Protokoll
+`/tmp/hub-neustart-watch.log`).
+
+Ursache war nicht die Leitung: die Denk-Fetzen kamen im Browser an (259
+`onFrames`-Aufrufe, Chat-Reiter 245/300 Proben mit Denk-Block, bis 3 048 Zeichen) — der
+Strom hing aber an `ChatTurns` und wurde **nur im Chat-Reiter** gerendert. Wer im Verlauf
+liest, sah nichts. Fix: `LiveStream.tsx` als einziger Darstellungsbaustein, im
+Schwanzcontainer für Chat **und** Verlauf; `liveZuwachs()` in `live-frames.ts` als reine
+Regel (5 neue Tests); `shared/ws.ts` benutzt den Rahmen-Typ aus `contracts` statt einer
+Kopie; `ChatTurns` verliert das `live`-Prop.
+
+Nachweis: `npx vitest run test/features/session test/app` 24 Dateien / 201 Fälle grün,
+CI `verify` grün, Live-Messung im deployed Bundle auf dem **Verlauf**-Reiter 87/110 Proben
+mit Denk-Block (2 → 88 → max 328 Zeichen), Abstand zur Unterseite in **jeder** Probe 0
+(läuft mit).
+
+Offen, als **BUG-0289** acptiert (`bugs/bug-0289-leseflaeche-in-kacheln-auf-48-pixelt.md`):
+im Raster-Layout `layout-2v` (1280 × 633) bleiben dem Schwanz in der fokussierten Kachel nur
+**48 px** Höhe (topbar 163 + new-jump 29 + run-strip 101 + dock-stack 230 von 532 px,
+`scrollHeight` 64 432 px) — der Strom wächst im DOM, ist aber nicht sichtbar. Ursache ist die
+Höhen-Messung `SessionTail.tsx:979` mit ihrer `Math.max(48, …)`-Klammer: die Chrome gibt in
+niedrigen Fenstern nicht nach. Als Nächstes: Chrome in Kacheln verkleinern **und** die Messung
+absichern. Nicht angefasst:
+Rahmen-Verwurf während Replay (`apps/hub/src/modules/sessions/ws.ts:105`) ist ADR-0083 so
+beschlossen und in der Messung folgenlos.
+
 ## 25.11.2026 — PR-Lage klären, Flake-Fix, Hub auf neuen Stand (Sitzung f2f88190)
 
 Lage: EPIC-P82 ist über PR #423 in main gemerged (16791e7b). #420 (EPIC-P83-Doku,
@@ -16,6 +47,42 @@ deployment consistent). Nightly 45559850100 auf dem Stand: vitest-full und k8 gr
 E2E rot in Shard 1+2 — device-setup (Runner-SDK ohne emulator-Binary, kein /dev/kvm),
 main-sync (Git-Identität im Konflikt-Klon), progress/querformat (Flakes). Fix läuft
 auf fix/nightly-e2e-runner; danach Nightly neu anstoßen — grün schließt #402–#404.
+
+## 24.11.2026 Vormittag — Zurück-Knopf im Browser und hängende Sitzungsliste
+
+**Fund (Nutzer, Handy):** „Die Zurück-Taste funktioniert hier gar nicht, ich muss die App
+schließen und komplett neu öffnen.“
+
+1. **Leere Historie.** `changeWorkspace()` schrieb jede neue Ansicht mit `replaceState` über
+   die aktuelle Adresse, und viele Ansichten (Bild-/Dateivorschau, Plananzeige) änderten die
+   Adresse überhaupt nicht. Vor dem Zurückknopf der Welt standen damit nur Seiten, die die
+   Adresszeile zufällig hinterlassen hatte — Zurück warf in uralte Ansichten oder aus der App.
+   Jetzt: echter Vorwärtsschritt (neue Seite, neue Sitzung, neue Vorschau, neuer Plan) →
+   `pushState`; Fokus zwischen offenen Kacheln, Kachel schließen und Seitentausch bleiben
+   `replaceState` (`apps/pwa/src/app/main.tsx`).
+   *Nachweis (ViewPort 430×900, echter Klick auf eine Sitzungszeile):* Adresse wechselt auf
+   die Sitzung, `history.length` wächst um eins, `history.back()` → `#/` mit Liste und
+   geschlossener Sitzung, weiter zurück `#/notizen`, weiter zurück die zuvor besuchte Sitzung.
+2. **Hängende Liste nach dem Zurück.** Die Seitenliste hängt an `/api/fleet` — gemessen
+   **3,0 s** pro Abruf (jeder Partner wird befragt), bei abwesendem Rechner deutlich länger:
+   nach dem Zurück stand **über 10 s** nur „loading…“ da, ohne Konsolenfehler. Die eigene
+   Liste kommt in **6 ms** (`/api/sessions`). Jetzt wird sie zuerst gesetzt, die Flotten-Sicht
+   ergänzt sie danach (`apps/pwa/src/app/App.tsx`). *Nachweis:* Liste beim Öffnen sofort
+   (3 Zeilen), nach dem Zurück die Gruppen „Arbeitet 1“ / „Ruhig 4“ statt Ladeköder.
+
+**Neu aufgeschrieben (offen, mit Messung in der Datei):**
+* `bugs/bug-0287-…` — eine späte Kachel-Aktualisierung schreibt die Adresse der verlassenen
+  Sitzung zurück in die Historie (direkt nach `history.back()` steht `#/`, 1,5 s später
+  wieder die Sitzungs-Adresse). Richtung: Navigations-Marke beim popstate.
+* `bugs/bug-0288-…` — der Denk-Block wächst im Browser nicht mit, in der Native-App schon.
+  Messung in der **eigenen laufenden** Sitzung (15 s, alle 1,9 s): Ansicht baut und klebt am
+  unteren Rand (`abstandUnten` 0), aber `.chat-live-thinking` bleibt leer (Länge 0).
+  Adapter und Pumpe liefern Fetzen (`normalize.ts:90-91`, `stream-pump.ts:86-95`), die PWA kann
+  wachsen (`ChatTurns.tsx:122-131`, Mitlauf-Effekt `SessionTail.tsx:1189-1190`). **Nächster
+  Schritt: zählen, welche WebSocket-Rahmen während eines laufenden Zugs im Browser ankommen.**
+  Achtung bei weiteren Messungen: eine Sitzung, die nicht in der Liste steht, bringt die App
+  stumm zurück auf die Übersicht — zwei Messläufe waren deshalb wertlos.
+
 
 ## 24.11.2026 — Nachschau über die eigenen Änderungen (PR #…)
 

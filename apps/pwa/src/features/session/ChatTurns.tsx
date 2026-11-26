@@ -50,7 +50,6 @@ export function ChatTurns({
   firstNewSeq,
   onOpenVerlauf,
   after,
-  live,
   sessionRef,
 }: {
   sessionId: string;
@@ -63,8 +62,6 @@ export function ChatTurns({
   onOpenVerlauf: () => void;
   /** Was unter einem Eintrag steht (z. B. die Token-Rechnung eines Zugs, ADR-0032). */
   after: (item: ChatItem, next: ChatItem | undefined) => ComponentChildren;
-  /** ADR-0083: bereits uebertragene Teiltexte, bevor der Block eintrifft. */
-  live?: { assistant: string; thinking: string };
   /** Eigene Sitzung (Id + Projektwurzel) — für die Bildvorschau gelesener Bilder. */
   sessionRef?: SessionRef | undefined;
 }) {
@@ -124,26 +121,6 @@ export function ChatTurns({
           {after(item, items[i + 1])}
         </Fragment>
       ))}
-      {live && (live.assistant || live.thinking) ? (
-        <div data-testid="chat-live" aria-live="polite">
-          {live.thinking ? (
-            /* Das live uebertragene Denken ist eine Denk-Notiz wie jede andere in dieser
-             * Ansicht: dieselbe Klasse, also auch dieselbe Groesse und derselbe Grund.
-             * Ein eigener Kasten und 15 px machten es groesser als das Denken sonst
-             * (Nutzerfund 17.11.2026). */
-            <div class="turn-note thinking chat-live-note" data-testid="chat-live-thinking">
-              {live.thinking}
-              <span class="chat-live-caret" aria-hidden="true" />
-            </div>
-          ) : null}
-          {live.assistant ? (
-            <div class="chat-live">
-              <span class="chat-live-label">{t("session.answering")}</span>
-              <div class="chat-live-part" data-testid="chat-live-assistant">{live.assistant}<span class="chat-live-caret" aria-hidden="true" /></div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </>
   );
 }
