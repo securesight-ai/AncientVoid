@@ -7,6 +7,7 @@ export const de = {
   "dock.newSession": "Neue Session",
   "dock.swarms": "Swarms (Agenten-Schwarm)",
   "dock.more": "Mehr",
+  "dock.depth3d": "3D-Tiefe",
   "dock.filetree": "Dateibaum",
   "dock.filetreeTitle": "Dateibaum ({combo})",
   "dock.media": "Medien",

@@ -30,7 +30,7 @@ test.describe("Dock bleibt bedienbar", () => {
     }
     await dock.getByRole("button", { name: "Mehr", exact: true }).click();
     const sheet = app.getByRole("dialog", { name: "Mehr" });
-    await expect(sheet.getByRole("button")).toHaveText(["Medien", "Notizen", "Automationen", "Einstellungen", "Statistik", "Terminal", "Release-Notes", "Pentest", "Provider-Status", "Dateibaum"]);
+    await expect(sheet.getByRole("button")).toHaveText(["Medien", "Notizen", "Automationen", "Einstellungen", "Statistik", "Terminal", "Release-Notes", "Pentest", "Provider-Status", "Dateibaum", "3D-Tiefe"]);
     await sheet.getByRole("button", { name: "Einstellungen" }).click();
     await expect(app).toHaveURL(/#\/einstellungen$/);
     await expect(sheet).toHaveCount(0);

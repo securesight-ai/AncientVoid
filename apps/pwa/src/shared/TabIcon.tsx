@@ -25,6 +25,7 @@ const PATHS = {
   browser: "M3 5h18v14H3zM3 9h18M6 7h.01M9 7h.01",
   geraete: "M8 3h8v18H8zM11 18h2",
   terminal: "M4 5h16v14H4zM7 9l3 3-3 3M12 15h5",
+  tiefe: "M12 3l9 4.5-9 4.5-9-4.5zM3 13l9 4.5 9-4.5M3 17l9 4.5 9-4.5",
 } as const;
 
 export type TabIconName = keyof typeof PATHS;
