@@ -1,6 +1,6 @@
 # EPIC-P86 — 3D-Tiefe: Fensterflug und lebendige Oberfläche (zuschaltbar)
 
-**Status:** In Umsetzung — Stufe 1 (T86.1–T86.3) umgesetzt auf `feat/p86-3d-tiefe-stufe1`, Nutzerentscheid 26.11.2026: Default an, alle drei Schalterflächen, three.js (Stufe 2) nur falls die Messung klar überzeugt („lightweight und performant“) · **Phase:** P86 · **Dauer:** 1–2 Agenten-Wochen (Stufe 1) + 0,5–1 (Stufe 2 nach T86.0-Beschluss)
+**Status:** In Umsetzung — Stufe 1 (T86.1–T86.3, „herausgelöst“, vom Nutzer abgenommen 26.11.2026) plus T86.7 (Layout-Orientierung) und der Kachel-Gluh aus T86.4 umgesetzt auf `feat/p86-3d-tiefe-stufe1`; Nutzerentscheid: three.js (Stufe 2) nur falls die Messung klar überzeugt („lightweight und performant“) · **Phase:** P86 · **Dauer:** 1–2 Agenten-Wochen (Stufe 1) + 0,5–1 (Stufe 2 nach T86.0-Beschluss)
 **Abhängigkeit:** keine blockierende (Quer-Epic, Muster P80/P85); P30/P31 bleiben On hold und unberührt. Sichtabnahme auf echtem Handy → [P000](EPIC-000-testsuite-fuer-menschen.md).
 
 ## 1. Ziel
@@ -185,7 +185,17 @@ Ablage nach `app/ui-scale.ts`-Muster (`ancientvoid.ctxMotion`):
   vom Nutzer als gut bewertet ist.
 - [ ] **T86.4 — Mikro-Tiefe + K2-Referenzmessung:** Press-/Hover-Lift,
   Working-Punkt-Puls in Tiefe; Frame-Budget-Messung Session-Tail
-  (K2-Vergleich vorher/nachher, dokumentiert im Task-PR).
+  (K2-Vergleich vorher/nachher, dokumentiert im Task-PR). Angefangen
+  (Nutzerwunsch 26.11.2026): die **fokussierte Kachel** hebt sich räumlich ab
+  und ihr Rand glüht im Puls (`depth3d-focus-glow`, 2.4 s Schleife, an
+  61-depth3d.css gegated) — Rest (Karten-Lift, K2-Messung) offen.
+- [x] **T86.7 — Layout-Orientierung (Nutzerwunsch 26.11.2026):**
+  (a) Übersichtskarte zeigt links unten die **Kachel-Nummer** (`.card-tile-no`
+  = `.tile-no` des Fensters, Schlüssel wie `tileRefOf`; main.tsx → App →
+  Dashboard → SessionRow) — Sessions lassen sich den Fenstern zuordnen.
+  (b) Im Session-Kopf steht der **Zustand rechts neben dem Titel**
+  (`session-top-titlerow`, statt in der `session-top-meta`-Zeile darunter) —
+  auch in schmalen Kacheln sichtbar. Belegt in `workspace-tiles.spec.ts`.
 - [ ] **T86.5 — three.js-Ambient** (nur nach klarem T86.0-Ja): lazy Modul,
   WebGL2-Gate, DPR-Cap, Hidden-Pause; E2E-Spec für K10 (offline ohne
   Ambient-Chunk kein White-Screen) und Basis-Bundle-Beweis (kein three im

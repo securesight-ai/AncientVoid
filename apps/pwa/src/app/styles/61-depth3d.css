@@ -3,8 +3,9 @@
  * Solange ein Fenster offen ist, weicht der Hintergrund zurück: Er wird kleiner
  * (scale), unscharf und dunkler (backdrop-filter auf der Hinterlegung). Das
  * Fenster selbst schwebt persistend davor (translateZ + Schatten) und fliegt
- * beim Öffnen aus der Tiefe ein. CSS-3D, bewusst ohne three.js; Vorbild ist
- * die securesight-Keynote (Hybrid: scharfes HTML vorne, Tiefe dahinter), nicht
+ * beim Öffnen aus der Tiefe ein. Die fokussierte Kachel hebt sich räumlich ab,
+ * ihr Rand glüht im Puls. CSS-3D, bewusst ohne three.js; Vorbild ist die
+ * securesight-Keynote (Hybrid: scharfes HTML vorne, Tiefe dahinter), nicht
  * ihr Umfang.
  *
  * Regeln wie 36-motion.css: animiert werden nur transform/opacity (K2), die
@@ -12,7 +13,7 @@
  * jede Fläche mountet erst im geöffneten Zustand. Kaskade (app/depth3d.ts):
  * data-ctx-3d="off" und data-ctx-motion="off" schalten die Ebene komplett ab;
  * prefers-reduced-motion lässt sie flach (kein Transform, keine Animation —
- * die Hinterlegung bleibt, sie ist kein Bewegungsreiz). */
+ * die Unschärfe bleibt, sie ist kein Bewegungsreiz). */
 
 :root {
   --depth3d-dist: 1100px;
@@ -69,6 +70,14 @@
   animation: depth3d-side var(--depth3d-time) var(--ease-out) 1;
 }
 
+/* ── Fokussierte Kachel (Nutzerwunsch 26.11.2026, T86.4): hebt sich räumlich
+ *    ab und ihr Rand glüht im Puls — „dieses Fenster ist aktiv“. Die ruhige
+ *    Kante aus 02-layout.css (.tile.focused) bleibt darunter erhalten. ── */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused {
+  transform: perspective(var(--depth3d-dist)) translateZ(12px);
+  animation: depth3d-focus-glow 2.4s ease-in-out infinite;
+}
+
 /* ── Sofort-Feedback (Nutzerfund 26.11.2026): Einschalten pulst offene
  *    Flächen kurz heran — ein Wechsel ohne sichtbare Reaktion wirkt wie ein
  *    toter Schalter. Die Klasse setzt app/depth3d.ts nur zur Laufzeit (nicht
@@ -107,6 +116,19 @@
   to { transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift-side)); opacity: 1; }
 }
 
+@keyframes depth3d-focus-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+      0 0 16px 4px color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent),
+      0 0 30px 8px color-mix(in srgb, var(--accent) 38%, transparent);
+  }
+}
+
 @keyframes depth3d-pulse {
   0%, 100% { transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift)); }
   45% { transform: perspective(var(--depth3d-dist)) translateZ(calc(var(--depth3d-lift) + 34px)); }
@@ -127,6 +149,7 @@
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet-backdrop,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-backdrop,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .app-page,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .session-live,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .split {
