@@ -24,6 +24,20 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
       await expect(tile(app, n + 1).locator(".run-tokens")).toContainText("Tokens");
     }
     await expect(tile(app, 4)).toHaveClass(/focused/);
+    // EPIC-P86 T86.4: die fokussierte Kachel hebt sich ab (Gluh-Puls), die
+    // anderen bleiben ruhig.
+    await expect(tile(app, 4)).toHaveCSS("animation-name", "depth3d-focus-glow");
+    await expect(tile(app, 1)).toHaveCSS("animation-name", "none");
+    // EPIC-P86 T86.7: die Karte links zeigt die Kachel-Nummer — dieselbe wie
+    // .tile-no, damit die Sessions ihren Fenstern zuzuordnen sind.
+    for (const [n, name] of ["Eins", "Zwei", "Drei", "Vier"].entries()) {
+      await expect(card(app, `Aufgabe ${name}`).locator(".card-tile-no")).toHaveText(String(n + 1));
+    }
+    // T86.7 (Nutzerwunsch 26.11.2026): der Zustand steht neben dem Titel,
+    // nicht erst in der Zeile darunter.
+    const row = tile(app, 1).locator(".session-top-titlerow");
+    await expect(row.locator(".session-top-title")).toHaveText("Aufgabe Eins");
+    await expect(row.locator(".status")).toBeVisible();
     // Half-height tiles: every tile folds its controls, not only new ones.
     for (const n of [1, 2, 3, 4]) await expect(tile(app, n).getByRole("button", { name: "Steuerung einblenden" })).toBeVisible();
   });

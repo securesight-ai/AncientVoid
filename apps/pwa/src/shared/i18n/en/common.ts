@@ -82,6 +82,7 @@ export const en = {
   "common.open_file_tree": "Open file tree",
   "common.open_in_window": "Open in own window",
   "common.open_repo_graph": "Open repo graph of {name}",
+  "common.tile_no": "Window {n} — this session is open in that tile on the right",
   "common.open_window": "Open window",
   "common.overview_view": "Overview view",
   "common.own_window": "⧉ own window",

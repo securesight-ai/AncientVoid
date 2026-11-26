@@ -580,6 +580,17 @@ function Main() {
 
   if (!ready) return <TokenGate onReady={() => void becomeReady()} rejected={gateError} />;
 
+  // EPIC-P86 T86.7 (Nutzerwunsch 26.11.2026): Kachel-Nummern für die
+  // Übersichtskarten — dieselbe Nummer wie .tile-no am Fensterrand, damit
+  // Sessions ihren Fenstern zuzuordnen sind. Schlüssel wie tileRefOf
+  // (remoteHost), erste Kachel gewinnt.
+  const tileNos = new Map<string, number>();
+  visibleTiles(ws).forEach((ref, i) => {
+    if (ref) {
+      const key = `${ref.hostId ?? ""}:${ref.sessionId}`;
+      if (!tileNos.has(key)) tileNos.set(key, i + 1);
+    }
+  });
   return (
     <>
       <TooltipLayer />
@@ -633,7 +644,7 @@ function Main() {
         // T8.5 (AC-P8-6): from 1280 px list and session side by side.
         <div class={`split${listCollapsed ? " list-collapsed" : ""}`}>
           <aside class="split-list">
-            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={filesWide && !listCollapsed} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
+            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={filesWide && !listCollapsed} tileNos={tileNos} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
           </aside>
           <section class="split-detail">
             {/* EPIC-P18: up to four sessions as tiles. */}
