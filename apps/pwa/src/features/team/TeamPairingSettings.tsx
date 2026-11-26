@@ -107,11 +107,11 @@ export function TeamPairingSettings() {
             </Button>
           </div>
           <SettingRow label={t("team.join_invite")}>
-            <input value={inviteIn} onInput={(e) => setInviteIn(e.currentTarget.value)} placeholder="avteam1.…" data-testid="team-join-input" />
+            <input value={inviteIn} onInput={(e) => setInviteIn(e.currentTarget.value)} placeholder={t("team.join_placeholder")} data-testid="team-join-input" />
             <Button disabled={busy || !inviteIn.trim()} onClick={() => void join()} data-testid="team-join-btn">{t("team.join")}</Button>
           </SettingRow>
           <SettingRow label={t("team.type_code")} hint={t("team.type_code_hint")}>
-            <input value={codeIn} onInput={(e) => setCodeIn(e.currentTarget.value)} inputMode="numeric" maxLength={8} placeholder="12345678" data-testid="team-code-input" />
+            <input value={codeIn} onInput={(e) => setCodeIn(e.currentTarget.value)} inputMode="numeric" maxLength={8} placeholder={t("team.code_placeholder")} data-testid="team-code-input" />
             <Button disabled={busy || !/^\d{8}$/.test(codeIn.trim())} onClick={() => void confirm()} data-testid="team-confirm-btn">{t("team.confirm")}</Button>
           </SettingRow>
           {pins.length > 0 && (

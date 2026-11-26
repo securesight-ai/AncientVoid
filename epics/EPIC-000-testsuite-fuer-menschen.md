@@ -254,6 +254,15 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   und Request-Tabelle prüfen. Bei einer reinen Zähler-Engine den Hinweis zu
   fehlenden Verteilungen prüfen. Beleg: Datum, Geräte und Ergebnis.
 
+### Übernommen aus EPIC-P84 (2026-11-25)
+
+- [ ] **T000.39 — Subjektive Qualität der Evaluationslösungen.**
+  (Herkunft: [AC-P84-7](EPIC-P84-ai-arbeit-evaluation-benchmark.md))
+  Nach Vorliegen der echten Kernserie je Split-Arm fünf mechanisch
+  erfolgreiche Patches derselben Aufgaben blind prüfen. Wartbarkeit,
+  Klarheit und unnötige Änderungen je Patch mit Kurzbegründung bewerten.
+  Beleg: Datum, anonymisierte Patch-IDs und Einzelurteile.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine

@@ -43,6 +43,7 @@ export function operationOf(method: string, url: string, body: unknown): PolicyO
   // EPIC-P75 (ADR-0097): Sprachausgabe — Status wie Synthese sind die Fläche
   // eines Menschen; Agenten/Flotte/Displays beschallen den Dienst nicht.
   if (path === "/api/tts") return "voice.speak";
+  if (/^\/api\/sessions\/[^/]+\/evaluation$/.test(path)) return "settings.manage";
   if (method === "GET" || method === "HEAD") return "read";
   if ((path === "/api/stt" || path === "/api/stt/stream-ticket") && method === "POST") return "voice.transcribe";
   if (path.startsWith("/api/media/")) return "media.analyze";

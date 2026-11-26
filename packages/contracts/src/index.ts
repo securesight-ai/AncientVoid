@@ -42,6 +42,7 @@ export * from "./voice/stt.ts";
 export * from "./voice/tts.ts";
 export * from "./desktop/desktop.ts";
 export * from "./runs/turn-metrics.ts";
+export * from "./runs/evaluation.ts";
 export * from "./loops/loop.ts";
 export * from "./loops/connector.ts";
 export * from "./workspace/manifest.ts";
