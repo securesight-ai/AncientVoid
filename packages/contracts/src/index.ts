@@ -56,6 +56,7 @@ export * from "./automations/automation.ts";
 export * from "./automations/external.ts";
 export * from "./swarm/swarm.ts";
 export * from "./team/identity.ts";
+export * from "./team/pairing.ts";
 export * from "./aimetrics/aimetrics.ts";
 export * from "./hostmetrics/hostmetrics.ts";
 export * from "./inference/index.ts";

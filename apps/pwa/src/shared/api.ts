@@ -420,6 +420,27 @@ export interface FleetPeer {
   pairedAt: string;
 }
 
+/** EPIC-P83 T83.3 — Status des Team-Kopplungsfensters. */
+export interface TeamPairingStatus {
+  teamId: string;
+  state: "idle" | "waiting" | "joined" | "confirmed";
+  codeA: string | null;
+  peerLabel: string | null;
+  peerInstanceId: string | null;
+  error: string | null;
+  inviteText: string | null;
+  /** false wenn `team.listen` fehlt — Kopplung nicht erreichbar. */
+  configured?: boolean;
+}
+
+/** EPIC-P83 T83.3 — gespeicherter Peer-Pin nach beidseitiger Bestätigung. */
+export interface TeamPeerPin {
+  instanceId: string;
+  spkiSha256: string;
+  state: string;
+  pinnedAt: string;
+}
+
 /** ADR-0015 — cross-session notification from the hub. */
 export interface HubNotification {
   id: number;
@@ -1147,6 +1168,17 @@ function createHubApi(P: (path: string) => string) {
   fleet: () => api<FleetOverview>(P("/api/fleet")),
   fleetHello: () => api<{ hostId: string; protocolVersion: number }>(P("/api/fleet/hello")),
   fleetInvite: () => api<{ code: string; expiresAt: string }>(P("/api/fleet/invites"), { method: "POST", body: "{}" }),
+  /** EPIC-P83 T83.3: Team-Kopplung (ADR-0118 §7) — nur mit `team.listen`. */
+  teamPairingStatus: () => api<TeamPairingStatus>(P("/api/teams/pairing")),
+  teamPins: async (): Promise<TeamPeerPin[]> => (await api<{ pins: TeamPeerPin[] }>(P("/api/teams/pins"))).pins,
+  teamInvite: (label: string) =>
+    api<{ teamId: string; inviteText: string }>(P("/api/teams"), { method: "POST", body: JSON.stringify({ label }) }),
+  teamJoin: (inviteText: string, label: string) =>
+    api<TeamPairingStatus>(P("/api/teams/join"), { method: "POST", body: JSON.stringify({ inviteText, label }) }),
+  teamConfirmCodeB: (code: string) =>
+    api<TeamPairingStatus>(P("/api/teams/pairings/current/confirm"), { method: "POST", body: JSON.stringify({ code }) }),
+  teamConfirmCodeA: (code: string) =>
+    api<TeamPairingStatus>(P("/api/teams/join/confirm"), { method: "POST", body: JSON.stringify({ code }) }),
   fleetPeers: () => api<FleetPeer[]>(P("/api/fleet/peers")),
   fleetAddPeer: (url: string, code: string) =>
     api<FleetPeer>(P("/api/fleet/peers"), { method: "POST", body: JSON.stringify({ url, code }) }),

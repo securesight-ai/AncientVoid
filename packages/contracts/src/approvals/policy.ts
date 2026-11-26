@@ -104,9 +104,11 @@ export const POLICY_OPERATIONS = [
   "swarm.manage",
   /** EPIC-P60 (ADR-0077): Lese-Seite der Swarms — Allow-Set identisch zum bisherigen generischen `read` der Fläche (reine Benennung). */
   "swarm.read",
-  /** EPIC-P74 (ADR-0096 Nachtrag, T74.7): Wissens-Quellen lesen und befragen —
-   * Agenten dürfen (via gateway-mcp), die Quellen-VERWALTUNG (CRUD, Geheimnisse)
-   * bleibt settings.manage. */
+  /** EPIC-P83 (ADR-0119 §6): Team lesen — Agenten dürfen die Fläche der ihnen
+   *  freigegebenen Aufgabe sehen (Server filtert), der Rest ist Menschen-Sache. */
+  "team.read",
+  /** EPIC-P83 (ADR-0119 §6): Team verwalten (anlegen, koppeln, Rollen, Widerruf) — nur der Mensch. */
+  "team.manage",
   "knowledge.read",
   /** EPIC-P74: Notiz in eine Wissens-Quelle schreiben — schreibt in ein fremdes,
    * ggf. geteiltes Backend: IMMER Freigabe, auch für den Menschen am Panel
@@ -205,6 +207,10 @@ export const POLICY: Readonly<Record<PolicyOperation, Readonly<Record<ActorKind,
   "swarm.manage": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** EPIC-P60 (ADR-0077): Swarms lesen — wie das bisherige generische `read` der Fläche. */
   "swarm.read": { human: HUMAN, fleet: "allow", agent: "allow", bridge: "deny", companion: "deny", display: "allow" },
+  /** EPIC-P83 (ADR-0119 §6): Team lesen — Agent gefiltert (nur Aufgabe der eigenen Session), Rest wie `read`. */
+  "team.read": { human: HUMAN, fleet: "allow", agent: "allow", bridge: "deny", companion: "deny", display: "allow" },
+  /** EPIC-P83 (ADR-0119 §6): Team verwalten — nur der Mensch; Einladung und Rechteausweitung brauchen Passkey/hubctl. */
+  "team.manage": { human: HUMAN, fleet: "deny", agent: "deny", bridge: "deny", companion: "deny", display: "deny" },
   /** EPIC-P74 (ADR-0096 Nachtrag): Lesen/Befragen wie das generische `read`
    * der Fläche — Quellen-Verwaltung bleibt settings.manage (deny für Agenten). */
   "knowledge.read": { human: HUMAN, fleet: "allow", agent: "allow", bridge: "deny", companion: "deny", display: "allow" },

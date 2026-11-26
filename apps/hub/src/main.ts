@@ -2,6 +2,7 @@
 import { loadOrCreateTeamIdentity, teamListenBindAddress } from "@ancientvoid/core";
 import { createHubSwarm } from "./modules/swarm/index.ts";
 import { startTeamListener, type TeamListener } from "./modules/team/team-listener.ts";
+import { TeamPairingService } from "./modules/team/team-pairing-service.ts";
 import { sttModuleConfig } from "./modules/voice/stt-wiring.ts";
 /**
  * AncientVoid hub daemon entry.
@@ -379,6 +380,7 @@ async function main(): Promise<void> {
   const teamIdentity = await loadOrCreateTeamIdentity(dataDir);
   logger.info("team identity ready", { instanceId: teamIdentity.identity.instanceId });
   let teamListener: TeamListener | null = null;
+  let teamPairing: TeamPairingService | undefined;
   if (config.team.listen) {
     const { address, port, pairPort } = config.team.listen;
     const bindAddress = await teamListenBindAddress(address, port);
@@ -391,6 +393,13 @@ async function main(): Promise<void> {
       log: (line) => logger.info(`team: ${line}`),
     });
     logger.info("team listener bound", { address: bindAddress, port, pairPort });
+    // Kopplungsdienst: Fenster + Kopplungsserver auf pairPort (nur mit team.listen).
+    teamPairing = new TeamPairingService({
+      dataDir,
+      material: { identity: teamIdentity.identity, privateKey: teamIdentity.privateKey, publicKey: teamIdentity.publicKey },
+      pairPort,
+      inviteAddress: bindAddress,
+    });
   }
 
   const swarm = createHubSwarm({ sessions, dataDir });
@@ -680,6 +689,7 @@ async function main(): Promise<void> {
       ...(ghTokenFile ? { githubTokenFile: ghTokenFile } : {}),
     },
     swarm,
+    ...(teamPairing ? { teamPairing } : {}),
     ...(aimetrics ? { aimetrics, aimetricsMergePeers: config.aiMetrics?.mergePeers !== false } : {}),
     ...(hostMetrics ? { hostMetrics } : {}),
     hostMetricsMergePeers: config.hostMetrics.mergePeers,

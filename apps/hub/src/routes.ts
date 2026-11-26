@@ -21,7 +21,7 @@ import { registerGitGraphRoutes } from "./modules/git-graph/git-graph.routes.ts"
 import { registerReleaseNotesRoutes } from "./modules/release-notes/release-notes.routes.ts";
 import { registerVaultRoutes } from "./modules/vault/vault.routes.ts";
 import { registerSwarmRoutes } from "./modules/swarm/swarm.routes.ts";
-import { registerLoopsRoutes } from "./modules/loops/loops.routes.ts";
+import { registerTeamPairingRoutes } from "./modules/team/team.routes.ts";
 import { registerFactoryRoutes } from "./modules/factory/factory.routes.ts";
 import { registerCommandRoutes } from "./modules/commands/commands.routes.ts";
 import { registerConnectionRoutes } from "./modules/connections/connections.routes.ts";
@@ -63,7 +63,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
   registerReleaseNotesRoutes(app, ctx);
   registerVaultRoutes(app, ctx);
   registerSwarmRoutes(app, ctx);
-  registerLoopsRoutes(app, ctx);
+  registerTeamPairingRoutes(app, ctx);
   registerFactoryRoutes(app, ctx);
   registerCommandRoutes(app, ctx, deps.assistantModel ? { model: deps.assistantModel } : {});
   registerReviewsRoutes(app, ctx);

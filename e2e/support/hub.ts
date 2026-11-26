@@ -77,6 +77,8 @@ export interface HubOptions {
   terminalAutodetect?: boolean;
   /** EPIC-P54 (ADR-0110): registriert den hub-getriebenen Ralph-Loop mit Stand-in-CLI. */
   ralphHub?: boolean;
+  /** EPIC-P83 T83.3: Team-Kopplung aktivieren (`team.listen` auf Loopback, ephemeral Ports). */
+  teamListen?: boolean;
 }
 
 export interface ApiResult<T> {
@@ -164,12 +166,18 @@ export class TestHub {
     this.beta = makeProject(this.projectsDir, "beta", "# Beta\n\nZweites Projekt.\n");
   }
 
+  /** EPIC-P83: gebundene Team-Ports (wenn `teamListen`), für Diagnose. */
+  teamPorts: { port: number; pairPort: number } | null = null;
+
   static async start(options: HubOptions = {}): Promise<TestHub> {
     const hub = new TestHub(options);
     hub.issueToken();
     // freePort() can race with a parallel worker's hub — retry on a new port.
     for (let attempt = 1; ; attempt++) {
       hub.port = await freePort();
+      if (options.teamListen) {
+        hub.teamPorts = { port: await freePort(), pairPort: await freePort() };
+      }
       hub.writeConfig();
       try {
         await hub.boot();
@@ -227,6 +235,9 @@ export class TestHub {
         // EPIC-P54: hub-getriebener Ralph mit einer Stand-in-CLI (echte Agenten bleiben der Menschenabnahme).
         ...(this.options.ralphHub ? [{ id: "ralph-hub", module: "@ancientvoid/loop-ralph-hub", config: { stateDir: ".ralph", turnTimeoutMs: 60_000, maxTurns: 10 } }] : []),
       ],
+      ...(this.teamPorts
+        ? { team: { listen: { address: "127.0.0.1", port: this.teamPorts.port, pairPort: this.teamPorts.pairPort } } }
+        : {}),
       adapters: [
         {
           id: "dummy",
