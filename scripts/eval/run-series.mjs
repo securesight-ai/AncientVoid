@@ -30,10 +30,11 @@ export async function runSeries(api, root, scratch, series, plan) {
         // Ein Timeout zählt nur dann als Infrastruktur, wenn die Engine danach nicht antwortet.
         const hung = /timed out/.test(error.message) && await Promise.any([arm.plan, arm.build].filter((side) => side?.healthUrl)
           .map((side) => probeHealth(side.healthUrl).then(() => { throw new Error("alive"); }, () => true))).catch(() => false);
-        // Timeout bei lebender Engine: Abbruch des Agenten. Er wird in aborted.jsonl sichtbar (nie still gedroppt),
-        // die Serie läuft weiter und gilt als partiell; der Report nennt die Abbrüche.
-        if (/timed out/.test(error.message) && !hung) {
-          appendFileSync(aborted, JSON.stringify({ key, attempt, at: new Date().toISOString(), cause: "timeout", message: error.message }) + "\n", { flush: true });
+        // Timeout bei lebender Engine oder offene Rückfrage: Abbruch des Agenten. Er wird in aborted.jsonl sichtbar
+        // (nie still gedroppt), die Serie läuft weiter und gilt als partiell; der Report nennt die Abbrüche.
+        const cause = /waiting_approval before/.test(error.message) ? "approval" : /timed out/.test(error.message) && !hung ? "timeout" : null;
+        if (cause) {
+          appendFileSync(aborted, JSON.stringify({ key, attempt, at: new Date().toISOString(), cause, message: error.message }) + "\n", { flush: true });
           return;
         }
         if (!isInfrastructureFailure(error) && !hung) throw error;

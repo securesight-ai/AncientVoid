@@ -140,7 +140,9 @@ exportieren und ist dann nie `messung_gueltig`. Der Hub-Datadir bleibt die Quell
 Die ACP-Anbindung von maki 0.6.5 meldet nur die Kontextfüllung, keine Richtungs-Tokens
 (`capabilities.usage=false`); die Session-Datei von maki bleibt bei null. Der Hub lehnt solche
 Läufe laut ab. Für die Messung läuft maki deshalb über den Claude-Adapter im
-stream-json-Modus (`maki -p --output-format stream-json` ist Claude-kompatibel):
+stream-json-Modus (`maki -p --output-format stream-json` ist Claude-kompatibel). Offen:
+maki fragt Werkzeug-Erlaubnisse als `control_request`, den der Claude-Adapter nicht
+beantwortet; mit Werkzeugen hängt der Zug in beiden `permissionPrompts`-Modi:
 
 ```json
 { "id": "maki-sdk", "module": "@ancientvoid/adapter-claude",
@@ -173,5 +175,7 @@ Gesundheitsantwort, Timeout bei toter Engine) zählen **nie** als Aufgabenfehler
 Der Runner protokolliert den Versuch in `invalid.jsonl` neben `sessions.jsonl`,
 wiederholt höchstens `maxInfraRetries`-mal (Versuchsnummer im Datensatz als
 `attempt`) und bricht nach drei Ausfällen in Folge laut ab. Ein Timeout bei
-lebender Engine ist ein Abbruch des Agenten und beendet die Serie ebenfalls laut;
-ein Aufzeichnungspfad für Abbrüche ist offen (EPIC-P84).
+lebender Engine oder eine offene Rückfrage ist ein Abbruch des Agenten: Er steht
+in `aborted.jsonl`, die Serie läuft weiter und ist partiell. Abbrüche fehlen in
+der Ergebnistabelle (Überlebenden-Verzerrung); der Report muss sie nennen.
+Vor jeder Serie muss jede Zelle einen Zug mit Werkzeugnutzung bestehen.

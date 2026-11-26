@@ -71,8 +71,15 @@ ohne Streuung. Nicht gelesene Werte stehen als `n/a`, nie als 0.
 Der Report „Was das nicht sagt“ benennt die Grenzen (n = 2, vier Aufgaben,
 Listenäquivalent bei Abos).
 
+## Abweichungen vor dem gültigen Lauf (2026-11-26)
+
+- `pilot-1` abgebrochen, ohne Ergebnis: Der Verdrahtungs-Durchstich nutzte kein
+  Werkzeug und übersah, dass die maki-Zelle an der Erlaubnis-Rückfrage hängt.
+- `pilot-2` läuft ohne die maki-Zelle (11 Zellen, 110 Läufe), nach grünem
+  Werkzeug-Durchstich je Zelle. Die Erlaubnisprüfung wird nicht abgeschaltet.
+
 ## Ausdrücklich offen
 
-Der Lauf selbst braucht die Freigabe des Nutzers (GPU-Fenster, Kosten bis zum
-Deckel). Bis dahin existiert **kein** datierter Pilotbericht; er entsteht erst
-aus echten Daten per `pilot-report` und wird nicht von Hand geschrieben.
+Der Nutzer hat den Lauf am 2026-11-26 freigegeben. Der datierte Pilotbericht
+entsteht erst aus echten Daten per `pilot-report` und wird nicht von Hand
+geschrieben.
