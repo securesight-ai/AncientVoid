@@ -20,7 +20,8 @@ import { createConsoleLogger } from "../../platform/index.ts";
 import { dedupeDiscovered, filterDiscovered, pageDiscovered } from "../discovery/index.ts";
 import { notificationHorizonCutoff, notificationFor, projectName, type NotificationDraft } from "../notifications/index.ts";
 import { parseNotificationAction, parseNotificationParams } from "../notifications/index.ts";
-import { deriveTurnMetrics, TurnMetricStore } from "../runs/index.ts";
+import { EVAL_COMPLETE_EVENT, EvalResult, type EvalRunInput } from "@ancientvoid/contracts";
+import { deriveTurnMetrics, measureEvaluationPhase, readEvaluation, TurnMetricStore } from "../runs/index.ts";
 import { buildHandoverPrompt, HANDOVER_PROMPT_MAX } from "../handover/index.ts";
 import { SessionQueue } from "./session-queue.ts";
 import { askTitleModel } from "./session-title.ts";
@@ -123,6 +124,7 @@ export abstract class SessionManagerRuntime {
   protected readonly mainSyncSettings: ((projectPath: string) => MainSyncSettings) | undefined;
   protected readonly queue: SessionQueue;
   protected readonly pforte: Pforte | undefined;
+  private readonly recordingEvaluations = new Set<string>();
   private readonly turnMetricStore: TurnMetricStore;
   private titleModel: PlannerModelConfig | undefined;
   protected readonly draining = new Set<string>();
@@ -827,6 +829,40 @@ export abstract class SessionManagerRuntime {
     return this.turnMetricStore.summary();
   }
 
+  evaluation(sessionId: string): Promise<EvalResult | null> {
+    return readEvaluation(this.store, sessionId);
+  }
+
+  async recordEvaluation(sessionId: string, input: EvalRunInput): Promise<EvalResult> {
+    if (input.phases.at(-1)?.sessionId !== sessionId) throw new Error("Evaluation must be recorded on the build session");
+    if (this.recordingEvaluations.has(sessionId)) throw new Error("Evaluation write in progress; retry");
+    this.recordingEvaluations.add(sessionId);
+    try {
+      const existing = await this.evaluation(sessionId);
+      if (existing) {
+        if (JSON.stringify(existing.input) !== JSON.stringify(input)) throw new Error("Session already has a different evaluation");
+        await this.store.flush(sessionId);
+        return existing;
+      }
+      const phases = await Promise.all(input.phases.map(async (phase) => {
+        const record = this.get(phase.sessionId);
+        if (!record || record.status !== "stopped") throw new Error("Evaluation phases must be stopped before recording");
+        return measureEvaluationPhase(phase, record, await this.store.replay(record.id));
+      }));
+      if (phases[0] && phases[1] && phases[0].endedAt > phases[1].startedAt) {
+        throw new Error("Evaluation plan must finish before the build begins");
+      }
+      const session = this.live.get(sessionId) ?? this.openStopped(sessionId);
+      if (!session || session.record.status !== "stopped") throw new Error("Evaluation build session is unavailable");
+      const result = EvalResult.parse({ input, recordedAt: new Date().toISOString(), phases });
+      await this.emitSystem(session, EVAL_COMPLETE_EVENT, { result });
+      await this.store.flush(sessionId);
+      return result;
+    } finally {
+      this.recordingEvaluations.delete(sessionId);
+    }
+  }
+
   protected makeContext(session: LiveSession): AdapterContext {
     const signal = session.abort.signal;
     const bindWorker = (proc: WorkerProcess) => {
@@ -854,6 +890,10 @@ export abstract class SessionManagerRuntime {
         logger[level](msg, extra);
       },
       emit: (event: EmittedEvent) => {
+        if (event.summary === EVAL_COMPLETE_EVENT || event.payload?.kind === EVAL_COMPLETE_EVENT) {
+          this.logger.warn("adapter attempted to emit a reserved evaluation event", { sessionId: session.record.id });
+          return;
+        }
         if (this.shuttingDown) return;
         if (signal.aborted) {
           // BUG-0188: stop() abortet das Signal, bevor der Adapter den

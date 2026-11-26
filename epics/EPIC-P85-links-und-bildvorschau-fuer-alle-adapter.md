@@ -1,6 +1,6 @@
 # EPIC-P85 — Externe Links im Standardbrowser; Bildvorschau modular für alle Adapter
 
-**Status:** Planungsentwurf (Nutzerauftrag 25.11.2026) · **Phase:** P85 · **Dauer:** 1–2 Agenten-Wochen · **Tracker:** [#441](https://github.com/securesight-ai/AncientVoid/issues/441); Defekt [BUG-0287 / #440](https://github.com/securesight-ai/AncientVoid/issues/440)
+**Status:** Planungsentwurf (Nutzerauftrag 25.11.2026) · **Phase:** P85 · **Dauer:** 1–2 Agenten-Wochen · **Tracker:** [#441](https://github.com/securesight-ai/AncientVoid/issues/441); Defekt [BUG-0290 / #440](https://github.com/securesight-ai/AncientVoid/issues/440)
 **Abhängigkeit:** Epic-Gating regulär (P82 grün als letztes abgeschlossene Phase; P83/P84 sind Planungsentwürfe, P30/P31 bleiben On hold und unberührt). Der ausdrückliche Planungsauftrag erlaubt den Entwurf vor grünen Vorgängern, keine Umsetzung. Geräteabnahme → [P000](EPIC-000-testsuite-fuer-menschen.md).
 
 ## 1. Ziel
@@ -63,7 +63,7 @@ Bildvorschau auf fremden Hosts (`sessionRefFor`-Grenze bleibt); OCR/Auslese
 - berührt auch: `EventRow.tsx` `ToolImageView`-Link (`target="_blank"` auf die
   Roh-Route) und `onCardClick`-Ausparung für `a` (Zeile 199–203) — die
   Klick-Kette muss bei einer zentralen Policy mitgedacht werden.
-- Der Defekt ist als [BUG-0287](../bugs/bug-0287-chatlink-oeffnet-nicht-im-standardbrowser.md)
+- Der Defekt ist als [BUG-0290](../bugs/bug-0290-chatlink-geht-nicht-im-standardbrowser-auf.md)
   erfasst; dieses Epic arbeitet ihn ab.
 
 ### 3.2 Link-Klick-Policy (Vorschlag, nach Evidenz zu bestätigen)
@@ -140,7 +140,7 @@ Contract-/Adapter-Wechsel, keine ADR-Pflicht):
   von `anhang-bilder.spec.ts`: eigener Link bleibt in-app; externer Link im
   Browser-Modus neuer Tab).
 - [ ] **T85.3 — Plattformwege** solo aus T85.1-Evidenz (intent-URI /
-  sichtbarer Fallback); Fail-loud-Rückmeldung; `fixes BUG-0287`.
+  sichtbarer Fallback); Fail-loud-Rückmeldung; `fixes BUG-0290`.
 - [ ] **T85.4 — Gemeinsamen Tool-Resolver** aus `turns.ts` wiederverwenden:
   `tool-image.ts` auf Resolver umstellen (name-Exaktheit fällt; `tool`-Schlüssel
   werden sichtbar). Rote Tests zuerst je Familie: claude-`Read`+`file_path`,
@@ -199,7 +199,7 @@ Contract-/Adapter-Wechsel, keine ADR-Pflicht):
 rot-dann-grün (`tool-image.test.ts`, `markdown.test.ts`, `turns.test.ts`,
 neue Familien-Fixtures); neue E2E-Specs in `e2e/specs/`; `npm run gate` grün
 (inkl. `check:arch`, `check:commits`, `check:context`); GitHub-Actions
-(`verify` + nightly-Vollsuite) grün; BUG-0287 per `Fixes #` geschlossen;
+(`verify` + nightly-Vollsuite) grün; BUG-0290 per `Fixes #` geschlossen;
 Doku-Punkte T85.6 geschrieben; Gerätetermine nach P000 eingetragen;
 Erreichbarkeit: Policy und Registry sind im Standardpfad aktiv, nicht hinter
 einem Schalter begraben.

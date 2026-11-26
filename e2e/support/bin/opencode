@@ -126,4 +126,4 @@ emit({
   sessionID: sid,
   part: { text: has("BREITENTEST") ? prompt : `Antwort auf: ${prompt.split("\n\n[Anhang")[0].split("\n").pop()} · Session ${sid}${resumed ? " (fortgesetzt)" : ""} · cwd ${process.cwd()}${attachmentNote()}` },
 });
-emit({ type: "step_finish", sessionID: sid, part: { reason: "stop", cost: 0.0012, tokens: { total: 321 } } });
+emit({ type: "step_finish", sessionID: sid, part: { reason: "stop", cost: 0.0012, tokens: { total: 321, input: 300, output: 21 } } });

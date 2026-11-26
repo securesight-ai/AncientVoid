@@ -1,5 +1,5 @@
 ---
-id: BUG-0287
+id: BUG-0290
 slug: chatlink-geht-nicht-im-standardbrowser-auf
 status: open
 severity: S2
@@ -12,7 +12,7 @@ created: 2026-11-25
 reporter: silenttz
 ---
 
-# BUG-0287 — Chat-Link angeklickt: der Standardbrowser geht nicht auf
+# BUG-0290 — Chat-Link angeklickt: der Standardbrowser geht nicht auf
 
 ## Gesehen
 

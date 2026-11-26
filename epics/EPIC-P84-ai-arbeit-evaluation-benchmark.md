@@ -1,6 +1,10 @@
 # EPIC-P84 — AI-Arbeit-Evaluation: Harness × Modell × Skills messbar vergleichen
 
-**Status:** Planungsentwurf (Nutzerauftrag 24.11.2026), Umsetzung offen · **Phase:** P84 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** keine blockierende (Quer-Epic wie P80/P82); P81/P82-Ausläufe bleiben unberührt, P30/P31 On hold ebenfalls. Grundlagen: [Recherche-Snapshot 2026-11-24](../docs/2026-11-24_ai-arbeit-evaluation-recherche.md); Messlauf-Muster (`scripts/messlauf-*.mjs`), Skill-Run-Extraktor `scripts/skill-runs.mjs` (P72), `turn_metrics`/ADR-0003/ADR-0006, P81 (Energie).
+**Status:** In Umsetzung, echte Kern- und Reproduktionsserie offen · **Phase:** P84 · **Dauer:** 2–3 Agenten-Wochen · **Abhängigkeit:** keine blockierende (Quer-Epic wie P80/P82); P81/P82-Ausläufe bleiben unberührt, P30/P31 On hold ebenfalls. Grundlagen: [Recherche-Snapshot 2026-11-24](../docs/2026-11-24_ai-arbeit-evaluation-recherche.md); Messlauf-Muster (`scripts/messlauf-*.mjs`), Skill-Run-Extraktor `scripts/skill-runs.mjs` (P72), `turn_metrics`/ADR-0003/ADR-0006, P81 (Energie).
+
+Tracker: [#427](https://github.com/securesight-ai/AncientVoid/issues/427) ·
+[Messlauf-Anleitung](../docs/evaluation-messlauf.md) ·
+[ADR-0126](../docs/adr/0126-evaluation-in-turn-metriken.md)
 
 ## 1. Ziel
 
@@ -99,28 +103,28 @@ Skill-Zuordnung pro Lauf nachträglich.
 
 ## 4. Aufgaben
 
-- [ ] **T84.1** Aufgabenkorpus einfrieren: 12–20 nachspielbare Aufgaben aus
+- [x] **T84.1** Aufgabenkorpus einfrieren: 12–20 nachspielbare Aufgaben aus
   diesem Repo mit deterministischer Abnahme-Prüfung; Korpus-Hash ins Repo;
   Erzeugungsdatum je Aufgabe notieren (Kontaminationsschutz, Recherche
-  §2.4). → AC-P84-1
-- [ ] **T84.2** Evaluations-Protokoll + Ergebnisspeicherung als Contract in
+  §2.4). [Korpus-Abnahme](../docs/messlauf/2026-11-25-p84-korpus.md) → AC-P84-1
+- [x] **T84.2** Evaluations-Protokoll + Ergebnisspeicherung als Contract in
   `@ancientvoid/contracts` und Core-Modul (Erweiterung `turn_metrics`-Welt,
   K7-Recovery-Pfad dokumentiert). → AC-P84-2, AC-P84-3
-- [ ] **T84.3** Runner `npm run messlauf:eval` (`scripts/messlauf-eval.mjs`,
+- [x] **T84.3** Runner `npm run messlauf:eval` (`scripts/messlauf-eval.mjs`,
   Messlauf-Muster): Arm-Definition als Datei, fährt Arme über bestehende
   Adapter durch den Hub; K8-Klasse (parallele Sessions ohne Verlust): der
   Runner bricht laut, statt Läufe still zu droppen. → AC-P84-2
-- [ ] **T84.4** Kosten-/Energiebuchung: Preis-Snapshot je Lauf im
+- [x] **T84.4** Kosten-/Energiebuchung: Preis-Snapshot je Lauf im
   Datensatz; lokale Arme mit P81-Energie; Report weist beides getrennt aus.
   → AC-P84-3
-- [ ] **T84.5** Skills-A/B innerhalb je eines Harness (an/aus auf
+- [x] **T84.5** Skills-A/B innerhalb je eines Harness (an/aus auf
   identischen Aufgaben; immer geladene Regel-Last konstant halten und
   ausweisen). → AC-P84-4
 - [ ] **T84.6** Erste Kernserie auf der reduzierten Matrix (n ≥ 5 je Arm,
   Median + Streuung je Metrik und Aufgabe). → AC-P84-2, AC-P84-6
 - [ ] **T84.7** Split-Szenarien (a)/(b)/(c) auf demselben Korpus,
   Phasentrennung Plan/Bau im Protokoll. → AC-P84-5
-- [ ] **T84.8** Report-Generator + erster datierter Report
+- [ ] **T84.8** Report-Generator (Code fertig, `scripts/eval/report.mjs`) + erster datierter Report
   `docs/messlauf/JJJJ-MM-DD-p83-eval-kernserie.md`; datenbasierte
   Kombinations-Empfehlung (Anhang im Report) als Entscheidungsvorlage. → AC-P84-2…6
 
@@ -148,7 +152,7 @@ Skill-Zuordnung pro Lauf nachträglich.
   verconfoundete Zeilen des Reports sind als solche gekennzeichnet.
 - **AC-P84-7 (Qualität):** Mechanische Korrektheit kommt aus
   deterministischen Tests; subjektive Qualitätsurteile sind nach
-  **P000 delegiert** (Eintragsformat dort) und werden hier nicht
+  **[P000 T000.39](EPIC-000-testsuite-fuer-menschen.md) verschoben** und werden hier nicht
   vorweggenommen.
 
 ## 6. Premortem
