@@ -2,3 +2,4 @@
 export { deriveTurnMetrics } from "./derive.ts";
 export { estimateRun } from "./estimate.ts";
 export { TurnMetricStore } from "./turn-metric-store.ts";
+export { measureEvaluationPhase, readEvaluation } from "./evaluation.ts";

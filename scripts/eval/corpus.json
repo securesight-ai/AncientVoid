@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "notizen-route",
+      "createdOn": "2026-11-23",
+      "start": "65a8cef7f7432f19968d7e77949156b3fc2bc13c",
+      "reference": "6daa2c1eb6ba3762dbe3d94df5db001d51636d14",
+      "test": "apps/pwa/test/app/route.test.ts",
+      "selector": "bleibt die Vault-Seite",
+      "prompt": "Beim Öffnen von #/notizen/wissen soll die Vault-Seite mit aktivem Wissen-Reiter erscheinen. Erhalte die bestehenden Notizen- und Übersichts-Routen.",
+      "editable": [
+        "apps/pwa/src/app/route.ts"
+      ],
+      "split": true,
+      "contaminationRisk": true
+    },
+    {
+      "id": "session-median",
+      "createdOn": "2026-11-23",
+      "start": "fd727a424e6de81e6cf0ad2e803368479cc06e1c",
+      "reference": "5e6a78e548ba3cbbb3fd0150244bec1944ec3e0d",
+      "test": "packages/core/test/modules/runs/turn-metrics.test.ts",
+      "selector": "eigene Züge der Session",
+      "prompt": "Liefere die Anzahl und den Median der erfolgreichen abgeschlossenen Züge einer Sitzung auch dann, wenn die Stichprobe für die allgemeine Laufzeitschätzung noch zu klein ist.",
+      "editable": [
+        "apps/pwa/src/features/session/SessionTail.tsx",
+        "apps/pwa/src/shared/api.ts",
+        "packages/contracts/src/runs/turn-metrics.ts",
+        "packages/core/src/modules/runs/turn-metric-store.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "notification-retention",
+      "createdOn": "2026-11-23",
+      "start": "26fe3fde0553493cc1cd31920f17328f6fb2bfe0",
+      "reference": "65a8cef7f7432f19968d7e77949156b3fc2bc13c",
+      "test": "packages/core/test/modules/sessions/session-manager.test.ts",
+      "selector": "notifications\\(\\) liefert nichts jenseits",
+      "prompt": "Begrenze die Liste der Glocken-Benachrichtigungen auf den konfigurierten Horizont. Entferne beim Lesen auch abgelaufene Einträge aus der Persistenz.",
+      "editable": [
+        "apps/pwa/src/features/notifications/Notifications.tsx",
+        "apps/pwa/src/shared/api.ts",
+        "packages/core/src/modules/notifications/index.ts",
+        "packages/core/src/modules/notifications/notifications.ts",
+        "packages/core/src/modules/sessions/session-manager.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "host-power",
+      "createdOn": "2026-11-23",
+      "start": "948e47248fb08ce3659acf284bbf6292a2051007",
+      "reference": "5f0df46730a5882acc17f93f3b7f72cd73ffec47",
+      "test": "packages/core/test/aimetrics/sampler.test.ts",
+      "selector": "GPU-Leistung|CPU-Paket|power1_average geht|nicht zuordenbar",
+      "prompt": "Lies AMD-Leistung aus hwmon. Unterscheide gesteckte GPU und APU-Paket, gib Durchschnittswerten den Vorrang und behandle fehlende oder ungültige Werte als unbekannt.",
+      "editable": [
+        "apps/pwa/src/features/statistics/StatisticsPage.tsx",
+        "packages/core/src/modules/aimetrics/sampler.ts"
+      ],
+      "split": true,
+      "contaminationRisk": true
+    },
+    {
+      "id": "local-image",
+      "createdOn": "2026-11-23",
+      "start": "943e95d06b84283d246de631d1fd3bd35465984b",
+      "reference": "53069cf5a0cc790a8c2a33e557e3268731091d3e",
+      "test": "apps/pwa/test/features/tool-image.test.ts",
+      "selector": "eigene Sitzung mit eigener hostId",
+      "prompt": "Zeige Werkzeug-Bildvorschauen in eigenen Sitzungen auch mit expliziter lokaler Host-ID an. Fremde Sitzungen bleiben ausgeschlossen.",
+      "editable": [
+        "apps/pwa/src/app/styles/08-session-events.css",
+        "apps/pwa/src/features/session/ChatTurns.tsx",
+        "apps/pwa/src/features/session/EventRow.tsx",
+        "apps/pwa/src/features/session/SessionTail.tsx",
+        "apps/pwa/src/features/session/tool-image.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "halogen-throughput",
+      "createdOn": "2026-11-23",
+      "start": "204ff0addef03bf17ecda23a38c5833054007da4",
+      "reference": "9cc5434b5952356943a8e3ef6eb87ebb26ec0299",
+      "test": "packages/core/test/inference.test.ts",
+      "selector": "Halogen: wiederverwendete Token kommen",
+      "prompt": "Zeige bei Halogen mittleren Prefill- und Decode-Durchsatz seit Prozessstart aus den kumulierten Zählern. Die Anzeige soll auch im Leerlauf sinnvoll bleiben.",
+      "editable": [
+        "packages/core/src/modules/inference/prom-engines.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "inference-share",
+      "createdOn": "2026-11-22",
+      "start": "050152ec3d5349318d6d238f3303089f15c6aac9",
+      "reference": "c9ea0ab468a02f290e52f68e9bdc9bf93ffd062c",
+      "test": "packages/core/test/inference.test.ts",
+      "selector": "Anteile: Einheit der Engine|num\\(\\): Zahlen als Text",
+      "prompt": "Normalisiere Inferenz-Auslastung auf Anteile zwischen 0 und 1, mit expliziter Einheit. Akzeptiere numerische Werte aus der Engine auch als Text, lasse ungültige Werte unbekannt.",
+      "editable": [
+        "apps/pwa/src/app/styles/57-inference.css",
+        "apps/pwa/src/features/inference/InferencePage.tsx",
+        "apps/pwa/src/features/inference/format.ts",
+        "packages/core/src/modules/inference/engine.ts",
+        "packages/core/src/modules/inference/strata.ts"
+      ],
+      "split": true,
+      "contaminationRisk": true
+    },
+    {
+      "id": "millions-format",
+      "createdOn": "2026-11-21",
+      "start": "29dde2f4a968c809b1bf09c78b7b64b18dcc6c3a",
+      "reference": "a0c6dfd0104e5001234097471a0cc482713bfd86",
+      "test": "apps/pwa/test/inference-format.test.ts",
+      "selector": "Großzahlen kompakt",
+      "prompt": "Korrigiere die Anzeige dreistelliger Millionenbeträge im Inferenz-Reiter. Werte ab 100 Mio sollen auf eine Nachkommastelle gerundet und von kleineren Millionenwerten unterscheidbar bleiben.",
+      "editable": [
+        "apps/pwa/src/features/inference/format.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "continue-link",
+      "createdOn": "2026-11-21",
+      "start": "30be05d7be4203d14d8ed29ecdb7c12516891c83",
+      "reference": "4d21e311b53ca0d83c98c4d3fe6a26c269e196d0",
+      "test": "apps/pwa/test/features/session/host-commands.test.ts",
+      "selector": "baut den Session-Deep-Link",
+      "prompt": "Erzeuge den Continue-Link aus der Sitzungs-ID als Deep-Link zur Sitzung. Der Link muss auch funktionieren, wenn die Ansicht in einer Kachel geöffnet ist und die URL der Seite keinen Sitzungs-Hash trägt.",
+      "editable": [
+        "apps/pwa/src/features/session/HostCommands.tsx",
+        "apps/pwa/src/features/session/ReportPane.tsx"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "halogen-endpoints",
+      "createdOn": "2026-11-23",
+      "start": "5dcd2525d567fa623a381c8cb9cbb41a28ccd8a1",
+      "reference": "2ae97ab54047aaff69dbbeb7eb8566e4349b932c",
+      "test": "packages/core/test/inference.test.ts",
+      "selector": "Halogen holt /health und /cache",
+      "prompt": "Frage beim Halogen-Tracker /health und /cache relativ zum Ursprung ab. Die Metrik-URL darf auf /metrics zeigen.",
+      "editable": [
+        "packages/core/src/modules/inference/tracker.ts"
+      ],
+      "split": true,
+      "contaminationRisk": true
+    },
+    {
+      "id": "queue-steering",
+      "createdOn": "2026-11-23",
+      "start": "3cb8700d668b447768b0f3f5168a92062127f425",
+      "reference": "579333ad91015085e7c86bdbcd5bdc6bea05d4ec",
+      "test": "apps/pwa/test/features/queue-send-moeglich.test.ts",
+      "selector": "im Leerlauf geht|im laufenden Zug nur",
+      "prompt": "Biete sofortiges Senden vorgemerkter Eingaben an, wenn die Sitzung bereit ist oder ihr Adapter mitten im laufenden Zug Eingaben annimmt. Andere laufende Züge sollen die Eingabe vorgemerkt lassen.",
+      "editable": [
+        "apps/pwa/src/app/styles/08-session-events.css",
+        "apps/pwa/src/features/session/QueueList.tsx",
+        "apps/pwa/src/features/session/SessionTail.tsx",
+        "apps/pwa/src/shared/i18n/de/features.ts",
+        "apps/pwa/src/shared/i18n/en/features.ts",
+        "packages/core/src/modules/sessions/session-manager.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "halogen-rates",
+      "createdOn": "2026-11-23",
+      "start": "58b43d75801c2879222de1cb583a8840f2ffd9a8",
+      "reference": "7b876b95fb464bbe650be2c63745e2f4aa690b7f",
+      "test": "packages/core/test/aimetrics/halogen.test.ts",
+      "selector": "eine Anfrage zwischen|Neustart der Engine|Zähler weg",
+      "prompt": "Leite Halogen-Anfrageraten aus Zählerdifferenzen ab. Erhalte den letzten positiven Wert samt Zeitpunkt, behandle einen Zähler-Reset korrekt und melde fehlende Zähler sichtbar.",
+      "editable": [
+        "apps/hub/src/main.ts",
+        "apps/pwa/src/features/statistics/MetricSource.tsx",
+        "apps/pwa/src/shared/metrics.ts",
+        "packages/core/src/modules/aimetrics/sampler.ts",
+        "packages/core/src/platform/config.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    }
+  ]
+}

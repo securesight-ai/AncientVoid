@@ -37,6 +37,7 @@
     "setup": "./setup.sh",
     "gateway-mcp": "node apps/gateway-mcp/src/main.ts",
     "loadtest": "node scripts/loadtest.mjs",
+    "messlauf:eval": "node scripts/messlauf-eval.mjs",
     "messlauf:hubctl-latency": "node scripts/messlauf-hubctl-latency.mjs",
     "messlauf:approve-latency": "node scripts/messlauf-approve-latency.mjs",
     "messlauf:p5-discovery": "node scripts/messlauf-p5.mjs discovery",
