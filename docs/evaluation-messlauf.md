@@ -113,6 +113,29 @@ Ein neuer Serienname startet einen unabhängigen Lauf. Der Report
 erfordert lückenlose, disjunkte Serien mit festem Protokollstand
 und weist Rangänderungen und Preisdatumswechsel aus.
 
+## Mess-Registrierungen im Benchmark-Hub
+
+Die ACP-Anbindung von maki 0.6.5 meldet nur die Kontextfüllung, keine Richtungs-Tokens
+(`capabilities.usage=false`); die Session-Datei von maki bleibt bei null. Der Hub lehnt solche
+Läufe laut ab. Für die Messung läuft maki deshalb über den Claude-Adapter im
+stream-json-Modus (`maki -p --output-format stream-json` ist Claude-kompatibel):
+
+```json
+{ "id": "maki-sdk", "module": "@ancientvoid/adapter-claude",
+  "config": { "command": "maki", "permissionPrompts": "off", "modelsCommand": ["maki", "models"] } }
+```
+
+Damit liefert maki native Richtungs-Tokens und den Cache getrennt. Die interaktive
+ACP-Registrierung bleibt unverändert. Claude Code gegen z.ai GLM läuft als weitere
+Claude-Registrierung mit `command` auf einen Wrapper, der `ANTHROPIC_BASE_URL`
+(`https://api.z.ai/api/anthropic`), den Key aus einer Datei und ein eigenes Profil setzt.
+Das von Claude Code gemeldete `costUsd` ist dort ein Anthropic-Preis und wird nicht verwendet.
+
+Cache-Tokens: Claude meldet sie getrennt von der frischen Eingabe. Pi, OpenCode und Codex
+melden die Eingabe einschließlich Cache und markieren das mit `cacheIncluded`; der Cache
+bleibt über `cacheInputTokens` sichtbar und wird zum Cache-Preis gerechnet. Bei Adaptern
+ohne Cache-Angabe (z. B. Cursor) weist der Report die Kosten als obere Schranke aus.
+
 ## Nachweise
 
 - [ADR-0126](adr/0126-evaluation-in-turn-metriken.md)

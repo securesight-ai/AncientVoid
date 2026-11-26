@@ -201,7 +201,8 @@ function usageEvent(raw: unknown): EmittedEvent[] {
   const input = n(u.input) + n(u.cacheRead) + n(u.cacheWrite);
   const output = n(u.output);
   const total = typeof u.totalTokens === "number" ? u.totalTokens : input + output;
-  return [{ type: "system", summary: `pi: ${total} Tokens`, payload: { kind: "pi.usage", usage: { input, output } }, tokensEst: total }];
+  const cache = n(u.cacheRead) + n(u.cacheWrite);
+  return [{ type: "system", summary: `pi: ${total} Tokens`, payload: { kind: "pi.usage", usage: { input, output }, ...(cache > 0 ? { cacheInputTokens: cache, cacheIncluded: true } : {}) }, tokensEst: total }];
 }
 
 function pick(rec: Record_, keys: string[]): Record<string, unknown> {

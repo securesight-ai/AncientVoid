@@ -117,6 +117,7 @@ export function normalizeOpencodeLine(raw: unknown): EmittedEvent[] {
       const costUsd = typeof p.cost === "number" && p.cost > 0 ? p.cost : undefined;
       const tokensEst = typeof p.tokens?.total === "number" ? p.tokens.total : undefined;
       const reasoning = typeof p.tokens?.reasoning === "number" ? p.tokens.reasoning : undefined;
+      const cache = (p.tokens?.cache?.read ?? 0) + (p.tokens?.cache?.write ?? 0);
       const usage = typeof p.tokens?.input === "number" && typeof p.tokens.output === "number"
         ? { input: p.tokens.input + (p.tokens.cache?.read ?? 0) + (p.tokens.cache?.write ?? 0), output: p.tokens.output + (reasoning ?? 0) }
         : undefined;
@@ -130,7 +131,7 @@ export function normalizeOpencodeLine(raw: unknown): EmittedEvent[] {
         {
           type: "system",
           summary,
-          payload: { kind: "opencode.step_finish", reason: p.reason, ...(usage ? { usage } : {}), ...(reasoning !== undefined ? { reasoning } : {}) },
+          payload: { kind: "opencode.step_finish", reason: p.reason, ...(usage ? { usage } : {}), ...(usage && cache > 0 ? { cacheInputTokens: cache, cacheIncluded: true } : {}), ...(reasoning !== undefined ? { reasoning } : {}) },
           ...(costUsd !== undefined ? { costUsd } : {}),
           ...(tokensEst !== undefined ? { tokensEst } : {}),
         },

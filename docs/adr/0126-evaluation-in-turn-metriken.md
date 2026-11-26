@@ -42,3 +42,9 @@ werden zum Eingabepreis gerechnet und überschätzen daher die Kosten), optional
 `fxDate` im Energie-Snapshot. Alle Felder sind additiv; bestehende
 Aufzeichnungen bleiben lesbar (`attempt` hat den Vorgabewert 1).
 `cacheInputTokens` ist für neue Aufzeichnungen Pflicht.
+
+Ergänzung (gleicher Tag): Ereignisse, deren `usage.input` den Cache bereits enthält
+(Pi, OpenCode, Codex), tragen `cacheInputTokens` zusammen mit `cacheIncluded: true`;
+die Erfassung addiert den Cache dann nicht noch einmal zur Eingabe. maki wird für
+die Messung über den Claude-Adapter im stream-json-Modus registriert, weil die
+ACP-Anbindung keine Richtungs-Tokens liefert.

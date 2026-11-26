@@ -37,6 +37,14 @@ describe("normalizeOpencodeLine — real captured `opencode run --format json` (
     expect(finishes[1]!.tokensEst).toBe(7505);
   });
 
+  it("keeps the cache visible next to the aggregated input (P84 cost split)", () => {
+    const [event] = normalizeOpencodeLine({
+      type: "step_finish",
+      part: { type: "step-finish", reason: "stop", tokens: { total: 130, input: 20, output: 10, cache: { read: 100, write: 0 } }, cost: 0 },
+    });
+    expect(event?.payload).toMatchObject({ usage: { input: 120, output: 10 }, cacheInputTokens: 100, cacheIncluded: true });
+  });
+
   it("says when a step hit the length limit after a thinking-only turn", () => {
     const events = normalizeOpencodeLine({
       type: "step_finish",

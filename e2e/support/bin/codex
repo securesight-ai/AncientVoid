@@ -67,7 +67,7 @@ async function turn(threadId, turnId, text) {
   notify("item/completed", { threadId, turnId, completedAtMs: Date.now(), item: { type: "reasoning", id: randomUUID(), summary: ["Kurz überlegt."], content: [] } });
   notify("item/completed", { threadId, turnId, completedAtMs: Date.now(), item: { type: "agentMessage", id: randomUUID(), text: `Antwort auf: ${text} · Codex${tail}` } });
   if (text.includes("SPAETES_ENDE")) await sleep(1000);
-  notify("thread/tokenUsage/updated", { threadId, turnId, tokenUsage: { modelContextWindow: 200, last: { inputTokens: 100, cachedInputTokens: 0, outputTokens: 20, reasoningOutputTokens: 0, totalTokens: 120 }, total: { inputTokens: 100, cachedInputTokens: 0, outputTokens: 20, reasoningOutputTokens: 0, totalTokens: 120 } } });
+  notify("thread/tokenUsage/updated", { threadId, turnId, tokenUsage: { modelContextWindow: 200, last: { inputTokens: 100, cachedInputTokens: 40, outputTokens: 20, reasoningOutputTokens: 0, totalTokens: 120 }, total: { inputTokens: 100, cachedInputTokens: 0, outputTokens: 20, reasoningOutputTokens: 0, totalTokens: 120 } } });
   notify("turn/completed", { threadId, turn: { id: turnId, status: "completed", items: [] } });
   if (text.includes("CHILD_ACTIVITY")) {
     await sleep(100);

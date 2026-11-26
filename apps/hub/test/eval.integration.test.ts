@@ -19,6 +19,7 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
     async start(_spec, ctx) {
       ctx.emit({ type: "system", summary: EVAL_COMPLETE_EVENT, payload: { kind: EVAL_COMPLETE_EVENT } });
       ctx.emit({ type: "system", summary: "metered", payload: { usage: { input: 20, output: 10 }, cacheInputTokens: 100 }, tokensEst: 130 });
+      ctx.emit({ type: "system", summary: "metered-aggregated", payload: { usage: { input: 120, output: 10 }, cacheInputTokens: 100, cacheIncluded: true }, tokensEst: 130 });
       ctx.emit({ type: "system", summary: "finished", payload: { kind: "session.turn_end", code: 0 } });
       return { sessionId: ctx.sessionId };
     },
@@ -72,7 +73,7 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
       const first = await hub.app.inject(request);
       expect(first.statusCode, first.body).toBe(200);
       const record = first.json();
-      expect(record.phases[0]).toMatchObject({ inputTokens: 120, cacheInputTokens: 100, outputTokens: 10, costUsd: index % 2 === 0 ? 0.00013 : 0.0025 });
+      expect(record.phases[0]).toMatchObject({ inputTokens: 240, cacheInputTokens: 200, outputTokens: 20, costUsd: index % 2 === 0 ? 0.00026 : 0.0025 });
       expect((await hub.app.inject(request)).json()).toEqual(record);
       expect((await hub.app.inject({ ...request, payload: { ...payload, acceptance: false } })).statusCode).toBe(422);
       expect((await hub.store.replay(id)).filter((event) => event.summary === EVAL_COMPLETE_EVENT)).toHaveLength(1);
