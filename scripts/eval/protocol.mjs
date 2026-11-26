@@ -4,27 +4,40 @@ import { EvalCloudPrice } from "@ancientvoid/contracts";
 
 const name = z.string().regex(/^[a-z0-9][a-z0-9._-]{0,95}$/);
 const label = z.string().min(1).max(200);
-const cloud = z.strictObject({ model: label, fingerprint: label, billing: EvalCloudPrice, budgetUsd: z.number().positive() });
 const local = z.strictObject({
+  kind: z.literal("local"),
+  date: z.iso.date(),
+  host: label,
+  usdPerKwh: z.number().positive(),
+  eurPerKwh: z.number().positive().optional(),
+  usdPerEur: z.number().positive().optional(),
+  fxDate: z.iso.date().optional(),
+});
+const cell = z.strictObject({
+  id: name,
+  harness: name,
+  adapter: name,
+  version: label,
+  configurationFingerprint: label,
   model: label,
   fingerprint: label,
-  billing: z.strictObject({
-    kind: z.literal("local"),
-    date: z.iso.date(),
-    host: label,
-    usdPerKwh: z.number().positive(),
-  }),
+  provider: name,
+  billing: z.discriminatedUnion("kind", [local, EvalCloudPrice]),
+  budgetUsd: z.number().positive().optional(),
+  skillsAb: z.boolean().default(true),
+  healthUrl: z.url().optional(),
 });
-const harness = z.strictObject({ adapter: name, version: label, configurationFingerprint: label, local, cloud });
 const protocol = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   fixturePolicy: z.literal("isolated-hub"),
-  repetitions: z.number().int().min(5).max(50),
+  repetitions: z.number().int().min(3).max(50),
   timeoutMs: z.number().int().min(1000).max(3_600_000),
   parallelCloudRuns: z.number().int().min(1).max(20),
+  maxInfraRetries: z.number().int().min(0).max(5).default(2),
   setup: label,
-  splitHarness: z.enum(["pi", "claude", "opencode"]),
-  harnesses: z.strictObject({ pi: harness, claude: harness, opencode: harness }),
+  providerBudgetUsd: z.record(name, z.number().positive()),
+  cells: z.array(cell).min(2),
+  splits: z.array(z.strictObject({ id: name, plan: name, build: name })).default([]),
 });
 
 export const sha256 = (value) => createHash("sha256").update(value).digest("hex");
@@ -32,30 +45,39 @@ export const sha256 = (value) => createHash("sha256").update(value).digest("hex"
 export function planSeries(raw, corpus) {
   const config = protocol.parse(raw);
   const protocolHash = sha256(JSON.stringify(config));
-  const candidate = (harnessId, kind) => {
-    const source = config.harnesses[harnessId];
-    return { harnessId, adapter: source.adapter, harnessVersion: source.version, ...source[kind] };
-  };
+  const cells = new Map();
+  for (const entry of config.cells) {
+    if (cells.has(entry.id)) throw new Error(`Duplicate cell ${entry.id}`);
+    if (entry.billing.kind === "cloud" && !entry.budgetUsd) throw new Error(`${entry.id}: cloud cells need budgetUsd`);
+    if (entry.billing.kind === "cloud" && !(entry.provider in config.providerBudgetUsd)) throw new Error(`${entry.id}: no providerBudgetUsd for ${entry.provider}`);
+    cells.set(entry.id, entry);
+  }
+  const byFingerprint = new Map();
+  for (const entry of cells.values()) {
+    const known = byFingerprint.get(entry.fingerprint);
+    if (known && known.model !== entry.model) throw new Error(`Fingerprint ${entry.fingerprint} is shared by different models`);
+    byFingerprint.set(entry.fingerprint, entry);
+  }
+  const candidate = (entry) => ({
+    cellId: entry.id, harnessId: entry.harness, adapter: entry.adapter, harnessVersion: entry.version, model: entry.model,
+    fingerprint: entry.fingerprint, provider: entry.provider, billing: entry.billing,
+    ...(entry.budgetUsd ? { budgetUsd: entry.budgetUsd } : {}), ...(entry.healthUrl ? { healthUrl: entry.healthUrl } : {}),
+  });
   const arms = [];
-  const adapters = Object.values(config.harnesses).map((source) => source.adapter);
-  if (new Set(adapters).size !== adapters.length) throw new Error("Core harnesses must use distinct adapter registrations");
-  for (const id of Object.keys(config.harnesses)) {
-    if (candidate(id, "local").fingerprint === candidate(id, "cloud").fingerprint) throw new Error(`${id}: local and cloud fingerprints must differ`);
-    for (const kind of ["local", "cloud"]) {
-      for (const skills of [false, true]) {
-        arms.push({ id: `${id}-${kind}-${skills ? "skills" : "plain"}`, group: "core", skills, build: candidate(id, kind) });
-      }
+  for (const entry of cells.values()) {
+    for (const skills of entry.skillsAb ? [false, true] : [false]) {
+      arms.push({ id: `${entry.id}-${skills ? "skills" : "plain"}`, group: "core", skills, build: candidate(entry) });
     }
   }
-  const localModel = candidate(config.splitHarness, "local");
-  const cloudModel = candidate(config.splitHarness, "cloud");
-  arms.push(
-    { id: "split-local-cloud", group: "split", skills: false, plan: localModel, build: cloudModel },
-    { id: "split-cloud-local", group: "split", skills: false, plan: cloudModel, build: localModel },
-    { id: "split-cloud-cloud", group: "split", skills: false, plan: cloudModel, build: cloudModel },
-  );
-  if (!arms.some((a) => arms.some((b) => a.group === "core" && b.group === "core" &&
-    a.build.harnessId !== b.build.harnessId && a.build.fingerprint === b.build.fingerprint &&
+  for (const split of config.splits) {
+    const planCell = cells.get(split.plan);
+    const buildCell = cells.get(split.build);
+    if (!planCell || !buildCell) throw new Error(`Split ${split.id} references an unknown cell`);
+    if (planCell.harness !== buildCell.harness) throw new Error(`Split ${split.id} must stay inside one harness`);
+    arms.push({ id: split.id, group: "split", skills: false, plan: candidate(planCell), build: candidate(buildCell) });
+  }
+  const core = arms.filter((arm) => arm.group === "core");
+  if (!core.some((a) => core.some((b) => a.build.harnessId !== b.build.harnessId && a.build.fingerprint === b.build.fingerprint &&
     a.build.billing.kind === b.build.billing.kind))) {
     throw new Error("The matrix needs an identical model fingerprint across two harnesses");
   }
@@ -72,6 +94,32 @@ export function planSeries(raw, corpus) {
   }
   return { config, protocolHash, corpus, arms, jobs };
 }
+
+export class BudgetGuard {
+  constructor(limits) {
+    this.limits = limits;
+    this.spent = {};
+  }
+
+  assertOpen(job) {
+    for (const side of [job.arm.plan, job.arm.build]) {
+      if (side?.billing.kind !== "cloud") continue;
+      const spent = this.spent[side.provider] ?? 0;
+      if (spent >= this.limits[side.provider]) {
+        throw new Error(`Provider budget exhausted for ${side.provider}: ${spent.toFixed(2)} of ${this.limits[side.provider]} USD`);
+      }
+    }
+  }
+
+  record(job, result) {
+    [job.arm.plan, job.arm.build].filter(Boolean).forEach((side, index) => {
+      if (side.billing.kind === "cloud") this.spent[side.provider] = (this.spent[side.provider] ?? 0) + result.phases[index].costUsd;
+    });
+  }
+}
+
+const INFRA = /HTTP 5\d\d|ECONN|fetch failed|before completed turn telemetry|no positive token usage|did not confirm stop|health/i;
+export const isInfrastructureFailure = (error) => INFRA.test(String(error?.message ?? error));
 
 export const jobKey = ({ arm, task, repetition }) => `${arm.id}/${task.id}/${repetition}`;
 

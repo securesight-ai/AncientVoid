@@ -10,6 +10,7 @@ export const EvalCloudPrice = z.strictObject({
   date: z.iso.date(),
   source: z.url().max(300),
   inputUsdPerMillion: z.number().positive(),
+  cacheInputUsdPerMillion: z.number().positive().optional(),
   outputUsdPerMillion: z.number().positive(),
 });
 
@@ -20,6 +21,9 @@ export const EvalEnergy = z.strictObject({
   source: z.literal("p81:power:components"),
   kwh: z.number().positive(),
   usdPerKwh: z.number().positive(),
+  eurPerKwh: z.number().positive().optional(),
+  usdPerEur: z.number().positive().optional(),
+  fxDate: z.iso.date().optional(),
 });
 
 const phase = z.strictObject({
@@ -36,6 +40,7 @@ export const EvalRunInput = z.strictObject({
   arm: id,
   task: id,
   repetition: z.number().int().positive(),
+  attempt: z.number().int().positive().default(1),
   corpusHash: hash,
   protocolHash: hash,
   rulesHash: hash,
@@ -63,6 +68,7 @@ export const EvalResult = z.strictObject({
     adapterVersion: label,
     model: label,
     inputTokens: count,
+    cacheInputTokens: count,
     outputTokens: count,
     costUsd: z.number().positive(),
     turnErrors: count,

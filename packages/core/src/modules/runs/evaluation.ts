@@ -24,6 +24,7 @@ export function measureEvaluationPhase(
   const completed = events.slice(0, lastTurnEnd + 1);
   const usage = completed.filter((event) => event.payload.usage !== undefined || event.tokensEst !== undefined);
   let inputTokens = 0;
+  let cacheInputTokens = 0;
   let outputTokens = 0;
   for (const event of usage) {
     const split = event.payload.usage as { input?: unknown; output?: unknown } | undefined;
@@ -38,18 +39,22 @@ export function measureEvaluationPhase(
       throw new Error("Evaluation received invalid cache input usage");
     }
     inputTokens += input + (cacheInput ?? 0);
+    cacheInputTokens += cacheInput ?? 0;
     outputTokens += output;
   }
   if (inputTokens + outputTokens === 0) throw new Error("Evaluation has no positive token usage");
   const billing = phase.billing;
   const costUsd = billing.kind === "cloud"
-    ? (inputTokens * billing.inputUsdPerMillion + outputTokens * billing.outputUsdPerMillion) / 1_000_000
+    ? ((inputTokens - cacheInputTokens) * billing.inputUsdPerMillion +
+        cacheInputTokens * (billing.cacheInputUsdPerMillion ?? billing.inputUsdPerMillion) +
+        outputTokens * billing.outputUsdPerMillion) / 1_000_000
     : billing.kwh * billing.usdPerKwh;
   return {
     adapter: session.adapter,
     adapterVersion: session.adapterVersion,
     model: session.model,
     inputTokens,
+    cacheInputTokens,
     outputTokens,
     costUsd,
     turnErrors: turns.filter((turn) => turn.outcome === "error").length,

@@ -5,16 +5,18 @@ const metrics = {
   failure: "Fehlerquote",
   wall: "ms",
   in: "Input-Tokens",
+  cache: "davon Cache-Tokens",
   out: "Output-Tokens",
   cost: "USD gesamt",
   cloudCost: "Cloud USD",
+  cacheCost: "davon Cache USD",
   energyCost: "P81 USD",
   rework: "Fehler tool_result",
 };
 const total = (rows, value) => rows.reduce((sum, row, index) => sum + value(row, index), 0);
 
 export function summarise(values) {
-  if (values.length < 5) throw new Error("Five observations are required for each result");
+  if (values.length < 3) throw new Error("Three observations are required for each result");
   const ordered = [...values].sort((a, b) => a - b);
   const median = (ordered[Math.floor((ordered.length - 1) / 2)] + ordered[Math.floor(ordered.length / 2)]) / 2;
   return { n: ordered.length, median, mean: total(ordered, (value) => value) / ordered.length, min: ordered[0], max: ordered.at(-1) };
@@ -25,9 +27,14 @@ function values({ input, phases }) {
     failure: Number(!(input.acceptance && input.lint && input.typecheck && phases.every((phase) => phase.turnErrors === 0))),
     wall: total(input.phases, (phase) => phase.wallMs),
     in: total(phases, (phase) => phase.inputTokens),
+    cache: total(phases, (phase) => phase.cacheInputTokens),
     out: total(phases, (phase) => phase.outputTokens),
     cost: total(phases, (phase) => phase.costUsd),
     cloudCost: total(phases, (phase, index) => input.phases[index].billing.kind === "cloud" ? phase.costUsd : 0),
+    cacheCost: total(phases, (phase, index) => {
+      const billing = input.phases[index].billing;
+      return billing.kind === "cloud" ? phase.cacheInputTokens * (billing.cacheInputUsdPerMillion ?? billing.inputUsdPerMillion) / 1_000_000 : 0;
+    }),
     energyCost: total(phases, (phase, index) => input.phases[index].billing.kind === "local" ? phase.costUsd : 0),
     rework: total(phases, (phase) => phase.toolErrors),
   };
@@ -167,16 +174,22 @@ export function renderReport(primary, repeat, plan, { date, commit, runtime, ski
   }
   lines.push("", "### Preis- und Energiesnapshots", "",
     "Cloud-Kosten sind Listenpreisäquivalente. Lokale Kosten basieren auf den P81-Komponenten und enthalten deren Grundlast. Fehlende Komponenten sind im P81-Prüfstand festzuhalten.", "");
-  for (const [harness, config] of Object.entries(plan.config.harnesses)) {
-    lines.push(`- ${harness} · CLI ${config.version}, Adapter ${a.versions.get(config.adapter)}, Konfiguration ${config.configurationFingerprint}`);
-    for (const candidate of [config.cloud, config.local]) {
-      const bill = candidate.billing;
-      lines.push(bill.kind === "cloud"
-        ? `  - ${candidate.model} (${candidate.fingerprint}) · Cloud ${bill.date}, ${bill.inputUsdPerMillion}/${bill.outputUsdPerMillion} USD pro Mio. Input/Output. [Preisquelle](${bill.source})`
-        : `  - ${candidate.model} (${candidate.fingerprint}) · P81 ${bill.host}, ${bill.date}, ${bill.usdPerKwh} USD/kWh`);
+  for (const cell of plan.config.cells) {
+    const bill = cell.billing;
+    lines.push(`- ${cell.id} · ${cell.harness} CLI ${cell.version}, Adapter ${a.versions.get(cell.adapter)}, Konfiguration ${cell.configurationFingerprint}`);
+    lines.push(bill.kind === "cloud"
+      ? `  - ${cell.model} (${cell.fingerprint}) · ${cell.provider} ${bill.date}, ${bill.inputUsdPerMillion}/${bill.cacheInputUsdPerMillion ?? "–"}/${bill.outputUsdPerMillion} USD pro Mio. Input/Cache/Output. [Preisquelle](${bill.source})`
+      : `  - ${cell.model} (${cell.fingerprint}) · P81 ${bill.host}, ${bill.date}, ${bill.usdPerKwh} USD/kWh${bill.eurPerKwh ? ` (${bill.eurPerKwh} EUR/kWh × ${bill.usdPerEur} USD/EUR, ${bill.fxDate})` : ""}`);
+  }
+  for (const series of [a, b]) {
+    for (const arm of plan.arms.filter((candidate) => candidate.group === "core" && candidate.build.billing.kind === "cloud")) {
+      const phases = series.rows.filter((row) => row.input.arm === arm.id).flatMap((row) => row.phases);
+      if (phases.length && phases.every((phase) => phase.cacheInputTokens === 0)) {
+        lines.push(`- ${series.series}/${arm.id} · Cache-Tokens nicht getrennt gemeldet: Kosten sind eine **obere Schranke** (Cache zum Eingabepreis).`);
+      }
     }
   }
-  const dates = new Set(Object.values(plan.config.harnesses).map((entry) => entry.cloud.billing.date));
+  const dates = new Set(plan.config.cells.filter((cell) => cell.billing.kind === "cloud").map((cell) => cell.billing.date));
   if (dates.size > 1) lines.push("", "Cloud-Vergleiche umfassen unterschiedliche Preisstände.");
   for (const series of [a, b]) {
     const electricity = series.rows.flatMap((row) => row.input.phases).filter((phase) => phase.billing.kind === "local");
