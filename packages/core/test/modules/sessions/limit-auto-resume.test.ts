@@ -88,7 +88,12 @@ describe("Limit-Wiederaufnahme (ADR-0076 Nachtrag)", () => {
     const f = await fixture();
     await f.manager.setAutoResumeOnLimit(f.record.id, true, "phone");
     await f.hitLimit(inAnHour());
-    await f.wait(async () => f.manager.get(f.record.id)?.status === "interrupted", "interrupted mit Option");
+    // Status und Journal können auseinanderlaufen (emit fire-and-forget) —
+    // erst auf das Interrupt-Event warten, sonst flake in CI unter Last.
+    await f.wait(async () => {
+      if (f.manager.get(f.record.id)?.status !== "interrupted") return false;
+      return (await f.events()).some((e) => e.payload.kind === "session.interrupted");
+    }, "interrupted mit Option");
     const interrupt = (await f.events()).findLast(e => e.payload.kind === "session.interrupted");
     expect(interrupt?.payload).toMatchObject({ reason: "provider_limit", limit: true, autoResumeEligible: true });
     expect(typeof interrupt?.payload.resumesAt).toBe("string");
