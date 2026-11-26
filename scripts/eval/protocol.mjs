@@ -128,6 +128,21 @@ export const isInfrastructureFailure = (error) => INFRA.test(String(error?.messa
 
 export const jobKey = ({ arm, task, repetition }) => `${arm.id}/${task.id}/${repetition}`;
 
+/** Offene Läufe beim Fortsetzen: Erfasstes und Abgebrochenes entfällt, zurückgestellte Provider warten. */
+export function resumeJobs(plan, { rows, aborted, skipProviders, budget }) {
+  const providers = new Set(plan.config.cells.map((entry) => entry.provider));
+  for (const name of skipProviders) if (!providers.has(name)) throw new Error(`Unknown provider ${name}`);
+  const byKey = new Map(plan.jobs.map((job) => [jobKey(job), job]));
+  for (const { key, row } of rows) {
+    const job = byKey.get(key);
+    if (!job || row.input.protocolHash !== plan.protocolHash) throw new Error(`${key} was recorded under a different protocol; start a new series`);
+    budget.record(job, row);
+  }
+  const closed = new Set([...rows.map((entry) => entry.key), ...aborted]);
+  return plan.jobs.filter((job) => !closed.has(jobKey(job)) &&
+    ![job.arm.plan, job.arm.build].some((side) => side && skipProviders.includes(side.provider)));
+}
+
 export async function runJobs(jobs, parallelCloudRuns, run) {
   let cloud = [];
   const settle = async () => {

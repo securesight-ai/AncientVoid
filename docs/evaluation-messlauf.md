@@ -181,3 +181,9 @@ lebender Engine oder eine offene Rückfrage ist ein Abbruch des Agenten: Er steh
 in `aborted.jsonl`, die Serie läuft weiter und ist partiell. Abbrüche fehlen in
 der Ergebnistabelle (Überlebenden-Verzerrung); der Report muss sie nennen.
 Vor jeder Serie muss jede Zelle einen Zug mit Werkzeugnutzung bestehen.
+
+Ein erschöpftes Anbieter-Kontingent (Abo-Limit) erscheint als Ausfall ohne Token
+und hält die Serie an. `run … --series <name> --resume` setzt dieselbe Serie unter
+demselben Protokoll fort: erfasste und abgebrochene Läufe entfallen, der verbrauchte
+Provider-Deckel zählt weiter. `--skip-provider anthropic` stellt einen Anbieter
+zurück; ein späteres `--resume` ohne die Angabe holt ihn nach.
