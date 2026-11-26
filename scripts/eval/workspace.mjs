@@ -31,6 +31,15 @@ async function skillDigest(directory, subpath = "") {
   return files;
 }
 
+// Jede Arbeitskopie ist ein eigenes, sauberes Git-Repo: Sonst gilt dem Hub ein umgebendes Repo als Projekt
+// (parallele Läufe kollidieren, der Agent sieht fremden Verlauf).
+export async function snapshotWorkspace(directory) {
+  const git = (...args) => run("git", ["-c", "user.name=bench", "-c", "user.email=bench@invalid", "-c", "commit.gpgsign=false", ...args], { cwd: directory, maxBuffer: 8 * 1024 * 1024 });
+  await git("init", "-q");
+  await git("add", "-A");
+  await git("commit", "-q", "--allow-empty", "-m", "start");
+}
+
 export async function prepareWorkspace(root, directory, task, skills) {
   await checkoutTask(root, directory, task.start);
   const skillStaging = `${directory}-skill-staging`;
@@ -44,6 +53,7 @@ export async function prepareWorkspace(root, directory, task, skills) {
     }
     const rules = await Promise.all(ruleFiles.map(async (path) => [path, (await readOptional(join(directory, path)))?.toString("utf8") ?? null]));
     await installDependencies(directory);
+    await snapshotWorkspace(directory);
     return { rulesHash: sha256(JSON.stringify(rules)), skillHash: skills ? sha256(JSON.stringify(await skillDigest(source))) : null };
   } finally {
     await rm(skillStaging, { recursive: true, force: true });
@@ -104,5 +114,6 @@ export async function carryPlan(planning, build) {
   if (!info) return false;
   if (!info.isFile() || info.size > 32_768) throw new Error("Expected a regular PLAN.md of at most 32 KiB");
   await writeFile(join(build, "PLAN.md"), await readFile(path), { flag: "wx" });
+  await snapshotWorkspace(build);
   return true;
 }

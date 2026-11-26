@@ -78,6 +78,15 @@ Listenäquivalent bei Abos).
 - `pilot-2` läuft ohne die maki-Zelle (11 Zellen, 110 Läufe), nach grünem
   Werkzeug-Durchstich je Zelle. Die Erlaubnisprüfung wird nicht abgeschaltet.
 
+- `pilot-2` abgebrochen nach zwei Ergebnissen: Die Arbeitskopien lagen ohne
+  eigenes Git im Benchmark-Repo, der Hub wies den zweiten parallelen Lauf ab.
+  Jede Arbeitskopie ist jetzt ein eigenes Git-Repo mit Startstand.
+- `pilot-3`: `timeoutMs` 30 statt 15 Minuten (lokale Läufe brauchten 12 Minuten
+  und mehr).
+- Bekannte Unschärfe: Der Claude-Adapter meldet Cache-Schreiben und -Lesen in
+  einer Zahl; beides wird zum Cache-Lesepreis gerechnet. Anthropic-Kosten (und
+  z.ai über Claude) sind damit eine **untere** Schranke, auch für den Deckel.
+
 ## Ausdrücklich offen
 
 Der Nutzer hat den Lauf am 2026-11-26 freigegeben. Der datierte Pilotbericht

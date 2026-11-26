@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { exportSeries } from "./export.mjs";
 import { renderPilotReport } from "./pilot-report.mjs";
+import { snapshotWorkspace } from "./workspace.mjs";
+import { execFileSync } from "node:child_process";
 import { evaluationTable } from "@ancientvoid/contracts";
 import { summariseSeries } from "@ancientvoid/core";
 import { expect, it, vi } from "vitest";
@@ -220,4 +222,22 @@ it("limits a pilot protocol to a task subset and rejects unknown task ids", () =
   expect(new Set(pilot.jobs.map((job) => job.task.id))).toEqual(new Set(ids));
   expect(pilot.jobs.length).toBeLessThan(plan.jobs.length / 5);
   expect(() => planSeries({ ...testProtocol, tasks: ["gibt-es-nicht"] }, readCorpus())).toThrow(/Unknown task/);
+});
+
+it("makes every workspace its own clean git root, also inside a surrounding repository", async () => {
+  const outer = mkdtempSync(join(tmpdir(), "p84-outer-"));
+  try {
+    execFileSync("git", ["init", "-q"], { cwd: outer });
+    const inner = mkdtempSync(join(outer, "work-"));
+    writeFileSync(join(inner, "a.txt"), "a");
+    const git = (...args) => execFileSync("git", args, { cwd: inner, encoding: "utf8" }).trim();
+    await snapshotWorkspace(inner);
+    expect(git("rev-parse", "--show-toplevel").endsWith(inner.slice(outer.length))).toBe(true);
+    writeFileSync(join(inner, "PLAN.md"), "plan");
+    await snapshotWorkspace(inner);
+    expect(git("status", "--porcelain")).toBe("");
+    expect(git("log", "--format=%an %s")).toBe("bench start\nbench start");
+  } finally {
+    rmSync(outer, { recursive: true, force: true });
+  }
 });

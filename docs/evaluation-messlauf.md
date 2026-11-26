@@ -28,7 +28,8 @@ auf Benchmark-Arbeitskopien zugreifen. Anbieterzugänge werden im Prüfstand
 konfiguriert. `ANCIENTVOID_TOKEN` ist der menschliche Token dieses Hubs,
 `ANCIENTVOID_URL` sein Origin. Hintergrund-Inferenz, Projekt-Automationen
 und andere Last auf den Messhosts während der Serie pausieren. Die
-Arbeitskopien stammen aus Git-Archiven ohne erreichbaren Projektverlauf.
+Arbeitskopien stammen aus Git-Archiven ohne erreichbaren Projektverlauf und
+werden jeweils als eigenes Git-Repo mit einem Startcommit angelegt.
 
 Das Protokoll (Version 2) ist eine JSON-Datei mit einer Liste von **Zellen**
 (Harness × Modell). Jede Zelle nennt Harness, Adapter-Registrierung, CLI-Version,
