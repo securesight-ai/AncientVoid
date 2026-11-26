@@ -103,6 +103,29 @@
   animation: none;
 }
 
+/* ── Ansicht öffnet sich als Fenster (T86.4, Nutzerauftrag 27.11.2026):
+ *    die Session-Ansicht am Handy (Karte → Detail) und die Bildvorschau
+ *    fliegen einmal aus der Tiefe ein. Ende exakt an der natürlichen
+ *    Position (transform none) — danach bleibt der Text scharf; kein
+ *    Dauer-Transform auf Textflächen (Nutzerfund 26.11.2026). ── */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) #app > .session-live,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .attachment-lightbox {
+  animation: depth3d-enter 320ms var(--ease-out) 1;
+}
+
+/* ── Press-Tiefe (T86.4): Karten und Dock-Tasten kommen dem Finger ein
+ *    Stück entgegen — nur während des Drucks (:active), mit kurzem Übergang
+ *    für das Zurückfedern. Greifbares Feedback statt Deko. ── */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .session-card,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .dock-item {
+  transition: transform 140ms var(--ease-out);
+}
+
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .session-card:active,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .dock-item:active {
+  transform: perspective(900px) translateZ(14px);
+}
+
 /* ── Sofort-Feedback (Nutzerfund 26.11.2026): Einschalten pulst offene
  *    Flächen kurz heran — ein Wechsel ohne sichtbare Reaktion wirkt wie ein
  *    toter Schalter. Die Klasse setzt app/depth3d.ts nur zur Laufzeit (nicht
@@ -133,6 +156,12 @@
   from { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(-140px) scale(0.96); opacity: 0; }
   55% { opacity: 1; }
   to { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift)); opacity: 1; }
+}
+
+@keyframes depth3d-enter {
+  from { transform: perspective(var(--depth3d-dist)) translateZ(-140px) scale(0.985); opacity: 0; }
+  55% { opacity: 1; }
+  to { transform: none; opacity: 1; }
 }
 
 @keyframes depth3d-side {
@@ -175,6 +204,10 @@
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet-backdrop,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-backdrop,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) #app > .session-live,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .attachment-lightbox,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .session-card,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .dock-item,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .app-page,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .session-live,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .split {

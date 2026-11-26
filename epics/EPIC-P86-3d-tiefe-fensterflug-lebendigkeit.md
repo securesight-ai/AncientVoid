@@ -194,8 +194,14 @@ Ablage nach `app/ui-scale.ts`-Muster (`ancientvoid.ctxMotion`):
   erste Ansatz hob die Kachel per `translateZ` — das machte den Text unscharf
   (Dauer-Skalierung); Transform auf Textflächen ist seither verboten,
   Unschärfe gehört allein zu offenen Fenstern (`transform: none` ist als
-  Regressionstest in `workspace-tiles.spec.ts` verankert). Rest
-  (Karten-Lift, K2-Messung) offen.
+  Regressionstest in `workspace-tiles.spec.ts` verankert). Nutzerauftrag
+  27.11.2026 („dezent, subtil, mit Zweck“): ergänzt — **Press-Tiefe** für
+  Karten und Dock-Tasten (`:active`-Hub mit 140-ms-Übergang, nur während des
+  Drucks — greifbares Feedback) und **Ansicht öffnet sich als Fenster**:
+  Session-Ansicht am Handy (Karte → Detail) und Bildvorschau-Lightbox
+  fliegen einmal aus der Tiefe ein (`depth3d-enter`, endet exakt auf
+  `transform: none`, belegt in `3d-tiefe.spec.ts`). Offen: K2-Messung
+  (vor dem Abschluss-PR).
 - [x] **T86.7 — Layout-Orientierung (Nutzerwunsch 26.11.2026):**
   (a) Übersichtskarte zeigt links unten die **Kachel-Nummer** (`.card-tile-no`
   = `.tile-no` des Fensters, Schlüssel wie `tileRefOf`; main.tsx → App →

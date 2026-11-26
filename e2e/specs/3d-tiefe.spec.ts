@@ -61,6 +61,33 @@ test.describe("3D-Tiefe", () => {
     expect(await app.evaluate(() => localStorage.getItem("ancientvoid.depth3d"))).toBeNull();
   });
 
+  test("T86.4: Session-Ansicht fliegt beim Öffnen ein; Karten kommen dem Druck entgegen", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "opencode", prompt: "Tiefenflug" });
+    const card = app.locator(".session-card").filter({ hasText: "Tiefenflug" });
+    await expect(card).toBeVisible();
+
+    // Press-Tiefe (Dock-Taste): gehaltener Druck hebt, Loslassen federt zurück.
+    const mehr = app.getByRole("button", { name: "Mehr", exact: true });
+    await mehr.hover();
+    await app.mouse.down();
+    await expect(mehr).toHaveCSS("transform", /matrix/);
+    await app.mouse.up();
+    await expect(mehr).toHaveCSS("transform", "none");
+    await app.keyboard.press("Escape");
+
+    // Press-Tiefe (Karte): gehaltener Druck hebt die Karte.
+    await card.hover();
+    await app.mouse.down();
+    await expect(card).toHaveCSS("transform", /matrix/);
+    // Loslassen = Öffnen: die Session-Ansicht fliegt als Fenster aus der Tiefe.
+    await app.mouse.up();
+    const view = app.locator("#app > .session-live");
+    await expect(view).toBeVisible();
+    await expect(view).toHaveCSS("animation-name", "depth3d-enter");
+    // Einmal-Flug, kein Dauer-Transform: danach natürliche Position.
+    await expect(view).toHaveCSS("transform", "none");
+  });
+
   test("T86.2: Sidebar und Einstellungen zeigen denselben Stand und schalten gegenseitig @desktop", async ({ app }) => {
     const sidebar = app.getByRole("button", { name: "3D an/aus", exact: true });
     await app.setViewportSize({ width: 1280, height: 800 });
