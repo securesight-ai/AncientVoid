@@ -9,6 +9,7 @@ import { Button, Card, EmptyState, Segmented, Select } from "../../shared/ui/ind
 import { AiMetricsPage } from "./AiMetricsPage.tsx";
 import { HostsPage } from "./HostsPage.tsx";
 import { InferencePage } from "./InferencePage.tsx";
+import { EvaluationPage } from "../evaluation/EvaluationPage.tsx";
 import { MetricSource } from "./MetricSource.tsx";
 
 /**
@@ -131,13 +132,14 @@ function Section({ id, title, note, collapsed, onToggle, children }: { id: strin
 }
 
 /** BUG-0257: Reiter der einen Analyse-Seite — URL ist der Zustand (route.ts). */
-export type StatTab = "statistik" | "hosts" | "metriken" | "inferenz";
+export type StatTab = "statistik" | "hosts" | "metriken" | "inferenz" | "evaluation";
 
 const STAT_TABS: readonly { id: StatTab; label: string; hash: string }[] = [
   { id: "statistik", label: t("dock.statistics"), hash: pageHash("statistics") },
   { id: "hosts", label: t("hosts.tab"), hash: statTabHash("hosts") },
   { id: "metriken", label: t("dock.aimetrics"), hash: statTabHash("metriken") },
   { id: "inferenz", label: t("common.inference"), hash: statTabHash("inferenz") },
+  { id: "evaluation", label: t("evaluation.tab"), hash: statTabHash("evaluation") },
 ];
 
 /**
@@ -158,7 +160,7 @@ export function StatisticsPage({ tab = "statistik" }: { tab?: StatTab }) {
           </button>
         ))}
       </div>
-      {tab === "hosts" ? <HostsPage /> : tab === "metriken" ? <AiMetricsPage /> : tab === "inferenz" ? <InferencePage /> : <StatistikTab />}
+      {tab === "hosts" ? <HostsPage /> : tab === "metriken" ? <AiMetricsPage /> : tab === "inferenz" ? <InferencePage /> : tab === "evaluation" ? <EvaluationPage /> : <StatistikTab />}
     </>
   );
 }

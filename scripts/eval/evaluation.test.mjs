@@ -3,6 +3,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { exportSeries } from "./export.mjs";
+import { renderPilotReport } from "./pilot-report.mjs";
+import { evaluationTable } from "@ancientvoid/contracts";
+import { summariseSeries } from "@ancientvoid/core";
 import { expect, it, vi } from "vitest";
 import { readCorpus } from "./corpus.mjs";
 import { BudgetGuard, isInfrastructureFailure, planSeries, runJobs } from "./protocol.mjs";
@@ -193,4 +196,20 @@ it("exports a complete series immutably with a hash manifest and marks partial s
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+it("renders the pilot report from the same summary and table as the PWA tab", () => {
+  const summary = summariseSeries("pilot", measured("pilot"));
+  const meta = { date: "2026-11-26", commit: "fixture", runtime: "fixture", valid: true, invalidReason: "" };
+  const markdown = renderPilotReport(summary, plan, meta);
+  const table = evaluationTable(summary);
+  expect(summary.runs).toBe(840);
+  expect(markdown).toContain(`| ${table.columns.join(" | ")} |`);
+  for (const row of table.rows) expect(markdown).toContain(`| ${row.join(" | ")} |`);
+  expect(markdown).toContain("Pflichtangaben");
+  expect(markdown).toContain("Was das nicht sagt");
+  expect(markdown).toContain("```csv");
+  expect(() => renderPilotReport({ ...summary, consistent: false }, plan, meta)).toThrow(/mixes/);
+  expect(() => renderPilotReport({ ...summary, protocolHashes: ["f".repeat(64)] }, plan, meta)).toThrow(/different corpus or protocol/);
+  expect(renderPilotReport(summary, plan, { ...meta, valid: false, invalidReason: "Engine ausgefallen" })).toContain("**ungültig** — Engine ausgefallen");
 });

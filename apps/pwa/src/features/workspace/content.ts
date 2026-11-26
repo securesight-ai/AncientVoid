@@ -3,7 +3,7 @@ import { codeHash, fileHash, sessionHash, pageHash, PAGE_SLUG, type CodeTarget, 
 const SESSION_TABS = ["chat", "verlauf", "bericht", "diff", "graph", "git", "datei", "forge", "suche", "code", "umgebung"] as const;
 export type SessionTab = (typeof SESSION_TABS)[number];
 export type WorkspaceContent =
-  | { kind: "page"; page: Exclude<ListPage, "dashboard">; vaultFile?: string; vaultTab?: "wissen"; statTab?: "hosts" | "metriken" | "inferenz"; hash?: string }
+  | { kind: "page"; page: Exclude<ListPage, "dashboard">; vaultFile?: string; vaultTab?: "wissen"; statTab?: "hosts" | "metriken" | "inferenz" | "evaluation"; hash?: string }
   /** `seq`: Fundstelle, an der die Sitzung aufgehen soll (Sitzungsfilter/Suche);
    * `seqAt` macht dieselbe Fundstelle als *neue* Bitte erkennbar — sonst fällt der
    * zweite Tipp auf dieselbe Karte stumm aus. */

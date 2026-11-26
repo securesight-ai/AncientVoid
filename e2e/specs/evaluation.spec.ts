@@ -1,7 +1,8 @@
-import type { EvalResult, TurnMetric } from "@ancientvoid/contracts";
-import { test, expect } from "../support/fixtures.ts";
+import { evaluationTable } from "@ancientvoid/contracts";
+import type { EvalResult, EvalSeriesSummary, TurnMetric } from "@ancientvoid/contracts";
+import { test, expect, signIn } from "../support/fixtures.ts";
 
-test("P84 speichert Abnahme und Richtungstokens an der Sitzung und behält sie beim Neustart", async ({ hub }) => {
+test("P84 speichert Abnahme und Richtungstokens an der Sitzung und behält sie beim Neustart", async ({ hub, page }) => {
   const id = await hub.createSession({ adapter: "opencode", model: "e2e/fake-model", prompt: "Lies README.md" });
   await hub.until(async () => {
     const response = await hub.api<{ turns: TurnMetric[] }>(`/api/sessions/${id}/turns`);
@@ -27,4 +28,15 @@ test("P84 speichert Abnahme und Richtungstokens an der Sitzung und behält sie b
   const restored = await hub.api(path);
   expect(restored.status).toBe(200);
   expect(restored.body).toEqual(saved.body);
+  // Die PWA zeigt dieselbe Tabelle wie der Report: Zelle für Zelle aus `evaluationTable` der Zusammenfassung.
+  const summary = await hub.api<EvalSeriesSummary>("/api/evaluation/series/e2e");
+  expect(summary.status).toBe(200);
+  const expected = evaluationTable(summary.body);
+  await signIn(page, hub);
+  await page.goto(`${hub.origin}/#/statistik/evaluation`);
+  const table = page.getByTestId("evaluation-table");
+  await expect(table).toBeVisible();
+  const cells = await table.locator("tbody tr").evaluateAll((rows) => rows.map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent ?? "")));
+  expect(cells).toEqual(expected.rows);
+  expect(await table.locator("thead th").allTextContents()).toEqual(expected.columns);
 });

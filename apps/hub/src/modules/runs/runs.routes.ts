@@ -1,4 +1,6 @@
 import { EvalRunInput } from "@ancientvoid/contracts";
+import type { EvalSeriesList } from "@ancientvoid/contracts";
+import { summariseSeries } from "@ancientvoid/core";
 import type { FastifyInstance } from "fastify";
 import type { RouteContext } from "../../route-context.ts";
 
@@ -34,6 +36,23 @@ export function registerRunsRoutes(app: FastifyInstance, ctx: RouteContext): voi
       req.log.warn({ err: error }, "evaluation not recorded");
       return reply.code(422).send({ error: error instanceof Error ? error.message : "evaluation not recorded" });
     }
+  });
+
+  // P84: dieselbe Zusammenfassung speist PWA-Reiter und Markdown-Report.
+  app.get("/api/evaluation/series", async (): Promise<EvalSeriesList> => {
+    const results = await deps.sessions.listEvaluations();
+    const names = [...new Set(results.map((result) => result.input.series))].sort();
+    return {
+      series: names.map((series) => {
+        const summary = summariseSeries(series, results);
+        return { series, runs: summary.runs, lastRecordedAt: summary.lastRecordedAt };
+      }),
+    };
+  });
+
+  app.get<{ Params: { series: string } }>("/api/evaluation/series/:series", async (req, reply) => {
+    const summary = summariseSeries(req.params.series, await deps.sessions.listEvaluations());
+    return summary.runs > 0 ? summary : reply.code(404).send({ error: "unknown evaluation series" });
   });
 
   app.get("/api/metrics/turns", async () => ({ groups: deps.sessions.turnMetricsSummary() }));

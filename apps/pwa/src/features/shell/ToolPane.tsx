@@ -58,7 +58,7 @@ export function ToolPane({
   /** EPIC-P49: Datei-Deep-Link für die Vault-Seite. */
   vaultFile?: string | null;
   /** BUG-0257: Reiter der Analyse-Seite (#/statistik/metriken). */
-  statTab?: "hosts" | "metriken" | "inferenz" | null;
+  statTab?: "hosts" | "metriken" | "inferenz" | "evaluation" | null;
   /** EPIC-P74 T74.6: Reiter im Notizen-Bereich (#/notizen/wissen). */
   vaultTab?: "notizen" | "wissen";
   onPopout?: () => void;

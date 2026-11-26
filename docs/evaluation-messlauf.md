@@ -158,6 +158,8 @@ melden die Eingabe einschließlich Cache und markieren das mit `cacheIncluded`; 
 bleibt über `cacheInputTokens` sichtbar und wird zum Cache-Preis gerechnet. Bei Adaptern
 ohne Cache-Angabe (z. B. Cursor) weist der Report die Kosten als obere Schranke aus.
 
+- Serien: [Planung der Pilotserie](p84-pilotserie-planung.md), [Serien-Vorlage](p84-serien-vorlage.md); `pilot-report` schreibt den datierten Bericht aus der Hub-Zusammenfassung.
+
 ## Nachweise
 
 - [ADR-0126](adr/0126-evaluation-in-turn-metriken.md)
