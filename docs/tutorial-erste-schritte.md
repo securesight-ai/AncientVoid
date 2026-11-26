@@ -140,6 +140,15 @@ Mit **Stopp** beendest du den Lauf.
 Geschafft. Der Übungsagent verlangt keine Freigaben; das siehst du erst mit
 einem echten Agenten (Schritt „Weiter“).
 
+**Zurück auf dem Handy.** Der Zurück-Knopf der Browser-Leiste oder die
+Handy-Wischgeste führt über die Seiten zurück, die du wirklich besucht
+hast: aus einer Sitzung zurück in die Übersicht, von dort zurück auf die
+Seite davor. Die Übersicht steht sofort — die eigenen Sitzungen kommen
+zuerst, die Sitzungen anderer Rechner des Verbunds einen Moment später,
+weil der Hub dafür jeden Partner befragen muss. (Bei 30+ Änderungen an
+diesen Seiten am 24.11.2026 geprüft: `history.length` wächst beim Öffnen
+einer Sitzung um eins, `history.back()` landet auf der Übersicht.)
+
 ## Weiter
 
 - **Echten Agenten anbinden** (claude, codex, opencode, …): [`onboarding.md`](onboarding.md) §6,
