@@ -1,5 +1,5 @@
 ---
-id: BUG-0283
+id: BUG-0288
 slug: denk-block-streamt-nicht-im-browser
 status: open
 severity: S2
@@ -12,7 +12,12 @@ created: 2026-11-24
 reporter: "Kai (Handy, Telegram-PWA)"
 ---
 
-# BUG-0283 — Der Denk-Block streamt im Browser nicht (in der Native-App schon)
+# BUG-0288 — Der Denk-Block streamt im Browser nicht (in der Native-App schon)
+
+Anknüpfung: BUG-0284 (`live-strom-haelt-nach-jedem-block`) beschreibt dasselbe Verhalten von
+der anderen Seite — dort läuft der Strom **nach jedem fertigen Block** bis zur Spitze, hier
+wächst der Denk-Block gar nicht. Beide zusammen deuten auf: es kommen fertige Blöcke an,
+keine Fetzen.
 
 ## Gesehen
 

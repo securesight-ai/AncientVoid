@@ -28,4 +28,6 @@ export const en: Record<keyof typeof deDock, string> = {
   "dock.releasenotes": "Release notes",
   "dock.releasenotesTitle": "Release notes: what changed per PR and why (EPIC-P68)",
   "dock.providerStatus": "Provider status",
+  "dock.pentest": "Pentest",
+  "dock.pentestTitle": "Pentest: scans of the allowed targets via the pentest backend (EPIC-P80)",
 };

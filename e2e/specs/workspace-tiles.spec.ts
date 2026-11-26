@@ -86,8 +86,9 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
     await app.getByRole("button", { name: "Zwei nebeneinander" }).click();
     await card(app, "Aufgabe Beta").click({ modifiers: ["Control"] });
     await expect(app.locator(".tile")).toHaveCount(2);
-    await card(app, "Aufgabe Gamma").click({ modifiers: ["Control"] });
-    await expect(app.locator(".tile")).toHaveCount(2);
+    // Nur der Strg-Klick wächst (BUG-0268); ein einfacher Klick bleibt im Raster.
+    await expect(tile(app, 2)).toHaveClass(/focused/);
+    await card(app, "Aufgabe Gamma").click();
     await expect(tile(app, 2).locator(".session-top-title")).toHaveText("Aufgabe Gamma");
     await card(app, "Aufgabe Alpha").click();
     await expect(tile(app, 1)).toHaveClass(/focused/);
@@ -110,6 +111,27 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
     });
     await expect(tile(app, 1).locator(".session-top-title")).toHaveText("Aufgabe Rechts");
     await expect(tile(app, 2).locator(".session-top-title")).toHaveText("Aufgabe Links");
+  });
+
+  test("Alt+1 gleich nach dem Öffnen behält den Fokus (BUG-0285)", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Links" });
+    await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Rechts" });
+    await card(app, "Aufgabe Links").click();
+    await app.getByRole("button", { name: "Zwei nebeneinander" }).click();
+    await expect(tile(app, 1)).toHaveClass(/focused/);
+    // Die Taste kommt, sobald Kachel 2 im DOM steht — vor dem Zeichnen und damit vor passiven Effekten.
+    await app.evaluate(() => {
+      new MutationObserver((_, observer) => {
+        if (!document.querySelector('.tile.focused[data-tile="2"]')) return;
+        observer.disconnect();
+        window.dispatchEvent(new KeyboardEvent("keydown", { code: "Digit1", altKey: true, bubbles: true, cancelable: true }));
+      }).observe(document.body, { subtree: true, childList: true, attributes: true });
+    });
+    await card(app, "Aufgabe Rechts").click({ modifiers: ["Control"] });
+    await expect(tile(app, 2).locator(".session-top-title")).toHaveText("Aufgabe Rechts");
+    await expect(tile(app, 1)).toHaveClass(/focused/);
+    await app.waitForTimeout(500);
+    await expect(tile(app, 1)).toHaveClass(/focused/);
   });
 
   test("nach Reload sind Layout und Belegung gleich; eine gelöschte Session sagt es (AC-P18-3, Premortem 4)", async ({ app, hub }) => {

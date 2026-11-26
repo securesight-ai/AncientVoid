@@ -1,6 +1,6 @@
 # EPIC-P61 — Mehrsprachigkeit: Oberfläche auf Englisch oder per Spracheinstellung
 
-**Status:** Code steht, Exit offen (AC-Nachweise siehe §8) · **Issue:** [#6](https://github.com/securesight-ai/AncientVoid/issues/6) · **Phase:** P61 · **Dauer:** 4–6 Agenten-Wochen (gemessen, s. §3.1)
+**Status:** Code steht, Exit offen (K2-Langlauf überschreitet 200 ms, §8) · **Issue:** [#6](https://github.com/securesight-ai/AncientVoid/issues/6) · **Phase:** P61 · **Dauer:** 4–6 Agenten-Wochen (gemessen, s. §3.1)
 **Abhängigkeit:** keine fachliche offene (Quer-Epic, Präzedenz P50–P53/P58–P60; Vorgänger P60 umgesetzt 14.11.2026). Berührt P33 (englische Einstiegsdoku, „vertagt") nur an der Grenze: P33 = Doku, P61 = Produktoberfläche.
 
 Quelle: Nutzerauftrag vom 15.11.2026 im Zuge der Veröffentlichung
@@ -292,18 +292,19 @@ hart verdrahtet. Für „praktisch alle Sprachen" gilt:
 
 ## 7. Definition of Done
 
-Alle T61.* und AC-P61-* mit Evidenz. `npm run gate` lokal grün
-(inkl. `check-i18n` mit leerer Baseline); Pipeline-Job `e2e` zusätzlich nur
-bei aktivem lokalem GitLab-Server (auf `gitlab.com`: „CI nicht anwendbar").
+Alle T61.* und AC-P61-* mit Evidenz oder dokumentierter Menschen-Abnahme
+in P000. Lokale Prüfungen nach AGENTS.md, `check-i18n` mit leerer Baseline,
+GitHub-Check `verify` und volle Suite im Nightly.
 Neue Abläufe mit Spec in `e2e/specs/` und Eintrag in `docs/funktionsinventar.md`;
 Sprachwahl in den Einstellungen erreichbar und in `docs/` (Bedienung)
 erwähnt. ADR gemerged vor der Contract-Änderung. K2/K5/K6/K7/K10
 nachweisbar unverändert bzw. erfüllt; kein TODO ohne Epic-Bezug.
 
-## 8. Stand der Exit-Nachweise (23.11.2026)
+## 8. Stand der Exit-Nachweise (25.11.2026)
 
 Die Sprachwahl ist seit PR #274 ohne Dev-Flag verfügbar. T61.1–T61.11 sind
 dokumentiert, einschließlich leerer i18n-Baseline und Sprachwechsel-Spec.
+Die Voreinstellung folgt der Browser-Sprache mit Englisch als Fallback.
 Der Mobil-Spec prüft den Kaltstart aus dem Service-Worker-Cache und den
 Sprachwechsel mit echtem Reload bei abgeschaltetem Netz (AC-P61-3, 2/2 grün
 am 23.11.). Für AC-P61-2 meldete TypeScript TS2740, nachdem das Segment
@@ -318,7 +319,48 @@ zwei Sprachen für dieselbe Meldung mit Test-Sender (AC-P61-5).
 AC-P61-7 ist durch den [CLI-Test](../apps/hubctl/test/cli.test.ts) mit
 lokalem HTTP-Fixture belegt. `hubctl status` lokalisiert den Text und
 `status --json` gibt in beiden Sprachen identische Bytes aus.
-Eine [aktuelle K2-Stichprobe](../docs/messlauf/2026-11-23-p61-session-tail-k2.md)
-mit 30 Events/s ist grün. Der K2-Vorher-/Nachher-Vergleich für AC-P61-6
-und der vollständige Abschluss-Gate-Nachweis bleiben ausstehend. Der englische K6-Gerätetermin (AC-P61-8) ist in
-[P000 T000.29](EPIC-000-testsuite-fuer-menschen.md) erfasst.
+Der englische K6-Gerätetermin (AC-P61-8) ist nach
+[P000 T000.29](EPIC-000-testsuite-fuer-menschen.md) verschoben.
+
+### K2-Vergleich (25.11.2026, AC-P61-6)
+
+Auf omarchy mit demselben Chromium und Node 26.12.0, jeweils in einem
+isolierten Hub mit Dummy-Adapter. Gemessen mit
+`e2e/specs/appearance-presets.spec.ts`, Desktop, ein Worker und
+`--grep '30 Events/s'`. Das vor P61 vorhandene deutsche Fixture lief auf
+beiden Ständen. Gemessen wurde vom Event-Zeitstempel bis zum DOM-Frame.
+
+| Stand | Event → DOM p95 je Runde | Größte Event → DOM-Latenz | Größter Frame-Abstand |
+|---|---|---|---|
+| Vor P61, `f50fa3a8` | 33 / 34 / 34 ms | 35 ms | 16,8 ms |
+| Aktueller Vergleichsstand `53e3ee63` | 32 / 34 / 33 ms | 38 ms | 16,8 ms |
+
+Der gezielte Spec war auf beiden Ständen grün. Die p95-Werte liegen
+auch in der Größenordnung der [Stichprobe vom 23.11.](../docs/messlauf/2026-11-23-p61-session-tail-k2.md).
+Im erweiterten Versuch mit 30-Sekunden-Messfenstern und 200-ms-Grenze
+brach der Vorher-Lauf bei 252 ms Event → DOM im ersten Fenster ab.
+Der Lauf nach P61 brach bei 306 ms im sechzehnten Fenster ab.
+In diesem Fenster lag p95 weiterhin bei 34 ms. Eine Wiederholung mit
+abgeschalteter Playwright-Aufzeichnung und CPU-Affinität 0–7 erreichte
+im achten Fenster 815 ms Event → DOM und 350 ms zwischen Frames.
+
+Ein Instrumentierungslauf am selben Produktstand beobachtete nur neue
+DOM-Knoten und erfasste zusätzlich WebSocket-Empfang und Browser-Long-Tasks.
+Im elften Fenster überschritten 20 beobachtete Events die 200-ms-Grenze.
+Beim langsamsten Event lagen 278 ms zwischen Event und WebSocket-Callback,
+danach 61 ms bis zum DOM. In diesem Abschnitt meldete Chromium eine Folge
+langer Aufgaben mit 51–131 ms Dauer. Der Callback-Zeitstempel umfasst auch
+Wartezeit auf dem Browser-Hauptthread. Wie viel davon auf den Transport
+entfiel, bleibt offen.
+
+Ein Chromium-CPU-Profil über zehn Minuten zeigte den größten
+JavaScript-Anteil beim Layout-Effekt für das automatische Mitrollen in
+`SessionTail.tsx`. Die Ursache der sporadischen Aussetzer bleibt offen.
+Eine Probeänderung bündelte das Mitrollen pro Frame. Damit waren alle
+fünf mobilen Fälle in `session-scroll.spec.ts` grün. Im Desktop-Langlauf
+erreichte sie 767 ms Event → DOM und wurde verworfen. AC-P61-6 und #6
+bleiben bis zum belastbaren K2-Nachweis offen.
+
+Der [Nightly auf `30336417`](https://github.com/securesight-ai/AncientVoid/actions/runs/45599047312)
+belegt Vitest, alle vier E2E-Shards und K8. Das lokale K2-Budget ist ein
+eigener Nachweis. Hosted Runner überspringen ihn gemäß BUG-0163 sichtbar.

@@ -1,7 +1,7 @@
 ---
 id: BUG-0269
 slug: statistik-schnitt-reload-race
-status: fixed
+status: done
 severity: S3
 area: pwa
 instance: dev
@@ -95,5 +95,12 @@ npm run typecheck && npm run lint                                         # ok
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue angelegt — [#319](https://github.com/securesight-ai/AncientVoid/issues/319)
 - [x] `bugfix` angewiesen
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `changeFilter` schreibt den Schnitt synchron, der vorige Report
+bleibt bis zum neuen (`apps/pwa/src/features/statistics/StatisticsPage.tsx:187,197`).
+Fix-Commit c09963fb im Stand.
+`npx vitest run apps/pwa/test/features/statistics-state.test.ts` → 3 passed.
 
 <!-- CI-Trigger: echter Baumdelta-Push nach stummem Actions-Webhook (PR #320) -->

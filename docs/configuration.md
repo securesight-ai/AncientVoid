@@ -112,7 +112,10 @@ node apps/hubctl/src/cli.ts token revoke "pixel-9" --db data/hub.db
 ```
 
 Plaintext-Token nur einmal sichtbar; in der DB liegt der SHA-256-Hash.
-Verwendung: `Authorization: Bearer <token>` (REST) bzw. `?token=` (WS).
+REST und direkte Hub-zu-Hub-WebSockets verwenden `Authorization: Bearer <token>`.
+Für den Session-Tail tauschen PWA und hubctl das Device-Token per POST gegen
+ein kurzlebiges Einmal-Ticket. Die WebSocket-URL trägt nur `?ticket=`.
+Pfad und Widerrufsverhalten stehen in [ADR-0124](adr/0124-session-tail-tickets.md).
 
 ## Exposition fürs Handy (Tailscale)
 

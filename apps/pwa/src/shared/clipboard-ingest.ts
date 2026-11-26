@@ -12,7 +12,7 @@ import { MAX_IMAGE_BYTES, saveImage } from "./clipboard-images.ts";
 export const INGEST_EVENT = "ancientvoid:clipboard-ingest";
 const SCHALTER_SCHLUESSEL = "ancientvoid.clipboard-ingest.v1";
 /** Zwei Blicke ins Clipboard mindestens drei Sekunden auseinander — kein Lausch-Timer. */
-export const MIN_ABSTAND_MS = 3_000;
+const MIN_ABSTAND_MS = 3_000;
 const BILD_TYPEN = ["image/png", "image/jpeg"] as const;
 
 export function ingestEnabled(): boolean {

@@ -1,4 +1,4 @@
-// EPIC-P79 (ADR-0102): Token-Tempo lokaler Inferenz — Katalog Deutsch.
+// EPIC-P79 (ADR-0125): Token-Tempo lokaler Inferenz — Katalog Deutsch.
 export const de = {
   "inference.title": "Token-Tempo der Inferenz",
   "inference.hint": "Gemessen an den Engines, die der Hub beprobt. Verteilungen rechnen über eigene Request-Historie, nicht über Gegenwerte.",

@@ -2,7 +2,7 @@ import type { HostMetricPoint, HostMetricsHost } from "@ancientvoid/contracts";
 import { fmtNumber } from "../../shared/i18n/format.ts";
 import { t } from "../../shared/i18n/index.ts";
 
-export const GROUPS = ["power", "cpu", "memory", "gpu", "temperature", "fan", "disk", "network", "system", "clock", "voltage"] as const;
+const GROUPS = ["power", "cpu", "memory", "gpu", "temperature", "fan", "disk", "network", "system", "clock", "voltage"] as const;
 type Known = (typeof GROUPS)[number];
 
 export function groupName(group: string): string {

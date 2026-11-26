@@ -3,7 +3,12 @@ import { mkdtemp, rm, readFile, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
-import { WebSocket } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
+import { once } from "node:events";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { EventStore, SessionManager, AdapterRegistry, HubDatabase, TokenService, ApprovalService, WebAuthnStore } from "@ancientvoid/core";
 import { ProcessRunner } from "@ancientvoid/workers";
 import { createAdapter as createDummy } from "@ancientvoid/adapter-dummy";
@@ -15,6 +20,8 @@ describe("hub server", () => {
   let app: FastifyInstance;
   let token: string;
   let baseUrl: string;
+  let tokens: TokenService;
+  let sessions: SessionManager;
 
   beforeAll(async () => {
     dir = await mkdtemp(join(tmpdir(), "ancientvoid-srv-"));
@@ -22,8 +29,8 @@ describe("hub server", () => {
     const store = new EventStore(dir);
     const registry = new AdapterRegistry();
     registry.register("dummy", createDummy, { eventsPerSecond: 10, autoStopAfterEvents: 25 });
-    const sessions = new SessionManager(db, store, registry, new ProcessRunner());
-    const tokens = new TokenService(db);
+    sessions = new SessionManager(db, store, registry, new ProcessRunner());
+    tokens = new TokenService(db);
     token = tokens.issue("test-device").token;
     app = await createHubApp({
       sessions,
@@ -179,6 +186,154 @@ describe("hub server", () => {
     await strictApp.close();
   });
 
+  async function createTailSession(): Promise<string> {
+    const created = await app.inject({
+      method: "POST", url: "/api/sessions", headers: { authorization: `Bearer ${token}` },
+      payload: { adapter: "dummy", project: dir },
+    });
+    expect(created.statusCode).toBe(201);
+    const { id } = created.json<{ id: string }>();
+    await sessions.stop(id);
+    return id;
+  }
+
+  it("WS tail closes a header-authenticated socket when the device token is revoked", async () => {
+    const id = await createTailSession();
+    const device = tokens.issue("header-tail-device");
+    const ws = new WebSocket(`${baseUrl.replace("http", "ws")}/api/events/${id}/tail`, {
+      headers: { authorization: `Bearer ${device.token}` },
+    });
+    try {
+      await once(ws, "open");
+      const pong = once(ws, "message");
+      ws.send(JSON.stringify({ type: "ping" }));
+      expect(JSON.parse(String((await pong)[0]))).toEqual({ type: "pong" });
+      const closed = once(ws, "close", { signal: AbortSignal.timeout(3_500) });
+      tokens.revoke(device.label);
+      expect((await closed)[0]).toBe(4401);
+    } finally {
+      ws.terminate();
+    }
+  });
+
+  it("WS tail tickets are scoped, single-use and subject to device revocation", async () => {
+    const id = await createTailSession();
+    const path = `/api/events/${id}/tail`;
+    const device = tokens.issue("ticket-tail-device");
+    const issue = () => app.inject({
+      method: "POST", url: `${path}-ticket`, headers: { authorization: `Bearer ${device.token}` },
+    });
+    const queryIssuer = await app.inject({ method: "POST", url: `${path}-ticket?token=${device.token}` });
+    expect(queryIssuer.statusCode).toBe(401);
+    const issued = await issue();
+    expect(issued.statusCode).toBe(201);
+    expect(issued.headers["cache-control"]).toBe("no-store");
+    const { ticket } = issued.json<{ ticket: string }>();
+    const expiring = (await issue()).json<{ ticket: string; expiresAt: number }>();
+    const revoked = (await issue()).json<{ ticket: string }>();
+    const base = baseUrl.replace("http", "ws");
+    async function denied(path: string): Promise<void> {
+      const ws = new WebSocket(`${base}${path}`);
+      try {
+        expect((await once(ws, "close"))[0]).toBe(4401);
+      } finally {
+        ws.terminate();
+      }
+    }
+    await denied(`${path}?token=${device.token}`);
+    await denied(`${path}?ticket=invalid`);
+    const clock = vi.spyOn(Date, "now").mockReturnValue(expiring.expiresAt);
+    try {
+      await denied(`${path}?ticket=${expiring.ticket}`);
+    } finally {
+      clock.mockRestore();
+    }
+    await denied(`/api/events/${crypto.randomUUID()}/tail?ticket=${ticket}`);
+    const ws = new WebSocket(`${base}${path}?ticket=${ticket}`);
+    try {
+      await once(ws, "open");
+      const pong = once(ws, "message");
+      ws.send(JSON.stringify({ type: "ping" }));
+      expect(JSON.parse(String((await pong)[0]))).toEqual({ type: "pong" });
+      await denied(`${path}?ticket=${ticket}`);
+      const closed = once(ws, "close", { signal: AbortSignal.timeout(3_500) });
+      tokens.revoke(device.label);
+      expect((await closed)[0]).toBe(4401);
+      await denied(`${path}?ticket=${revoked.ticket}`);
+    } finally {
+      ws.terminate();
+    }
+  });
+
+  it("hubctl tail -f prints events and exits when its device is revoked", async () => {
+    const id = await createTailSession();
+    const device = tokens.issue("hubctl-tail-device");
+    const cli = fileURLToPath(new URL("../../hubctl/src/cli.ts", import.meta.url));
+    const child = spawn(process.execPath, [cli, "tail", id, "-f"], {
+      env: { ...process.env, ANCIENTVOID_URL: baseUrl, ANCIENTVOID_TOKEN: device.token },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let error = "";
+    child.stderr.setEncoding("utf8").on("data", (chunk: string) => { error += chunk; });
+    try {
+      const exited = once(child, "close");
+      const [chunk] = await Promise.race([
+        once(child.stdout, "data", { signal: AbortSignal.timeout(5_000) }),
+        exited.then(([code]) => { throw new Error(`hubctl exited early (${code}): ${error}`); }),
+      ]);
+      expect(String(chunk)).toMatch(/#\s*1\s/);
+      tokens.revoke(device.label);
+      expect((await exited)[0]).toBe(1);
+      expect(error).toContain("4401");
+    } finally {
+      child.kill();
+    }
+  });
+
+  it("hubctl tail -f survives a hub that is briefly unreachable", async () => {
+    let posts = 0;
+    const hellos: number[] = [];
+    const wss = new WebSocketServer({ noServer: true });
+    const stub = createServer((req, res) => {
+      posts += 1;
+      // Neustart: erst keine Verbindung, dann ein Proxy ohne Upstream.
+      if (posts === 2) {
+        req.socket.destroy();
+        return;
+      }
+      res.writeHead(posts === 3 ? 502 : 201, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ticket: `ticket-${posts}`, expiresAt: Date.now() + 30_000 }));
+    });
+    stub.on("upgrade", (req, socket, head) => wss.handleUpgrade(req, socket, head, (ws) => {
+      ws.on("message", (raw: Buffer) => {
+        hellos.push((JSON.parse(String(raw)) as { lastSeq: number }).lastSeq);
+        const seq = hellos.length;
+        const event = { seq, ts: "2026-11-25T00:00:00.000Z", type: "message", summary: `Ereignis ${seq}` };
+        ws.send(JSON.stringify({ type: "events", sessionId: "s", events: [event], highWater: seq, dropped: false }));
+        ws.close(hellos.length === 1 ? 1012 : 1000);
+      });
+    }));
+    await new Promise<void>((resolve) => { stub.listen(0, "127.0.0.1", resolve); });
+    const cli = fileURLToPath(new URL("../../hubctl/src/cli.ts", import.meta.url));
+    const child = spawn(process.execPath, [cli, "tail", "s", "-f"], {
+      env: { ...process.env, ANCIENTVOID_URL: `http://127.0.0.1:${(stub.address() as AddressInfo).port}`, ANCIENTVOID_TOKEN: "t" },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let error = "";
+    child.stderr.setEncoding("utf8").on("data", (chunk: string) => { error += chunk; });
+    child.stdout.resume();
+    try {
+      const [code] = await once(child, "close", { signal: AbortSignal.timeout(12_000) });
+      expect({ code, error }).toEqual({ code: 0, error: "" });
+      expect(hellos).toEqual([0, 1]);
+      expect(posts).toBe(4);
+    } finally {
+      child.kill();
+      wss.close();
+      stub.close();
+    }
+  }, 15_000);
+
   it("WS tail: hello → events flow with gapless seq deltas", async () => {
     const created = await app.inject({
       method: "POST",
@@ -188,7 +343,7 @@ describe("hub server", () => {
     });
     const { id } = created.json() as { id: string };
     const wsUrl = baseUrl.replace("http", "ws");
-    const ws = new WebSocket(`${wsUrl}/api/events/${id}/tail?token=${token}`);
+    const ws = new WebSocket(`${wsUrl}/api/events/${id}/tail`, { headers: { authorization: `Bearer ${token}` } });
     const received: { type: string; events?: { seq: number }[]; highWater?: number }[] = [];
     const done = new Promise<void>((resolve, reject) => {
       ws.on("error", reject);
@@ -226,7 +381,7 @@ describe("hub server", () => {
     const { id } = created.json() as { id: string };
     await new Promise((r) => setTimeout(r, 400));
     const wsUrl = baseUrl.replace("http", "ws");
-    const ws = new WebSocket(`${wsUrl}/api/events/${id}/tail?token=${token}`);
+    const ws = new WebSocket(`${wsUrl}/api/events/${id}/tail`, { headers: { authorization: `Bearer ${token}` } });
     const resynced = new Promise<void>((resolve, reject) => {
       ws.on("error", reject);
       ws.on("message", (raw: Buffer) => {

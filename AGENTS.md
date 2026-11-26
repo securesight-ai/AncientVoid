@@ -66,6 +66,7 @@ npm run test:slow        # vitest Tier B: die langsamen Dateien (VITEST_SET=slow
 npm run test:e2e         # Playwright-E2E-Gate gegen einen echten Hub (docs/testing-e2e.md)
 npm run lint             # eslint
 npm run typecheck        # tsc --noEmit
+npm run check:knip       # Inventar für Dateien, Abhängigkeiten und Exporte (Teil von gate)
 npm run gate             # check:* + typecheck + lint + volle Suite + test:e2e
 npm run skills:curate    # Skill-Kur: Run-Auswertung, Regeln, Mining (kein LLM; docs/skill-curation.md)
 npm run loadtest         # K8: 20 Sessions × 30 ev/s
@@ -119,6 +120,15 @@ bei fehlendem Reporter-Zugang im Vordergrund bleiben.
 `data/` (SQLite, JSONL, Blobs, Worker-Logs) ist git-ignored und bleibt es.
 Keine Secrets in Config-Commits; Tokens nur als Hash. Kein Code, der Agenten-
 Output als Instruktion interpretiert (Prompt-Injection-Grenze, PRD §8.5).
+
+Team-Handoff nach [ADR-0119 §7.6](docs/adr/0119-team-koordination-und-agentengrenze.md):
+Eingehendes `auto` ist ausschließlich für bereits als `teamTaint` markierte
+Sessions in der Sandbox nach [ADR-0122](docs/adr/0122-sandbox-fuer-worker.md)
+zulässig. Standard bleibt `preview` (eingehend) bzw. `ask` (ausgehend).
+Ein Mensch gibt `auto` je Aufgabe und Richtung per Passkey oder `hubctl`
+für höchstens 24 Stunden frei. Je Nachricht ist `team.auto_released` zu
+schreiben. Secret-Scan, Egress-Liste, 30 Nachrichten je Stunde und Aufgabe,
+Pause nach sechs Agentenzügen ohne Menschen und Not-Stopp gelten weiter.
 
 ## Arbeitsweise für Agenten
 

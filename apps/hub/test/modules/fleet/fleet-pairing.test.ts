@@ -96,7 +96,7 @@ describe("fleet pairing (T6.2, ADR-0017)", () => {
   it("revoke blocks new requests at once and closes open streams within 5 s", async () => {
     const fleetToken = peer.tokens.issue("fleet:revoke-me").token;
     const id = (await call<{ id: string }>(peer, "/api/sessions", { body: { adapter: "dummy", project: peer.dir } })).body.id;
-    const ws = new WebSocket(`${peer.url.replace("http", "ws")}/api/events/${id}/tail?token=${fleetToken}`);
+    const ws = new WebSocket(`${peer.url.replace("http", "ws")}/api/events/${id}/tail`, { headers: { authorization: `Bearer ${fleetToken}` } });
     await new Promise((r) => ws.once("open", r));
     const closed = new Promise<number>((r) => ws.once("close", (code) => r(code)));
     const t0 = Date.now();

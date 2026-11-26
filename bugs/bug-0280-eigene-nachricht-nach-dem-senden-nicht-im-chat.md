@@ -1,12 +1,12 @@
 ---
 id: BUG-0280
 slug: eigene-nachricht-verschwindet-nach-dem-senden-aus-dem-chat
-status: open
+status: done
 severity: S2
 area: pwa
 instance: dev
-commit: ""
-forge: ""
+commit: pending
+forge: "https://github.com/securesight-ai/AncientVoid/issues/416"
 epic: P7
 created: 2026-11-24
 reporter: Kai
@@ -45,6 +45,25 @@ Vorgemerkte Eingaben (ADR-0085) werden nur in `QueueList` dargestellt; erst die
 Auslieferung erzeugt das `session.prompt`-Ereignis, das `turnsOf` als
 Zeilenanfang rendert. Zwischen Senden und Auslieferung gibt es keine Zeile.
 
+## Nachtrag 24.11.2026 — dieselbe Nachricht, 19 Minuten lang unsichtbar
+
+Die Messnachricht derselben Untersuchung ist spaeter wirklich angekommen, und die
+Zahlen zeigen, wie lang die Blindstelle ist:
+
+* gesendet 07:38:08 (lokale Uhr, Zeitstempel der Sonde: 1795502288958)
+* Ereignis `session.prompt` erst **seq 20145, 06:57:19Z = 07:57:19 lokal** — also
+  **~19 Minuten** spaeter, waehrend der Zug durchlief (Adapter `pi` sagt
+  `midTurnInput:false`, ADR-0074/0085: Zustellung fruehestens am Zugende)
+* Waehrend dieser 19 Minuten: kein Chat-Eintrag, `GET /api/sessions/:id/queue`
+  lieferte den Text nur dort — nach der Zustellung ist die Warteschlange wieder leer
+  (anzahl 0)
+* Meta-Zeile der nun sichtbaren Nachricht: „Du · pc-diagnose" — der Name des
+  (laengst widerrufenen) Zweck-Tokens. Das ist BUG-0281, hier erstmals an einer
+  echten Zeile sichtbar.
+
+Genau diese Luecke von ~19 Minuten ohne jeden sichtbaren Nachweis ist der Grund,
+warum die Nachricht als „verschwunden" erlebt wird.
+
 ## Vorschlag
 
 Vorgemerkte eigene Eingabe als eigene Chat-Zeile mit Status („wartet auf den
@@ -63,3 +82,13 @@ einzige Nachweis.
 
 Windows 11, Hub 127.0.0.1:7373 (Stand `75bae8e5`), Adapter `pi`,
 Auslieferung „nächste Gelegenheit".
+
+## Behoben (2026-11-30)
+
+`PendingOwnChat` rendert vorgemerkte eigene Eingaben als eigene Zeile im Fluss
+(Chat und Verlauf — der Default-Tab ist Verlauf): voller Text, Status
+(„geht automatisch raus…" / „Annahme unklar"), Bearbeiten und Streichen — der
+Streifen bleibt die Verwaltung, der Hub führt die Reihe (ADR-0085).
+Test: `apps/pwa/test/features/session/pending-own.test.ts` (rot→grün, reine
+Funktion `pendingOwnRows`) und E2E `warteschlange-pc.spec.ts` (Zeile mit vollem
+Text, Bearbeiten und Streichen durch die UI, Hub-Zustand danach).

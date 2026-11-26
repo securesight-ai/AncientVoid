@@ -1,9 +1,9 @@
 # EPIC-P79 — Token-Tempo lokaler Inferenz in der PWA (eigener Menüpunkt)
 
-**Status:** Code steht (T79.1–T79.5, PR #264), Exit offen (T79.6 Betriebsdoku und Geräteprüfung) · **Messlatten:** K5 (Antwortgrößen), K7 (Rekonstruktion aus JSONL),
+**Status:** Abgeschlossen (25.11.2026, Geräteabnahme nach P000 verschoben, T000.38) · **Messlatten:** K5 (Antwortgrößen), K7 (Rekonstruktion aus JSONL),
 K9 (Ausfall sichtbar), ADR-0023 (`null` ≠ 0), ADR-0011 (Secrets nur als Dateireferenz),
 ADR-0020 (Vertical Slices) · **Vertrag:** `@ancientvoid/contracts` → `inference/`
-(ADR-0102)
+([ADR-0125](../docs/adr/0125-inferenz-token-tempo.md))
 
 ## Warum
 
@@ -61,14 +61,16 @@ Session, die den Request ausgelöst hat.
 - **T79.5 Tests**: Kern-Unit (Adapter an Fixture-Rohdaten, Statistiken, Store),
   Routen-Integration (leere Konfiguration → leere Liste, nicht `null`), E2E-Spec
   für Menüpunkt + Seite gegen einen Modell-Server-Attrappen-Endpunkt.
-- **T79.6 Doku**: `docs/inference-token-tempo.md` (was welche Engine liefert, was
-  nicht), ADR-0102 (Warum eigene Spur neben P59), Vermerk in `docs/guide/`.
+- **T79.6 Doku:** [Betriebsanleitung](../docs/inference-token-tempo.md),
+  [ADR-0125](../docs/adr/0125-inferenz-token-tempo.md) und Guide-Verweis.
+  Geräteabnahme nach P000 verschoben (T000.38).
 
 ## Ausstiegskriterien
 
 1. `GET /api/inference/sources` und `…/snapshot` liefern die konfigurierten Engines;
    fehlende Engines erscheinen mit Fehlerzustand statt zu verschwinden (K9).
-2. Die Seite hat einen **eigenen Menüpunkt** und ist unter `/inferenz` erreichbar;
+2. Die Seite ist unter **Statistik → Inferenz** erreichbar (Altlink
+   `#/inferenz` leitet auf `#/statistik/inferenz` weiter, seit BUG-0257);
    sie zeigt Decode-, Prefill-, Zeit-bis-erstes-Token-Werte und die Schichten, und
    jede Zahl trägt ihre Quelle.
 3. Perzentile erscheinen nur bei Engines mit Einzel-Requests; für Zähler-Engines steht
@@ -89,3 +91,20 @@ Session, die den Request ausgelöst hat.
 Kosten/Preis-Rechnung (P55), Session-Zuordnung einzelner Engine-Requests (die Engine
 weiß nicht, welche Session sie gesendet hat — eigene Entscheidung nötig), vLLM-Adapter
 (nur wenn ein vLLM-Endpunkt existiert, gemessen statt geraten), Grafana-Export.
+
+## Retro (25.11.2026)
+
+| Exit | Beleg |
+|---|---|
+| 1 — Quellen und Fehler | `apps/hub/test/modules/inference/routes.test.ts`, Ausfalltest in `e2e/specs/inference-tempo.spec.ts` |
+| 2 — Erreichbarkeit und Werte | E2E-Spec `inference-tempo.spec.ts`, Test zum Einstieg über das Dock und zum Inferenz-Reiter |
+| 3 — Verteilungen | Derselbe Spec prüft je eine Quelle mit Einzel-Requests und eine reine Zähler-Engine |
+| 4 — Wiederherstellung | `packages/core/test/inference.test.ts`, Test „Store: dedupliziert, überlebt Neustart und hält sich ans Fenster“ |
+| 5 — Antwortgrenzen | Test „Tracker: volle Antwort bleibt gekappt und messbar klein“ und die Strata-Live-Stichprobe oben |
+| 6 — Prüfungen | Gezielte Inferenz-Tests und [Nightly auf `4f8533cf`](https://github.com/securesight-ai/AncientVoid/actions/runs/45566415645) |
+| 7 — Geräteabnahme | Nach P000 verschoben ([T000.38](EPIC-000-testsuite-fuer-menschen.md)) |
+
+Der Test mit einer reinen Zähler-Engine deckt das Risiko aus Premortem 2 ab.
+Das Aufbewahrungsfenster aus Premortem 5 begrenzt die aktive Request-Menge.
+Die [Betriebsanleitung](../docs/inference-token-tempo.md) dokumentiert die
+append-only Datei und die fehlende automatische Rotation.

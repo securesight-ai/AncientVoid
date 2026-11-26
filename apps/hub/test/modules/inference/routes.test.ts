@@ -9,7 +9,7 @@ import type { FastifyInstance } from "fastify";
 import { createHubApp } from "../../../src/app.ts";
 
 /**
- * EPIC-P79 (ADR-0102): GET /api/inference/sources und /api/inference/snapshot —
+ * EPIC-P79 (ADR-0125): GET /api/inference/sources und /api/inference/snapshot —
  * Contract-Stabilität, ehrliche leere Liste ohne Konfiguration, keine stillen
  * Rückfälle bei unbekannter Quellen-Id.
  */

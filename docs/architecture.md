@@ -70,7 +70,7 @@ Moduls teilen sich große Klassen nach Verantwortung auf (Beispiel
 Host-Schnittstelle).
 
 Beispiel für ein Modul, das nur liest und misst: `core/modules/inference`
-(EPIC-P79, ADR-0102) beprobt lokale Inferenz-Engines (Strata, Halogen,
+(EPIC-P79, ADR-0125) beprobt lokale Inferenz-Engines (Strata, Halogen,
 llama.cpp) in eigener Folge als `aimetrics` (P59) — Request-Historie als JSONL
 (K7, quellen-getaggt), Perzentile über eigene Requests, Gegenwerte nur als
 Gegenwerte. `null` heißt „Engine meldet nicht“ und wird nie zu `0`; die Antwort

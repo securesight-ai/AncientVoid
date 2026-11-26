@@ -2,10 +2,11 @@ import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import WebSocket from "ws";
-import type { FleetStore, SessionManager, TokenService } from "@ancientvoid/core";
+import type { FleetStore, SessionManager } from "@ancientvoid/core";
 import type { HubMetrics } from "@ancientvoid/contracts";
 import { isFleetRoutable, MAX_ATTACHMENT_BYTES } from "@ancientvoid/contracts";
 import { createTailHandler } from "../sessions/ws.ts";
+import type { TailAccess } from "../sessions/tail-access.ts";
 
 const FORWARD_TIMEOUT_MS = 10_000;
 /** Enhance/optimizer calls spawn a CLI model call (10–30 s measured) — the
@@ -154,11 +155,18 @@ function routablePath(rest: string): string | null {
  */
 export function registerFleetProxy(
   app: FastifyInstance,
-  deps: { fleet: FleetStore; hostId: string; sessions: SessionManager; tokens: TokenService; metrics?: HubMetrics },
+  deps: { fleet: FleetStore; hostId: string; sessions: SessionManager; tailAccess: TailAccess; metrics?: HubMetrics },
 ): void {
-  const local = createTailHandler(deps.sessions, deps.metrics, deps.tokens);
+  const local = createTailHandler(deps.sessions, deps.metrics);
+  const tailPath = "/api/hosts/:hostId/events/:id/tail";
+  deps.tailAccess.registerTicket(app, tailPath, (req) => {
+    const { hostId, id } = req.params as { hostId: string; id: string };
+    if (hostId === deps.hostId) return deps.sessions.get(id) ? null : "unknown session";
+    return deps.fleet.peer(hostId) ? null : "unknown host";
+  });
 
-  app.get("/api/hosts/:hostId/events/:id/tail", { websocket: true }, (socket, req) => {
+  app.get(tailPath, { websocket: true, config: { sessionTail: "upgrade" } }, (socket, req) => {
+    if (!deps.tailAccess.authorize(socket, req)) return;
     const { hostId, id } = req.params as { hostId: string; id: string };
     if (hostId === deps.hostId) {
       local(socket, req);
@@ -169,7 +177,10 @@ export function registerFleetProxy(
       socket.close(4404, "unknown host");
       return;
     }
-    const upstream = new WebSocket(`${peer.url.replace(/^http/, "ws")}/api/events/${encodeURIComponent(id)}/tail?token=${encodeURIComponent(peer.token)}`);
+    const upstream = new WebSocket(`${peer.url.replace(/^http/, "ws")}/api/events/${encodeURIComponent(id)}/tail`, {
+      headers: { authorization: `Bearer ${peer.token}` },
+      handshakeTimeout: FORWARD_TIMEOUT_MS,
+    });
     const pending: string[] = [];
     socket.on("message", (data: Buffer) => {
       const text = data.toString();

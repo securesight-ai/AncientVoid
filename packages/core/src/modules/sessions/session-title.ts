@@ -1,4 +1,5 @@
 import type { PlannerModelConfig } from "../commands/model.ts";
+import { hintergrundAnfrage } from "../inference/index.ts";
 
 /**
  * EPIC-P15 T15.5: a short title from the model — only from the person's first
@@ -29,20 +30,21 @@ export async function askTitleModel(cfg: PlannerModelConfig, prompt: string, ans
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), cfg.timeoutMs ?? 15_000);
   try {
-    const res = await (cfg.fetch ?? fetch)(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
-      body: JSON.stringify({
-        model: cfg.model,
-        temperature: 0.2,
-        max_tokens: 200,
-        messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: `Auftrag:\n${prompt.slice(0, 500)}\n\nAnfang der Antwort:\n${answer.slice(0, 300)}` },
-        ],
-      }),
-    });
+    const res = await hintergrundAnfrage(cfg.pforte, cfg.model, cfg.url, "titel", "Sitzungstitel", () =>
+      (cfg.fetch ?? fetch)(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
+        body: JSON.stringify({
+          model: cfg.model,
+          temperature: 0.2,
+          max_tokens: 200,
+          messages: [
+            { role: "system", content: SYSTEM },
+            { role: "user", content: `Auftrag:\n${prompt.slice(0, 500)}\n\nAnfang der Antwort:\n${answer.slice(0, 300)}` },
+          ],
+        }),
+      }));
     if (!res.ok) return null;
     const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     return cleanModelTitle(body.choices?.[0]?.message?.content ?? "");

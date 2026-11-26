@@ -1,6 +1,7 @@
 import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
-import type { AdbDeviceEntry, DeviceStatus } from "@ancientvoid/contracts";
+import type { AdbDeviceEntry, AvdDescriptor, DeviceSetupStatus, DeviceStatus } from "@ancientvoid/contracts";
+import { DEVICE_AVD_PROFILES, DEVICE_DEFAULT_IMAGE, DEVICE_DEFAULT_PROFILE } from "@ancientvoid/contracts";
 import { hubApi, remoteHost } from "../../shared/api.ts";
 import { openPopout } from "../windows/windows.ts";
 import { getHubStatus } from "../shell/hub-status.ts";
@@ -43,6 +44,9 @@ export function DevicePanel({ sessionId, label, hostId, onClose }: { sessionId: 
   const [selected, setSelected] = useState<string | null>(null);
   const [generation, setGeneration] = useState<number | null>(null);
   const [online, setOnline] = useState(navigator.onLine);
+  const [setup, setSetup] = useState<DeviceSetupStatus | null>(null);
+  const [sdkRoot, setSdkRoot] = useState("");
+  const [avdCreated, setAvdCreated] = useState<string | null>(null);
   const remote = Boolean(remoteHost(hostId));
 
   useEffect(() => {
@@ -56,7 +60,17 @@ export function DevicePanel({ sessionId, label, hostId, onClose }: { sessionId: 
     };
   }, []);
 
-  const refresh = () => hubApi.devicesStatus().then(setStatus).catch((err) => setError(err instanceof Error ? err.message : "Status nicht lesbar"));
+  const refresh = () => {
+    void hubApi.devicesStatus().then(setStatus).catch((err) => setError(err instanceof Error ? err.message : "Status nicht lesbar"));
+    void hubApi
+      .deviceSetupStatus()
+      .then((s) => {
+        setSetup(s);
+        setSdkRoot((cur) => cur.trim() || s.suggestedSdkRoot);
+      })
+      .catch(() => undefined);
+  };
+
   useEffect(() => {
     if (remote) return;
     void refresh();
@@ -108,6 +122,46 @@ export function DevicePanel({ sessionId, label, hostId, onClose }: { sessionId: 
       )}
       {error && <div class="files-error" role="alert">{error}</div>}
       {!online && <div class="files-stale" role="status">{t("devices.offline")}</div>}
+      {setup && status && !status.capabilities.ready && (
+        <div class="device-setup" data-testid="device-setup">
+          <strong>{t("devices.setup_title")}</strong>
+          <div class="dim">{t("devices.setup_hint")}</div>
+          <form
+            class="browser-url"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void run(async () => {
+                setSetup(await hubApi.deviceSetupStart(sdkRoot.trim()));
+              });
+            }}
+          >
+            <input
+              aria-label={t("devices.setup_target")}
+              placeholder={t("devices.setup_target")}
+              value={sdkRoot}
+              disabled={!online || setup.state === "running"}
+              maxLength={4096}
+              data-testid="device-setup-target"
+              onInput={(e) => setSdkRoot((e.target as HTMLInputElement).value)}
+            />
+            <Button type="submit" disabled={!online || !sdkRoot.trim() || setup.state === "running"} data-testid="device-setup-start">
+              {t("devices.setup_start")}
+            </Button>
+          </form>
+          <div data-testid="device-setup-state">
+            {setup.state === "running" && <span class="dim">{t("devices.setup_running")} — {t(`devices.setup_phase_${setup.phase}`)}</span>}
+            {setup.state === "done" && <span class="run-ready">{t("devices.setup_done")}</span>}
+            {setup.state === "failed" && <span class="files-error" role="alert">{t("devices.setup_failed")}: {setup.reason ?? "?"}</span>}
+          </div>
+          {setup.tail && <details><summary class="dim">{t("devices.setup_log")}</summary><pre class="file-text mono">{setup.tail}</pre></details>}
+        </div>
+      )}
+      {status?.capabilities.ready && (
+        <details class="device-install">
+          <summary class="dim">{t("devices.avd_create")}</summary>
+          <CreateAvd busy={busy} online={online} created={avdCreated} onCreated={(name) => { setAvdCreated(name); void refresh(); }} onError={setError} />
+        </details>
+      )}
       <div class="device-bar">
         <label class="dim" title={t("devices.avd_home")}>
           {t("devices.avd")}{" "}
@@ -363,6 +417,52 @@ function Tests({ serial, online }: { serial: string; online: boolean }) {
         ))}
         {runs.length === 0 && <li class="dim">{t("devices.no_runs")}</li>}
       </ul>
+    </div>
+  );
+}
+
+/** In-App-Setup (2026-11-24): neuen AVD anlegen — Name, installiertes Image, Geräteprofil. */
+function CreateAvd({ busy, online, created, onCreated, onError }: { busy: boolean; online: boolean; created: string | null; onCreated: (name: string) => void; onError: (m: string) => void }) {
+  const [name, setName] = useState("");
+  const [image, setImage] = useState(DEVICE_DEFAULT_IMAGE);
+  const [profile, setProfile] = useState<string>(DEVICE_DEFAULT_PROFILE);
+  const [images, setImages] = useState<string[]>([]);
+  useEffect(() => {
+    void hubApi
+      .deviceImages()
+      .then((r) => {
+        setImages(r.images);
+        if (r.images.length > 0 && !r.images.includes(DEVICE_DEFAULT_IMAGE)) setImage(r.images[0]!);
+      })
+      .catch(() => undefined);
+  }, []);
+  return (
+    <div data-testid="device-avd-create">
+      <form
+        class="browser-type"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const trimmed = name.trim();
+          if (!trimmed) return;
+          void hubApi
+            .deviceCreateAvd({ name: trimmed, image, profile })
+            .then((avd: AvdDescriptor) => {
+              setName("");
+              onCreated(avd.name);
+            })
+            .catch((err) => onError(err instanceof Error ? err.message : "AVD-Anlage fehlgeschlagen"));
+        }}
+      >
+        <input aria-label={t("devices.avd_name")} placeholder={t("devices.avd_name")} value={name} disabled={!online || busy} maxLength={32} data-testid="device-avd-name" onInput={(e) => setName((e.target as HTMLInputElement).value)} />
+        <select aria-label={t("devices.avd_image")} value={image} disabled={!online} data-testid="device-avd-image" onChange={(e) => setImage((e.target as HTMLSelectElement).value)}>
+          {(images.length > 0 ? images : [DEVICE_DEFAULT_IMAGE]).map((i) => <option key={i} value={i}>{i}</option>)}
+        </select>
+        <select aria-label={t("devices.avd_profile")} value={profile} disabled={!online} data-testid="device-avd-profile" onChange={(e) => setProfile((e.target as HTMLSelectElement).value)}>
+          {DEVICE_AVD_PROFILES.map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+        <Button type="submit" disabled={!online || busy || !name.trim() || !image} data-testid="device-avd-create-btn">{t("devices.avd_create_btn")}</Button>
+      </form>
+      {created && <div class="dim" data-testid="device-avd-created">{t("devices.avd_created")} „{created}“</div>}
     </div>
   );
 }

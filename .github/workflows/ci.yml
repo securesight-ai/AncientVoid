@@ -79,7 +79,7 @@ jobs:
           fi
           npm rebuild esbuild
           fehler=0
-          for gate in check:workspace-links typecheck lint check:commits check:arch check:names check:adapter-matrix check:context check:epics check:skills check:i18n check:secrets; do
+          for gate in check:workspace-links typecheck lint check:commits check:arch check:knip check:names check:adapter-matrix check:context check:epics check:skills check:i18n check:secrets; do
             echo "::group::$gate"
             npm run -s "$gate" || fehler=1
             echo "::endgroup::"

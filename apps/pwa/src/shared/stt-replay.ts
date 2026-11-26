@@ -10,7 +10,7 @@
 const DB_NAME = "ancientvoid.stt-recordings";
 const STORE = "recordings.v1";
 export const MAX_REPLAY_KEEP = 3;
-export const MAX_REPLAY_BYTES = 12 * 1024 * 1024;
+const MAX_REPLAY_BYTES = 12 * 1024 * 1024;
 export const REPLAY_EVENT = "ancientvoid:stt-replay";
 
 export type ReplaySummary = {
@@ -169,9 +169,4 @@ export async function getRecording(id: string): Promise<ReplayRecording | undefi
 export async function dropRecording(id: string): Promise<void> {
   await entfernen(id);
   melden();
-}
-
-/** Die neueste Aufnahme, auf die die Benutzeroberflaeche zeigt. */
-export async function latestRecording(): Promise<ReplaySummary | undefined> {
-  return (await listRecordings())[0];
 }

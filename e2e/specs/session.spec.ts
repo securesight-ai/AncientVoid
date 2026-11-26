@@ -40,6 +40,30 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
     expect(record?.adapter).toBe("opencode");
   });
 
+  test("der Session-Tail verbindet sich nach einem Abbruch mit einem frischen Ticket", async ({ app, hub }) => {
+    const prompt = "Tail nach Verbindungsabbruch";
+    const id = await hub.createSession({ adapter: "opencode", prompt });
+    const streamPath = `/api/events/${id}/tail`;
+    const queries: URLSearchParams[] = [];
+    await app.routeWebSocket((url) => url.pathname === streamPath, (route) => {
+      queries.push(new URL(route.url()).searchParams);
+      const upstream = route.connectToServer();
+      if (queries.length === 1) {
+        upstream.onMessage(() => route.close({ code: 1012 }));
+      }
+    });
+
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    await sessionTab(app, "Chat");
+    await expect.poll(() => queries.length).toBe(2);
+    for (const query of queries) {
+      expect([...query.keys()]).toEqual(["ticket"]);
+      expect(query.get("ticket")).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    }
+    expect(queries[1]?.get("ticket")).not.toBe(queries[0]?.get("ticket"));
+    await expect(app.locator(".tail-scroll").getByText(/Antwort auf: Tail nach Verbindungsabbruch/)).toBeVisible();
+  });
+
   test("Projektauswahl zuerst: Pfad wird vorbelegt, folgt der Auswahl und bleibt überschreibbar @desktop", async ({ app, hub }) => {
     await app.getByRole("button", { name: "Neue Session" }).click();
     // Ohne Host-Auswahl kommt das Projekt vor Loop und Adapter, auch im zweispaltigen Formular.
@@ -147,6 +171,28 @@ test.describe("Session anlegen und verfolgen (P1, P1.6)", () => {
     await app.reload();
     await expect(app.locator(".session-topbar")).toContainText("dummy");
     await app.goBack();
+    await expect(app.locator(".dashboard")).toBeVisible();
+  });
+
+  // BUG-0282: Am Handy führt der Übersicht-Knopf immer in die Übersicht. Der
+  // alte popView-Rückschritt merkte sich beim Zurückkehren die verlassene
+  // Ansicht selbst wieder (main.tsx rememberView) und pendelte nach einem
+  // In-Session-Sprung (Suche-Treffer, Forge-Link) zwischen den Sessions,
+  // statt heimzukehren.
+  test("BUG-0282: Übersicht-Knopf nach In-Session-Sprung zurück in die Übersicht", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "dummy", prompt: "Nadel Alpha" });
+    await hub.createSession({ adapter: "dummy", prompt: "Nadel Beta" });
+    await expect(app.locator(".session-card")).toHaveCount(2);
+    await app.locator(".session-card").filter({ hasText: "Nadel Alpha" }).locator(".session-open").click();
+    await expect(app.locator(".session-topbar")).toContainText("Nadel Alpha");
+    const overviewBtn = app.getByLabel("Zur Übersicht");
+    await expect(overviewBtn.locator(".tab-icon")).toBeVisible();
+    await sessionTab(app, "Suche");
+    await app.locator(".search-input").fill("Nadel Beta");
+    await app.locator(".search-form button[type=submit]").click();
+    await app.locator(".hit-group-title").filter({ hasText: "Nadel Beta" }).click();
+    await expect(app.locator(".session-topbar")).toContainText("Nadel Beta");
+    await overviewBtn.click();
     await expect(app.locator(".dashboard")).toBeVisible();
   });
 

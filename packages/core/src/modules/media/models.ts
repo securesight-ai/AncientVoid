@@ -1,5 +1,6 @@
 import type { TranscriptSegment } from "@ancientvoid/contracts";
 import { parseTimestamp } from "@ancientvoid/contracts";
+import { hintergrundAnfrage, type Pforte } from "../inference/index.ts";
 
 /**
  * EPIC-P10.5: the services a media job may ask — whisper.cpp for speech,
@@ -12,6 +13,8 @@ export interface OpenAiModel {
   apiKey?: string | undefined;
   fetch?: typeof fetch;
   timeoutMs?: number;
+  /** BUG-0272 Rest: Zusammenfassen/Bildbeschrieb läuft als Hintergrund durch die Modell-Pforte. */
+  pforte?: Pforte | undefined;
 }
 
 export interface GeminiModel {
@@ -61,21 +64,22 @@ function withTimeout(ms: number, signal?: AbortSignal): AbortSignal {
 
 /** One JSON answer from an OpenAI-compatible chat model (llama.cpp: schema-constrained). */
 export async function chatJson<T>(cfg: OpenAiModel, system: string, user: string, schema: object, maxTokens: number, signal?: AbortSignal): Promise<T> {
-  const res = await (cfg.fetch ?? fetch)(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
-    method: "POST",
-    signal: withTimeout(cfg.timeoutMs ?? 300_000, signal),
-    headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
-    body: JSON.stringify({
-      model: cfg.model,
-      temperature: 0.2,
-      max_tokens: maxTokens,
-      response_format: { type: "json_object", schema },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    }),
-  });
+  const res = await hintergrundAnfrage(cfg.pforte, cfg.model, cfg.url, "analyse", "Analyse", () =>
+    (cfg.fetch ?? fetch)(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      signal: withTimeout(cfg.timeoutMs ?? 300_000, signal),
+      headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
+      body: JSON.stringify({
+        model: cfg.model,
+        temperature: 0.2,
+        max_tokens: maxTokens,
+        response_format: { type: "json_object", schema },
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+      }),
+    }));
   if (!res.ok) throw new Error(`Modell ${res.status}`);
   const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return parseJsonAnswer<T>(body.choices?.[0]?.message?.content ?? "");
@@ -99,25 +103,26 @@ const FRAME_PROMPT =
 
 /** A local vision model behind an OpenAI-compatible API (llama.cpp with mmproj). */
 export async function describeFrameOpenAi(cfg: OpenAiModel, jpeg: Uint8Array, signal?: AbortSignal): Promise<FrameReading> {
-  const res = await (cfg.fetch ?? fetch)(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
-    method: "POST",
-    signal: withTimeout(cfg.timeoutMs ?? 120_000, signal),
-    headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
-    body: JSON.stringify({
-      model: cfg.model,
-      temperature: 0,
-      max_tokens: 400,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: FRAME_PROMPT },
-            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${Buffer.from(jpeg).toString("base64")}` } },
-          ],
-        },
-      ],
-    }),
-  });
+  const res = await hintergrundAnfrage(cfg.pforte, cfg.model, cfg.url, "bild", "Standbild beschreiben", () =>
+    (cfg.fetch ?? fetch)(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      signal: withTimeout(cfg.timeoutMs ?? 120_000, signal),
+      headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
+      body: JSON.stringify({
+        model: cfg.model,
+        temperature: 0,
+        max_tokens: 400,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: FRAME_PROMPT },
+              { type: "image_url", image_url: { url: `data:image/jpeg;base64,${Buffer.from(jpeg).toString("base64")}` } },
+            ],
+          },
+        ],
+      }),
+    }));
   if (!res.ok) throw new Error(`Bildmodell ${res.status}`);
   const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return readingOf(body.choices?.[0]?.message?.content ?? "");

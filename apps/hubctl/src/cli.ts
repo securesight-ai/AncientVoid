@@ -7,17 +7,15 @@
  *   hubctl token issue "pixel-9"          (issues against local hub DB file)
  */
 import { pathToFileURL } from "node:url";
-import type { NormalizedEvent } from "@ancientvoid/contracts";
+import type { NormalizedEvent, SessionTailTicket, WsServerMessage } from "@ancientvoid/contracts";
 import { DEFAULT_SERVER, findOrphanedWorkers, pruneOrphanedWorkers } from "@ancientvoid/workers";
-import { BASE, TOKEN, api } from "./api.ts";
+import { BASE, api } from "./api.ts";
 import { setCliLang, t } from "./i18n/index.ts";
 
 /** Exported for unit testing — building this by hand (vs. the URL API) is
  * exactly how BUG-0005 (ws:://host, an invalid URL) slipped in unnoticed. */
-export function buildWsUrl(base: string, token: string, sessionId: string): string {
-  const proto = base.startsWith("https") ? "wss" : "ws";
-  const url = `${proto}:${base.replace(/^https?:/, "")}/api/events/${sessionId}/tail${token ? `?token=${encodeURIComponent(token)}` : ""}`;
-  return url;
+export function buildWsUrl(base: string, ticket: string, sessionId: string): string {
+  return `${base.replace(/^http/, "ws")}/api/events/${encodeURIComponent(sessionId)}/tail?ticket=${encodeURIComponent(ticket)}`;
 }
 
 /** Exported so additive /api/health fields stay printed (ADR-0010) instead
@@ -60,34 +58,75 @@ function printSession(s: SessionRow): void {
   console.log(`${short}  ${s.status.padEnd(18)} ${s.adapter.padEnd(10)} ${(s.workspaceMode ?? "unknown").padEnd(8)} #${String(s.lastSeq).padEnd(6)} ${s.project}`);
 }
 
+function isClientError(err: unknown): boolean {
+  const status = err instanceof Error ? err.cause : undefined;
+  return typeof status === "number" && status >= 400 && status < 500;
+}
+
 async function* followWs(sessionId: string): AsyncGenerator<NormalizedEvent> {
-  const socket = new WebSocket(buildWsUrl(BASE, TOKEN, sessionId));
-  const queue: NormalizedEvent[] = [];
-  let wake: (() => void) | null = null;
-  socket.onmessage = (msg: MessageEvent) => {
-    const data = JSON.parse(String(msg.data)) as { type: string; events?: NormalizedEvent[] };
-    if (data.type === "events" && data.events) {
-      queue.push(...data.events);
-      wake?.();
-    }
+  let lastSeq = 0;
+  let delayMs = 500;
+  let connected = false;
+  const backoff = async (): Promise<void> => {
+    await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+    delayMs = Math.min(delayMs * 2, 10_000);
   };
-  const opened = new Promise<void>((resolve, reject) => {
-    socket.onopen = () => resolve();
-    socket.onerror = (e) => reject(new Error(`ws error: ${String(e)}`));
-  });
-  await opened;
-  socket.send(JSON.stringify({ type: "hello", lastSeq: 0 }));
-  while (true) {
-    if (queue.length === 0) {
-      await new Promise<void>((resolve) => {
-        wake = resolve;
-        setTimeout(resolve, 30_000);
-      });
-      wake = null;
+  for (;;) {
+    let ticket: string;
+    try {
+      ({ ticket } = await api<SessionTailTicket>(`/api/events/${encodeURIComponent(sessionId)}/tail-ticket`, {
+        method: "POST", signal: AbortSignal.timeout(10_000),
+      }));
+    } catch (err) {
+      // A running tail outlives a hub restart; a rejection (4xx) is final.
+      if (!connected || isClientError(err)) throw err;
+      await backoff();
       continue;
     }
-    const batch = queue.splice(0, queue.length);
-    for (const ev of batch) yield ev;
+    const socket = new WebSocket(buildWsUrl(BASE, ticket, sessionId));
+    const queue: NormalizedEvent[] = [];
+    let wake: (() => void) | undefined;
+    let closed: CloseEvent | undefined;
+    let serverError: string | undefined;
+    socket.onopen = () => socket.send(JSON.stringify({ type: "hello", lastSeq }));
+    socket.onmessage = (msg: MessageEvent) => {
+      try {
+        const data = JSON.parse(String(msg.data)) as WsServerMessage;
+        if (data.type === "events" || data.type === "welcome") {
+          connected = true;
+          delayMs = 500;
+        }
+        if (data.type === "events") queue.push(...data.events);
+        if (data.type === "error") serverError = data.message;
+      } catch {
+        serverError = "Invalid session tail frame";
+      }
+      wake?.();
+    };
+    socket.onclose = (event) => {
+      closed = event;
+      wake?.();
+    };
+
+    try {
+      while (!closed || queue.length > 0) {
+        if (serverError) throw new Error(serverError);
+        if (queue.length === 0) await new Promise<void>((resolve) => { wake = resolve; });
+        for (const event of queue.splice(0)) {
+          if (event.seq <= lastSeq) continue;
+          lastSeq = event.seq;
+          yield event;
+        }
+      }
+      if (serverError) throw new Error(serverError);
+      if (closed.code === 1000) return;
+      if (closed.code !== 1006 && closed.code !== 1011 && closed.code !== 1012 && closed.code !== 1013) {
+        throw new Error(`Session tail closed (${closed.code}): ${closed.reason}`);
+      }
+    } finally {
+      socket.close();
+    }
+    await backoff();
   }
 }
 
@@ -257,6 +296,11 @@ async function main(): Promise<void> {
       } else {
         usage();
       }
+      break;
+    }
+    case "scan": {
+      const { scanCommand } = await import("./scan.ts");
+      await scanCommand(args);
       break;
     }
     case "backup": {

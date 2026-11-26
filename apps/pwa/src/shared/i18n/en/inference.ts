@@ -1,4 +1,4 @@
-// EPIC-P79 (ADR-0102): inference token tempo — English catalogue (parity checked by tsc).
+// EPIC-P79 (ADR-0125): inference token tempo — English catalogue (parity checked by tsc).
 export const en = {
   "inference.title": "Inference token tempo",
   "inference.hint": "Measured on the engines the hub probes. Distributions are computed over our own request history, never over counters.",

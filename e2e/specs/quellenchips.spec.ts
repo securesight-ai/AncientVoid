@@ -74,6 +74,7 @@ test("Quellensprung per Tastatur bewahrt Entwurf und Verbindung, Popout teilt Qu
   if (await showControls.isVisible()) await showControls.click();
   const reply = app.getByPlaceholder("Antworten…");
   await reply.fill("Entwurf behalten");
+  await expect.poll(() => connections).toBeGreaterThan(0);
   const before = connections;
   await app.keyboard.press("Control+k");
   await app.getByRole("combobox", { name: "Auftrag" }).fill("README");
@@ -90,10 +91,13 @@ test("Quellensprung per Tastatur bewahrt Entwurf und Verbindung, Popout teilt Qu
   // Gerätewahl und die Steuerung steht meist offen. Erst den Sprung selbst
   // abwarten (URL), dann nur aufklappen, wenn nötig.
   await expect(app).toHaveURL(/\/code\/README\.md/);
-  if (await showControls.isVisible()) await showControls.click();
-  await expect(reply).toHaveValue("Entwurf behalten");
+  // Das Einklappen folgt erst nach dem URL-Wechsel — eine einzelne Abfrage träfe den Stand davor.
+  await expect(async () => {
+    if (await showControls.isVisible()) await showControls.click();
+    await expect(reply).toHaveValue("Entwurf behalten", { timeout: 500 });
+    await expect(app.getByTestId("source-chips")).toBeVisible({ timeout: 500 });
+  }).toPass({ timeout: 10_000 });
   expect(connections).toBe(before);
-  await expect(app.getByTestId("source-chips")).toBeVisible();
   // Eigene Fenster teilen die lokale Quellenauswahl, ohne implizites Senden.
   const popout = await context.newPage();
   await popout.goto(`${hub.origin}/?window=1#/sessions/${id}`);

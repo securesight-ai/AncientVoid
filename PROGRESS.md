@@ -1,5 +1,21 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
+## 25.11.2026 — PR-Lage klären, Flake-Fix, Hub auf neuen Stand (Sitzung f2f88190)
+
+Lage: EPIC-P82 ist über PR #423 in main gemerged (16791e7b). #420 (EPIC-P83-Doku,
+Auto-Merge aktiviert) ist BLOCKED — verify scheiterte am device-setup-Test mit
+ENOTEMPTY; #424 (p80, andere Sitzung) ist offen, CLEAN und grün. Fix läuft auf
+fix/device-setup-test-race: Tests warten auf den terminalen Zustand, bevor
+afterEach löscht. Rückfall-Stand für den Hub-Neustart: f291ce81 (ausgeliefert).
+Wiederaufnahme bei Abbruch: (1) Fix-PR mergen, (2) gh pr sync 420 (Auto-Merge
+löst aus), (3) main pullen, PWA bauen, Wachhund-Neustart nach Skill
+hub-neustart-live, (4) Nightly auf dem neuen Stand anstoßen.
+
+Schritte 1–4 erledigt (PR #425, #420 gemergt, Hub läuft auf 4e9675f6, Health 200,
+deployment consistent). Nightly 45559850100 auf dem Stand: vitest-full und k8 grün,
+E2E rot in Shard 1+2 — device-setup (Runner-SDK ohne emulator-Binary, kein /dev/kvm),
+main-sync (Git-Identität im Konflikt-Klon), progress/querformat (Flakes). Fix läuft
+auf fix/nightly-e2e-runner; danach Nightly neu anstoßen — grün schließt #402–#404.
 
 ## 24.11.2026 Vormittag — Zurück-Knopf im Browser und hängende Sitzungsliste
 
@@ -24,10 +40,10 @@ schließen und komplett neu öffnen.“
    (3 Zeilen), nach dem Zurück die Gruppen „Arbeitet 1“ / „Ruhig 4“ statt Ladeköder.
 
 **Neu aufgeschrieben (offen, mit Messung in der Datei):**
-* `bugs/bug-0282-…` — eine späte Kachel-Aktualisierung schreibt die Adresse der verlassenen
+* `bugs/bug-0287-…` — eine späte Kachel-Aktualisierung schreibt die Adresse der verlassenen
   Sitzung zurück in die Historie (direkt nach `history.back()` steht `#/`, 1,5 s später
   wieder die Sitzungs-Adresse). Richtung: Navigations-Marke beim popstate.
-* `bugs/bug-0283-…` — der Denk-Block wächst im Browser nicht mit, in der Native-App schon.
+* `bugs/bug-0288-…` — der Denk-Block wächst im Browser nicht mit, in der Native-App schon.
   20 s Messung in der eigenen laufenden Pi-Sitzung: kein `.chat-live-thinking`, kein
   `.tail-scroll`. Client kann es (`ChatTurns.tsx:122-131`, Mitlauf-Scrollen hängt an
   `liveText`), der Hub meldet Denk-Fenster. **Nächster Schritt: zählen, welche

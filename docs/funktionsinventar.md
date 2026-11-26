@@ -2,7 +2,7 @@
 
 **Art:** referenz
 
-**Stand:** 2026-11-22 (P43-Basis, P43.5-Abschluss integriert; S27/S29 nach Nutzerentscheidung vom 21.11.2026 entfallen — „nehmen zu viel Platz weg und lenken ab“; S79 kehrt am selben Tag als Ablage-Sprachnachricht zurück; G79 ergänzt (EPIC-P61 T61.10); G80 ergänzt (EPIC-P75)) · **Zweck:** Leitplanke E10 — beim Umbau der Oberfläche
+**Stand:** 2026-11-25 (P43-Basis, P43.5-Abschluss integriert; S27/S29 nach Nutzerentscheidung vom 21.11.2026 entfallen — „nehmen zu viel Platz weg und lenken ab“; S79 kehrt am selben Tag als Ablage-Sprachnachricht zurück; G79 ergänzt (EPIC-P61 T61.10); G80 ergänzt (EPIC-P75); G81 ergänzt (EPIC-P80)) · **Zweck:** Leitplanke E10 — beim Umbau der Oberfläche
 geht keine Funktion verloren. · **Gate:** [`e2e/specs/funktionsinventar.spec.ts`](../e2e/specs/funktionsinventar.spec.ts)
 
 Jede Zeile ist eine Funktion, die ein Mensch in der PWA erreichen kann. Die letzte Spalte
@@ -109,9 +109,10 @@ Werkzeugseiten füllen die Detailspalte.
 | G75 | Main-Sync: neue Sessions starten auf origin/Hauptbranch (Fetch mit hartem Timeout, Fallback + sichtbares Event); laufende Prüfung je Projekt mit Modi melden/fragen/automatisch; Session-Hinweis „N hinter main“ mit Prüfen/Einmischen im ⋯-Menü; Benachrichtigung mit Aktionsknopf | Einstellungen → Main-Synchronisation · Session ⋯-Menü · `hubctl main-sync` | EPIC-P67 / ADR-0088 | spec:main-sync-session.spec.ts |
 | G76 | Release-Notes: pro PR Was (Commits, Dateien, ±Zeilen) und Warum (PR-Beschreibung) aus dem lokalen Git-Verlauf; Subjects ohne Notation bleiben roh sichtbar | Dock „Mehr“ → „Release-Notes“; PC: Leiste | — | spec:release-notes.spec.ts |
 | G77 | Wissensquellen: MCP-Wissensserver (z. B. Librarian) anbinden — Adresse, Anmeldung Bearer/eigener Header/keine, Token write-only; Prüfen mit sichtbarem Status je Quelle; durchsuchen und Treffer lesen (fremder Text, keine Anweisung) | Einstellungen → Wissensquellen | EPIC-P74 / ADR-0096 | spec:knowledge-sources.spec.ts |
-| G78 | Token-Tempo der Inferenz-Engines: Decode/Vorbehandlung/Zeit-bis-1.-Token, Verteilungen nur bei Engines mit Einzel-Requests, Gegenwert-Engines erklären sich, Ausfall bleibt sichtbar | Dock „Mehr“ → „Inferenz“ | EPIC-P79 / ADR-0102 | spec:inference-tempo.spec.ts |
+| G78 | Token-Tempo der Inferenz-Engines: Decode/Vorbehandlung/Zeit-bis-1.-Token, Verteilungen nur bei Engines mit Einzel-Requests, Gegenwert-Engines erklären sich, Ausfall bleibt sichtbar | Statistik → Inferenz | EPIC-P79 / ADR-0125 | spec:inference-tempo.spec.ts |
 | G79 | Oberflächensprache umschalten (Deutsch/English); Sprache bleibt über Reload und Offline erhalten | Einstellungen → Sprache | EPIC-P61 / ADR-0101 | spec:i18n-language.spec.ts |
 | G80 | Sprachausgabe: Assistant-Antworten und offene Fragen per Knopf vorlesen (Hub-Proxy zum lokalen TTS-Dienst, Sprache/Tempo/Timeout in den Einstellungen, Hörprobe, sichtbare Kürzung am Text-Cap, ohne Dienst aus mit Grund) | Session → Vorlesen-Knopf · Einstellungen → Sprachausgabe | EPIC-P75 / ADR-0097 | spec:tts.spec.ts |
+| G81 | Pentest-Seite: Backend-Status sichtbar; gelistetes Ziel mit Profil und Werkzeug scannen; Funde und Rohoutput aus der Antwort; Verlauf aus dem Hub-Journal; Ziel außerhalb der Allowliste bricht sichtbar ab; ohne Backend erklärt die Seite die Lage | Dock „Mehr“ → „Pentest“ | EPIC-P80 / ADR-0118 | spec:pentest-seite.spec.ts |
 
 ## Session
 
@@ -132,7 +133,7 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S07 | GitLab | „Mehr“ → „GitLab“ | T43.4 | inventar |
 | S08 | Suche | „Mehr“ → „Suche“ | T43.4 | inventar |
 | S09 | Code | Reiter „Dateien“ | T43.5 | inventar |
-| S10 | Umgebung | „Mehr“ → „Umgebung“ | T43.4 | inventar |
+| S10 | Umgebung-Reiter nur, wenn die Session einen Workspace hat; nachweislich ohne (Anfang geladen, kein workspace-Event) bleibt der Eintrag weg — Kleinkram-Regel 2 | „Mehr“ (ohne Workspace kein Eintrag) | T43.4, Umgebungs-Fix 2026-11-24 | inventar |
 | S11 | Zurück zur Übersicht (Handy/Tablet) | „←“ im Kopf; ab 700 px Dock „Start“ | — | inventar |
 | S12 | Stop | Taste im Kopf | T43.4 | inventar |
 | S13 | Umbenennen | „⋯“ → „Umbenennen“ | — | inventar |
@@ -184,7 +185,7 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S62 | Session per Link wieder öffnen | Deeplink | — | spec:deeplink.spec.ts |
 | S63 | Wiederanlauf nach Hub-Neustart | — | — | spec:recovery.spec.ts |
 | S64 | Leseposition bleibt beim Scrollen und Tippen | Chat | T43.4 | spec:session-scroll.spec.ts |
-| S65 | Android-Testgeräte: Liste, Start/Stop, Lease, Standbild (EPIC-P42) | „Mehr“ → „Geräte“ | T43.5 | inventar |
+| S65 | Android-Testgeräte: Liste, Start/Stop, Lease, Standbild (EPIC-P42); In-App-Setup: SDK einrichten (JDK, cmdline-tools, Lizenzen, Pakete) und AVD anlegen — komplett ohne CLI | „Mehr“ → „Geräte“ | T43.5, In-App-Setup 2026-11-24 | spec:device-setup.spec.ts |
 | S66 | Android-Testgeräte in eigenes Fenster (PC) | Geräte → „⧉“ | T43.7 | inventar |
 | S67 | Android-Testgeräte bedienen: Tippen, Wischen, Tasten, Ausrichtung, URL (mit Lease) | Geräte-Panel | — | spec:android-device.spec.ts |
 | S68 | Chat in Zügen: Arbeit gefaltet, Schritte mit Ein- und Ausgabe | Reiter „Chat“ | T43.4 | spec:chat-zuege.spec.ts |

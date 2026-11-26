@@ -174,9 +174,10 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   über `turn_metrics` messen. Der Erstlauf-Report
   (`docs/2026-11-21_skill-curation-erstlauf.md`) ist die Ausgangsmessung.
 - [ ] **T000.29 — K6-Messlauf mit `en`.** (Herkunft: EPIC-P61 T61.9)
-  Sprachwechsel-Messlatze (K6): Lastlauf `npm run loadtest` gegen einen
-  Hub mit eingestellter Sprache `en` auf gpubox; Durchsatz / p95 wie in
-  EPIC-P61 §3.1 festgelegt. Gerät war offline; Code und Tests sind grün.
+  Auf gpubox die PWA auf Englisch stellen und englische Eingaben über die
+  lokale Transkription diktieren. Nach [P10 AC-P10-1](EPIC-P10-realtime-voice-laya.md)
+  mindestens 20 Proben vom Ende der Aufnahme bis zum finalen Transkript
+  messen. Ziel: p90 ≤ 1,5 s. Beleg: Datum, Gerät, Modell, Probenzahl und p90.
 
 ### Übernommen aus EPIC-P75 (2026-11-22)
 
@@ -214,7 +215,44 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   omarchy: `scripts/host-monitoring-setup.sh` mit `modules drivetemp nct6775` und
   `rapl <benutzer>`, danach Neustart; evox2: `modules nct6775 it87`. Prüfen: CPU-Watt
   auf omarchy ist eine Zahl statt „keine Berechtigung“, alle vier Hosts stehen unter
-  Statistik → Hosts, Kurven füllen sich. Beleg: Checklisten-Zeile mit Datum.
+  Statistik → Hosts, Kurven füllen sich. Für AC-P81-1 die Sensoren aus P81
+  §3.2 je Host mit `sensors` bzw. `nvidia-smi` abgleichen und dokumentieren,
+  welche als Wert oder mit einem sichtbaren Grund für fehlende Daten erscheinen.
+  Handy und Tablet prüfen. Beleg: Datum und Ergebnis je Host und Gerät.
+
+### Übernommen aus EPIC-P80 (2026-11-25)
+
+- [ ] **T000.37 — Pentest-Seite am Handy abnehmen.**
+  (Herkunft: EPIC-P80-pentest-scanseite.md, DoD)
+  Hub mit `pentest`-Block gegen das laufende SiLenT-Deck starten, am Handy
+  „Mehr“ → „Pentest“ öffnen und ein gelistetes Ziel mit Profil `quick` scannen:
+  Statuskarte grün, Fundliste und Rohoutput da, Job im Verlauf. Dazu ein Ziel
+  außerhalb der Allowliste: sichtbarer Abbruch, kein White-Screen. Beleg:
+  Checklisten-Zeile mit Datum.
+
+### Übernommen aus EPIC-P83 (2026-11-24, ausführbar nach Umsetzung)
+
+- [ ] **T000.34 — Team zwischen zwei Standorten.** (Herkunft:
+  EPIC-P83-team-kollaboration.md AC-P83-15) Zwei Menschen mit getrennten Tailnets und
+  Rechnern: Node teilen, ACL nur auf Team-Ports, koppeln mit vorgelesenen Codes und
+  Passkey, Aufgabe Ende-zu-Ende, Session gemeinsam verfolgen und steuern, Widerruf. Messlatte: Kopplung ≤ 5 min ohne Hilfe, Ereignis
+  p95 ≤ 1 s direkt / ≤ 2 s über Relay, Widerruf ≤ 5 s. Beleg: Messlauf mit Datum.
+- [ ] **T000.35 — Team-Ansicht an echten Geräten.** (Herkunft:
+  EPIC-P83-team-kollaboration.md AC-P83-12) Handy und Desktop, TalkBack/Orca, reduzierte
+  Bewegung, Flugmodus; beide erklären ohne Hilfe, wer woran arbeitet und was auf sie wartet.
+  K2/K10. Beleg: Checklisten-Zeile mit Datum.
+- [ ] **T000.36 — Begleiter unterscheiden.** (Herkunft:
+  EPIC-P83-team-kollaboration.md AC-P83-13) Werkstatt bedienen, gleiche Namen, hell/dunkel
+  und Graustufen: Zuordnung aller Agenten fehlerfrei. Beleg: Screenshot mit Datum.
+
+### Übernommen aus EPIC-P79 (2026-11-25)
+
+- [ ] **T000.38 — Inferenz auf Cover- und Falt-Display abnehmen.**
+  (Herkunft: [EPIC-P79 T79.6](EPIC-P79-inferenz-token-tempo.md))
+  Statistik → Inferenz mit einer konfigurierten Engine öffnen. Auf beiden
+  Displays Quelle und Zeitfenster wechseln und die Lesbarkeit der Tempo-Kacheln
+  und Request-Tabelle prüfen. Bei einer reinen Zähler-Engine den Hinweis zu
+  fehlenden Verteilungen prüfen. Beleg: Datum, Geräte und Ergebnis.
 
 ## 5. Acceptance Criteria
 

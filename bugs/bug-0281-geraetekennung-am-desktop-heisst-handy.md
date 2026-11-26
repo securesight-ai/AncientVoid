@@ -1,12 +1,12 @@
 ---
 id: BUG-0281
 slug: geraetekennung-am-desktop-heisst-handy
-status: open
+status: done
 severity: S3
 area: pwa
 instance: dev
-commit: ""
-forge: ""
+commit: pending
+forge: "https://github.com/securesight-ai/AncientVoid/issues/414"
 epic: P3
 created: 2026-11-24
 reporter: Kai

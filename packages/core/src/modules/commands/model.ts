@@ -1,4 +1,5 @@
 import { COMMANDS, FIELDS, PAGES, SESSION_FILTERS, TRANSFORMS, type CommandContext } from "@ancientvoid/contracts";
+import { hintergrundAnfrage, type Pforte } from "../inference/index.ts";
 import type { Intent } from "./parse.ts";
 
 /**
@@ -13,6 +14,8 @@ export interface PlannerModelConfig {
   apiKey?: string | undefined;
   fetch?: typeof fetch;
   timeoutMs?: number;
+  /** BUG-0272 Rest: Planen läuft als Hintergrund durch die Modell-Pforte. */
+  pforte?: Pforte | undefined;
 }
 
 const OPS = [...Object.keys(COMMANDS), "none"] as const;
@@ -62,21 +65,22 @@ export async function askPlannerModel(cfg: PlannerModelConfig, text: string, ctx
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), cfg.timeoutMs ?? 12_000);
   try {
-    const res = await (cfg.fetch ?? fetch)(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
-      body: JSON.stringify({
-        model: cfg.model,
-        temperature: 0,
-        max_tokens: 300,
-        response_format: { type: "json_object", schema: INTENT_SCHEMA },
-        messages: [
-          { role: "system", content: PLANNER_PROMPT },
-          { role: "user", content: `Context: page=${ctx.page}${ctx.sessionId ? ", a session is open" : ""}${ctx.field ? `, field=${ctx.field}` : ""}\nInstruction: ${text.slice(0, 2000)}` },
-        ],
-      }),
-    });
+    const res = await hintergrundAnfrage(cfg.pforte, cfg.model, cfg.url, "planer", "Befehl planen", () =>
+      (cfg.fetch ?? fetch)(`${cfg.url.replace(/\/$/, "")}/chat/completions`, {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "content-type": "application/json", ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}` } : {}) },
+        body: JSON.stringify({
+          model: cfg.model,
+          temperature: 0,
+          max_tokens: 300,
+          response_format: { type: "json_object", schema: INTENT_SCHEMA },
+          messages: [
+            { role: "system", content: PLANNER_PROMPT },
+            { role: "user", content: `Context: page=${ctx.page}${ctx.sessionId ? ", a session is open" : ""}${ctx.field ? `, field=${ctx.field}` : ""}\nInstruction: ${text.slice(0, 2000)}` },
+          ],
+        }),
+      }));
     if (!res.ok) throw new Error(`Planer-Modell ${res.status}`);
     const body = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const parsed = JSON.parse(body.choices?.[0]?.message?.content ?? "{}") as { op?: string; slots?: Record<string, unknown> };

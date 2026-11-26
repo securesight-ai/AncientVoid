@@ -7,6 +7,7 @@ import { de as common } from "./de/common.ts";
 import { de as features } from "./de/features.ts";
 import { de as inference } from "./de/inference.ts";
 import { de as hosts } from "./de/hosts.ts";
+import { de as pentest } from "./de/pentest.ts";
 
 export const de = {
   ...dock,
@@ -15,6 +16,7 @@ export const de = {
   ...features,
   ...inference,
   ...hosts,
+  ...pentest,
 
   "settings.language.title": "Sprache",
   "settings.language.hint": "Gerät-Einstellung; folgt dem System beim ersten Start. Ein Wechsel lädt neu — Entwürfe bleiben erhalten.",

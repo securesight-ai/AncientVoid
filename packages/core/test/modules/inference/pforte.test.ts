@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { createPforte, type Pforte, type PforteGesuch } from "../../../src/index.ts";
-
+import { createPforte, hintergrundAnfrage, type Pforte, type PforteGesuch } from "../../../src/index.ts";
+import { askGatekeeperModel } from "../../../src/modules/gatekeeper/model.ts";
 /**
  * BUG-0272 (ADR-0116): die Pforte pro Modell-Endpoint. Die Fälle sind die des
  * Bug-Reports —(serialisiert, Kontextbudget als Aufnahmeregel, Lease für die
@@ -190,5 +190,75 @@ describe("Pforte: ein Platz pro Einzelslot-Endpoint", () => {
     const wert = await pforte.durchlassen({ ...gesuch({ inhaber: "x" }), endpoint: "openai/gpt" }, async () => "direkt");
     expect(wert).toBe("direkt");
     expect(pforte.zustand("openai/gpt")).toBeNull();
+  });
+});
+
+describe("BUG-0272 Rest: hub-interne Kurzanfragen laufen als Hintergrund durch die Pforte", () => {
+  it("hintergrundAnfrage wartet hinter einem laufenden Zug und kommt danach durch", async () => {
+    const ereignisse: string[] = [];
+    const pforte = createPforte({ engines: [{ provider: "strata", slots: 1, leaseMs: 0, maxWaitMs: 5_000 }] }, { onEreignis: (e) => ereignisse.push(`${e.art}:${e.inhaber}`) });
+    const { done, freigeben } = await offen();
+    const zug = pforte.durchlassen(gesuch({ inhaber: "943797b3" }), () => done);
+    await vi.waitFor(() => expect(pforte.zustand(endpoint)?.plaetze.length).toBe(1));
+
+    let gelaufen = 0;
+    const titel = hintergrundAnfrage(pforte, "strata/qwen3.8", "http://127.0.0.1:8080/v1", "titel", "Sitzungstitel", async () => {
+      gelaufen += 1;
+      return "ok";
+    });
+    await vi.waitFor(() => expect(pforte.zustand(endpoint)?.wartende.map((w) => w.inhaber)).toEqual(["titel"]));
+    expect(gelaufen).toBe(0); // nie während der Zug läuft
+    expect(ereignisse).toContain("inference.slot_wait:titel");
+
+    freigeben();
+    await zug;
+    await expect(titel).resolves.toBe("ok");
+    expect(gelaufen).toBe(1);
+  });
+
+  it("hintergrundAnfrage ohne Pforte bleibt direkt (Cloud)", async () => {
+    let gelaufen = 0;
+    await expect(hintergrundAnfrage(undefined, "gpt-4o", "https://api.openai.com/v1", "analyse", "Analyse", async () => {
+      gelaufen += 1;
+      return 42;
+    })).resolves.toBe(42);
+    expect(gelaufen).toBe(1);
+  });
+
+  it("askGatekeeperModel erkennt den Endpoint an der Modellangabe und stört den Zug nicht", async () => {
+    const pforte = createPforte({ engines: [{ provider: "strata", slots: 1, leaseMs: 0, maxWaitMs: 5_000 }] });
+    const { done, freigeben } = await offen();
+    const zug = pforte.durchlassen(gesuch({ inhaber: "943797b3" }), () => done);
+    await vi.waitFor(() => expect(pforte.zustand(endpoint)?.plaetze.length).toBe(1));
+
+    const fetches: string[] = [];
+    const antwort = async () => {
+      fetches.push("gatekeeper");
+      return new Response(JSON.stringify({ choices: [{ message: { content: "tool_risk: READ_ONLY\nsecurity_gate: CLEAN" }, logprobs: { content: [] } }] }), { status: 200 });
+    };
+    const urteil = askGatekeeperModel(
+      { url: "http://127.0.0.1:8080/v1", model: "strata/qwen3.8-flash-next-iq3_s", fetch: antwort as unknown as typeof fetch, pforte },
+      "Bash", { command: "ls" }, null,
+    );
+    await vi.waitFor(() => expect(pforte.zustand(endpoint)?.wartende.map((w) => w.inhaber)).toEqual(["gatekeeper"]));
+    expect(fetches).toEqual([]); // der Zug hält den Platz — Labeln wartet
+
+    freigeben();
+    await zug;
+    const verdict = await urteil;
+    expect(fetches).toEqual(["gatekeeper"]);
+    expect(verdict.toolRisk).toBe("READ_ONLY");
+    expect(verdict.securityGate).toBe("CLEAN");
+  });
+
+  it("hintergrundAnfrage erkennt den Endpoint notfalls über die URL", async () => {
+    const pforte = createPforte({ engines: [{ url: "http://127.0.0.1:8080", slots: 1, leaseMs: 0, maxWaitMs: 5_000 }] });
+    expect(pforte.schluessel("strata/qwen3.8")).toBeNull(); // Modellangabe passt nicht zum URL-Eintrag
+    let gelaufen = 0;
+    await expect(hintergrundAnfrage(pforte, "qwen3.8", "http://127.0.0.1:8080/v1", "analyse", "Analyse", async () => {
+      gelaufen += 1;
+      return "ok";
+    })).resolves.toBe("ok");
+    expect(gelaufen).toBe(1);
   });
 });

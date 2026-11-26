@@ -19,27 +19,15 @@ process.env.AV_LANG = "en";
  */
 describe("buildWsUrl", () => {
   it("maps http:// to ws:// without a double colon", () => {
-    const url = buildWsUrl("http://127.0.0.1:7373", "", "sess-1");
-    expect(url).toBe("ws://127.0.0.1:7373/api/events/sess-1/tail");
+    const url = buildWsUrl("http://127.0.0.1:7373", "ticket", "sess-1");
+    expect(url).toBe("ws://127.0.0.1:7373/api/events/sess-1/tail?ticket=ticket");
   });
 
-  it("maps https:// to wss://", () => {
-    const url = buildWsUrl("https://hub.tailnet.ts.net", "", "sess-1");
-    expect(url).toBe("wss://hub.tailnet.ts.net/api/events/sess-1/tail");
-  });
-
-  it("appends the token as an encoded query param when present", () => {
-    const url = buildWsUrl("http://127.0.0.1:7373", "a b/c", "sess-1");
-    expect(url).toBe("ws://127.0.0.1:7373/api/events/sess-1/tail?token=a%20b%2Fc");
-  });
-
-  it("omits the query string entirely when there is no token", () => {
-    const url = buildWsUrl("http://127.0.0.1:7373", "", "sess-1");
-    expect(url).not.toContain("?");
-  });
-
-  it("produces a URL the WHATWG URL parser accepts", () => {
-    expect(() => new URL(buildWsUrl("http://127.0.0.1:7373", "tok", "sess-1"))).not.toThrow();
+  it("maps https:// to wss:// and encodes the ticket and session", () => {
+    const url = new URL(buildWsUrl("https://hub.tailnet.ts.net", "a b/c", "sess/1"));
+    expect(url.protocol).toBe("wss:");
+    expect(url.pathname).toBe("/api/events/sess%2F1/tail");
+    expect([...url.searchParams]).toEqual([["ticket", "a b/c"]]);
   });
 });
 

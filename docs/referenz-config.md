@@ -32,6 +32,10 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `devices.avdHome` | string | — |
 | `devices.avdAllowlist` | array<string> | [] |
 | `devices.maxEmulators` | integer | 1 |
+| `devices.kvmPath` | string | — |
+| `devices.setup.jdkUrl` | string | — |
+| `devices.setup.toolsUrl` | string | — |
+| `devices.setup.packages` | array<string> | — |
 | `ocr.tessdataDir` | string | — |
 | `actions` | array<object> | [] |
 | `forge.gitlab.command` | string | "glab" |
@@ -104,5 +108,13 @@ Felder von `hub.config.json`; Erklärung und Beispiele: [`configuration.md`](con
 | `inference.minReadPrefill` | integer | 4000 |
 | `inference.engines` | array<object> | [] |
 | `inference.gate.engines` | array<object> | [] |
+| `pentest.enabled` | boolean | true |
+| `pentest.backendUrl` | string | — |
+| `pentest.credentialsFile` | string | — |
+| `pentest.probeIntervalMs` | integer | 30000 |
+| `pentest.jobTimeoutMs` | integer | 310000 |
+| `pentest.windowHours` | integer | 720 |
+| `pentest.targets` | array<object> | [] |
+| `pentest.tools` | array<object> | [{"tool":"nmap","risky":false}] |
 | `terminals` | array<object> | [] |
 | `terminalAutodetect` | boolean | true |

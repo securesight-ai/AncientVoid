@@ -1,6 +1,6 @@
 ---
-id: BUG-0282
-slug: asynchrone-kachelschreib-ueberschreibt-die-historie
+id: BUG-0287
+slug: spaete-kachelaktualisierung-schreibt-die-adresse-zurueck
 status: open
 severity: S2
 area: pwa
@@ -12,7 +12,10 @@ created: 2026-11-24
 reporter: "Kai (Handy, Telegram-PWA)"
 ---
 
-# BUG-0282 — Zurücktippen wird von einer nachträglichen Kachel-Schreiboperation überschrieben
+# BUG-0287 — Zurücktippen wird von einer nachträglichen Kachel-Schreiboperation überschrieben
+
+Anknüpfung: BUG-0282 (`handy-zurueck-pfeil-pendelt`, erledigt) behob den Zurück-Pfeil **in**
+der Sitzung. Dieser Fall bleibt dahinter: die **Historie der Browser-Leiste / Handy-Geste**.
 
 ## Gesehen
 

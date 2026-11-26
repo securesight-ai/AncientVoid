@@ -410,3 +410,23 @@ export function createPforte(konfig: InferenceGateConfig, optionen: PforteOption
     },
   };
 }
+
+/**
+ * BUG-0272 Rest: hub-interne Kurzanfragen (Gatekeeper, Sitzungstitel, Planer,
+ * Analyse, Bild) laufen als **Hintergrund** durch dieselbe Pforte — sie reihen
+ * sich hinter interaktive Züge ein und stören den Lauf nie. Der Endpoint wird
+ * wie bei Zügen erkannt: erst Modellangabe (`strata/…`), sonst Basis-URL;
+ * ohne Pforten-Eintrag bleibt der Aufruf direkt (Cloud).
+ */
+export function hintergrundAnfrage<T>(
+  pforte: Pforte | undefined,
+  modell: string | undefined,
+  url: string,
+  inhaber: string,
+  warum: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  if (!pforte) return fn();
+  const endpoint = modell != null && pforte.schluessel(modell) != null ? modell : url;
+  return pforte.durchlassen({ endpoint, inhaber, priorität: "hintergrund", warum, promptToken: null, maxToken: null }, fn);
+}

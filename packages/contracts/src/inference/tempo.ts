@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * EPIC-P79 (ADR-0102): Token- und Tempo-Verlauf lokaler Inferenz-Engines
+ * EPIC-P79 (ADR-0125): Token- und Tempo-Verlauf lokaler Inferenz-Engines
  * (Strata, Halogen, llama.cpp). Abgrenzung zu P59/`aimetrics`: dort stehen
  * skalarisierte Felder im 10-s-Takt; hier geht es um **Request-bezogene
  * Verteilungen**, die eine eigene Request-Historie voraussetzen (K7).

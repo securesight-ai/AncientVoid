@@ -18,12 +18,12 @@ export const LINE_BUDGETS = [
   { glob: "AGENTS.md", limit: 200 },
   { glob: "CONTRIBUTING.md", limit: 200 },
   { glob: "README.md", limit: 300 },
-  { glob: "epics/README.md", limit: 385 }, // +10 am 2026-11-20: P75-Epoche (Sprachausgabe)
+  { glob: "epics/README.md", limit: 400 }, // +10 am 2026-11-20: P75-Epoche (Sprachausgabe); +15 am 2026-11-24: P82-Epoche (Audit-Räumen)
   { glob: ".claude/skills/README.md", limit: 120 },
   { glob: ".claude/skills/*/SKILL.md", limit: 250 },
   { glob: ".claude/agents/*.md", limit: 150 },
   // EPIC-P62 T62.1: Guide- und Video-Doku sind on-demand, duerfen laenger sein.
-  { glob: "docs/guide/*.md", limit: 400 },
+  { glob: "docs/guide/*.md", limit: 410 }, // +10 am 2026-11-25: EPIC-P80 (Pentest-Sektionen)
   { glob: "docs/videos/*.md", limit: 250 },
 ];
 

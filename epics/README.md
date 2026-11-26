@@ -1,4 +1,4 @@
-# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P81)
+# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P84)
 
 **On hold seit 15.11.2026 (Nutzerentscheid): P30 und P31.** Beide bleiben
 im Inventar, sind aber aus Empfehlungen für die nächste Arbeit ausgeschlossen.
@@ -299,7 +299,7 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 
 | Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
 |---|---|---|---|
-| [P61 — Mehrsprachigkeit: Englisch/Spracheinstellung](EPIC-P61-mehrsprachigkeit-englisch.md) | Eigen-i18n der PWA (typisierte Kataloge `de`/`en`, `t()`, Sprachwahl pro Gerät, **Default Browsersprache** mit Fallback Englisch, manuell wählbar+persistiert — entschieden 17.11.2026, Sprachliste modular für weitere Sprachen), Nachrichtenschlüssel für Notifications/Push/API-Fehler (ADR vor Contract), `hubctl --lang`, STT-Sprache, Ratchet-Gate gegen hart codierte Strings; gemessen ~2.660 Text-Kandidaten in 134 PWA-Dateien — **Code steht, Exit offen (AC-Nachweise im Epic §8; K6 nach P000 T000.29)** | keine fachliche offene (Quer-Epic; P60 umgesetzt) | 4–6 |
+| [P61 — Mehrsprachigkeit: Englisch/Spracheinstellung](EPIC-P61-mehrsprachigkeit-englisch.md) | Eigen-i18n der PWA (typisierte Kataloge `de`/`en`, `t()`, Sprachwahl pro Gerät, **Default Browsersprache** mit Fallback Englisch, manuell wählbar+persistiert — entschieden 17.11.2026, Sprachliste modular für weitere Sprachen), Nachrichtenschlüssel für Notifications/Push/API-Fehler (ADR vor Contract), `hubctl --lang`, STT-Sprache, Ratchet-Gate gegen hart codierte Strings; gemessen ~2.660 Text-Kandidaten in 134 PWA-Dateien — **Code steht, K2-Langlauf offen (§8), K6 nach P000 T000.29** | keine fachliche offene (Quer-Epic; P60 umgesetzt) | 4–6 |
 
 ## Nutzerauftrag vom 16.11.2026 — Öffentliche Anleitung, Videos, Promo-Seite (nach GitHub-Umzug)
 
@@ -320,15 +320,28 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 | [P76 — Aktuelle, adapterspezifische Modellkataloge](EPIC-P76-adapterspezifische-modellkataloge.md) | Native Quellen je Registrierung, Refresh/Invalidierung, sichtbare Fehler und Fallbacks; 6.2-Verfügbarkeit/Preise eingeordnet, „Kolex“ unbestätigt als Codex vermutet — **Planungsentwurf, Umsetzung gesperrt** | P75 Exit grün; P30/P31 bleiben On hold | 1–2 |
 | [P77 — Separate mobile Session-Instanzen](EPIC-P77-mobile-session-instanzen.md) | Plattform-Spike, stabile Session-Einstiege
 | [P78 — Token-effiziente MCP-Anbindung: Progressive Disclosure statt Tool-Flut](EPIC-P78-token-effiziente-mcp-anbindung.md) | ADR-0098-Regel: fixer Contract / Dynamic Tool Search / Code Mode; getriggerter Prototyp erst ab >1 Backend mit >20 Tools |, belegte Session-App-Installation oder benannter Tab-Fallback; Lifecycle/Recovery ohne Hauptfenster — **Planungsentwurf, Umsetzung gesperrt** | P76 Exit grün; P32 bleibt vertagt, P30/P31 On hold | 0,5–1 Evaluation + 1–2 Umsetzung |
-| [P79 — Token-Tempo lokaler Inferenz in der PWA (eigener Menüpunkt)](EPIC-P79-inferenz-token-tempo.md) | Request-bezogene Verteilungen (Perzentile, KV-Reuse, TTFT) eigener Menüpunkt; tokdeck-Muster: externes Tool wird Hub-Modul — **Code steht (T79.1–T79.5, PR #264), Exit offen (T79.6/Geräteprüfung)** | — | — |
-| [P80 — Pentest-Seite: Scan ausgewählter Projekte über die SiLenT-Deck-API](EPIC-P80-pentest-scanseite.md) | Neue PWA-Seite + Contract/Core-Modul/Hub-Routen; generische MCP-Anbindung (Muster ADR-0096: Backend = Konfiguration, Allowlist-Gate), SiLenT-Deck bleibt Execution-Backend und bekommt MCP-Fassade (SiLenT_Tz EPIC-04/4.9, Übergang HTTP-Adapter); K5 Blob-Grenzen, K7-Journal, K9/K10 Degeneration ohne Deck; LLM-Analyse bleibt im Deck (Injection-Grenze) — **Planungsentwurf (Nutzerauftrag 22.11.2026)** | keine blockierende (Quer-Epic); P30/P31 On hold unberührt; externe Abhängigkeit: laufendes SiLenT-Deck | 1–2 Agenten-Tage |
-| [P81 — Host-Monitoring und Strom: alle Werte aller Hosts](EPIC-P81-host-monitoring-strom.md) | Neuer Reiter „Hosts“ unter `#/statistik` (omarchy, evox2, Server, NAS; Watt/kWh ohne Euro), 90 Tage Verlauf, gemeinsame Chart-Bausteine für Statistik/Metriken/Inferenz; powermeter als Stilvorlage, nicht 1:1 — **in Umsetzung, ausgerollt 23.11.2026; Abschluss-Gate offen** | keine blockierende (Quer-Epic); ADR-0117 vor Contract | 3–4 |
+| [P79 — Token-Tempo lokaler Inferenz in der PWA](EPIC-P79-inferenz-token-tempo.md) | Request-bezogene Verteilungen (Perzentile, KV-Reuse, TTFT) unter Statistik → Inferenz; **abgeschlossen 25.11.2026**, Geräteabnahme in P000 T000.38 | — | — |
+| [P80 — Pentest-Seite: Scan ausgewählter Projekte über die SiLenT-Deck-API](EPIC-P80-pentest-scanseite.md) | Neue PWA-Seite + Contract/Core-Modul/Hub-Routen; generische MCP-Anbindung (Muster ADR-0096: Backend = Konfiguration, Allowlist-Gate), SiLenT-Deck bleibt Execution-Backend und bekommt MCP-Fassade (SiLenT_Tz EPIC-04/4.9, Übergang HTTP-Adapter); K5 Blob-Grenzen, K7-Journal, K9/K10 Degeneration ohne Deck; LLM-Analyse bleibt im Deck (Injection-Grenze) — **abgeschlossen 25.11.2026, Menschen-Abnahme in P000 T000.37** | keine blockierende (Quer-Epic); P30/P31 On hold unberührt; externe Abhängigkeit: laufendes SiLenT-Deck | 1–2 Agenten-Tage |
+| [P81 — Host-Monitoring und Strom: alle Werte aller Hosts](EPIC-P81-host-monitoring-strom.md) | Neuer Reiter „Hosts“ unter `#/statistik` (omarchy, evox2, Server, NAS; Watt/kWh ohne Euro), 90 Tage Verlauf, gemeinsame Chart-Bausteine für Statistik/Metriken/Inferenz; powermeter als Stilvorlage, nicht 1:1 — **abgeschlossen 25.11.2026; Live-Sensorabgleich und Geräteabnahme in P000 T000.33** | keine blockierende (Quer-Epic); ADR-0117 vor Contract | 3–4 |
 
 ## Nutzerauftrag vom 20.11.2026 — Sprachausgabe (TTS) im Chat
 
 | Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
 |---|---|---|---|
 | [P75 — Sprachausgabe: Chat-Nachrichten und Fragen vorlesen](EPIC-P75-sprachausgabe-chat-vorlesen.md) | Play-Button an Agent→User-Nachrichten (Assistant-Blasen, Frage-/Approval-Karten) synthetisiert über den Hub ([ADR-0097](../docs/adr/0097-sprachausgabe-tts-hub-proxy.md): `POST /api/tts` → derselbe Hivemind-/tts-Dienst wie VoidWardens Nyx-Ansagen, Policy `voice.speak` nur Menschen, Audio transient — K5, Serialisierung max 1 wegen geteilter Box, ehrliche Verfügbarkeitsprobe nach BUG-0214-Muster); TTS-Eintrag in den Einstellungen (SettingsStore, Hörprobe, ohne Restart); kein Auto-Vorlesen, kein Cloud-TTS, kein Ghost-Processing — **abgeschlossen 2026-11-17 (Geräteabnahme nach P000)** | keine fachliche offene (Quer-Epic; P65-Audiobasis) | ~0,5 |
+
+## Nutzerauftrag vom 24.11.2026 — Audit-Räumen (Inventar, Monolith-Schnitt, Härtung)
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P82 — Audit-Räumen: Inventar, Monolith-Schnitt, Härtungsdetails](EPIC-P82-audit-raeumen-inventar-schnitt-haertung.md) | Knip-Inventar räumen und `check:knip` ins Gate; `session-manager.ts` entlang Modulnaht teilen (reines Verschieben); WS-Revocation-Recheck aus aufgelöstem Auth; Session-Tail-Tickets nach STT-/Terminal-Muster; SQL-Whitelist-Kommentare — **Abgeschlossen (25.11.2026)** | keine blockierende (Quer-Epic); P30/P31 On hold unberührt; Tracker #412 | 1–2 |
+| [P83 — Team: gemeinsam arbeiten über mehrere Instanzen](EPIC-P83-team-kollaboration.md) | Nutzerauftrag 24.11.2026: gekoppelte Hubs mehrerer Menschen (mTLS im Overlay, kein öffentlicher Port), Aufgaben, Räume, Agentengrenze, geteilte Sessions, Chat mit animierten Begleitern; ADR-0118–0123 — **Planungsentwurf, P82 grün, Betreiberbestätigung in T83.0 ausstehend** | P82 grün; P45-No-go bleibt; Tracker #421 | 13–18 |
+
+## Nutzerauftrag vom 24.11.2026 — AI-Arbeit-Evaluation (Harness × Modell × Skills)
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P84 — AI-Arbeit-Evaluation: Harness × Modell × Skills messbar vergleichen](EPIC-P84-ai-arbeit-evaluation-benchmark.md) | Reproduzierbarer Evaluations-Messlauf im Messlauf-Muster: eingefrorenes Aufgabenkorpus aus diesem Repo, Arme gespleißt (Harness × Modell × Skills an/aus), Split-Szenarien Plan↔Bau inkl. Kontrollarm, Metriken Fehlerquote/Wandzeit/Tokens/Kosten (Preis-Snapshot; lokal via P81-Energie)/Qualität, n ≥ 5 je Arm; Trainingsdaten-Kontamination und Skill-Kausalität gegen externe Benchmark-Kritik abgesichert; Recherche-Snapshot: [docs/2026-11-24_ai-arbeit-evaluation-recherche.md](../docs/2026-11-24_ai-arbeit-evaluation-recherche.md) — **Planungsentwurf (Nutzerauftrag 24.11.2026)** | keine blockierende (Quer-Epic); P81 (Energie-Messung) als Datengrundlage erwünscht, nicht blockierend; P30/P31 On hold unberührt | 2–3 |
 
 ## Reihenfolge & Gating
 

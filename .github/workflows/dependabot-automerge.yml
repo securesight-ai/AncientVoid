@@ -18,13 +18,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: metadata
-        uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a # v2.5.0
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
       - name: Auto-Merge für Patch/Minor stellen
         # Major-Bumps ausgenommen — Grund steht oben und im Runbook.
         if: steps.metadata.outputs.update-type != 'version-update:major'
         run: gh pr merge "${{ github.event.pull_request.number }}" --auto --merge --delete-branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Ohne Checkout hat gh keinen Repo-Kontext — GH_REPO setzt ihn (sonst
+          # "fatal: not a git repository", gesehen 23.11. an #394/#395/#396).
+          GH_REPO: ${{ github.repository }}
       - name: Major-Bump bleibt Handarbeit
         if: steps.metadata.outputs.update-type == 'version-update:major'
         run: echo "Major-Bump erkannt — kein Auto-Merge (docs/ci-runbook.md)."

@@ -111,8 +111,20 @@ export const HubConfig = z.object({
       avdHome: z.string().optional(),
       avdAllowlist: z.array(z.string().min(1).max(64)).max(10).default([]),
       maxEmulators: z.number().int().min(1).max(2).default(1),
+      /** KVM-Gerät der Bereitschaftsprüfung (Standard /dev/kvm) — Override für Umgebungen
+       * ohne KVM (Container/CI): z. B. auf ein Dummy-Gerät zeigen, wenn nur Fake-Emulatoren laufen. */
+      kvmPath: z.string().optional(),
+      /** In-App-Setup (2026-11-24): Download-Quellen und Paketliste — Overrides für
+       * Spiegel/Offline-Installationen; ohne Angabe gelten die angepinnten Defaults. */
+      setup: z
+        .object({
+          jdkUrl: z.string().url().optional(),
+          toolsUrl: z.string().url().optional(),
+          packages: z.array(z.string().min(1).max(120)).max(8).optional(),
+        })
+        .default({}),
     })
-    .default({ avdAllowlist: [], maxEmulators: 1 }),
+    .default({ avdAllowlist: [], maxEmulators: 1, setup: {} }),
   /** T7.10: local OCR — a tessdata dir with extra languages (e.g. deu),
    * set up by scripts/setup-ocr.sh without root. */
   ocr: z.object({ tessdataDir: z.string().optional() }).default({}),
@@ -331,7 +343,7 @@ export const HubConfig = z.object({
     })
     .optional(),
   /**
-   * EPIC-P79 (ADR-0102): Token-Tempo der Inferenz-Engines fuer die Seite
+   * EPIC-P79 (ADR-0125): Token-Tempo der Inferenz-Engines fuer die Seite
    * "Inferenz". Eigene, engmaschigere Spur als `aiMetrics` (P59): Request-
    * Historie plus Verteilungen. Ohne Abschnitt: leere Quellen-Liste, die Seite
    * erklaert die Konfiguration. Schluessel nur als Dateireferenz (ADR-0011).
@@ -368,6 +380,48 @@ export const HubConfig = z.object({
        * haben das Problem nicht und bleiben ungedeckelt.
        */
       gate: InferenceGateConfig.optional(),
+    })
+    .optional(),
+  /**
+   * EPIC-P80 (ADR-0118): Pentest-Scan — Anbindung ans SiLenT-Deck
+   * (Übergang: HTTP-API, Ziel: MCP-Fassade). Ohne Abschnitt oder ohne
+   * backendUrl: die Seite erklärt sichtbar die Konfigurationslosigkeit (K10),
+   * sie wird nicht still tot. Secrets nur als Dateireferenz (ADR-0011).
+   */
+  pentest: z
+    .object({
+      enabled: z.boolean().default(true),
+      /** Backend-URL (https?://host:port ohne Pfad); fehlt sie: Grund sichtbar. */
+      backendUrl: z.string().url().optional(),
+      /** Datei mit `user:pass` für die Basic-Auth des Decks (ADR-0011). */
+      credentialsFile: z.string().min(1).optional(),
+      /** Prüfzyklus — K9: Ausfall muss binnen 60 s sichtbar sein. */
+      probeIntervalMs: z.number().int().min(2_000).max(60_000).default(30_000),
+      /** Hub-Job-Timeout: größer als das Backend-Timeout (300 s), sonst hängt der Job sichtbar statt still (K9). */
+      jobTimeoutMs: z.number().int().min(1_000).max(600_000).default(310_000),
+      /** Aufbewahrungsfenster der Scan-Historie (K7: JSONL+Snapshot). */
+      windowHours: z.number().int().min(1).max(8_760).default(720),
+      /** Ziel-Allowliste (D5): die Sicherheitsgrenze, nicht die UI. */
+      targets: z
+        .array(
+          z.object({
+            label: z.string().min(1).max(80),
+            target: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9.:/_-]{0,254}$/),
+            kind: z.enum(["frei", "inventar"]).default("frei"),
+          }),
+        )
+        .max(100)
+        .default([]),
+      /** Deklarierte Tools (D4); riskante laufen nur über die Freigabe. */
+      tools: z
+        .array(
+          z.object({
+            tool: z.enum(["nmap", "hydra", "sqlmap", "nuclei"]),
+            risky: z.boolean().default(false),
+          }),
+        )
+        .max(20)
+        .default([{ tool: "nmap", risky: false }]),
     })
     .optional(),
   /**

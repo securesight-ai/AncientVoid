@@ -57,7 +57,7 @@ describe("session hash route (AC-P5-5)", () => {
 
 describe("Werkzeugseiten (EPIC-P34 T34.2)", () => {
   it("Einstellungen, Medien, PC und Status füllen die Detailspalte; Übersicht, Neu und Freigaben bleiben in der Liste (Entdeckt ist seit EPIC-P47 ein Übersichtszustand)", () => {
-    const tools: ListPage[] = ["settings", "media", "pc", "status", "statistics"];
+    const tools: ListPage[] = ["settings", "media", "pc", "status", "statistics", "pentest"];
     const listed: ListPage[] = ["dashboard", "new", "approvals"];
     for (const page of tools) expect(isToolPage(page), page).toBe(true);
     for (const page of listed) expect(isToolPage(page), page).toBe(false);

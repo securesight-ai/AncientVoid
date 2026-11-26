@@ -182,7 +182,7 @@ const SESSION: Entry[] = [
   { id: "S07", name: "Mehr: GitLab", from: "session", reach: async (c) => { await more(c, "GitLab"); await expect(card(c).locator(".forge-panel")).toBeVisible(); } },
   { id: "S08", name: "Mehr: Suche", from: "session", reach: async (c) => { await more(c, "Suche"); await expect(card(c).locator(".search-pane")).toBeVisible(); } },
   { id: "S09", name: "Reiter Befehle (Code)", from: "session", reach: async (c) => { await c.tap(tab(c, "Befehle")); await expect(card(c).locator(".code-pane")).toBeVisible(); } },
-  { id: "S10", name: "Mehr: Umgebung", from: "session", reach: async (c) => { await more(c, "Umgebung"); await expect(card(c).getByText(/ancientvoid\.workspace\.json|Umgebung/).first()).toBeVisible(); } },
+  { id: "S10", name: "Umgebung nur mit Workspace — ohne bleibt der Eintrag weg (Kleinkram-Regel 2)", from: "session", reach: async (c) => { await c.tap(c.s.locator('.subtabs-wrap [aria-haspopup="menu"]')); await expect(c.s.getByRole("menu", { name: "Weitere Ansichten" }).getByRole("menuitem", { name: "Umgebung", exact: true })).toHaveCount(0); } },
   { id: "S11", name: "Zurück zur Übersicht", forms: TOUCH, from: "session", reach: async (c) => { if (c.wide) await c.tap(dock(c, "Start")); else await c.tap(c.s.getByRole("button", { name: "Zur Übersicht" })); await expect(c.page.locator(".dashboard")).toBeVisible(); } },
   { id: "S12", name: "Stop", from: "session", reach: async (c) => { await expect(c.s.locator(".stop-btn")).toBeVisible(); } },
   { id: "S13", name: "Menü: Umbenennen", from: "session", reach: async (c) => { await c.tap(menu(c)); await c.tap(c.s.locator(".session-menu-items").getByRole("button", { name: "Umbenennen" })); await expect(c.s.getByLabel("Neuer Titel")).toBeVisible(); } },
@@ -204,8 +204,7 @@ const SESSION: Entry[] = [
   { id: "S32", name: "Dateibaum (Reiter Befehle)", from: "session", reach: async (c) => { await c.tap(tab(c, "Befehle")); await c.tap(card(c).getByRole("button", { name: "Dateibaum öffnen" })); await expect(c.page.getByTestId("files-sidebar")).toBeVisible(); } },
   { id: "S33", name: "Browser-Arbeitsplatz (Mehr)", from: "session", reach: async (c) => { await more(c, "Browser"); await expect(c.page.getByTestId("browser-panel")).toBeVisible(); } },
   { id: "S34", name: "Graph in eigenes Fenster", forms: PC, from: "session", reach: async (c) => { await more(c, "Graph"); await expect(card(c).getByRole("button", { name: "Graph in eigenes Fenster" })).toBeVisible(); } },
-  // EPIC-P42: Android-Testgeräte — ohne SDK sichtbar blockiert, das Panel selbst ist immer erreichbar.
-  { id: "S65", name: "Android-Testgeräte (Mehr)", from: "session", reach: async (c) => { await more(c, "Geräte"); await expect(c.page.getByTestId("device-panel")).toBeVisible(); } },
+  // EPIC-P42: Android-Testgeräte — Nachweis führt jetzt nach spec:device-setup.spec.ts (In-App-Setup, 2026-11-24).
   { id: "S66", name: "Android-Testgeräte in eigenes Fenster", forms: PC, from: "session", reach: async (c) => { await more(c, "Geräte"); await expect(c.page.getByRole("button", { name: "Geräte in eigenes Fenster" })).toBeVisible(); } },
 ];
 

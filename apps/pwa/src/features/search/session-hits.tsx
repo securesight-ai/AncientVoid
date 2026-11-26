@@ -110,7 +110,7 @@ export interface HitGroup {
 
 /** hoch N pro Sitzung, Rest einklappbar — eine Sitzung, die zwanzig Mal
  * denselben Begriff streift, darf nicht die halbe Ergebnisliste füllen. */
-export const GROUP_VISIBLE = 3;
+const GROUP_VISIBLE = 3;
 
 /** Funde nach Sitzung gruppieren, in der Reihenfolge ihrer besten Fundstelle. */
 export function groupHits(hits: readonly SessionTextHit[], limit = GROUP_VISIBLE): HitGroup[] {

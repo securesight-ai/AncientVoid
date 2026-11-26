@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import {
   TERMINAL_BACKLOG_CHARS,
@@ -14,6 +14,7 @@ import {
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import WebSocket, { type RawData } from "ws";
 import { extractToken } from "../../platform/auth.ts";
+import { StreamTickets } from "../../platform/stream-tickets.ts";
 
 export interface TerminalConfigEntry {
   id: string;
@@ -23,8 +24,6 @@ export interface TerminalConfigEntry {
   /** Pfad oder Name der Shell für lokale Ziele (Default bash, ADR-0087 Nachtrag). */
   shell?: string;
 }
-
-const hashTicket = (ticket: string): string => createHash("sha256").update(ticket).digest("hex");
 
 function send(socket: WebSocket, frame: TerminalFrame): void {
   if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(frame));
@@ -100,12 +99,8 @@ export function registerTerminalRoutes(
   terminals: readonly TerminalConfigEntry[] = [],
 ): void {
   const byId = new Map(terminals.map((t) => [t.id, t]));
-  const tickets = new Map<string, { expiresAt: number; id: string }>();
+  const tickets = new StreamTickets<string>(TERMINAL_TICKET_TTL_MS, TERMINAL_MAX_PENDING_TICKETS);
   const sessions = new Map<string, TerminalSession>();
-
-  const prune = (now: number): void => {
-    for (const [hash, entry] of tickets) if (entry.expiresAt <= now) tickets.delete(hash);
-  };
 
   const end = (session: TerminalSession): void => {
     sessions.delete(session.id);
@@ -223,15 +218,8 @@ export function registerTerminalRoutes(
     if (!byId.has(id)) return reply.code(404).send({ error: "Unbekanntes Terminal-Ziel." });
     const token = extractToken(req);
     if (!token) return reply.code(401).send({ error: "device token required" });
-    const now = Date.now();
-    prune(now);
-    if (tickets.size >= TERMINAL_MAX_PENDING_TICKETS) {
-      return reply.code(503).send({ error: "Zu viele offene Terminal-Tickets." });
-    }
-    const ticket = randomBytes(32).toString("base64url");
-    const expiresAt = now + TERMINAL_TICKET_TTL_MS;
-    tickets.set(hashTicket(ticket), { expiresAt, id });
-    const result: TerminalTicket = { ticket, expiresAt };
+    const result: TerminalTicket | undefined = tickets.issue(id);
+    if (!result) return reply.code(503).send({ error: "Zu viele offene Terminal-Tickets." });
     return reply.header("cache-control", "no-store").code(201).send(result);
   });
 
@@ -239,16 +227,10 @@ export function registerTerminalRoutes(
     const id = (req.params as { id?: string }).id ?? "";
     const target = byId.get(id);
     const query = req.query as { ticket?: unknown; cols?: unknown; rows?: unknown; session?: unknown } | undefined;
-    const ticket = query?.ticket;
-    const now = Date.now();
-    prune(now);
-    const ticketHash = typeof ticket === "string" ? hashTicket(ticket) : "";
-    const entry = tickets.get(ticketHash);
-    if (!target || !entry || entry.expiresAt <= now || entry.id !== id) {
+    if (!target || !tickets.consume(query?.ticket, (targetId) => targetId === id)) {
       browser.close(4401, "invalid or expired terminal ticket");
       return;
     }
-    tickets.delete(ticketHash);
 
     const resume = typeof query?.session === "string" ? sessions.get(query.session) : undefined;
     if (resume && resume.targetId === id) {

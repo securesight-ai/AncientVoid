@@ -1,7 +1,7 @@
 ---
 id: BUG-0271
 slug: toast-layout-shift
-status: in-progress
+status: done
 severity: S3
 area: pwa
 instance: local
@@ -53,3 +53,5 @@ Layout-Shift; nach kurzer Zeit automatisch weg.
 
 `position: fixed` + `z-index: var(--z-toast)`; kürzere `TOAST_MS`. Test:
 `apps/pwa/test/features/notifications/toast-overlay.test.ts`.
+
+Gemerged als PR [#338](https://github.com/securesight-ai/AncientVoid/pull/338) (e15eef36); Unit 2/2 grün im Session-Worktree nachgestellt.

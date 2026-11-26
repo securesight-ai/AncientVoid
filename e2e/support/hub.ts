@@ -59,14 +59,18 @@ export interface HubOptions {
   browserOrigins?: string[];
   /** EPIC-P39: false = sichtbares Fenster (nur mit Anzeige; in E2E nicht genutzt). */
   browserHeadless?: boolean;
-  /** EPIC-P42 (ADR-0067): echte Android-Abnahme — SDK-/AVD-Pfade; nur aktiv mit env ANCIENTVOID_E2E_ANDROID=1. */
-  devices?: { sdkRoot: string; avdHome: string; avd: string };
+  /** EPIC-P42 (ADR-0067): echte Android-Abnahme — SDK-/AVD-Pfade; nur aktiv mit env ANCIENTVOID_E2E_ANDROID=1.
+   * In-App-Setup (2026-11-24): lokale Spiegel-URLs für JDK/cmdline-tools — kein Cloud-Egress im Test.
+   * kvmPath: KVM-Stand-in (z. B. /dev/null) — Hosted-Runner haben kein /dev/kvm. */
+  devices?: { sdkRoot?: string; avdHome?: string; avd?: string; kvmPath?: string; setup?: { jdkUrl: string; toolsUrl: string } };
   /** Echte Abnahme (P37 T37.6): absoluter Pfad zum echten glab statt Stub. */
   forgeCommand?: string;
   /** EPIC-P59 (ADR-0078): aiMetrics-Abschnitt für die Hub-Config (Test-Server, Intervall). */
   aiMetrics?: Record<string, unknown>;
-  /** EPIC-P79 (ADR-0102): inference-Abschnitt für die Hub-Config (Engine-Stand-ins). */
+  /** EPIC-P79 (ADR-0125): inference-Abschnitt für die Hub-Config (Engine-Stand-ins). */
   inference?: Record<string, unknown>;
+  /** EPIC-P80 (ADR-0118): pentest-Abschnitt für die Hub-Config (Deck-Fassade im Prozess). */
+  pentest?: Record<string, unknown>;
   /** ADR-0087: Allowlist für den PWA-Terminal-Tab. */
   terminals?: Array<{ id: string; label: string; ssh?: string; local?: boolean; shell?: string }>;
   /** ADR-0087 Nachtrag 2026-11-23: Auto-Erkennung der Host-Shells (Default: an). */
@@ -198,7 +202,9 @@ export class TestHub {
       requireStepApprovals: this.options.requireStepApprovals ?? false,
       ...(this.options.steerWaitMs !== undefined ? { steerWaitMs: this.options.steerWaitMs } : {}),
       ...(this.options.browserOrigins ? { browserOrigins: this.options.browserOrigins } : {}),
-      ...(this.options.devices ? { devices: { sdkRoot: this.options.devices.sdkRoot, avdHome: this.options.devices.avdHome, avdAllowlist: [this.options.devices.avd] } } : {}),
+      ...(this.options.devices
+        ? { devices: { ...(this.options.devices.sdkRoot ? { sdkRoot: this.options.devices.sdkRoot } : {}), avdHome: this.options.devices.avdHome, avdAllowlist: this.options.devices.avd ? [this.options.devices.avd] : [], ...(this.options.devices.kvmPath ? { kvmPath: this.options.devices.kvmPath } : {}), ...(this.options.devices.setup ? { setup: this.options.devices.setup } : {}) } }
+        : {}),
       ...(this.options.sttUrl ? { stt: {
         url: this.options.sttUrl,
         engine: "whisper-e2e",
@@ -207,6 +213,7 @@ export class TestHub {
       ...(this.options.assistantUrl ? { assistant: { model: { url: this.options.assistantUrl, model: "e2e-model" } } } : {}),
       ...(this.options.aiMetrics ? { aiMetrics: this.options.aiMetrics } : {}),
       ...(this.options.inference ? { inference: this.options.inference } : {}),
+      ...(this.options.pentest ? { pentest: this.options.pentest } : {}),
       ...(this.options.terminals ? { terminals: this.options.terminals } : {}),
       ...(this.options.terminalAutodetect === false ? { terminalAutodetect: false } : {}),
       media: { ytDlp: standIn("yt-dlp") },
@@ -360,6 +367,11 @@ export class TestHub {
       PI_CODING_AGENT_DIR: join(this.root, "pi-agent"),
     };
     delete env.TMUX;
+    // Hosted-Runner setzen ANDROID_SDK_ROOT auf ein SDK ohne emulator-Binary — die
+    // Geräte-Fähigkeiten würden danach über das Host-SDK urteilen statt „Kein SDK
+    // konfiguriert“ zu melden. Echte Abnahme übergibt sdkRoot per hubOptions.
+    delete env.ANDROID_SDK_ROOT;
+    delete env.ANDROID_HOME;
     const log = createWriteStream(this.logPath, { flags: "a" });
     const child = spawn(process.execPath, [join(repoRoot, "apps/hub/src/main.ts")], {
       cwd: repoRoot,

@@ -2,7 +2,7 @@
 id: BUG-0262
 slug: seitenkachel-popout-ohne-ziel
 severity: S2
-status: fixed
+status: done
 instance: dev
 commit: "7dfb0f54"
 forge: "https://github.com/securesight-ai/AncientVoid/issues/312"   # GitHub-Issue- oder PR-URL
@@ -82,3 +82,10 @@ liefert deshalb `null` und `PopoutShell` zeigt die Leerstelle.
 - [x] Datei im Index [`README.md`](README.md)
 - [x] GitHub-Issue angelegt (`gh issue create`, URL in `forge:`) — [#312](https://github.com/securesight-ai/AncientVoid/issues/312)
 - [x] `bugfix` angewiesen
+
+## Abschluss (2026-11-24)
+
+Nachgestellt: `popoutTile` baut das Fensterziel über `tileWindowTarget(ref)`
+(`apps/pwa/src/app/main.tsx:449-451`), Karten ohne Fensteradresse lösen sich
+nicht ab. Fix-Commit 530c6e2b (PR #314) im Stand.
+`npx vitest run apps/pwa/test/features/windows/tile-target.test.ts` → 7 passed.

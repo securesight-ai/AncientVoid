@@ -185,7 +185,7 @@ async function revokeStep() {
   const host = "gpubox";
   console.log(`AC-P6-4 — Widerruf auf ${host}, Heim-Hub-Ausfall`);
   const s = (await remoteSessions(host)).find((x) => x.adapter === "dummy");
-  const ws = new WebSocket(`${HOME.replace("http", "ws")}/api/hosts/${host}/events/${s.id}/tail?token=${TOKEN}`);
+  const ws = new WebSocket(`${HOME.replace("http", "ws")}/api/hosts/${host}/events/${s.id}/tail`, { headers: { authorization: `Bearer ${TOKEN}` } });
   await new Promise((r, j) => {
     ws.once("open", r);
     ws.once("error", j);

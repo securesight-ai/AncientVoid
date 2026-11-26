@@ -6,7 +6,7 @@
 import { SettingRow, Segmented } from "./parts.tsx";
 import { availableLanguages, getLanguageSetting, setLanguageSetting, t, type LanguageSetting } from "../../shared/i18n/index.ts";
 
-export function i18nDevFlagOn(): boolean {
+function i18nDevFlagOn(): boolean {
   try {
     return globalThis.localStorage?.getItem("ancientvoid.i18n-dev") === "1";
   } catch {
@@ -14,7 +14,7 @@ export function i18nDevFlagOn(): boolean {
   }
 }
 
-export function selectableLanguages(): { value: LanguageSetting; label: string }[] {
+function selectableLanguages(): { value: LanguageSetting; label: string }[] {
   const opts: { value: LanguageSetting; label: string }[] = [{ value: "auto", label: t("settings.language.auto") }];
   for (const lang of availableLanguages) if (lang.complete || i18nDevFlagOn()) opts.push({ value: lang.code, label: lang.label });
   return opts;

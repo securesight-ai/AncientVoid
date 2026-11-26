@@ -10196,10 +10196,10 @@
       "en": "· Manifest "
     },
     {
-      "match": "Diese Session hat keinen Workspace — ohne `ancientvoid.workspace.json` gilt der unveränderte alte Ablauf (ADR-0051 §7).",
+      "match": "Umgebung zeigt die Laufzeit-Services dieser Session — Vorbereitung, Logs, Vorschau, Retry. Diese Session hat keinen Workspace: Im Basis-Commit des Projekts liegt kein `ancientvoid.workspace.json` (ADR-0051); ohne Manifest gilt der unveränderte alte Ablauf.",
       "key": "workspace.no_workspace",
-      "de": "Diese Session hat keinen Workspace — ohne `ancientvoid.workspace.json` gilt der unveränderte alte Ablauf (ADR-0051 §7).",
-      "en": "This session has no workspace — without `ancientvoid.workspace.json` the unchanged old flow applies (ADR-0051 §7)."
+      "de": "Umgebung zeigt die Laufzeit-Services dieser Session — Vorbereitung, Logs, Vorschau, Retry. Diese Session hat keinen Workspace: Im Basis-Commit des Projekts liegt kein `ancientvoid.workspace.json` (ADR-0051); ohne Manifest gilt der unveränderte alte Ablauf.",
+      "en": "Environment shows this session's runtime services — prepare, logs, preview, retry. This session has no workspace: the project's base commit carries no `ancientvoid.workspace.json` (ADR-0051); without a manifest the unchanged old flow applies."
     },
     {
       "match": "Port",

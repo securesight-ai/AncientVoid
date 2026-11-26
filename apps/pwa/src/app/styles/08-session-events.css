@@ -207,6 +207,26 @@
   background: var(--bg-chip);
 }
 .queue-item + .queue-item { margin-top: 3px; }
+/* BUG-0280: die eigene Vorgemerke im Chatfluss — voller Text, Status, Bearbeiten/
+   Streichen; der Streifen unten bleibt die Verwaltung. */
+.pending-own {
+  margin-top: 8px;
+}
+.pending-own-row {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-chip);
+}
+.pending-own-row + .pending-own-row { margin-top: 3px; }
+.pending-own-meta { margin-bottom: 2px; }
+.pending-own-text {
+  overflow-wrap: anywhere;
+}
+.pending-own-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
 .queue-pos {
   flex: none;
   color: var(--fg-faint);

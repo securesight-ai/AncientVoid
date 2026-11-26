@@ -33,6 +33,10 @@ export function operationOf(method: string, url: string, body: unknown): PolicyO
     if (path === "/api/knowledge/sources" && (method === "GET" || method === "HEAD")) return "knowledge.read";
     return "settings.manage";
   }
+  // EPIC-P80 (ADR-0118): Pentest — lesen wie das generische read der Fläche;
+  // der Scan selbst ist die Tat (Policy-Tabelle: Agent erfragt, Mensch/Fleet tun).
+  if (path === "/api/pentest/scan" && method === "POST") return "scan.run";
+  if (path.startsWith("/api/pentest/")) return "scan.read";
   // EPIC-P40/EPIC-P60 (ADR-0064 §4, ADR-0077): Teams steuern nur Menschen;
   // Lesen ist eine eigene Operation mit dem Allow-Set des bisherigen generischen `read`.
   if (path.startsWith("/api/teams")) return method === "GET" || method === "HEAD" ? "team.read" : "team.manage";
@@ -118,7 +122,7 @@ export function policyHook(tokens: TokenService) {
       return;
     }
     if (!label) return; // public routes (auth already let them through)
-    const operation = operationOf(req.method, req.url, req.body);
+    const operation = req.routeOptions.config.sessionTail === "ticket" ? "read" : operationOf(req.method, req.url, req.body);
 
     const decision: PolicyDecision = operation ? policyFor(operation, label) : policyFor("tokens.manage", label) === "allow" ? "allow" : "deny";
     if (decision === "deny") {

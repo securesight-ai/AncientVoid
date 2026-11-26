@@ -7,8 +7,7 @@ import type { ComponentChildren } from "preact";
 import { InterruptedBanner } from "./InterruptedBanner.tsx";
 import { copyIntoShelf } from "../../shared/clipboard-copy.ts";
 import { readTailScroll, writeTailScroll } from "./tail-scroll.ts";
-import { sessionHash, fileHash, pageHash } from "../../app/route.ts";
-import { popView } from "../../shared/nav-history.ts";
+import { sessionHash, fileHash } from "../../app/route.ts";
 import { registerShortcut } from "../../shared/shortcuts/registry.ts";
 import {
   sourcesBlock,
@@ -102,7 +101,9 @@ import { StatusLine } from "./StatusLine.tsx";
 import { ChangesHead, changeSummary } from "./ChangesHead.tsx";
 import { openLayer } from "../../shared/layers.ts";
 import { ChatTurns, itemFirstSeq, itemLastSeq } from "./ChatTurns.tsx";
+import { PendingOwnChat } from "./PendingOwnChat.tsx";
 import { turnsOf } from "./turns.ts";
+import { showActorSuffix } from "./actor-display.ts";
 import { PinnedPrompt } from "./PinnedPrompt.tsx";
 import {
   lastUserPrompt,
@@ -157,6 +158,12 @@ const READING_TABS: ReadonlySet<string> = new Set([
   "git",
   "datei",
 ]);
+
+/** `workspace.*`-Art eines Event-Payloads — null ohne Art. main_sync zählt aufruferseitig nicht. */
+function workspaceKindOf(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null || !("kind" in payload)) return null;
+  return typeof payload.kind === "string" ? payload.kind : null;
+}
 
 /** EPIC-P18: set when this view is one tile of the desktop workspace —
  * several SessionTails then share one page. */
@@ -441,6 +448,8 @@ export function SessionTail({
   >("mehr" /* i18n-ignore: Daten-Key */);
   /** BUG-0208: Seq des Blocks, der einen Live-Strom eingeholt hat — an seinen Anfang rollen. */
   const jumpSeqRef = useRef<number | null>(null);
+  /** Nur der Sprung zur Fundstelle hält die Ansicht; das Einrücken nach einem Strom nicht. */
+  const jumpIsHitRef = useRef(false);
   /** Suche: derselbe Sprung, aber von außen gesetzt (Fundstelle in der Suche).
    * Der Zähler ist der einzige Weg, den Roll-Effekt neu anzustoßen — ohne ihn
    * ändert sich an den Abhängigkeiten nichts. */
@@ -755,10 +764,16 @@ export function SessionTail({
           if (assistantBlocks.length) {
             // BUG-0208: die Nachricht ist fertig gestreamt — ihr Anfang wird vorgemerkt,
             // damit die Ansicht dorthin rueckt statt am Strom-Ende stehenzubleiben.
-            if (liveLensRef.current.assistant > 0)
+            // Eine Fundstelle, die gesucht oder gerade gelesen wird, hat Vorrang.
+            const hitHolds =
+              (jumpSeqRef.current !== null && jumpIsHitRef.current) ||
+              Date.now() <= jumpHoldUntilRef.current;
+            if (liveLensRef.current.assistant > 0 && !hitHolds) {
+              jumpIsHitRef.current = false;
               jumpSeqRef.current = Math.min(
                 ...assistantBlocks.map((e) => e.seq),
               );
+            }
             liveLensRef.current.assistant = 0;
             setLiveText((p) => (p.assistant ? { ...p, assistant: "" } : p));
           }
@@ -1052,6 +1067,20 @@ export function SessionTail({
     }
     return seq;
   }, [events]);
+  // Kleinkram-Regel 2: „Umgebung“ bleibt weg, wenn die Session nachweislich
+  // keinen Workspace hat — das geladene Fenster reicht bis zum Sessionstart
+  // (events[0].seq <= 1) und kein workspace.*-Event existiert (main_sync-
+  // Events zählen nicht: sie laufen auch ohne Manifest). Bei langen Sessions,
+  // deren Anfang noch nicht geladen ist, bleibt der Eintrag ehrlich stehen.
+  const workspacePossible = useMemo(
+    () =>
+      (events[0]?.seq ?? 1) > 1 ||
+      events.some((e) => {
+        const kind = workspaceKindOf(e.payload);
+        return kind !== null && kind.startsWith("workspace.") && !kind.startsWith("workspace.main_sync_");
+      }),
+    [events],
+  );
   // T21.3: measured turns of the same adapter/model — fetched when a turn starts, never guessed client-side.
   const [estimate, setEstimate] = useState<RunEstimate | null>(null);
   useEffect(() => {
@@ -1139,6 +1168,8 @@ export function SessionTail({
     [filtered, backgroundTile],
   );
   const hiddenOlder = filtered.length - visible.length;
+  // BUG-0281: Das Geräte-Kurzlabel erscheint nur, wenn mehrere verschiedene Akteure im Spiel sind.
+  const chatMultiActor = useMemo(() => showActorSuffix(visible.map((e) => (e.payload as { actor?: string }).actor)), [visible]);
   // EPIC-P43 T43.4: der Chat in Zügen — aus dem ungefilterten Strom, damit Schritte nicht verloren gehen.
   const live = status === "working" || status === "starting";
   const chat = useChatEvents(shownEvents, api);
@@ -1164,18 +1195,20 @@ export function SessionTail({
           (tries > 8 ? resolveSeqNode(seq) : null);
         if (node) {
           jumpSeqRef.current = null;
+          const hit = jumpIsHitRef.current;
           const box = tailRef.current?.getBoundingClientRect();
           // Nur springen, wenn der Anfang oberhalb der Lesespitze liegt — ist die
           // Nachricht ganz sichtbar, waere ein Sprung nur Flackern.
           if (box && node.getBoundingClientRect().top < box.top - 8) {
             stickRef.current = false;
-            jumpHoldUntilRef.current = Date.now() + 8_000;
+            if (hit) jumpHoldUntilRef.current = Date.now() + 8_000;
             node.scrollIntoView({ behavior: "auto", block: "start" });
-          } else {
+          } else if (hit) {
             jumpHoldUntilRef.current = Date.now() + 4_000;
           }
           // Nachleuchten: die Fundstelle ist gefunden, sie muss aber auch als solche
           // zu sehen sein — 2,2 s, damit das Auge sie erkennt.
+          if (!hit) return;
           node.classList.add("hit-target");
           window.setTimeout(() => node.classList.remove("hit-target"), 2200);
           return;
@@ -1266,6 +1299,7 @@ export function SessionTail({
       lastFloor = floor;
       await loadOlder();
     }
+    jumpIsHitRef.current = true;
     jumpSeqRef.current = seq;
     setJumpTick((n) => n + 1);
     jumpHoldRef.current = null;
@@ -1716,12 +1750,16 @@ export function SessionTail({
       show: () => setActiveTab("forge"),
     },
     { id: "suche", label: t("session.search"), icon: "suche", show: showSucheTab },
-    {
-      id: "umgebung",
-      label: t("session.environment"),
-      icon: "umgebung",
-      show: showUmgebungTab,
-    },
+    ...(workspacePossible
+      ? [
+          {
+            id: "umgebung" as Tab,
+            label: t("session.environment"),
+            icon: "umgebung" as TabIconName,
+            show: showUmgebungTab,
+          },
+        ]
+      : []),
   ];
   const inMore = MORE.some(
     (m) => m.id === activeTab && !MAIN.some((t) => t.tabs.includes(m.id)),
@@ -1853,20 +1891,19 @@ export function SessionTail({
           </div>
         )}
         <div>
-          {/* T8.5: back, what this is, Stop apart from Senden, the rest in ⋯ */}
+          {/* T8.5: Kopf — Übersicht-Knopf, Titel, Stop abseits von Senden,
+           * Rest in ⋯. BUG-0282: statt Historie-Rücksprung (popView) führt
+           * der Knopf am Handy deterministisch in die Übersicht; der Stack
+           * pendelte sonst zwischen Sessions. */}
           <div class={`topbar session-topbar${tile ? " tile-top" : ""}`}>
             {tile?.head?.start}
             <Button
               aria-label={t("app.to_overview")}
               title={t("app.to_overview")}
-              onClick={() => {
-                // Navigations-Historie: exakt die zuvor sichtbare Ansicht
-                // wiederherstellen; ohne Vorgeschichte die Übersicht.
-                location.hash = popView() ?? pageHash("dashboard");
-              }}
+              onClick={() => onNavigate("dashboard")}
               class="back-btn"
             >
-              ←
+              <TabIcon name="uebersicht" />
             </Button>
             <div class="session-top-main">
               {renaming ? (
@@ -2543,51 +2580,53 @@ export function SessionTail({
                 />
               </>
             ) : activeTab === "chat" ? (
-              chatItems.length === 0 ? (
-                <div class="ui-empty">
-                  {live
-                    ? t("session.tail_loading", { "suffix": shownModel ? ` · ${shownModel}` : "" })
-                    : t("session.no_messages")}
-                </div>
-              ) : (
-                <ChatTurns
-                  key={session.id}
-                  sessionId={session.id}
-                  sessionRef={sessionRef}
-                  items={chatItems}
-                  live={liveText}
-                  expanded={expanded}
-                  onToggleExpand={toggleExpanded}
-                  onJump={jumpTo}
-                  firstNewSeq={firstNew?.seq ?? null}
-                  onOpenVerlauf={showVerlaufTab}
-                  after={(item, next) => {
-                    if (item.kind !== "event" && item.kind !== "work")
-                      return null;
-                    const last =
-                      item.kind === "event"
-                        ? item.event.seq
-                        : itemLastSeq(item);
-                    const closed = turnsClosedBetween(
-                      tokenStats.turns,
-                      last,
-                      next ? itemFirstSeq(next) : null,
-                    );
-                    if (closed.length === 0) return null;
-                    const turnFill = closed[closed.length - 1]!.contextTokens;
-                    return (
-                      <div class="turn-stats dim">
-                        {turnStatsText(
-                          tokenStats.turns.findIndex(
-                            (t) => t.endSeq === closed[0]!.endSeq,
-                          ) + 1,
-                          closed,
-                        )}
-                      </div>
-                    );
-                  }}
-                />
-              )
+              <>
+                {chatItems.length === 0 ? (
+                  <div class="ui-empty">
+                    {live
+                      ? t("session.tail_loading", { "suffix": shownModel ? ` · ${shownModel}` : "" })
+                      : t("session.no_messages")}
+                  </div>
+                ) : (
+                  <ChatTurns
+                    key={session.id}
+                    sessionId={session.id}
+                    sessionRef={sessionRef}
+                    items={chatItems}
+                    live={liveText}
+                    expanded={expanded}
+                    onToggleExpand={toggleExpanded}
+                    onJump={jumpTo}
+                    firstNewSeq={firstNew?.seq ?? null}
+                    onOpenVerlauf={showVerlaufTab}
+                    after={(item, next) => {
+                      if (item.kind !== "event" && item.kind !== "work")
+                        return null;
+                      const last =
+                        item.kind === "event"
+                          ? item.event.seq
+                          : itemLastSeq(item);
+                      const closed = turnsClosedBetween(
+                        tokenStats.turns,
+                        last,
+                        next ? itemFirstSeq(next) : null,
+                      );
+                      if (closed.length === 0) return null;
+                      const turnFill = closed[closed.length - 1]!.contextTokens;
+                      return (
+                        <div class="turn-stats dim">
+                          {turnStatsText(
+                            tokenStats.turns.findIndex(
+                              (t) => t.endSeq === closed[0]!.endSeq,
+                            ) + 1,
+                            closed,
+                          )}
+                        </div>
+                      );
+                    }}
+                  />
+                )}
+              </>
             ) : visible.length === 0 ? (
               <div class="ui-empty">
                 {status === "working" || status === "starting"
@@ -2626,6 +2665,7 @@ export function SessionTail({
                         expanded={expanded.has(e.seq)}
                         onToggleExpand={() => toggleExpanded(e.seq)}
                         sessionRef={sessionRef}
+                        showActor={chatMultiActor}
                         toolResult={
                           e.type === "tool_use"
                             ? toolResultByToolId.get(toolIdOf(e) ?? "")
@@ -2647,6 +2687,10 @@ export function SessionTail({
                   );
                 })}
               </>
+            )}
+            {/* BUG-0280: die eigene Vorgemerke gehört in den Fluss — Chat wie Verlauf; der Streifen bleibt die Verwaltung. */}
+            {(activeTab === "chat" || activeTab === "verlauf") && (
+              <PendingOwnChat sessionId={session.id} api={api} refreshKey={queueTick} />
             )}
           </div>
 

@@ -1,7 +1,7 @@
 import type { HubTeam } from "./modules/team/index.ts";
 import { resolve, sep } from "node:path";
 import type { FastifyRequest } from "fastify";
-import type { ClaudeLive, PlannerModelConfig, SettingsStore, AttachmentStore, SessionManager, TokenService, AdapterRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, AiMetricsSampler, HostMetricsService, InferenceTracker, FleetStore, MainSyncSettingsService } from "@ancientvoid/core";
+import type { ClaudeLive, PlannerModelConfig, SettingsStore, AttachmentStore, SessionManager, TokenService, AdapterRegistry, ApprovalService, WebAuthnStore, HealthStore, ProbeRunner, ReviewStore, ProjectTrustStore, BrowserService, DeviceService, AutomationService, AiMetricsSampler, HostMetricsService, InferenceTracker, FleetStore, MainSyncSettingsService, ScanService } from "@ancientvoid/core";
 import { KnowledgeService, nativeOpenCommand, scanProjectSkills, ensureBaseSkills, LoopRegistry, type SessionTextIndex } from "@ancientvoid/core";
 import type { ForgeService } from "./modules/forge/forge-service.ts";
 import type { StatisticsService } from "./modules/statistics/statistics.service.ts";
@@ -77,13 +77,15 @@ export interface RouteDeps {
   forgeTokens?: { githubTokenFile?: string };
   /** EPIC-P74 (ADR-0096): Wissensquellen — ohne Angabe aus `settings` gebaut, ohne beides 501. */
   knowledge?: KnowledgeService;
+  /** EPIC-P80 (ADR-0118): Pentest-Scan — ohne Konfiguration erklären die Routen die Lage (K10). */
+  scan?: ScanService;
   /** EPIC-P73 (ADR-0094): externe Auto-Jobs (GitHub-Actions, Issue-Bridge) —
    * immer vorhanden; ohne Quellen antwortet der Endpunkt ehrlich leer. */
   externalJobs?: ExternalJobsService;
   team?: HubTeam;
   /** EPIC-P59 (ADR-0078): Sampler für die Metrik-Seite; ohne Angabe leere Quelle-Liste. */
   aimetrics?: AiMetricsSampler;
-  /** EPIC-P79 (ADR-0102): Tracker für die Token-Tempo-Seite. */
+  /** EPIC-P79 (ADR-0125): Tracker für die Token-Tempo-Seite. */
   inference?: InferenceTracker;
   /** Suche (Nachschärfe 2026-11-22): Volltextindex über die Sessiontexte.
    * Ohne Angabe antworten die Session-Routen 501 — wie bei approvals, die
@@ -179,7 +181,7 @@ export function createRouteContext(deps: RouteDeps) {
   // teilen dieselbe Instanz (Freigabe-Antrag und Ausführung nach Entscheidung).
   const knowledge = deps.knowledge ?? (deps.settings ? new KnowledgeService(deps.settings, { operations: deps.sessions.operations(), ...(deps.approvals ? { approvals: deps.approvals } : {}) }) : null);
 
-  return { deps, loops, projectRoots, hostId, hostLabel: deps.hostLabel, startedAt, catalogRootFor, skillsFor, callerLabel, withAttachCmd, webauthnRoutes, indexingInFlight, knowledge };
+  return { deps, loops, projectRoots, hostId, hostLabel: deps.hostLabel, startedAt, catalogRootFor, skillsFor, callerLabel, withAttachCmd, webauthnRoutes, indexingInFlight, knowledge, scan: deps.scan };
 }
 
 export type RouteContext = ReturnType<typeof createRouteContext>;

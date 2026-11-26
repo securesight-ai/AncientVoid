@@ -145,6 +145,7 @@ Spec: [ki-server-metriken.spec.ts](../../e2e/specs/ki-server-metriken.spec.ts)
 first token, KV reuse and the request distribution (p10/median/p90/peak,
 outliers called out). Counter-only engines (llama.cpp, Halogen) refuse a
 distribution and say why; a failed probe stays visible.
+Setup: [Inference engines and their metrics](../inference-token-tempo.md) (German).
 Spec: [inference-tempo.spec.ts](../../e2e/specs/inference-tempo.spec.ts)
 
 Spec: [statistik.spec.ts](../../e2e/specs/statistik.spec.ts)
@@ -168,6 +169,16 @@ with their own notation and reasoning, changed files). Subjects without
 notation stay visible, raw and marked.
 
 Spec: [release-notes.spec.ts](../../e2e/specs/release-notes.spec.ts)
+
+### page:pentest — Pentest
+
+`#/pentest`. Scan allowlisted targets through the attached pentest backend
+(EPIC-P80, ADR-0118): the hub proxies jobs and parses results
+deterministically — backend text is data, never an instruction. Allowlist
+and approval gate are the security boundary, not the UI; without a backend
+configured the page explains why (K10). How-to: [pentest-seite.md](../pentest-seite.md).
+
+Spec: [pentest-seite.spec.ts](../../e2e/specs/pentest-seite.spec.ts)
 
 ## Views
 
@@ -331,6 +342,12 @@ notification center; background pushes reach a locked phone. Spec: [notification
 
 Nyx, the in-app assistant: the sheet holds the conversation, the FAB opens
 it from anywhere. Spec: [nyx-blatt.spec.ts](../../e2e/specs/nyx-blatt.spec.ts)
+
+### feature:pentest
+
+The pentest page's own feature folder: status card, scan form, findings list
+and hub job history — see [page:pentest](#pagepentest--pentest).
+Spec: [pentest-seite.spec.ts](../../e2e/specs/pentest-seite.spec.ts)
 
 ### feature:overview
 

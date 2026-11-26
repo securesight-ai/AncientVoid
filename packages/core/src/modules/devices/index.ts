@@ -1,4 +1,5 @@
 export { DeviceError, DeviceService, maskDeviceLog, type DeviceErrorCode, type DeviceExec, type DeviceServiceOptions } from "./device-service.ts";
+export { DeviceSetup, readConfiguredSdkRoot, type DeviceSetupOptions } from "./device-setup.ts";
 export {
   adbBootCompletedArgv,
   adbDevicesArgv,

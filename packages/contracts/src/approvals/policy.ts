@@ -112,6 +112,9 @@ export const POLICY_OPERATIONS = [
    * ggf. geteiltes Backend: IMMER Freigabe, auch für den Menschen am Panel
    * (EPIC-P74 §3.6 „Write-Pfad nie ohne Freigabe"). */
   "knowledge.add",
+  /** EPIC-P80 (ADR-0118): Scan auslösen (Mensch/Fleet direkt, Agent erfragt) und lesen. */
+  "scan.run",
+  "scan.read",
 ] as const;
 export type PolicyOperation = (typeof POLICY_OPERATIONS)[number];
 
@@ -208,6 +211,11 @@ export const POLICY: Readonly<Record<PolicyOperation, Readonly<Record<ActorKind,
   /** EPIC-P74: Schreiben in den Brain — Agent fragt an (approve), Mensch/Fleet
    * legt an; die Route legt für jeden Akteur eine Freigabe an (ein Code-Pfad). */
   "knowledge.add": { human: HUMAN, fleet: "allow", agent: "approve", bridge: "deny", companion: "deny", display: "deny" },
+  /** EPIC-P80 (ADR-0118): Scan auslösen — Mensch/Fleet dürfen (Standard-Profil),
+   * Agenten erfragen es; riskante Tools gehen ohnehin über den Approval-Weg (D4). */
+  "scan.run": { human: HUMAN, fleet: "allow", agent: "approve", bridge: "deny", companion: "deny", display: "deny" },
+  /** EPIC-P80 (ADR-0118): Status, Targets und Jobs lesen — wie das generische `read`. */
+  "scan.read": { human: HUMAN, fleet: "allow", agent: "allow", bridge: "deny", companion: "deny", display: "allow" },
 };
 
 export function policyFor(operation: PolicyOperation, label: string | null | undefined): PolicyDecision {

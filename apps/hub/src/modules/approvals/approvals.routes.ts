@@ -129,6 +129,14 @@ export function registerApprovalsRoutes(app: FastifyInstance, ctx: RouteContext)
         return { ok: false, detail: "Ausführung gescheitert (siehe Status der Quelle)" };
       });
       if (ack && !ack.ok) req.log.warn({ detail: ack.detail }, "approved knowledge.add did not run");
+    } else if (result.request!.status === "approved" && result.request!.action === "scan.run") {
+      // EPIC-P80 (ADR-0118): der freigegebene Scan — einmalig, über dieselbe
+      // Service-Instanz, die den Antrag angelegt hat (RouteContext.scan).
+      const ack = await ctx.scan?.applyApprovedScan(result.request!.id).catch((err) => {
+        req.log.error({ err }, "applyApprovedScan failed after a real approval");
+        return { ok: false, detail: "Ausführung gescheitert (siehe Job-Liste)" };
+      });
+      if (ack && !ack.ok) req.log.warn({ detail: ack.detail }, "approved scan did not run");
     }
     return result.request;
   });
