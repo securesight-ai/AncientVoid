@@ -95,6 +95,7 @@ Regeln:
 | feature:statistics | One analysis page: metrics hub (system, AI server, sessions/turns/tools) plus inference token/tempo adapters with request history and percentiles | statistik |
 | feature:stt | Speech-to-text dictation | voice-local |
 | feature:swarm | Swarm cards, DAG view, model choice | swarm |
+| feature:team | Team pairing across hubs: invite text, exporter codes, pins (EPIC-P83) | team-pairing |
 | feature:terminal | Allowlisted hub SSH/local terminal (xterm) | terminal |
 | feature:vault | Vault notes: editor, folders, popout | vault |
 | feature:windows | Popout windows and window targets | windows |

@@ -15,9 +15,9 @@ import { acceptJoin, pairingExporterContext, type PairingWindow, type TeamTlsMat
  * einen Confirm-Frame sendet (ADR-0118 §7.6: Pins erst nach beiden
  * Bestätigungen) — Invite-TTL als Obergrenze.
  */
-export const PAIR_ALPN = "av-team-pair/1";
-export const PAIR_LABEL_A = "EXPERIMENTAL-ancientvoid-team-pair-a";
-export const PAIR_LABEL_B = "EXPERIMENTAL-ancientvoid-team-pair-b";
+const PAIR_ALPN = "av-team-pair/1";
+const PAIR_LABEL_A = "EXPERIMENTAL-ancientvoid-team-pair-a";
+const PAIR_LABEL_B = "EXPERIMENTAL-ancientvoid-team-pair-b";
 const PAIR_DEADLINE_MS = 5_000;
 const CONFIRM_DEADLINE_MS = 10 * 60_000;
 const MAX_JOIN_BYTES = 16_384;
@@ -28,7 +28,7 @@ function code8(bytes: Uint8Array): string {
 }
 
 /** Längenpräfix (u32 BE) + UTF-8-JSON — Join-Request und Confirm-Frame. */
-export function writePairingFrame(socket: TLSSocket, payload: unknown): Promise<void> {
+function writePairingFrame(socket: TLSSocket, payload: unknown): Promise<void> {
   const body = Buffer.from(JSON.stringify(payload));
   const frame = Buffer.alloc(4 + body.length);
   frame.writeUInt32BE(body.length, 0);
@@ -44,7 +44,7 @@ export function sendPairingConfirm(socket: TLSSocket): Promise<void> {
 }
 
 /** Codes aus einem Ende der Kopplungsverbindung (Exporter, je Label). */
-export function derivePairingCodes(socket: TLSSocket, teamId: string, spkiA: string, spkiB: string): { codeA: string; codeB: string } {
+function derivePairingCodes(socket: TLSSocket, teamId: string, spkiA: string, spkiB: string): { codeA: string; codeB: string } {
   const context = pairingExporterContext(teamId, spkiA, spkiB);
   // Node-Typing: exportKeyingMaterial(length, label, context).
   const a = new Uint8Array(socket.exportKeyingMaterial(32, PAIR_LABEL_A, context));

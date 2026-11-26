@@ -23,7 +23,7 @@ export const LINE_BUDGETS = [
   { glob: ".claude/skills/*/SKILL.md", limit: 250 },
   { glob: ".claude/agents/*.md", limit: 150 },
   // EPIC-P62 T62.1: Guide- und Video-Doku sind on-demand, duerfen laenger sein.
-  { glob: "docs/guide/*.md", limit: 410 }, // +10 am 2026-11-25: EPIC-P80 (Pentest-Sektionen)
+  { glob: "docs/guide/*.md", limit: 420 }, // +10 am 2026-11-25: EPIC-P80 (Pentest); +10 am 2026-11-26: EPIC-P83 (Team)
   { glob: "docs/videos/*.md", limit: 250 },
 ];
 

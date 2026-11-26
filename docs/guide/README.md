@@ -392,6 +392,10 @@ Dictation: local speech-to-text fills the composer (Nyx FAB). Spec: [voice-local
 
 Swarms — see [page:swarms](#pageswarms--agent-swarms). Spec: [swarm.spec.ts](../../e2e/specs/swarm.spec.ts)
 
+### feature:team
+
+Team pairing across hubs (invite, codes, pins; Settings; needs `team.listen`). Spec: [team-pairing.spec.ts](../../e2e/specs/team-pairing.spec.ts)
+
 ### feature:terminal
 
 Allowlisted SSH/local shell — see [page:terminal](#pageterminal--terminal). Spec: [terminal.spec.ts](../../e2e/specs/terminal.spec.ts)
