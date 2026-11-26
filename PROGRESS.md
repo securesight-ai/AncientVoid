@@ -21,9 +21,13 @@ CI `verify` grün, Live-Messung im deployed Bundle auf dem **Verlauf**-Reiter 87
 mit Denk-Block (2 → 88 → max 328 Zeichen), Abstand zur Unterseite in **jeder** Probe 0
 (läuft mit).
 
-Offen (eigene Akte nötig): im Raster-Layout `layout-2v` (1280 × 633) bleiben dem Schwanz in
-der fokussierten Kachel nur **48 px** Höhe (topbar 163 + new-jump 29 + run-strip 101 +
-dock-stack 230 von 579 px) — der Strom wächst, ist aber kaum zu lesen. Nicht angefasst:
+Offen, als **BUG-0289** acptiert (`bugs/bug-0289-leseflaeche-in-kacheln-auf-48-pixelt.md`):
+im Raster-Layout `layout-2v` (1280 × 633) bleiben dem Schwanz in der fokussierten Kachel nur
+**48 px** Höhe (topbar 163 + new-jump 29 + run-strip 101 + dock-stack 230 von 532 px,
+`scrollHeight` 64 432 px) — der Strom wächst im DOM, ist aber nicht sichtbar. Ursache ist die
+Höhen-Messung `SessionTail.tsx:979` mit ihrer `Math.max(48, …)`-Klammer: die Chrome gibt in
+niedrigen Fenstern nicht nach. Als Nächstes: Chrome in Kacheln verkleinern **und** die Messung
+absichern. Nicht angefasst:
 Rahmen-Verwurf während Replay (`apps/hub/src/modules/sessions/ws.ts:105`) ist ADR-0083 so
 beschlossen und in der Messung folgenlos.
 
