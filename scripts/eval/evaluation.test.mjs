@@ -213,3 +213,11 @@ it("renders the pilot report from the same summary and table as the PWA tab", ()
   expect(() => renderPilotReport({ ...summary, protocolHashes: ["f".repeat(64)] }, plan, meta)).toThrow(/different corpus or protocol/);
   expect(renderPilotReport(summary, plan, { ...meta, valid: false, invalidReason: "Engine ausgefallen" })).toContain("**ungültig** — Engine ausgefallen");
 });
+
+it("limits a pilot protocol to a task subset and rejects unknown task ids", () => {
+  const ids = readCorpus().tasks.slice(0, 2).map((task) => task.id);
+  const pilot = planSeries({ ...testProtocol, repetitions: 2, tasks: ids }, readCorpus());
+  expect(new Set(pilot.jobs.map((job) => job.task.id))).toEqual(new Set(ids));
+  expect(pilot.jobs.length).toBeLessThan(plan.jobs.length / 5);
+  expect(() => planSeries({ ...testProtocol, tasks: ["gibt-es-nicht"] }, readCorpus())).toThrow(/Unknown task/);
+});

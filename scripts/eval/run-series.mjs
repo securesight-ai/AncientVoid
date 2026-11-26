@@ -12,6 +12,8 @@ export async function runSeries(api, root, scratch, series, plan) {
   writeFileSync(receipts, "", { flag: "wx", mode: 0o600 });
   const invalid = join(destination, "invalid.jsonl");
   writeFileSync(invalid, "", { flag: "wx", mode: 0o600 });
+  const aborted = join(destination, "aborted.jsonl");
+  writeFileSync(aborted, "", { flag: "wx", mode: 0o600 });
   const budget = new BudgetGuard(plan.config.providerBudgetUsd);
   let infraStreak = 0;
   const attemptJob = async (job) => {
@@ -28,6 +30,12 @@ export async function runSeries(api, root, scratch, series, plan) {
         // Ein Timeout zählt nur dann als Infrastruktur, wenn die Engine danach nicht antwortet.
         const hung = /timed out/.test(error.message) && await Promise.any([arm.plan, arm.build].filter((side) => side?.healthUrl)
           .map((side) => probeHealth(side.healthUrl).then(() => { throw new Error("alive"); }, () => true))).catch(() => false);
+        // Timeout bei lebender Engine: Abbruch des Agenten. Er wird in aborted.jsonl sichtbar (nie still gedroppt),
+        // die Serie läuft weiter und gilt als partiell; der Report nennt die Abbrüche.
+        if (/timed out/.test(error.message) && !hung) {
+          appendFileSync(aborted, JSON.stringify({ key, attempt, at: new Date().toISOString(), cause: "timeout", message: error.message }) + "\n", { flush: true });
+          return;
+        }
         if (!isInfrastructureFailure(error) && !hung) throw error;
         // Eine tote Engine ist keine Aufgabenschwäche: Versuch protokollieren, nie als gescheitert zählen.
         appendFileSync(invalid, JSON.stringify({ key, attempt, at: new Date().toISOString(), cause: "infrastructure", message: error.message }) + "\n", { flush: true });
