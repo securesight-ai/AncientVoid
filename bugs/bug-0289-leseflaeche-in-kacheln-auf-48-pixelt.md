@@ -97,6 +97,21 @@ Vermutlich betroffen, noch zu messen: `50-short-viewport.css` (Media Queries ab 
 Höhe) und `layout-3*`/`layout-2v` nebeneinander — bei drei Spalten ist jede Kachel noch
 kürzer.
 
+## Nachtrag (26.11., gemessen nach PR #446)
+
+Streaming selbst ist bewiesen und **nicht** Teil dieser Akte: WS-Sonde am laufenden Hub,
+150 s — **177 Rahmen: 132 `thinking` (3 110 Zeichen) und 45 `assistant` (1 246 Zeichen)**;
+dieselbe Sitzung, Browser-Sonde im Verlauf-Reiter — `chat-live-assistant` wuchs in 47 von
+415 DOM-Proben von 24 auf 307 Zeichen (Spitze 880), Abstand zur Unterseite in 34 dieser
+Proben 0. Antwort und Denken streamen also beide.
+
+Was in niedrigen Fenstern stört, ist ausschließlich die Höhe: im Screenshot von 08:50
+(`screenshot-1795679461944.png`) ist der Antwortblock nach gut vier Zeilen abgeschnitten
+(mittendurch eine Textzeile, darunter ein ▾). Zusätzlich überdeckt die Knopfzeile
+„Überwachen / Debuggen“ die Icon-Zeile des Eingabefeldes: die Beschriftung „Debuggen“ liegt
+bei 1280 × 633 auf dem dritten Icon-Knopf (y ≈ 571 über y ≈ 514) — ein umkippendes Flex-
+Verhalten, das beim Einpacken dieser Zeile mit behoben werden muss.
+
 ## Handoff
 
 - [x] Datei im Index [`README.md`](README.md)
