@@ -58,3 +58,12 @@ Median, Mittel, Min–Max über die Rohwerte aus den Ergebnissen. Lesende Routen
 liest die Journale gestoppter Sitzungen (`evaluation.completed`, K7) und hält
 nur einen Cache. PWA-Tab und Markdown-Report formatieren über dieselbe
 Funktion. Rein additiv, kein neuer Zustand.
+
+## Nachtrag 2026-11-26: Cache bei ACP und cursor
+
+Live belegt (opencode 2.4, omp 19.2, cursor-agent 2026.11.22): `inputTokens` ist
+nur die frische Eingabe, der Cache steht daneben und ging bisher verloren. Beide
+Adapter melden ihn jetzt als `cacheInputTokens` ohne `cacheIncluded`. ACP-Agenten
+mit getrenntem `thoughtTokens` zählen diese zur Ausgabe, wenn `totalTokens` sie
+belegt separat führt. Frühere Aufzeichnungen dieser Adapter unterschätzen Eingabe
+und Cloud-Kosten.

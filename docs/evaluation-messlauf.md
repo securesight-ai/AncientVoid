@@ -159,7 +159,8 @@ Das von Claude Code gemeldete `costUsd` ist dort ein Anthropic-Preis und wird ni
 Cache-Tokens: Claude meldet sie getrennt von der frischen Eingabe. Pi, OpenCode und Codex
 melden die Eingabe einschließlich Cache und markieren das mit `cacheIncluded`; der Cache
 bleibt über `cacheInputTokens` sichtbar und wird zum Cache-Preis gerechnet. Bei Adaptern
-ohne Cache-Angabe (z. B. Cursor) weist der Report die Kosten als obere Schranke aus.
+ohne Cache-Angabe weist der Report die Kosten als obere Schranke aus. ACP-Adapter
+(opencode, omp) und cursor melden den Cache seit dem 26.11.2026 getrennt.
 
 - Serien: [Planung der Pilotserie](p84-pilotserie-planung.md), [Serien-Vorlage](p84-serien-vorlage.md); `pilot-report` schreibt den datierten Bericht aus der Hub-Zusammenfassung.
 
