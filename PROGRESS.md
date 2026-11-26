@@ -1,5 +1,36 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
+## 26.11.2026 — Der Denk-Strom gehört zum Schwanz (BUG-0288, PR #446, main 5aab9b8a)
+
+Lage: main = `5aab9b8a`, Hub ausgeliefert (`health=200`,
+`runtimeSha == checkoutSha == pwaSha == 5aab9b8a`, `runtimeDirty false`, Bundle
+`index-CeBE9rCF.js`). Neustart über den Wächter aus dem Skill
+`ancientvoid-hub-ausliefern` (30 s ohne Kindprozess, Protokoll
+`/tmp/hub-neustart-watch.log`).
+
+Ursache war nicht die Leitung: die Denk-Fetzen kamen im Browser an (259
+`onFrames`-Aufrufe, Chat-Reiter 245/300 Proben mit Denk-Block, bis 3 048 Zeichen) — der
+Strom hing aber an `ChatTurns` und wurde **nur im Chat-Reiter** gerendert. Wer im Verlauf
+liest, sah nichts. Fix: `LiveStream.tsx` als einziger Darstellungsbaustein, im
+Schwanzcontainer für Chat **und** Verlauf; `liveZuwachs()` in `live-frames.ts` als reine
+Regel (5 neue Tests); `shared/ws.ts` benutzt den Rahmen-Typ aus `contracts` statt einer
+Kopie; `ChatTurns` verliert das `live`-Prop.
+
+Nachweis: `npx vitest run test/features/session test/app` 24 Dateien / 201 Fälle grün,
+CI `verify` grün, Live-Messung im deployed Bundle auf dem **Verlauf**-Reiter 87/110 Proben
+mit Denk-Block (2 → 88 → max 328 Zeichen), Abstand zur Unterseite in **jeder** Probe 0
+(läuft mit).
+
+Offen, als **BUG-0289** acptiert (`bugs/bug-0289-leseflaeche-in-kacheln-auf-48-pixelt.md`):
+im Raster-Layout `layout-2v` (1280 × 633) bleiben dem Schwanz in der fokussierten Kachel nur
+**48 px** Höhe (topbar 163 + new-jump 29 + run-strip 101 + dock-stack 230 von 532 px,
+`scrollHeight` 64 432 px) — der Strom wächst im DOM, ist aber nicht sichtbar. Ursache ist die
+Höhen-Messung `SessionTail.tsx:979` mit ihrer `Math.max(48, …)`-Klammer: die Chrome gibt in
+niedrigen Fenstern nicht nach. Als Nächstes: Chrome in Kacheln verkleinern **und** die Messung
+absichern. Nicht angefasst:
+Rahmen-Verwurf während Replay (`apps/hub/src/modules/sessions/ws.ts:105`) ist ADR-0083 so
+beschlossen und in der Messung folgenlos.
+
 ## 25.11.2026 — PR-Lage klären, Flake-Fix, Hub auf neuen Stand (Sitzung f2f88190)
 
 Lage: EPIC-P82 ist über PR #423 in main gemerged (16791e7b). #420 (EPIC-P83-Doku,

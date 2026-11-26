@@ -137,6 +137,8 @@ import { SessionApprovals } from "./SessionApprovals.tsx";
 import { projectName } from "../../shared/project-name.ts";
 import { Button, Chip, ConfirmDialog } from "../../shared/ui/index.ts";
 import { MainSyncModal } from "./MainSyncModal.tsx";
+import { LiveStream } from "./LiveStream.tsx";
+import { liveZuwachs, type LiveText } from "./live-frames.ts";
 /** BUG-0053: below this window height (landscape) the dock is compacted and the controls start folded. */
 const SHORT_VIEWPORT_PX = 520;
 /** A tile without focus renders new events at most this often (K2 budget 200 ms). */
@@ -330,10 +332,7 @@ export function SessionTail({
   }, [tileActive]);
   /** ADR-0083: Teiltexte des Adapters, bis der dauerhafte Block eintrifft. Kein
    * Nacherzählen: was hier steht, ist wirklich schon uebertragen worden. */
-  const [liveText, setLiveText] = useState<{
-    assistant: string;
-    thinking: string;
-  }>({ assistant: "", thinking: "" });
+  const [liveText, setLiveText] = useState<LiveText>({ assistant: "", thinking: "" });
   // 2026-10-25: click-to-expand for the run strip's todo plan (transparency).
   const [todosOpen, setTodosOpen] = useState(false);
   const [recoveryHandover, setRecoveryHandover] = useState(false);
@@ -791,31 +790,19 @@ export function SessionTail({
         // BUG-0207: Frames lassen den Chat wachsen, ohne dass ein Ereignis eintrifft.
         // Ein neu beginnender Strom holt das Mitrollen zurueck — aber nicht gegen einen
         // Leser, der sich bewusst weiter oben etwas ansieht.
-        const open = openTurnsRef.current;
-        const wasStreaming = open.size > 0;
-        let assistantText = "";
-        let thinkingText = "";
-        for (const f of frames) {
-          if (f.turnId && f.stream) {
-            if (f.final) open.delete(f.turnId);
-            else open.add(f.turnId);
-          }
-          if (!f.text) continue;
-          if (f.stream === "assistant") assistantText += f.text;
-          else thinkingText += f.text;
-        }
-        liveLensRef.current.assistant += assistantText.length;
-        liveLensRef.current.thinking += thinkingText.length;
-        if (!wasStreaming && open.size > 0 && !awayRef.current)
+        // BUG-0288: welche Teiltexte dazugehoeren, entscheidet die rein Funktion
+        // `liveZuwachs` — dieselbe Regel, die im Test steht, nicht ein Handler-Detail.
+        const wasStreaming = openTurnsRef.current.size > 0;
+        const zuwachs = liveZuwachs(frames, openTurnsRef.current);
+        openTurnsRef.current = new Set(zuwachs.offen);
+        liveLensRef.current.assistant += zuwachs.assistant.length;
+        liveLensRef.current.thinking += zuwachs.thinking.length;
+        if (!wasStreaming && zuwachs.offen.length > 0 && !awayRef.current)
           stickRef.current = true;
-        if (assistantText || thinkingText) {
+        if (zuwachs.assistant || zuwachs.thinking) {
           setLiveText((prev) => ({
-            assistant: assistantText
-              ? prev.assistant + assistantText
-              : prev.assistant,
-            thinking: thinkingText
-              ? prev.thinking + thinkingText
-              : prev.thinking,
+            assistant: prev.assistant + zuwachs.assistant,
+            thinking: prev.thinking + zuwachs.thinking,
           }));
         }
       },
@@ -2593,7 +2580,6 @@ export function SessionTail({
                     sessionId={session.id}
                     sessionRef={sessionRef}
                     items={chatItems}
-                    live={liveText}
                     expanded={expanded}
                     onToggleExpand={toggleExpanded}
                     onJump={jumpTo}
@@ -2687,6 +2673,12 @@ export function SessionTail({
                   );
                 })}
               </>
+            )}
+            {/* BUG-0288: der Live-Strom gehört zum Schwanz, nicht zu einem Reiter — Chat und
+             * Verlauf zeigen denselben wachsenden Teiltext (vorher: nur im Chat-Reiter, wer im
+             * Verlauf las, sah in der App einen streamenden Thinking-Berg, im Browser nichts). */}
+            {(activeTab === "chat" || activeTab === "verlauf") && (
+              <LiveStream live={liveText} />
             )}
             {/* BUG-0280: die eigene Vorgemerke gehört in den Fluss — Chat wie Verlauf; der Streifen bleibt die Verwaltung. */}
             {(activeTab === "chat" || activeTab === "verlauf") && (

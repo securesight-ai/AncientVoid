@@ -75,12 +75,13 @@ function resolvePayload(event, root, sessionId, unparsed) {
   return payload;
 }
 
-export function extractRuns(root, { project = null, since = null } = {}) {
+export function extractRuns(root, { project = null, since = null, sessionIds = null } = {}) {
   const sessionsDir = join(root, "sessions");
   const turnMetrics = readTurnMetrics(root);
   const runs = [];
   if (!existsSync(sessionsDir)) return runs;
   for (const sessionId of readdirSync(sessionsDir).sort()) {
+    if (sessionIds && !sessionIds.has(sessionId)) continue;
     const file = join(sessionsDir, sessionId, "events.jsonl");
     if (!existsSync(file)) continue;
     const lines = readFileSync(file, "utf8").split("\n").filter((l) => l.trim());
@@ -105,8 +106,13 @@ export function extractRuns(root, { project = null, since = null } = {}) {
         for (const n of payload.names ?? []) if (!run.skills.chain.includes(n)) run.skills.chain.push(n);
       } else if (event.type === "tool_use") {
         const name = toolName(payload);
-        if (name === "Skill") {
-          if (typeof payload?.input?.skill === "string" && !run.skills.invoked.includes(payload.input.skill)) run.skills.invoked.push(payload.input.skill);
+        if (name?.toLowerCase() === "skill") {
+          const skill = payload?.input?.skill ?? payload?.input?.name;
+          if (typeof skill === "string" && !run.skills.invoked.includes(skill)) run.skills.invoked.push(skill);
+        } else if (name?.toLowerCase() === "read") {
+          const path = payload?.input?.path ?? payload?.input?.file_path ?? payload?.input?.filePath;
+          const match = typeof path === "string" && /(?:^|\/)(?:\.claude|\.agents|\.pi|\.opencode)\/skills\/([a-zA-Z0-9_-]+)\/SKILL\.md$/.exec(path);
+          if (match && !run.skills.invoked.includes(match[1])) run.skills.invoked.push(match[1]);
         } else if (name && SHELL_IN_TABLE.has(name.toLowerCase())) {
           const cmd = payload?.input?.command;
           if (typeof cmd === "string" && cmd.trim()) pending.push({ seq: event.seq, cmd, callId: payload.id ?? null });
