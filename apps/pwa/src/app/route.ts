@@ -86,7 +86,8 @@ export const FOUND_HASH_ALIAS = "#/gefunden";
 // jede neue Seite ohne docs/guide/inventory.md-Zeile rot.
 export const PAGE_SLUG: Record<ListPage, string> = { dashboard: "", new: "neu", settings: "einstellungen", approvals: "freigaben", status: "status", media: "medien", pc: "pc", vault: "notizen", swarms: "swarms", automationen: "automationen", statistics: "statistik", terminal: "terminal", releasenotes: "releasenotes", pentest: "pentest" };
 
-/** EPIC-P34 T34.2: Seiten, die am Desktop die Detailspalte füllen. Übersicht, Neu und Freigaben bleiben in der Liste (K1-Weg). */
+/** EPIC-P34 T34.2: Seiten, die am Desktop die Detailspalte füllen. Übersicht
+ * bleibt Listenziel (K1-Weg); „Neu“ ist seit BUG-0291 ein Modal über allem. */
 export const TOOL_PAGE_IDS = ["settings", "media", "pc", "status", "vault", "swarms", "automationen", "statistics", "terminal", "releasenotes", "pentest"] as const;
 export type ToolPageId = (typeof TOOL_PAGE_IDS)[number];
 const TOOL_PAGES: ReadonlySet<ListPage> = new Set<ListPage>(TOOL_PAGE_IDS);

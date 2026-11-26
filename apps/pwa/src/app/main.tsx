@@ -38,8 +38,9 @@ import { RestoreBar } from "../features/windows/RestoreBar.tsx";
 import { PopoutShell } from "../features/windows/PopoutShell.tsx";
 import type { DropPoint } from "../features/windows/drag.ts";
 import { focusWindowFor, isPopoutWindow, onWindowMessage, openPopout, startWindowHub } from "../features/windows/windows.ts";
-import { detachTile, focusOpenSession, focusTile, forgetDetached, isLayoutFixed, openAdditionalTile, openInNewTile, openInTile, parseWorkspace, reattach, restoreTile, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
+import { detachTile, focusOpenSession, focusTile, forgetDetached, isLayoutFixed, openAdditionalTile, openInNewTile, parseWorkspace, reattach, restoreTile, serializeWorkspace, visibleTiles, type TileRef, type Workspace } from "../features/workspace/tiles.ts";
 import { targetKey, tileWindowTarget } from "../features/windows/protocol.ts";
+import { NewSessionModal } from "../features/new-session/NewSessionModal.tsx";
 import { NyxFab } from "../features/stt/NyxFab.tsx";
 import type { Page } from "./Dock.tsx";
 import "./styles/index.css";
@@ -514,13 +515,11 @@ function Main() {
         }
       }
     } else {
-      if (route.page === "dashboard") return;
+      // BUG-0291: „Neue Session“ öffnet am breiten Bildschirm keine Kachel —
+      // das Modal (unten gerendert) liegt über allem, das Raster
+      // bleibt unangetastet. Übersicht bleibt Listenziel (K1-Weg).
+      if (route.page === "dashboard" || route.page === "new") return;
       ref = { sessionId: "", content: { kind: "page", page: route.page, ...(route.vaultFile ? { vaultFile: route.vaultFile } : {}), ...(route.vaultTab ? { vaultTab: route.vaultTab } : {}), ...(route.statTab ? { statTab: route.statTab } : {}), hash: location.hash } };
-      // BUG-0244: Neue Session immer in Kachel 1.
-      if (route.page === "new") {
-        latest.current.changeWorkspace(openInTile(current, ref, 0));
-        return;
-      }
     }
     latest.current.changeWorkspace(openInNewTile(current, ref));
   }, [wide, route]);
@@ -699,6 +698,9 @@ function Main() {
       {!wide && <FilesLayer wide={false} focusedSessionId={route.view === "tail" ? route.session.id : null} />}
       {!wide && <BrowserLayer focusedSessionId={route.view === "tail" ? route.session.id : null} />}
       {!wide && <DeviceLayer focusedSessionId={route.view === "tail" ? route.session.id : null} />}
+      {/* BUG-0291: „Neue Session“ am PC/Tablet als Modal über allem (Route #/neu);
+       * am Handy rendert App die Seite selbst. */}
+      {wide && <NewSessionModal open={route.view === "list" && route.page === "new"} />}
       {attachmentView && (
         <AttachmentRouteView key={attachmentView.attachmentId} attachmentId={attachmentView.attachmentId} onClose={() => (location.hash = popView() ?? "#/")} />
       )}

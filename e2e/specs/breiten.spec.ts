@@ -13,7 +13,7 @@ const WIDTHS = [
 ];
 
 const CONTROL_SEL =
-  ".topbar button, .dock button, .card-decision button, .nyx-sheet button, .session-topbar button, .composer button, .tool-pane button, .settings-page button, .settings-page select, .form-field select, .form-field button, .settings-page input:not([type=checkbox]):not([type=radio]):not([type=range]), .form-field input:not([type=checkbox]):not([type=radio]):not([type=range])";
+  ".topbar button, .dock button, .card-decision button, .nyx-sheet button, .session-topbar button, .composer button, .tool-pane button, .settings-page button, .settings-page select, .form-field select, .form-field button, .settings-page input:not([type=checkbox]):not([type=radio]):not([type=range]), .form-field input:not([type=checkbox]):not([type=radio]):not([type=range]), .ui-sheet button, .ui-sheet select, .ui-sheet input:not([type=checkbox]):not([type=radio]):not([type=range])";
 
 /** Sichtbare Bedienelemente, die den Rand überragen oder kleiner als `min` sind. */
 function problems(page: Page, min: number): Promise<{ overflow: number; cut: string[]; small: string[] }> {

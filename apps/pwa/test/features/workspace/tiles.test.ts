@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { closeTile, compactTiles, detachTile, focusOpenSession, isDetached, isLayoutFixed, openAdditionalTile, openInTile, reattach, restoreTile, cycleLayout, emptyWorkspace, focusTile, openInNewTile, openSession, parseWorkspace, serializeWorkspace, setLayout, setLayoutFixed, swapWith, tileCount, visibleTiles } from "../../../src/features/workspace/tiles.ts";
+import { closeTile, compactTiles, detachTile, focusOpenSession, isDetached, isLayoutFixed, openAdditionalTile, reattach, restoreTile, cycleLayout, emptyWorkspace, focusTile, openInNewTile, openSession, parseWorkspace, serializeWorkspace, setLayout, setLayoutFixed, swapWith, tileCount, visibleTiles } from "../../../src/features/workspace/tiles.ts";
 
 const a = { sessionId: "a" };
 const b = { sessionId: "b" };
@@ -202,22 +202,20 @@ describe("Layout fixieren und Session-Reuse", () => {
   });
 });
 
-describe("BUG-0244: Neue Session in Kachel 1", () => {
+describe("BUG-0291: Neue Session ist kein Kachelinhalt mehr", () => {
   const neu = { sessionId: "", content: { kind: "page" as const, page: "new" as const } };
 
-  it("pinnt Neue Session auf Index 0 und verschiebt die alte Kachel 1", () => {
-    let ws = openSession(setLayout(emptyWorkspace(), "2v"), a);
-    ws = openInTile(ws, neu, 0);
-    expect(visibleTiles(ws)[0]).toEqual(neu);
-    expect(visibleTiles(ws).some((t) => t?.sessionId === "a")).toBe(true);
+  it("gespeicherte Neu-Kacheln aus Vor-Ständen fallen beim Laden still weg (kompakt)", () => {
+    const raw = JSON.stringify({ layout: "2x2", slots: [neu, a, null, null], focus: 0, layoutFixed: true });
+    const ws = parseWorkspace(raw);
+    expect(visibleTiles(ws)).toEqual([a]);
+    expect(ws.layout).toBe("1");
     expect(ws.focus).toBe(0);
   });
 
-  it("erneutes Öffnen fokussiert Kachel 1, ohne zu verdoppeln", () => {
-    let ws = openInTile(openSession(emptyWorkspace(), a), neu, 0);
-    ws = openInTile(ws, neu, 0);
-    expect(visibleTiles(ws).filter((t) => t && JSON.stringify(t) === JSON.stringify(neu))).toHaveLength(1);
-    expect(ws.focus).toBe(0);
+  it("abgelöste Neu-Kacheln fallen ebenso weg — detached bleibt ohne sie gültig", () => {
+    const raw = JSON.stringify({ layout: "1", slots: [a, null, null, null], focus: 0, layoutFixed: true, detached: [neu] });
+    expect(parseWorkspace(raw).detached ?? []).toEqual([]);
   });
 });
 

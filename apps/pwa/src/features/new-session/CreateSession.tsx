@@ -327,7 +327,7 @@ export function CreateSession({
 
   return (
     <ApiContext.Provider value={api}>
-    {/* BUG-0244: zwei Spalten ab ausreichender Kachelbreite (Container-Query), weniger Scrollen am PC/Tablet. */}
+    {/* BUG-0244: zwei Spalten ab ausreichender Container-Breite (Kachel wie Modal), weniger Scrollen am PC/Tablet. */}
     <Card class="form-grid new-session-form">
       <div class="new-session-col">
       {/* BUG-0188: Der Host führt das Formular an — Pfad, wählbares Repo,
