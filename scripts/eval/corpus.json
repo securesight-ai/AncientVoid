@@ -194,6 +194,21 @@
       ],
       "split": false,
       "contaminationRisk": true
+    },
+    {
+      "id": "notizen-route-negativ",
+      "createdOn": "2026-11-26",
+      "start": "6daa2c1eb6ba3762dbe3d94df5db001d51636d14",
+      "reference": "6daa2c1eb6ba3762dbe3d94df5db001d51636d14",
+      "test": "apps/pwa/test/app/route.test.ts",
+      "selector": "bleibt die Vault-Seite",
+      "prompt": "Prüfe, ob beim Öffnen von #/notizen/wissen die Vault-Seite mit aktivem Wissen-Reiter erscheint und die Notizen- und Übersichts-Routen erhalten bleiben. Ist das bereits der Fall, ändere keine Datei und begründe kurz, warum nichts zu tun ist.",
+      "editable": [
+        "apps/pwa/src/app/route.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true,
+      "negative": true
     }
   ]
 }
