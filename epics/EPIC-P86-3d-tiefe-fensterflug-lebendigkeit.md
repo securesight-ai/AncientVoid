@@ -115,6 +115,24 @@ Ablage nach `app/ui-scale.ts`-Muster (`ancientvoid.ctxMotion`):
   (`61-depth3d.css`): `translateZ(-160px)+scale` beim Hereinkommen, 300 ms,
   `--ease-out`; der Flug animiert nur `transform`/`opacity`, kein
   `box-shadow`-Wachstum (Regel aus 36-motion.css, K2).
+- Nutzerfeedback 26.11.2026 („Elemente sollen wirklich herausgelöst aussehen,
+  Hintergrund etwas wegzoomen und blurren“): Stufe 1 ist seither kein
+  300-ms-Einflug mehr, sondern ein **persistenter Zustand** in
+  `61-depth3d.css`, solange ein Fenster offen ist:
+  - Hintergrund: Inhaltsflächen (`#app > .app-page/.session-live/.split`)
+    weichen auf `scale(0.97)` zurück (320 ms Übergang) und werden über die
+    Hinterlegung `backdrop-filter: blur(16px) brightness(.8)` defokussiert;
+    Dock/Layer/Blätter liegen daneben und bleiben scharf.
+  - Fenster: schweben persistend vor dem Hintergrund
+    (`translateZ(50px)` + `--depth3d-shadow`), Einflug aus der Tiefe endet
+    exakt auf dieser Ruheposition (kein Snap).
+  - Seitenfenster/Dateibaum-Drawer: Milchglas (`color-mix`-transluzentes
+    `--bg-elev` + eigenes `backdrop-filter`), leichter Hub (26 px).
+  - Befehlsfenster bekommt eine Hinterlegung (`command-backdrop`,
+    CommandBar.tsx) — vorher hatte es keine; Klick darauf schließt.
+  Nur `transform`/`opacity`/`backdrop-filter` (K2); unter
+  `prefers-reduced-motion` bleiben die Flächen flach, die Unschärfe bleibt
+  (Zustand, kein Bewegungsreiz).
 - Gegriffen wird da, wo Fokus schon sichtbar wird: Layer/Overlay-Öffnung
   (`shared/layers.ts`-Flächen: Shell/Terminal, Dateibaum, Suche, Command-Bar,
   Bildvorschau) und Session-Karte → Detail-Fokus (Anregung der

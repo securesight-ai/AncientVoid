@@ -1,65 +1,82 @@
-/* EPIC-P86 T86.3: die Tiefenebene — Blätter, Modals und Seitenfenster fliegen
- * beim Öffnen ein Stück auf den Betrachter zu. CSS-3D (perspective +
- * translateZ), bewusst ohne three.js; Vorbild ist die securesight-Keynote
- * (Hybrid: scharfes HTML vorne, Tiefe dahinter), nicht ihr Umfang.
+/* EPIC-P86 T86.3 (+ Nutzerfeedback 26.11.2026): die Tiefenebene — „herausgelöst“.
  *
- * Regeln wie 36-motion.css: nur transform und opacity (K2), lauter
- * Einmal-Animationen — jede dieser Flächen mountet erst im geöffneten
- * Zustand, der Flug läuft also genau einmal pro Öffnen. Kaskade
- * (app/depth3d.ts): prefers-reduced-motion und der Bewegungsschalter
- * schalten auch diese Ebene ab; data-ctx-3d="off" ist der eigene Schalter. */
+ * Solange ein Fenster offen ist, weicht der Hintergrund zurück: Er wird kleiner
+ * (scale), unscharf und dunkler (backdrop-filter auf der Hinterlegung). Das
+ * Fenster selbst schwebt persistend davor (translateZ + Schatten) und fliegt
+ * beim Öffnen aus der Tiefe ein. CSS-3D, bewusst ohne three.js; Vorbild ist
+ * die securesight-Keynote (Hybrid: scharfes HTML vorne, Tiefe dahinter), nicht
+ * ihr Umfang.
+ *
+ * Regeln wie 36-motion.css: animiert werden nur transform/opacity (K2), die
+ * Unschärfe ist ein Zustand, keine Bewegung. Flüge sind Einmal-Animationen —
+ * jede Fläche mountet erst im geöffneten Zustand. Kaskade (app/depth3d.ts):
+ * data-ctx-3d="off" und data-ctx-motion="off" schalten die Ebene komplett ab;
+ * prefers-reduced-motion lässt sie flach (kein Transform, keine Animation —
+ * die Hinterlegung bleibt, sie ist kein Bewegungsreiz). */
 
 :root {
   --depth3d-dist: 1100px;
   --depth3d-time: 300ms;
+  --depth3d-lift: 50px;      /* wie nah ein offenes Fenster schwebt */
+  --depth3d-lift-side: 26px; /* Seitenfenster heben sich weniger ab */
+  --depth3d-recede: 0.97;    /* der Hintergrund weicht so weit zurück */
+  --depth3d-shadow: 0 28px 90px 18px color-mix(in srgb, black 55%, transparent);
 }
 
-/* Blatt von unten: Sheet-Baustein (Mehr, Skills, Nyx) und Dateibaum-Drawer. */
-:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet:not(.ui-sheet--modal),
-:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer {
+/* ── Hintergrund weicht zurück, solange ein Fenster mit Hinterlegung offen ist ──
+ * Die Inhaltsflächen sind die direkten Kinder von #app (Übersicht .app-page,
+ * Session .session-live, PC-Arbeitsplatz .split); Dock, Layer und Blätter
+ * liegen daneben und bleiben scharf. */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .app-page,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .session-live,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .split {
+  transform: scale(var(--depth3d-recede));
+  transition: transform 320ms var(--ease-out);
+}
+
+/* ── Hinterlegung: Hintergrund defokussieren und abdunkeln ── */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet-backdrop,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-backdrop {
+  backdrop-filter: blur(16px) brightness(0.8);
+  animation: depth3d-veil var(--depth3d-time) linear 1;
+}
+
+/* ── Blatt von unten: schwebt vor dem Hintergrund, fliegt aus der Tiefe ein ── */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet:not(.ui-sheet--modal) {
+  transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift));
+  box-shadow: var(--depth3d-shadow);
   animation: depth3d-rise var(--depth3d-time) var(--ease-out) 1;
 }
 
-/* Zentrierte Fenster: Grundstellung translate(-50%,-50%) steht in jedem
- * Schritt, damit sie danach exakt auf ihrem Platz ruht. command-card ist
- * die eingebettete Variante in der Kachel — kein Fenster, kein Flug. */
+/* ── Zentrierte Fenster (Modal, Befehl): Grundstellung translate(-50%,-50%)
+ *    steht in jedem Schritt; command-card ist die eingebettete Variante in
+ *    der Kachel — kein Fenster, kein Flug. ── */
 :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet--modal,
 :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-sheet:not(.command-card) {
+  transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift));
+  box-shadow: var(--depth3d-shadow);
   animation: depth3d-approach var(--depth3d-time) var(--ease-out) 1;
 }
 
-/* Seitenfenster von rechts: Browser-Arbeitsplatz und Geräte. */
-:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel {
+/* ── Seitenfenster von rechts (Browser-Arbeitsplatz, Geräte) und der
+ *    Dateibaum-Drawer: Milchglas — der Inhalt dahinter scheint durch. ── */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer {
+  transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift-side));
+  background: color-mix(in srgb, var(--bg-elev) 86%, transparent);
+  backdrop-filter: blur(12px) brightness(0.92);
+  box-shadow: var(--depth3d-shadow);
   animation: depth3d-side var(--depth3d-time) var(--ease-out) 1;
 }
 
-@keyframes depth3d-rise {
-  from { transform: perspective(var(--depth3d-dist)) translateZ(-180px) translateY(4%); opacity: 0; }
-  55% { opacity: 1; }
-  to { transform: none; opacity: 1; }
-}
-
-@keyframes depth3d-approach {
-  from { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(-160px) scale(0.965); opacity: 0; }
-  55% { opacity: 1; }
-  to { transform: translate(-50%, -50%); opacity: 1; }
-}
-
-@keyframes depth3d-side {
-  from { transform: perspective(var(--depth3d-dist)) translateZ(-150px) translateX(5%); opacity: 0; }
-  55% { opacity: 1; }
-  to { transform: none; opacity: 1; }
-}
-
-/* Sofort-Feedback (Nutzerfund 26.11.2026): Einschalten pulst offene Flächen
- * kurz heran — ein Wechsel ohne sichtbare Reaktion wirkt wie ein toter
- * Schalter. Die Klasse setzt app/depth3d.ts nur zur Laufzeit (nicht beim
- * Boot) und nur, wenn die Kaskade Bewegung erlaubt; Ausschalten bleibt
- * bewegungslos. Specificität über den Mount-Regeln (gleiche :not-Gates
- * plus Klasse) und später in der Datei. */
+/* ── Sofort-Feedback (Nutzerfund 26.11.2026): Einschalten pulst offene
+ *    Flächen kurz heran — ein Wechsel ohne sichtbare Reaktion wirkt wie ein
+ *    toter Schalter. Die Klasse setzt app/depth3d.ts nur zur Laufzeit (nicht
+ *    beim Boot) und nur, wenn die Kaskade Bewegung erlaubt; Ausschalten
+ *    bleibt bewegungslos. ── */
 :root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet:not(.ui-sheet--modal),
-:root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer,
-:root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel {
+:root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel,
+:root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer {
   animation: depth3d-pulse 240ms var(--ease-out) 1;
 }
 
@@ -68,26 +85,53 @@
   animation: depth3d-pulse-modal 240ms var(--ease-out) 1;
 }
 
+@keyframes depth3d-veil {
+  from { opacity: 0; }
+}
+
+@keyframes depth3d-rise {
+  from { transform: perspective(var(--depth3d-dist)) translateZ(-160px) translateY(4%); opacity: 0; }
+  55% { opacity: 1; }
+  to { transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift)); opacity: 1; }
+}
+
+@keyframes depth3d-approach {
+  from { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(-140px) scale(0.96); opacity: 0; }
+  55% { opacity: 1; }
+  to { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift)); opacity: 1; }
+}
+
+@keyframes depth3d-side {
+  from { transform: perspective(var(--depth3d-dist)) translateZ(-140px) translateX(5%); opacity: 0; }
+  55% { opacity: 1; }
+  to { transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift-side)); opacity: 1; }
+}
+
 @keyframes depth3d-pulse {
-  0%, 100% { transform: none; }
-  45% { transform: perspective(var(--depth3d-dist)) translateZ(28px); }
+  0%, 100% { transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift)); }
+  45% { transform: perspective(var(--depth3d-dist)) translateZ(calc(var(--depth3d-lift) + 34px)); }
 }
 
 @keyframes depth3d-pulse-modal {
-  0%, 100% { transform: translate(-50%, -50%); }
-  45% { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(28px); }
+  0%, 100% { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift)); }
+  45% { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(calc(var(--depth3d-lift) + 34px)); }
 }
 
-/* Systemvorgabe schlägt jeden Schalter (Kaskade §3.2 des Epics). */
+/* Systemvorgabe schlägt jeden Schalter (Kaskade §3.2 des Epics): keine
+ * Bewegung — Transform, Animation und Übergang fallen flach, die Unschärfe
+ * der Hinterlegung bleibt (Zustand, kein Bewegungsreiz). */
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet,
-  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-sheet:not(.command-card),
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel,
-  :root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet,
-  :root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer,
-  :root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-sheet:not(.command-card),
-  :root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel {
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet-backdrop,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-backdrop,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .app-page,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .session-live,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .split {
     animation: none;
+    transition: none;
+    transform: none;
   }
 }

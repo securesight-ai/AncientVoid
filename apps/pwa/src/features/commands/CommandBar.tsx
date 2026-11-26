@@ -205,6 +205,10 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
 
   const writes = plan && plan.steps.some((s) => s.risk !== "read");
   return (
+    <>
+      {/* EPIC-P86 T86.3: Hinterlegung wie beim Sheet-Baustein — der Befehl
+          schwebt über dem zurückweichenden Hintergrund (61-depth3d.css). */}
+      {!embedded && <div class="command-backdrop" aria-hidden="true" onClick={() => { setOpen(false); setText(""); }} />}
     <div class={`command-sheet${embedded ? " command-card" : ""}`} role={embedded ? "region" : "dialog"} aria-label={embedded ? t("knowledge.search") : t("commands.voice_order")} ref={sheet}>
       <form
         class="command-form"
@@ -347,5 +351,6 @@ export function CommandBar({ embedded = false, active = true, onClose }: { embed
         </div>
       )}
     </div>
+    </>
   );
 }

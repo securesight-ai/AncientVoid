@@ -18,6 +18,11 @@ test.describe("3D-Tiefe", () => {
     const sheet = app.getByRole("dialog", { name: "Mehr" });
     await expect(sheet).toBeVisible();
     await expect(sheet).toHaveCSS("animation-name", "depth3d-rise");
+    // Nutzerfeedback 26.11.2026 („herausgelöst“): Der Hintergrund weicht
+    // zurück (Unschärfe + kleiner), das Fenster schwebt persistend davor.
+    await expect(app.locator(".ui-sheet-backdrop")).toHaveCSS("backdrop-filter", /blur\(16px\)/);
+    await expect(sheet).toHaveCSS("transform", /matrix/);
+    await expect(app.locator("#app > .app-page")).toHaveCSS("transform", /matrix/);
 
     // T86.2: Schalter im offenen Blatt — sofort wirksam, ohne Reload.
     await sheet.getByRole("button", { name: "3D-Tiefe" }).click();
@@ -29,6 +34,9 @@ test.describe("3D-Tiefe", () => {
     const again = app.getByRole("dialog", { name: "Mehr" });
     await expect(again).toBeVisible();
     await expect(again).toHaveCSS("animation-name", "none");
+    await expect(app.locator(".ui-sheet-backdrop")).toHaveCSS("backdrop-filter", "none");
+    await expect(again).toHaveCSS("transform", "none");
+    await expect(app.locator("#app > .app-page")).toHaveCSS("transform", "none");
     await again.getByRole("button", { name: "Einstellungen" }).click();
 
     // T86.1: Ablage überlebt den Reload (Muster ctxMotion).
