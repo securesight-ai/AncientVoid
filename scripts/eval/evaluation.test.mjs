@@ -26,7 +26,7 @@ function measured(series) {
     return {
       input, recordedAt: "2026-11-25T13:00:00.000Z",
       phases: candidates.map((candidate) => ({
-        adapter: candidate.adapter, model: candidate.model, adapterVersion: "0.1.0", inputTokens: 1000, cacheInputTokens: 0, outputTokens: 100,
+        adapter: candidate.adapter, model: candidate.model, adapterVersion: "0.1.0", inputTokens: 1000, cacheInputTokens: candidate.billing.kind === "cloud" ? 400 : 0, outputTokens: 100,
         costUsd: 0.15, turnErrors: 0, toolErrors: 0, turns: 1,
         startedAt: "2026-11-25T12:59:59.000Z", endedAt: "2026-11-25T13:00:00.000Z",
       })),
@@ -83,7 +83,7 @@ it("reports only complete independent series with means, medians and dispersion"
   const second = measured("second");
   const meta = { date: "2026-11-25", commit: "fixture", runtime: "fixture" };
   expect(summarise([2, 10, 3, 0, 4])).toEqual({ n: 5, median: 3, mean: 3.8, min: 0, max: 10 });
-  expect(() => summarise([1, 2, 3, 4])).toThrow(/Five/);
+  expect(() => summarise([1, 2])).toThrow(/Three/);
   expect(() => validateSeries(first.slice(1), plan)).toThrow(/Incomplete/);
   expect(() => validateSeries([...first, first[0]], plan)).toThrow(/duplicate/);
   expect(() => renderReport(first, first, plan, meta)).toThrow(/independent/);
@@ -154,4 +154,16 @@ it("separates dead infrastructure from task failures", async () => {
   const down = vi.fn(async () => ({ ok: false, status: 504 }));
   await expect(awaitHealthy("http://127.0.0.1:1/health", { fetcher: down, waitMs: 0, stepMs: 1 })).rejects.toThrow(/health check failed/);
   await expect(awaitHealthy("http://127.0.0.1:1/health", { fetcher: async () => ({ ok: true }) })).resolves.toBeUndefined();
+});
+
+it("shows cache tokens and cache cost and flags adapters that do not split the cache", () => {
+  const first = measured("first");
+  const second = measured("second");
+  const meta = { date: "2026-11-25", commit: "fixture", runtime: "fixture" };
+  const report = renderReport(first, second, plan, meta).markdown;
+  expect(report).toContain("davon Cache-Tokens");
+  expect(report).toContain("davon Cache USD");
+  expect(report).not.toContain("obere Schranke");
+  for (const row of first.filter(({ input }) => input.arm === "pi-cloud-plain")) for (const phase of row.phases) phase.cacheInputTokens = 0;
+  expect(renderReport(first, second, plan, meta).markdown).toContain("first/pi-cloud-plain · Cache-Tokens nicht getrennt gemeldet");
 });
