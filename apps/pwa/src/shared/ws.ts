@@ -1,4 +1,4 @@
-import type { SessionTailTicket } from "@ancientvoid/contracts";
+import type { EmittedStreamFrame, SessionTailTicket } from "@ancientvoid/contracts";
 import { newEvents, resyncDelayMs, shouldResync } from "./ws-protocol.ts";
 
 /**
@@ -28,13 +28,9 @@ export interface TailConnection {
 /** ADR-0083: transiente Live-Frames — kein Ereignis, nicht persistiert, kein seq des
  * Event-Protokolls. Eine Lücke ist hier ausdrücklich kein Resync-Anlass: der dauerhafte
  * Block holt alles ein. */
-interface StreamFrameView {
-  turnId: string;
-  stream: "assistant" | "thinking";
-  seq: number;
-  text: string;
-  final: boolean;
-}
+/** ADR-0083: dieselbe Rahmenform, die Hub und Adapter verwenden (`contracts`) — eine
+ * Definition für Leitung und Anzeige, damit ein Feld nie nur auf einer Seite existiert. */
+export type StreamFrameView = EmittedStreamFrame;
 
 export interface TailOptions {
   url: string;
