@@ -87,6 +87,32 @@ Listenäquivalent bei Abos).
   einer Zahl; beides wird zum Cache-Lesepreis gerechnet. Anthropic-Kosten (und
   z.ai über Claude) sind damit eine **untere** Schranke, auch für den Deckel.
 
+- `pilot-3` abgebrochen (ungültig): Der Abnahmetest zu `session-median`
+  verlangt Feldnamen, die der Aufgabentext nicht nennt.
+- `pilot-4` läuft mit den Aufgaben `millions-format`, `notification-retention`,
+  `halogen-endpoints`, `halogen-throughput` und der Negativkontrolle. Sie nutzen
+  nach Sichtung nur Schnittstellen, die am Startstand schon existieren.
+
+## Befund: sieben Aufgaben sind durch Konstruktion unlösbar
+
+Ihr versteckter Test prüft Namen, die weder am Startstand existieren noch im
+Aufgabentext stehen. Ein Fehlschlag misst dort Namensraten, nicht Qualität.
+
+| Aufgabe | Ungenannte Schnittstelle |
+|---|---|
+| `session-median` | Felder `sessionTurns`, `sessionMedianMs` |
+| `host-power` | Metrik `sysfs:package_power_watts` |
+| `local-image` | Funktion `sessionRefFor` |
+| `inference-share` | Funktion `anteilNormalisieren` |
+| `continue-link` | Funktion `continueSessionLink` |
+| `queue-steering` | Funktion `sendNowPossible` |
+| `halogen-rates` | Metriken `derived:decode_active`, `derived:requests_per_min` |
+
+Vor der Kernserie (T84.6) müssen diese Aufgabentexte den Schnittstellenvertrag
+nennen (neuer Korpus-Hash) oder die Aufgaben ersetzt werden. Die Korpus-Abnahme
+vom 25.11.2026 prüfte nur „rot am Start, grün an der Referenz“, nicht die
+Lösbarkeit aus dem Text.
+
 ## Ausdrücklich offen
 
 Der Nutzer hat den Lauf am 2026-11-26 freigegeben. Der datierte Pilotbericht

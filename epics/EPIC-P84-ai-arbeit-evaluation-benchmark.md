@@ -122,6 +122,10 @@ Skill-Zuordnung pro Lauf nachträglich.
 - [x] **T84.5** Skills-A/B innerhalb je eines Harness (an/aus auf
   identischen Aufgaben; immer geladene Regel-Last konstant halten und
   ausweisen). → AC-P84-4
+- [ ] **T84.1b** Blocker für T84.6: Sieben Aufgaben sind aus dem Aufgabentext
+  nicht lösbar ([Befund](../docs/p84-pilotserie-planung.md)); Texte ergänzen
+  oder Aufgaben ersetzen, dazu ein Prüfschritt „Namen im Test stehen am Start
+  oder im Text“. → AC-P84-2
 - [ ] **T84.6** Erste Kernserie auf der reduzierten Matrix (n ≥ 5 je Arm,
   Median + Streuung je Metrik und Aufgabe). → AC-P84-2, AC-P84-6
 - [ ] **T84.7** Split-Szenarien (a)/(b)/(c) auf demselben Korpus,
