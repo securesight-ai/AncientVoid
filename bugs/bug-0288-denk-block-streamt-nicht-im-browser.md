@@ -31,19 +31,25 @@ Rand mit, ohne dass der Nutzer scrollen muss.
 
 ## Repro
 
-Hub läuft (`127.0.0.1:7373`), ViewPort 430×900, eigene laufende Pi-Sitzung
-`84a3981c-217c-41ee-ade4-5892ddbb3c9a` (Adapter `pi`, Modell `strata/qwen3.8-flash-next-iq3_s`).
+Hub läuft (`127.0.0.1:7373`), ViewPort 430×900, **die eigene laufende Pi-Sitzung**
+`7d3df295-0af9-4520-ba33-fbbd5d26af5a` (Adapter `pi` im RPC-Modus, Modell
+`strata/qwen3.8-flash-next-iq3_s`) — sie war während der Messung sichtbar in Arbeit.
 
-1. Adresse der laufenden Sitzung setzen: `#/hosts/cachyos-ai/sessions/84a3981c-…`.
-2. 20 s zuwarten und dabei alle 1,8 s im DOM messen.
+1. In der Übersicht (`#/`) die laufende Sitzung antippen (Liste → Sitzung, derselbe Weg wie
+   beim Nutzer).
+2. 15 s zuwarten und alle 1,9 s im DOM messen.
 
-**Ergebnis nach Schritt 2:** 12 Messungen in Folge ohne Live-Block
-(`.chat-live-thinking` nicht vorhanden) **und ohne Scroll-Container** (`.tail-scroll` nicht
-vorhanden, `scrollHeight` deshalb `null`) — die Sitzung wurde in dieser Zeit überhaupt
-nicht als Schwanz-Ansicht gerendert. Kein Konsolenfehler, keine Seiten-Ausnahme.
+**Ergebnis nach Schritt 2:** Ansicht baut korrekt (`.tail-scroll` vorhanden, klebt am unteren
+Rand, `abstandUnten` durchgehend 0), aber der Live-Denk-Block bleibt die ganzen 15 s **leer**
+(`.chat-live-thinking` nicht vorhanden, Länge 0) und ebenso der Live-Antwortblock (Länge 0) —
+obwohl in dieser Zeit Denk-Fetzen laufen. Kein Konsolenfehler, keine Seiten-Ausnahme.
 
-**Häufigkeit:** in diesem Ablauf immer; ob der Live-Block bei einer über die Liste
-angeklickten Sitzung erscheint, ist offen (dieselbe Sitzung, anderer Weg).
+*Zwei Messläufe vorher sind irreführend und wurden verworfen:* sie riefen
+`#/hosts/cachyos-ai/sessions/84a3981c-…` bzw. `#/sessions/84a3981c-…` auf. Diese Sitzung stand
+nicht in der Liste; die App fiel stumm auf die Übersicht zurück (kein `.tail-scroll`). Für
+die Messung zählt die Sitzung, die über die Liste erreichbar ist.
+
+**Häufigkeit:** in diesem Ablauf immer (17 Messungen über zwei Läufe, durchgehend leer).
 
 ## Umgebung
 
@@ -56,10 +62,14 @@ angeklickten Sitzung erscheint, ist offen (dieselbe Sitzung, anderer Weg).
 
 ## Logs
 
-Der Hub protokolliert Denk-Fenster für diese Sitzung (`[hub] Sitzung …: Denk-Fenster
-geöffnet … (164 Zeichen)`), die Zeichen kommen also am Hub an. Welche WebSocket-Rahmen bei
-einem laufenden Zug den Browser erreichen (Denk-Fetzen oder nur fertige Blöcke), ist **noch
-nicht gemessen** — das ist der nächste Arbeitsschritt.
+Der Hub protokolliert Denk-Fenster für dieselbe Sitzung (`[hub] Sitzung …: Denk-Fenster
+geöffnet … (164 Zeichen)`), die Zeichen kommen also am Hub an. Am Adapter liegt es
+voraussichtlich nicht: `packages/adapters/pi/src/normalize.ts:90-91` reicht `thinking_delta`
+an die Live-Pumpe weiter, und `packages/contracts/src/sessions/stream-pump.ts:86-95` sendet
+Fetzen **laufend** (spätestens nach `STREAM_FLUSH_INTERVAL_MS`, früher ab
+`STREAM_FLUSH_MIN_CHARS`). Welche WebSocket-Rahmen davon im Browser ankommen, ist **noch nicht
+gezählt** — das ist der nächste Arbeitsschritt: entweder reicht der Hub die Frames nicht an
+die Sitzungs-WS weiter, oder die PWA verwirft sie, bevor `liveText.thinking` gefüllt wird.
 
 ## Tests
 
@@ -69,8 +79,9 @@ nicht gemessen** — das ist der nächste Arbeitsschritt.
 
 Der Client-Code ist angelegt: `apps/pwa/src/features/session/ChatTurns.tsx:122-131`
 (`chat-live-thinking`) und der Mitlauf-Effekt `SessionTail.tsx:1189-1190` (hängt an
-`liveText`). Offene Frage: warum `liveText.thinking` bei einer laufenden Pi-Sitzung im
-Browser leer bleibt und warum der Scroll-Container in dem Messlauf fehlte.
+`liveText`). Die Mitlauf-Richtung ist in Ordnung: die Ansicht klebte während der Messung am
+unteren Rand. Offen bleibt, warum `liveText.thinking` bei einer laufenden Pi-Sitzung im
+Browser leer bleibt (`setLiveText` in `SessionTail.tsx:812` wird nie erreicht).
 
 ## Eingrenzung
 

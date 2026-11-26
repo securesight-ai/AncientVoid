@@ -44,10 +44,13 @@ schließen und komplett neu öffnen.“
   Sitzung zurück in die Historie (direkt nach `history.back()` steht `#/`, 1,5 s später
   wieder die Sitzungs-Adresse). Richtung: Navigations-Marke beim popstate.
 * `bugs/bug-0288-…` — der Denk-Block wächst im Browser nicht mit, in der Native-App schon.
-  20 s Messung in der eigenen laufenden Pi-Sitzung: kein `.chat-live-thinking`, kein
-  `.tail-scroll`. Client kann es (`ChatTurns.tsx:122-131`, Mitlauf-Scrollen hängt an
-  `liveText`), der Hub meldet Denk-Fenster. **Nächster Schritt: zählen, welche
-  WebSocket-Rahmen während eines laufenden Zugs im Browser ankommen.**
+  Messung in der **eigenen laufenden** Sitzung (15 s, alle 1,9 s): Ansicht baut und klebt am
+  unteren Rand (`abstandUnten` 0), aber `.chat-live-thinking` bleibt leer (Länge 0).
+  Adapter und Pumpe liefern Fetzen (`normalize.ts:90-91`, `stream-pump.ts:86-95`), die PWA kann
+  wachsen (`ChatTurns.tsx:122-131`, Mitlauf-Effekt `SessionTail.tsx:1189-1190`). **Nächster
+  Schritt: zählen, welche WebSocket-Rahmen während eines laufenden Zugs im Browser ankommen.**
+  Achtung bei weiteren Messungen: eine Sitzung, die nicht in der Liste steht, bringt die App
+  stumm zurück auf die Übersicht — zwei Messläufe waren deshalb wertlos.
 
 
 ## 24.11.2026 — Nachschau über die eigenen Änderungen (PR #…)
