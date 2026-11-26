@@ -2,7 +2,7 @@ import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { mkdtempSync, rmSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadOrCreateTeamIdentity, spkiSha256Hex, type TeamTlsMaterial } from "@ancientvoid/core";
+import { loadOrCreateTeamIdentity, type TeamTlsMaterial } from "@ancientvoid/core";
 import { TeamPairingService } from "../../../src/modules/team/team-pairing-service.ts";
 
 /**
