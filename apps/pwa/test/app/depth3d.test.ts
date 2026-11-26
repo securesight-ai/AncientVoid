@@ -18,6 +18,7 @@ function fakeDom({ stored = null, ctxMotion = "on", reduced = false }: FakeOptio
   const storage = new Map<string, string>();
   if (stored !== null) storage.set(DEPTH3D_KEY, stored);
   const attrs = new Map<string, string>();
+  const classes = new Set<string>();
   const events: string[] = [];
   vi.stubGlobal("localStorage", {
     getItem: (key: string) => storage.get(key) ?? null,
@@ -29,14 +30,21 @@ function fakeDom({ stored = null, ctxMotion = "on", reduced = false }: FakeOptio
       dataset: { ctxMotion },
       getAttribute: (name: string) => attrs.get(name) ?? null,
       setAttribute: (name: string, value: string) => void attrs.set(name, value),
+      hasAttribute: (name: string) => attrs.has(name),
+      classList: {
+        add: (name: string) => void classes.add(name),
+        remove: (name: string) => void classes.delete(name),
+        contains: (name: string) => classes.has(name),
+      },
     },
   });
-  vi.stubGlobal("window", { dispatchEvent: (e: Event) => (events.push(e.type), true) });
+  // Kick-Räumtimer durchgereicht — unter vi.useFakeTimers greift hier der Fake.
+  vi.stubGlobal("window", { dispatchEvent: (e: Event) => (events.push(e.type), true), setTimeout, clearTimeout });
   vi.stubGlobal("matchMedia", () => ({ matches: reduced }));
-  return { attrs, events };
+  return { attrs, events, classes };
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 
 describe("depth3dOn / applyDepth3d (EPIC-P86, AC-P86-2)", () => {
   it("Standard ist an; „0“ ist aus; applyDepth3d setzt Attribut und Ereignis in beide Richtungen", () => {
@@ -67,6 +75,37 @@ describe("depth3dOn / applyDepth3d (EPIC-P86, AC-P86-2)", () => {
     expect(depth3dOn()).toBe(false);
     toggleDepth3d();
     expect(depth3dOn()).toBe(true);
+  });
+});
+
+describe("Kick — Sofort-Feedback beim Einschalten (Nutzerfund 26.11.2026: Toggle ohne sichtbare Reaktion)", () => {
+  it("Laufzeit-Wechsel auf an setzt die Kick-Klasse und räumt sie nach dem Puls ab; der Boot nicht", () => {
+    vi.useFakeTimers();
+    const dom = fakeDom();
+    applyDepth3d(true);
+    expect(dom.classes.has("depth3d-kick"), "Boot: kein Puls, nichts ist offen").toBe(false);
+
+    applyDepth3d(false);
+    expect(dom.classes.has("depth3d-kick"), "Ausschalten bleibt bewegungslos").toBe(false);
+
+    applyDepth3d(true);
+    expect(dom.classes.has("depth3d-kick"), "Laufzeit-Wechsel auf an pulst").toBe(true);
+    vi.advanceTimersByTime(1000);
+    expect(dom.classes.has("depth3d-kick"), "Puls ist einmalig").toBe(false);
+  });
+
+  it("ohne Bewegung (Kaskade) gibt es keinen Puls", () => {
+    const off = fakeDom({ ctxMotion: "off" });
+    applyDepth3d(true);
+    applyDepth3d(false);
+    applyDepth3d(true);
+    expect(off.classes.has("depth3d-kick")).toBe(false);
+
+    const reduced = fakeDom({ reduced: true });
+    applyDepth3d(true);
+    applyDepth3d(false);
+    applyDepth3d(true);
+    expect(reduced.classes.has("depth3d-kick")).toBe(false);
   });
 });
 

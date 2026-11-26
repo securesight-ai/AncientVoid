@@ -97,6 +97,13 @@ Ablage nach `app/ui-scale.ts`-Muster (`ancientvoid.ctxMotion`):
   Leisten-Taste: der Handy-Dock ist auf fünf 44-px-Ziele geeicht,
   dock-visibility.spec).
   Beide Flächen rufen dieselbe `toggleDepth3d()`.
+- Nutzerfund 26.11.2026 („Toggle zeigt keine Veränderung“): Die Flüge wirken
+  nur beim Öffnen einer Fläche — ein Wechsel auf bereits geöffneter Ansicht
+  (und an→aus generell) hatte keinerlei sichtbare Reaktion. Fix: Einschalten
+  **zur Laufzeit** (nicht beim Boot) pulst offene Flächen kurz heran
+  (`depth3d-kick`-Klasse für 900 ms, `depth3d-pulse` 240 ms in
+  61-depth3d.css) — gegated durch die Kaskade; Ausschalten bleibt
+  bewegungslos, Feedback dort ist der Schalterzustand selbst.
 
 ### 3.3 Fensterflug (Stufe 1)
 

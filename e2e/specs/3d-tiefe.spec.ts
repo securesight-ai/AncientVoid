@@ -38,6 +38,15 @@ test.describe("3D-Tiefe", () => {
     // Zurück auf an — auch das überlebt den Reload.
     await app.getByRole("button", { name: "Mehr", exact: true }).click();
     await app.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "3D-Tiefe" }).click();
+    // Nutzerfund 26.11.2026: ein Wechsel ohne sichtbare Reaktion wirkt wie
+    // ein toter Schalter — Einschalten pulst deshalb die offene Fläche
+    // kurz in der Tiefe (Kick, gesetzt von app/depth3d.ts).
+    const kick = await app.evaluate(() => ({
+      cls: document.documentElement.classList.contains("depth3d-kick"),
+      pulse: document.querySelector(".ui-sheet") ? getComputedStyle(document.querySelector(".ui-sheet")!).animationName : null,
+    }));
+    expect(kick.cls, "Kick-Klasse am Wurzelelement nach dem Einschalten").toBe(true);
+    expect(kick.pulse, "offenes Blatt pulst in der Tiefe").toBe("depth3d-pulse");
     await expect.poll(attr).toBe("on");
     await app.reload();
     await expect.poll(attr).toBe("on");

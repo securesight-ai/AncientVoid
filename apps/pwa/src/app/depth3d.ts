@@ -18,6 +18,11 @@ export const DEPTH3D_KEY = "ancientvoid.depth3d";
 /** Feuert nach jeder Änderung (Detail: neuer eigener Schalterzustand). */
 export const DEPTH3D_EVENT = "ancientvoid:depth3d";
 
+/** Klasse am Wurzelelement, solange der Einschalt-Puls läuft (61-depth3d.css). */
+const KICK_CLASS = "depth3d-kick";
+const KICK_MS = 900;
+let kickTimer: number | undefined;
+
 /** Der eigene Schalter — ohne die Bewegungs-Kaskade. */
 export function depth3dOn(): boolean {
   return localStorage.getItem(DEPTH3D_KEY) !== "0";
@@ -26,8 +31,21 @@ export function depth3dOn(): boolean {
 export function applyDepth3d(on: boolean): void {
   if (on) localStorage.removeItem(DEPTH3D_KEY);
   else localStorage.setItem(DEPTH3D_KEY, "0");
-  document.documentElement.setAttribute("data-ctx-3d", on ? "on" : "off");
+  const root = document.documentElement;
+  const boot = !root.hasAttribute("data-ctx-3d");
+  root.setAttribute("data-ctx-3d", on ? "on" : "off");
   window.dispatchEvent(new CustomEvent(DEPTH3D_EVENT, { detail: on }));
+  // Nutzerfund 26.11.2026: ein Wechsel ohne sichtbare Reaktion wirkt wie ein
+  // toter Schalter. Einschalten pulst deshalb offene Flächen kurz in der
+  // Tiefe — nur zur Laufzeit (nicht beim Boot) und nur, wenn die Kaskade
+  // Bewegung erlaubt. Ausschalten bleibt bewegungslos (3D aus bewegt nichts).
+  if (!boot && on && motionAllowed()) {
+    root.classList.remove(KICK_CLASS);
+    void root.offsetWidth; // Reflow, damit ein schneller Doppelklick neu pulst
+    root.classList.add(KICK_CLASS);
+    window.clearTimeout(kickTimer);
+    kickTimer = window.setTimeout(() => root.classList.remove(KICK_CLASS), KICK_MS);
+  }
 }
 
 export function toggleDepth3d(): void {
