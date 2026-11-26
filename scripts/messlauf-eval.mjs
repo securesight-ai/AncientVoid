@@ -16,7 +16,7 @@ import { extractRuns } from "./skill-runs.mjs";
 
 const { positionals: [mode], values: options } = parseArgs({
   allowPositionals: true,
-  options: Object.fromEntries([...["protocol", "series", "scratch", "first", "repeat", "report", "data", "out", "invalid", "invalid-reason"].map((key) => [key, { type: "string" }]), ["partial", { type: "boolean" }]]),
+  options: Object.fromEntries([...["protocol", "series", "scratch", "first", "repeat", "report", "data", "out", "invalid", "invalid-reason", "skip-provider"].map((key) => [key, { type: "string" }]), ["partial", { type: "boolean" }], ["resume", { type: "boolean" }]]),
 });
 const root = resolve(import.meta.dirname, "..");
 const required = (key) => {
@@ -43,7 +43,7 @@ async function main() {
     console.log("Usage: npm run messlauf:eval -- <plan|check|run|report|export|pilot-report> --protocol <file>\n" +
       "pilot-report: --series <name> --report docs/JJJJ-MM-TT_p84-pilotserie.md [--invalid-reason <text>]\n" +
       "export: --first <sessions.jsonl> --out <neuer Ordner im Benchmark-Repo> [--invalid <invalid.jsonl>] [--partial]\n" +
-      "run: --scratch <hub project root> --series <name>\n" +
+      "run: --scratch <hub project root> --series <name> [--resume] [--skip-provider <name,…>]\n" +
       "report: --first <sessions.jsonl> --repeat <sessions.jsonl> --data <hub data dir> --report <dated markdown path>");
     if (mode) process.exitCode = 2;
     return;
@@ -64,8 +64,10 @@ async function main() {
     if (!(await stat(scratch)).isDirectory() || scratch === root) throw new Error("Use a separate scratch project root");
     const series = required("series");
     if (!/^[a-z0-9][a-z0-9._-]{0,95}$/.test(series)) throw new Error("Invalid series name");
-    const receipts = await runSeries(api, root, scratch, series, plan);
-    console.log(`P84 ${series}: ${plan.jobs.length} results recorded in the hub. Session references: ${receipts}`);
+    const receipts = await runSeries(api, root, scratch, series, plan, {
+      resume: options.resume === true, skipProviders: options["skip-provider"]?.split(",") ?? [],
+    });
+    console.log(`P84 ${series}: run finished. Session references: ${receipts}`);
     return;
   }
   if (mode === "pilot-report") {

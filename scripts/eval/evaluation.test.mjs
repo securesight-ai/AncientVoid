@@ -10,7 +10,7 @@ import { evaluationTable } from "@ancientvoid/contracts";
 import { summariseSeries } from "@ancientvoid/core";
 import { expect, it, vi } from "vitest";
 import { readCorpus } from "./corpus.mjs";
-import { BudgetGuard, isInfrastructureFailure, planSeries, runJobs } from "./protocol.mjs";
+import { BudgetGuard, isInfrastructureFailure, jobKey, planSeries, resumeJobs, runJobs } from "./protocol.mjs";
 import { integrateEnergy } from "./energy.mjs";
 import { renderReport, summarise, validateSeries } from "./report.mjs";
 import { awaitHealthy, connectHub, preflight, runPhase } from "./hub.mjs";
@@ -240,4 +240,21 @@ it("makes every workspace its own clean git root, also inside a surrounding repo
   } finally {
     rmSync(outer, { recursive: true, force: true });
   }
+});
+
+it("resumes a series: skips recorded and aborted jobs and deferred providers, and keeps the spent budget", async () => {
+  const [done, aborted] = plan.jobs;
+  const rows = [{ key: jobKey(done), row: { input: { protocolHash: plan.protocolHash }, phases: [{ costUsd: 19.5 }, { costUsd: 19.5 }] } }];
+  const budget = new BudgetGuard(plan.config.providerBudgetUsd);
+  const open = resumeJobs(plan, { rows, aborted: [jobKey(aborted)], skipProviders: [], budget });
+  expect(open).toHaveLength(plan.jobs.length - 2);
+  expect(open.map(jobKey)).not.toContain(jobKey(done));
+  const cloudSides = [done.arm.plan, done.arm.build].filter((side) => side?.billing.kind === "cloud");
+  expect(budget.spent.fixture ?? 0).toBe(cloudSides.length * 19.5);
+  const localOnly = resumeJobs(plan, { rows: [], aborted: [], skipProviders: ["fixture"], budget: new BudgetGuard({ fixture: 20 }) });
+  expect(localOnly.length).toBeGreaterThan(0);
+  expect(localOnly.every((job) => [job.arm.plan, job.arm.build].every((side) => side?.provider !== "fixture"))).toBe(true);
+  const foreign = [{ key: jobKey(done), row: { input: { protocolHash: "f".repeat(64) }, phases: [] } }];
+  expect(() => resumeJobs(plan, { rows: foreign, aborted: [], skipProviders: [], budget })).toThrow(/different protocol/);
+  expect(() => resumeJobs(plan, { rows: [], aborted: [], skipProviders: ["tippfehler"], budget })).toThrow(/Unknown provider/);
 });

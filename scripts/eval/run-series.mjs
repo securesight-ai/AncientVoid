@@ -1,20 +1,23 @@
-import { appendFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { prepareWorkspace, carryPlan, judgeWorkspace } from "./workspace.mjs";
 import { awaitHealthy, preflight, probeHealth, runPhase } from "./hub.mjs";
-import { BudgetGuard, isInfrastructureFailure, jobKey, runJobs } from "./protocol.mjs";
+import { BudgetGuard, isInfrastructureFailure, jobKey, resumeJobs, runJobs } from "./protocol.mjs";
 
-export async function runSeries(api, root, scratch, series, plan) {
+const jsonLines = (path) => readFileSync(path, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line));
+
+export async function runSeries(api, root, scratch, series, plan, { resume = false, skipProviders = [] } = {}) {
   await preflight(api, plan.config);
   const destination = join(scratch, series);
-  mkdirSync(destination, { recursive: false, mode: 0o700 });
-  const receipts = join(destination, "sessions.jsonl");
-  writeFileSync(receipts, "", { flag: "wx", mode: 0o600 });
-  const invalid = join(destination, "invalid.jsonl");
-  writeFileSync(invalid, "", { flag: "wx", mode: 0o600 });
-  const aborted = join(destination, "aborted.jsonl");
-  writeFileSync(aborted, "", { flag: "wx", mode: 0o600 });
+  mkdirSync(destination, { recursive: resume, mode: 0o700 });
+  const [receipts, invalid, aborted] = ["sessions", "invalid", "aborted"].map((name) => join(destination, `${name}.jsonl`));
+  // Beim Fortsetzen müssen die Protokolldateien da sein (fail loud); sonst werden sie neu angelegt.
+  if (!resume) for (const path of [receipts, invalid, aborted]) writeFileSync(path, "", { flag: "wx", mode: 0o600 });
   const budget = new BudgetGuard(plan.config.providerBudgetUsd);
+  const rows = resume ? await Promise.all(jsonLines(receipts).map(async ({ key, sessionId }) =>
+    ({ key, row: await api(`/api/sessions/${sessionId}/evaluation`) }))) : [];
+  const jobs = resumeJobs(plan, { rows, aborted: resume ? jsonLines(aborted).map((entry) => entry.key) : [], skipProviders, budget });
+  console.log(`P84 ${series}: ${jobs.length} of ${plan.jobs.length} runs open${skipProviders.length ? `, deferred providers: ${skipProviders.join(", ")}` : ""}`);
   let infraStreak = 0;
   const attemptJob = async (job) => {
     const { arm } = job;
@@ -45,7 +48,7 @@ export async function runSeries(api, root, scratch, series, plan) {
       }
     }
   };
-  await runJobs(plan.jobs, plan.config.parallelCloudRuns, attemptJob);
+  await runJobs(jobs, plan.config.parallelCloudRuns, attemptJob);
   async function runAttempt(job, attempt) {
     const { arm, task, repetition } = job;
     const key = jobKey(job);
