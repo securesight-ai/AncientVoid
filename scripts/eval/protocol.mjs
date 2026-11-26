@@ -30,7 +30,9 @@ const cell = z.strictObject({
 const protocol = z.strictObject({
   version: z.literal(2),
   fixturePolicy: z.literal("isolated-hub"),
-  repetitions: z.number().int().min(3).max(50),
+  repetitions: z.number().int().min(2).max(50),
+  // Pilot: Teilkorpus. Ohne Angabe läuft der ganze Korpus.
+  tasks: z.array(name).min(1).optional(),
   timeoutMs: z.number().int().min(1000).max(3_600_000),
   parallelCloudRuns: z.number().int().min(1).max(20),
   maxInfraRetries: z.number().int().min(0).max(5).default(2),
@@ -81,10 +83,13 @@ export function planSeries(raw, corpus) {
     a.build.billing.kind === b.build.billing.kind))) {
     throw new Error("The matrix needs an identical model fingerprint across two harnesses");
   }
+  const known = new Set(corpus.tasks.map((task) => task.id));
+  for (const id of config.tasks ?? []) if (!known.has(id)) throw new Error(`Unknown task ${id} in protocol`);
+  const tasks = config.tasks ? corpus.tasks.filter((task) => config.tasks.includes(task.id)) : corpus.tasks;
   const jobs = [];
   for (let repetition = 1; repetition <= config.repetitions; repetition++) {
-    for (let index = 0; index < corpus.tasks.length; index++) {
-      const task = corpus.tasks[index];
+    for (let index = 0; index < tasks.length; index++) {
+      const task = tasks[index];
       const rotation = (repetition + index) % arms.length;
       for (const arm of [...arms.slice(rotation), ...arms.slice(0, rotation)]) {
         if (arm.group === "split" && !task.split) continue;

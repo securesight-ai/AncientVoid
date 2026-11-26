@@ -833,6 +833,23 @@ export abstract class SessionManagerRuntime {
     return readEvaluation(this.store, sessionId);
   }
 
+  /**
+   * P84: alle erfassten Auswertungen. Die Journale bleiben die Quelle (K7); der Speicher-Cache
+   * merkt sich nur, dass eine beendete Session keine Auswertung trägt, und fällt mit dem Prozess.
+   */
+  private readonly evaluationScan = new Map<string, EvalResult | null>();
+
+  async listEvaluations(): Promise<EvalResult[]> {
+    const stopped = this.list().filter((record) => record.status === "stopped");
+    const todo = stopped.filter((record) => !this.evaluationScan.has(record.id));
+    for (let index = 0; index < todo.length; index += 8) {
+      await Promise.all(todo.slice(index, index + 8).map(async (record) => {
+        this.evaluationScan.set(record.id, await readEvaluation(this.store, record.id));
+      }));
+    }
+    return stopped.flatMap((record) => this.evaluationScan.get(record.id) ?? []);
+  }
+
   async recordEvaluation(sessionId: string, input: EvalRunInput): Promise<EvalResult> {
     if (input.phases.at(-1)?.sessionId !== sessionId) throw new Error("Evaluation must be recorded on the build session");
     if (this.recordingEvaluations.has(sessionId)) throw new Error("Evaluation write in progress; retry");
@@ -856,6 +873,7 @@ export abstract class SessionManagerRuntime {
       if (!session || session.record.status !== "stopped") throw new Error("Evaluation build session is unavailable");
       const result = EvalResult.parse({ input, recordedAt: new Date().toISOString(), phases });
       await this.emitSystem(session, EVAL_COMPLETE_EVENT, { result });
+      this.evaluationScan.set(sessionId, result);
       await this.store.flush(sessionId);
       return result;
     } finally {

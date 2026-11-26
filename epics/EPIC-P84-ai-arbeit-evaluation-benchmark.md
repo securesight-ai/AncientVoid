@@ -4,6 +4,8 @@
 
 Tracker: [#427](https://github.com/securesight-ai/AncientVoid/issues/427) ·
 [Messlauf-Anleitung](../docs/evaluation-messlauf.md) ·
+[Pilotserie-Planung](../docs/p84-pilotserie-planung.md) ·
+[Serien-Vorlage](../docs/p84-serien-vorlage.md) ·
 [ADR-0126](../docs/adr/0126-evaluation-in-turn-metriken.md)
 
 ## 1. Ziel

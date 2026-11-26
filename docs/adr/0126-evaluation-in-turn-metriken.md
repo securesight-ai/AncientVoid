@@ -48,3 +48,13 @@ Ergänzung (gleicher Tag): Ereignisse, deren `usage.input` den Cache bereits ent
 die Erfassung addiert den Cache dann nicht noch einmal zur Eingabe. maki wird für
 die Messung über den Claude-Adapter im stream-json-Modus registriert, weil die
 ACP-Anbindung keine Richtungs-Tokens liefert.
+
+## Nachtrag 2026-11-26: Serienzusammenfassung
+
+Neuer Vertrag `EvalSeriesSummary`/`EvalSeriesList` und `evaluationTable`
+(`packages/contracts/src/runs/evaluation-summary.ts`): je Arm und Aufgabe
+Median, Mittel, Min–Max über die Rohwerte aus den Ergebnissen. Lesende Routen
+`GET /api/evaluation/series` und `/api/evaluation/series/:series`; der Hub
+liest die Journale gestoppter Sitzungen (`evaluation.completed`, K7) und hält
+nur einen Cache. PWA-Tab und Markdown-Report formatieren über dieselbe
+Funktion. Rein additiv, kein neuer Zustand.

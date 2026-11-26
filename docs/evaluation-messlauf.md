@@ -28,7 +28,8 @@ auf Benchmark-Arbeitskopien zugreifen. Anbieterzugänge werden im Prüfstand
 konfiguriert. `ANCIENTVOID_TOKEN` ist der menschliche Token dieses Hubs,
 `ANCIENTVOID_URL` sein Origin. Hintergrund-Inferenz, Projekt-Automationen
 und andere Last auf den Messhosts während der Serie pausieren. Die
-Arbeitskopien stammen aus Git-Archiven ohne erreichbaren Projektverlauf.
+Arbeitskopien stammen aus Git-Archiven ohne erreichbaren Projektverlauf und
+werden jeweils als eigenes Git-Repo mit einem Startcommit angelegt.
 
 Das Protokoll (Version 2) ist eine JSON-Datei mit einer Liste von **Zellen**
 (Harness × Modell). Jede Zelle nennt Harness, Adapter-Registrierung, CLI-Version,
@@ -140,7 +141,9 @@ exportieren und ist dann nie `messung_gueltig`. Der Hub-Datadir bleibt die Quell
 Die ACP-Anbindung von maki 0.6.5 meldet nur die Kontextfüllung, keine Richtungs-Tokens
 (`capabilities.usage=false`); die Session-Datei von maki bleibt bei null. Der Hub lehnt solche
 Läufe laut ab. Für die Messung läuft maki deshalb über den Claude-Adapter im
-stream-json-Modus (`maki -p --output-format stream-json` ist Claude-kompatibel):
+stream-json-Modus (`maki -p --output-format stream-json` ist Claude-kompatibel). Offen:
+maki fragt Werkzeug-Erlaubnisse als `control_request`, den der Claude-Adapter nicht
+beantwortet; mit Werkzeugen hängt der Zug in beiden `permissionPrompts`-Modi:
 
 ```json
 { "id": "maki-sdk", "module": "@ancientvoid/adapter-claude",
@@ -158,6 +161,8 @@ melden die Eingabe einschließlich Cache und markieren das mit `cacheIncluded`; 
 bleibt über `cacheInputTokens` sichtbar und wird zum Cache-Preis gerechnet. Bei Adaptern
 ohne Cache-Angabe (z. B. Cursor) weist der Report die Kosten als obere Schranke aus.
 
+- Serien: [Planung der Pilotserie](p84-pilotserie-planung.md), [Serien-Vorlage](p84-serien-vorlage.md); `pilot-report` schreibt den datierten Bericht aus der Hub-Zusammenfassung.
+
 ## Nachweise
 
 - [ADR-0126](adr/0126-evaluation-in-turn-metriken.md)
@@ -171,5 +176,7 @@ Gesundheitsantwort, Timeout bei toter Engine) zählen **nie** als Aufgabenfehler
 Der Runner protokolliert den Versuch in `invalid.jsonl` neben `sessions.jsonl`,
 wiederholt höchstens `maxInfraRetries`-mal (Versuchsnummer im Datensatz als
 `attempt`) und bricht nach drei Ausfällen in Folge laut ab. Ein Timeout bei
-lebender Engine ist ein Abbruch des Agenten und beendet die Serie ebenfalls laut;
-ein Aufzeichnungspfad für Abbrüche ist offen (EPIC-P84).
+lebender Engine oder eine offene Rückfrage ist ein Abbruch des Agenten: Er steht
+in `aborted.jsonl`, die Serie läuft weiter und ist partiell. Abbrüche fehlen in
+der Ergebnistabelle (Überlebenden-Verzerrung); der Report muss sie nennen.
+Vor jeder Serie muss jede Zelle einen Zug mit Werkzeugnutzung bestehen.

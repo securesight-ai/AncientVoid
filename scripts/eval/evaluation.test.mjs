@@ -3,6 +3,11 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { exportSeries } from "./export.mjs";
+import { renderPilotReport } from "./pilot-report.mjs";
+import { snapshotWorkspace } from "./workspace.mjs";
+import { execFileSync } from "node:child_process";
+import { evaluationTable } from "@ancientvoid/contracts";
+import { summariseSeries } from "@ancientvoid/core";
 import { expect, it, vi } from "vitest";
 import { readCorpus } from "./corpus.mjs";
 import { BudgetGuard, isInfrastructureFailure, planSeries, runJobs } from "./protocol.mjs";
@@ -192,5 +197,47 @@ it("exports a complete series immutably with a hash manifest and marks partial s
     expect(partial.manifest.grund_ungueltig).toMatch(/Incomplete/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+it("renders the pilot report from the same summary and table as the PWA tab", () => {
+  const summary = summariseSeries("pilot", measured("pilot"));
+  const meta = { date: "2026-11-26", commit: "fixture", runtime: "fixture", valid: true, invalidReason: "" };
+  const markdown = renderPilotReport(summary, plan, meta);
+  const table = evaluationTable(summary);
+  expect(summary.runs).toBe(840);
+  expect(markdown).toContain(`| ${table.columns.join(" | ")} |`);
+  for (const row of table.rows) expect(markdown).toContain(`| ${row.join(" | ")} |`);
+  expect(markdown).toContain("Pflichtangaben");
+  expect(markdown).toContain("Was das nicht sagt");
+  expect(markdown).toContain("```csv");
+  expect(() => renderPilotReport({ ...summary, consistent: false }, plan, meta)).toThrow(/mixes/);
+  expect(() => renderPilotReport({ ...summary, protocolHashes: ["f".repeat(64)] }, plan, meta)).toThrow(/different corpus or protocol/);
+  expect(renderPilotReport(summary, plan, { ...meta, valid: false, invalidReason: "Engine ausgefallen" })).toContain("**ungültig** — Engine ausgefallen");
+});
+
+it("limits a pilot protocol to a task subset and rejects unknown task ids", () => {
+  const ids = readCorpus().tasks.slice(0, 2).map((task) => task.id);
+  const pilot = planSeries({ ...testProtocol, repetitions: 2, tasks: ids }, readCorpus());
+  expect(new Set(pilot.jobs.map((job) => job.task.id))).toEqual(new Set(ids));
+  expect(pilot.jobs.length).toBeLessThan(plan.jobs.length / 5);
+  expect(() => planSeries({ ...testProtocol, tasks: ["gibt-es-nicht"] }, readCorpus())).toThrow(/Unknown task/);
+});
+
+it("makes every workspace its own clean git root, also inside a surrounding repository", async () => {
+  const outer = mkdtempSync(join(tmpdir(), "p84-outer-"));
+  try {
+    execFileSync("git", ["init", "-q"], { cwd: outer });
+    const inner = mkdtempSync(join(outer, "work-"));
+    writeFileSync(join(inner, "a.txt"), "a");
+    const git = (...args) => execFileSync("git", args, { cwd: inner, encoding: "utf8" }).trim();
+    await snapshotWorkspace(inner);
+    expect(git("rev-parse", "--show-toplevel").endsWith(inner.slice(outer.length))).toBe(true);
+    writeFileSync(join(inner, "PLAN.md"), "plan");
+    await snapshotWorkspace(inner);
+    expect(git("status", "--porcelain")).toBe("");
+    expect(git("log", "--format=%an %s")).toBe("bench start\nbench start");
+  } finally {
+    rmSync(outer, { recursive: true, force: true });
   }
 });

@@ -89,6 +89,17 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
       expect(hub.sessions.turnMetrics(id)).toEqual([]);
       expect((await hub.app.inject({ method: "GET", url, headers })).json()).toEqual(record);
     }
+    // P84: dieselbe Zusammenfassung für PWA und Report — nach dem Neustart aus den Journalen (K7).
+    const listed = (await hub.app.inject({ method: "GET", url: "/api/evaluation/series", headers })).json();
+    expect(listed.series).toEqual([{ series: "fixture", runs: 20, lastRecordedAt: expect.any(String) }]);
+    const summary = (await hub.app.inject({ method: "GET", url: "/api/evaluation/series/fixture", headers })).json();
+    expect(summary).toMatchObject({ series: "fixture", runs: 20, consistent: true });
+    expect(summary.rows.map((row: { task: string }) => row.task)).toEqual(["task", "gesamt"]);
+    const total = summary.rows.find((row: { task: string }) => row.task === "gesamt");
+    expect(total.n).toBe(20);
+    expect(total.metrics.cacheTokens.median).toBe(200);
+    expect(total.metrics.energyKwh).toMatchObject({ min: 0, max: 0.01 });
+    expect((await hub.app.inject({ method: "GET", url: "/api/evaluation/series/unbekannt", headers })).statusCode).toBe(404);
   } finally {
     await hub.app.close();
     hub.db.close();

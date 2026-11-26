@@ -7,6 +7,7 @@ import { de as common } from "./de/common.ts";
 import { de as features } from "./de/features.ts";
 import { de as inference } from "./de/inference.ts";
 import { de as hosts } from "./de/hosts.ts";
+import { de as evaluation } from "./de/evaluation.ts";
 import { de as pentest } from "./de/pentest.ts";
 
 export const de = {
@@ -16,6 +17,7 @@ export const de = {
   ...features,
   ...inference,
   ...hosts,
+  ...evaluation,
   ...pentest,
 
   "settings.language.title": "Sprache",

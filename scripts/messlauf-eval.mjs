@@ -11,11 +11,12 @@ import { planSeries } from "./eval/protocol.mjs";
 import { runSeries } from "./eval/run-series.mjs";
 import { renderReport } from "./eval/report.mjs";
 import { exportSeries } from "./eval/export.mjs";
+import { renderPilotReport } from "./eval/pilot-report.mjs";
 import { extractRuns } from "./skill-runs.mjs";
 
 const { positionals: [mode], values: options } = parseArgs({
   allowPositionals: true,
-  options: Object.fromEntries([...["protocol", "series", "scratch", "first", "repeat", "report", "data", "out", "invalid"].map((key) => [key, { type: "string" }]), ["partial", { type: "boolean" }]]),
+  options: Object.fromEntries([...["protocol", "series", "scratch", "first", "repeat", "report", "data", "out", "invalid", "invalid-reason"].map((key) => [key, { type: "string" }]), ["partial", { type: "boolean" }]]),
 });
 const root = resolve(import.meta.dirname, "..");
 const required = (key) => {
@@ -38,8 +39,9 @@ async function readSeries(api, path) {
 }
 
 async function main() {
-  if (!["plan", "check", "run", "report", "export"].includes(mode)) {
-    console.log("Usage: npm run messlauf:eval -- <plan|check|run|report|export> --protocol <file>\n" +
+  if (!["plan", "check", "run", "report", "export", "pilot-report"].includes(mode)) {
+    console.log("Usage: npm run messlauf:eval -- <plan|check|run|report|export|pilot-report> --protocol <file>\n" +
+      "pilot-report: --series <name> --report docs/JJJJ-MM-TT_p84-pilotserie.md [--invalid-reason <text>]\n" +
       "export: --first <sessions.jsonl> --out <neuer Ordner im Benchmark-Repo> [--invalid <invalid.jsonl>] [--partial]\n" +
       "run: --scratch <hub project root> --series <name>\n" +
       "report: --first <sessions.jsonl> --repeat <sessions.jsonl> --data <hub data dir> --report <dated markdown path>");
@@ -64,6 +66,19 @@ async function main() {
     if (!/^[a-z0-9][a-z0-9._-]{0,95}$/.test(series)) throw new Error("Invalid series name");
     const receipts = await runSeries(api, root, scratch, series, plan);
     console.log(`P84 ${series}: ${plan.jobs.length} results recorded in the hub. Session references: ${receipts}`);
+    return;
+  }
+  if (mode === "pilot-report") {
+    const destination = required("report");
+    const date = /(?:^|\/)(\d{4}-\d{2}-\d{2})_p84-[a-z0-9-]+\.md$/.exec(destination)?.[1];
+    if (!date) throw new Error("Use docs/JJJJ-MM-TT_p84-<name>.md");
+    const { stdout: sha } = await promisify(execFile)("git", ["rev-parse", "--short", "HEAD"], { cwd: root });
+    const markdown = renderPilotReport(await api(`/api/evaluation/series/${encodeURIComponent(required("series"))}`), plan, {
+      date, commit: sha.trim(), runtime: `${hostname()} / ${platform()} / Node ${process.version}`,
+      valid: !options["invalid-reason"], invalidReason: options["invalid-reason"] ?? "",
+    });
+    writeFileSync(destination, markdown, { flag: "wx" });
+    console.log(`P84 pilot report ${destination}`);
     return;
   }
   if (mode === "export") {

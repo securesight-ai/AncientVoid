@@ -36,7 +36,7 @@ Regeln:
 | page:vault | Notes vault with folder picker | `#/notizen` | vault |
 | page:swarms | Agent swarms: plan, dispatch, gates, deliveries | `#/swarms` | swarm |
 | page:automationen | Automations: schedules and run history | `#/automationen` | automations |
-| page:statistics | One analysis page with tabs: session/turn/gate/tool statistics, host monitoring, AI server metrics, inference token tempo | `#/statistik` (+`/hosts`, `/hosts/<id>`, `/metriken`, `/inferenz`) | statistik |
+| page:statistics | One analysis page with tabs: session/turn/gate/tool statistics, host monitoring, AI server metrics, inference token tempo, evaluation series | `#/statistik` (+`/hosts`, `/hosts/<id>`, `/metriken`, `/inferenz`, `/evaluation`) | statistik |
 | page:terminal | Allowlisted SSH/local shell in the PWA | `#/terminal` | terminal |
 | page:releasenotes | Release notes: merged PRs with what changed and why | `#/releasenotes` | release-notes |
 | page:pentest | Pentest page: scan allowlisted targets through the attached pentest backend; profiles, findings, hub job history | `#/pentest` | pentest-seite |
@@ -73,6 +73,7 @@ Regeln:
 | feature:desktop | Desktop workspace and companion surface | desktop |
 | feature:devices | Device pairing and token management | auth |
 | feature:discovery | Discovered sessions: preview and takeover | discovery |
+| feature:evaluation | Evaluation series: raw values per arm and task as median, mean and range (EPIC-P84) | evaluation |
 | feature:files | File viewers and language diagnostics | file-viewers |
 | feature:fleet | Multi-host fleet views and steering | fleet |
 | feature:forge | Forge context: issues, reviews, CI | forge-review |

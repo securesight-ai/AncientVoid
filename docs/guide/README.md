@@ -294,6 +294,10 @@ Device pairing and token management — see [view:devices](#viewdevices--devices
 Sessions found on disk (claude, codex, opencode, pi, …): preview, take over
 without a prompt or as a copy; "runs elsewhere" is shown. Spec: [discovery.spec.ts](../../e2e/specs/discovery.spec.ts)
 
+### feature:evaluation
+
+Evaluation series on the Statistics page (`#/statistik/evaluation`), same table as the Markdown report. Spec: [evaluation.spec.ts](../../e2e/specs/evaluation.spec.ts)
+
 ### feature:files
 
 File viewers and diagnostics — see [layer:files](#layerfiles--files). Spec: [file-viewers.spec.ts](../../e2e/specs/file-viewers.spec.ts)

@@ -187,7 +187,7 @@ function Main() {
       .catch(() => setSelfHostId(null));
   };
   const [route, setRoute] = useState<
-    { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "hosts" | "metriken" | "inferenz" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string; seq?: number }
+    { view: "list"; page: Page; vaultFile?: string; vaultTab?: "wissen"; statTab?: "hosts" | "metriken" | "inferenz" | "evaluation" } | { view: "tail"; session: SessionRecord; code?: CodeTarget; tab?: TailTab; file?: string; seq?: number }
   >({ view: "list", page: "dashboard" });
 
   // Ein Anhang-Deep-Link (`#/anhang/<id>` oder `…/sessions/<id>/anhang/<id>`) liegt UEBER
