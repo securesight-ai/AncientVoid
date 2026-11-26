@@ -19,6 +19,22 @@ auf fix/nightly-e2e-runner; danach Nightly neu anstoßen — grün schließt #40
 
 ## 24.11.2026 Vormittag — Zurück-Knopf im Browser und hängende Sitzungsliste
 
+**Nachtrag — Eigenkritik an #443, korrigiert in PR #444 (`d15059fb`, live).** Die Regel in
+#443 lautete „Inhalt der fokussierten Kachel geändert → Vorwärtsschritt". Das war zu weit:
+ein reiner Fokus-Wechsel (Alt+1/2/3, Klick auf eine andere offene Karte) ändert genau diesen
+Inhalt — jede Fokus-Bewegung hätte einen Historie-Eintrag hinterlassen. Jetzt entscheidet die
+reine Funktion `warVorwaertsSchritt()` in
+`apps/pwa/src/features/workspace/content.ts`: nur was in **keiner** offenen Kachel steckt, ist
+ein Schritt; Fokus-Sprung und Kachel-Schließen bleiben `replaceState`.
+*Tests:* `test/features/workspace/content.test.ts` fünf Fälle (neue Sitzung = Schritt; Fokus
+auf offene Kachel = kein Schritt; Verlauf teilt die Sitzungs-Adresse = kein Schritt, Graph mit
+eigener Adresse = Schritt; Kachel schließen = kein Schritt; Alt+1/2/3-Serie = kein Schritt),
+`test/features/workspace` + `test/app` 11 Dateien grün, Typecheck leer.
+*Browser, ausgelieferter Stand `d15059fb`:* Desktop 1280 px — Sitzung öffnen 2→3, dieselbe
+Sitzung erneut 3, **Alt+2 (Fokus) bleibt 3**, andere Sitzung öffnen 3→4. Handy 430×900 —
+Übersicht (7 Zeilen, kein Ladeköder) → Sitzung A (+1) → zurück (`#/`, 7 Zeilen) → Sitzung B
+(kein zusätzlicher Eintrag) → zurück (`#/`, 7 Zeilen).
+
 **Fund (Nutzer, Handy):** „Die Zurück-Taste funktioniert hier gar nicht, ich muss die App
 schließen und komplett neu öffnen.“
 
