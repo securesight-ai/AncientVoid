@@ -553,20 +553,27 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       .then((prompt) => state.conn.request("session/prompt", { sessionId: state.acpSessionId, prompt }))
       .then((res) => {
         if (state.turnSeq !== seq) return;
-        const r = res as { stopReason?: string; usage?: { totalTokens?: number; inputTokens?: number; outputTokens?: number } | null };
+        const r = res as { stopReason?: string; usage?: { totalTokens?: number; inputTokens?: number; outputTokens?: number; thoughtTokens?: number; cachedReadTokens?: number; cachedWriteTokens?: number } | null };
         emitAll(ctx, state.mapper.flush());
         // ADR-0032: input is the context fill; tokens fall back to
         // input+output when the agent names no total.
         const inTok = typeof r.usage?.inputTokens === "number" ? r.usage.inputTokens : undefined;
         const outTok = typeof r.usage?.outputTokens === "number" ? r.usage.outputTokens : undefined;
         const total = typeof r.usage?.totalTokens === "number" ? r.usage.totalTokens : inTok !== undefined && outTok !== undefined ? inTok + outTok : undefined;
+        // EPIC-P84 (live: opencode 2.4, omp 19.2): inputTokens ist nur die frische Eingabe, Cache steht
+        // daneben. Denk-Token zählen zur Ausgabe, wenn die Gesamtsumme sie belegt separat führt.
+        const cached = (r.usage?.cachedReadTokens ?? 0) + (r.usage?.cachedWriteTokens ?? 0);
+        const thought = r.usage?.thoughtTokens ?? 0;
+        const separateThought = inTok !== undefined && outTok !== undefined && total !== undefined && total >= inTok + outTok + thought + cached;
+        const output = outTok !== undefined && separateThought ? outTok + thought : outTok;
         ctx.emit({
           type: "system",
           summary: `${label}: Zug beendet (${r.stopReason ?? "?"})`,
           payload: {
             kind: "acp.turn_end",
             stopReason: r.stopReason ?? null,
-            ...(inTok !== undefined || outTok !== undefined ? { usage: { ...(inTok !== undefined ? { input: inTok } : {}), ...(outTok !== undefined ? { output: outTok } : {}) } } : {}),
+            ...(inTok !== undefined || output !== undefined ? { usage: { ...(inTok !== undefined ? { input: inTok } : {}), ...(output !== undefined ? { output } : {}) } } : {}),
+            ...(cached > 0 ? { cacheInputTokens: cached } : {}),
           },
           ...(total !== undefined ? { tokensEst: total } : {}),
         });

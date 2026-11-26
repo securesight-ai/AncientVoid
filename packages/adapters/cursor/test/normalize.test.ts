@@ -31,7 +31,11 @@ describe("normalizeCursorLine — echte cursor-agent-Formen (live 2026-09-29)", 
     const [e] = line({ type: "result", subtype: "success", usage: { inputTokens: 15694, outputTokens: 28, cacheReadTokens: 2688 }, result: "cursor ok" });
     expect(e?.tokensEst).toBe(15722);
     expect(e?.costUsd).toBeUndefined();
-    expect(e?.payload).toMatchObject({ usage: { input: 15694, output: 28 } });
+    expect(e?.payload).toMatchObject({ usage: { input: 15694, output: 28 }, cacheInputTokens: 2688 });
+    // EPIC-P84 (live 2026-11-26): inputTokens enthält den Cache nicht; Denken steckt schon in outputTokens.
+    expect(e?.payload).not.toHaveProperty("cacheIncluded");
+    const [ohne] = line({ type: "result", subtype: "success", usage: { inputTokens: 10, outputTokens: 5 } });
+    expect(ohne?.payload).not.toHaveProperty("cacheInputTokens");
     const [withCost] = line({ type: "result", subtype: "success", total_cost_usd: 0.01, usage: { input_tokens: 10, output_tokens: 5 } });
     expect(withCost?.costUsd).toBeCloseTo(0.01, 5);
     expect(withCost?.tokensEst).toBe(15);

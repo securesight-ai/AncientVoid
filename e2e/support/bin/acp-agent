@@ -16,6 +16,8 @@
 //             out live (BUG-0033), not only at the turn's end
 //   OHNE_TOTAL usage without totalTokens: tokens come from input+output
 //             (ADR-0032)
+//   MIT_CACHE usage as opencode/omp report it: cache and thought tokens
+//             separate from input and output (EPIC-P84)
 //   FRAGE     an `elicitation/create` form (T21.4): a single choice, a multi choice, a yes/no and a number;
 //             the answer is echoed back as JSON in the reply
 //   FEHLER    the prompt fails with a rate-limit error
@@ -111,6 +113,10 @@ async function prompt(id, { sessionId, prompt: blocks }) {
     for (const part of [reply.slice(10, 25), reply.slice(25)]) update(sessionId, { sessionUpdate: "agent_message_chunk", content: { type: "text", text: part } });
     send({ id, result: { stopReason: "end_turn", usage: { totalTokens: 42, inputTokens: 30, outputTokens: 12 } } });
     return;
+  }
+  if (text.includes("MIT_CACHE")) {
+    for (const part of [reply.slice(0, 10), reply.slice(10, 25), reply.slice(25)]) update(sessionId, { sessionUpdate: "agent_message_chunk", content: { type: "text", text: part } });
+    return send({ id, result: { stopReason: "end_turn", usage: { totalTokens: 100, inputTokens: 30, outputTokens: 12, thoughtTokens: 8, cachedReadTokens: 45, cachedWriteTokens: 5 } } });
   }
   if (text.includes("OHNE_TOTAL")) {
     for (const part of [reply.slice(0, 10), reply.slice(10, 25), reply.slice(25)]) update(sessionId, { sessionUpdate: "agent_message_chunk", content: { type: "text", text: part } });

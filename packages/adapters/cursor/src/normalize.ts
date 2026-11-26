@@ -18,7 +18,7 @@ export interface CursorLine {
   result?: unknown;
   is_error?: unknown;
   total_cost_usd?: unknown;
-  usage?: { input_tokens?: unknown; output_tokens?: unknown; inputTokens?: unknown; outputTokens?: unknown } | null;
+  usage?: { input_tokens?: unknown; output_tokens?: unknown; inputTokens?: unknown; outputTokens?: unknown; cacheReadTokens?: unknown; cacheWriteTokens?: unknown } | null;
   cwd?: unknown;
   tools?: unknown;
   /** BUG-0202: stream-json tool lifecycle (`started`/`completed`). */
@@ -117,6 +117,8 @@ export function normalizeCursorLine(line: CursorLine, state: { thinking: string 
     const usage = line.usage ?? null;
     const input = typeof usage?.inputTokens === "number" ? usage.inputTokens : typeof usage?.input_tokens === "number" ? usage.input_tokens : undefined;
     const output = typeof usage?.outputTokens === "number" ? usage.outputTokens : typeof usage?.output_tokens === "number" ? usage.output_tokens : undefined;
+    // EPIC-P84: der Cache steht neben inputTokens, nicht darin.
+    const cached = [usage?.cacheReadTokens, usage?.cacheWriteTokens].reduce<number>((sum, value) => sum + (typeof value === "number" ? value : 0), 0);
     const cost = typeof line.total_cost_usd === "number" ? line.total_cost_usd : undefined;
     const tokens = input !== undefined && output !== undefined ? input + output : undefined;
     out.push({
@@ -127,6 +129,7 @@ export function normalizeCursorLine(line: CursorLine, state: { thinking: string 
         isError: line.is_error === true,
         result: typeof line.result === "string" ? line.result.slice(0, 500) : undefined,
         ...(input !== undefined || output !== undefined ? { usage: { ...(input !== undefined ? { input } : {}), ...(output !== undefined ? { output } : {}) } } : {}),
+        ...(cached > 0 ? { cacheInputTokens: cached } : {}),
       },
       ...(cost !== undefined ? { costUsd: cost } : {}),
       ...(tokens !== undefined ? { tokensEst: tokens } : {}),

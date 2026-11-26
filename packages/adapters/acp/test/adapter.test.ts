@@ -337,6 +337,18 @@ describe("acp adapter (T7.2)", () => {
     expect((turnEnd?.payload as { usage?: { input?: number; output?: number } }).usage).toMatchObject({ input: 10, output: 5 });
   });
 
+  it("EPIC-P84: Cache- und Denk-Token, die der Agent getrennt meldet, gehen nicht verloren", async () => {
+    const turns: string[] = [];
+    const ctx = context({ turns });
+    await createAdapter({ command: [agent], label: "fake" }).start({ adapter: "acp", project: process.cwd(), prompt: "MIT_CACHE" }, ctx);
+    await waitFor(() => turns.includes("idle"));
+    const turnEnd = ctx.events.find((e) => (e.payload as { kind?: string }).kind === "acp.turn_end");
+    // Eingabe bleibt der frische Anteil (wie Claude: ohne cacheIncluded), Denken zählt als Ausgabe.
+    expect(turnEnd?.payload).toMatchObject({ usage: { input: 30, output: 20 }, cacheInputTokens: 50 });
+    expect(turnEnd?.payload).not.toHaveProperty("cacheIncluded");
+    expect(turnEnd?.tokensEst).toBe(100);
+  });
+
   it("models(): a listing command feeds the start form's dropdown; derived for `… acp` agents, explicit via modelsCommand", async () => {
     const list = ["zai-coding-plan/glm-5.3", "opencode/claude-fable-5", "opencode/gpt-6-astra", "", "kein modell"];
     const script = `process.stdout.write(${JSON.stringify(list.join("\n"))})`;
