@@ -1,0 +1,62 @@
+/* EPIC-P86 T86.3: die Tiefenebene — Blätter, Modals und Seitenfenster fliegen
+ * beim Öffnen ein Stück auf den Betrachter zu. CSS-3D (perspective +
+ * translateZ), bewusst ohne three.js; Vorbild ist die securesight-Keynote
+ * (Hybrid: scharfes HTML vorne, Tiefe dahinter), nicht ihr Umfang.
+ *
+ * Regeln wie 36-motion.css: nur transform und opacity (K2), lauter
+ * Einmal-Animationen — jede dieser Flächen mountet erst im geöffneten
+ * Zustand, der Flug läuft also genau einmal pro Öffnen. Kaskade
+ * (app/depth3d.ts): prefers-reduced-motion und der Bewegungsschalter
+ * schalten auch diese Ebene ab; data-ctx-3d="off" ist der eigene Schalter. */
+
+:root {
+  --depth3d-dist: 1100px;
+  --depth3d-time: 300ms;
+}
+
+/* Blatt von unten: Sheet-Baustein (Mehr, Skills, Nyx) und Dateibaum-Drawer. */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet:not(.ui-sheet--modal),
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer {
+  animation: depth3d-rise var(--depth3d-time) var(--ease-out) 1;
+}
+
+/* Zentrierte Fenster: Grundstellung translate(-50%,-50%) steht in jedem
+ * Schritt, damit sie danach exakt auf ihrem Platz ruht. command-card ist
+ * die eingebettete Variante in der Kachel — kein Fenster, kein Flug. */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet--modal,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-sheet:not(.command-card) {
+  animation: depth3d-approach var(--depth3d-time) var(--ease-out) 1;
+}
+
+/* Seitenfenster von rechts: Browser-Arbeitsplatz und Geräte. */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel {
+  animation: depth3d-side var(--depth3d-time) var(--ease-out) 1;
+}
+
+@keyframes depth3d-rise {
+  from { transform: perspective(var(--depth3d-dist)) translateZ(-180px) translateY(4%); opacity: 0; }
+  55% { opacity: 1; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes depth3d-approach {
+  from { transform: translate(-50%, -50%) perspective(var(--depth3d-dist)) translateZ(-160px) scale(0.965); opacity: 0; }
+  55% { opacity: 1; }
+  to { transform: translate(-50%, -50%); opacity: 1; }
+}
+
+@keyframes depth3d-side {
+  from { transform: perspective(var(--depth3d-dist)) translateZ(-150px) translateX(5%); opacity: 0; }
+  55% { opacity: 1; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Systemvorgabe schlägt jeden Schalter (Kaskade §3.2 des Epics). */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-sheet:not(.command-card),
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel {
+    animation: none;
+  }
+}
