@@ -186,9 +186,16 @@ Ablage nach `app/ui-scale.ts`-Muster (`ancientvoid.ctxMotion`):
 - [ ] **T86.4 — Mikro-Tiefe + K2-Referenzmessung:** Press-/Hover-Lift,
   Working-Punkt-Puls in Tiefe; Frame-Budget-Messung Session-Tail
   (K2-Vergleich vorher/nachher, dokumentiert im Task-PR). Angefangen
-  (Nutzerwunsch 26.11.2026): die **fokussierte Kachel** hebt sich räumlich ab
-  und ihr Rand glüht im Puls (`depth3d-focus-glow`, 2.4 s Schleife, an
-  61-depth3d.css gegated) — Rest (Karten-Lift, K2-Messung) offen.
+  (Nutzerwunsch 26.11.2026): der Rand der **fokussierten Kachel** glüht im
+  Puls (`depth3d-focus-glow`, 2.4 s Schleife) — die **Farbe folgt dem
+  Zustand** der Session (Akzent = arbeitet, `--call` = Frage/Freigabe/fertig,
+  `--err` = Fehler, `--fg-dim` ohne Puls = still), gelesen über den
+  StatusDot im Titelabschnitt (`:has`, T86.7). Nutzerfund 26.11.2026: der
+  erste Ansatz hob die Kachel per `translateZ` — das machte den Text unscharf
+  (Dauer-Skalierung); Transform auf Textflächen ist seither verboten,
+  Unschärfe gehört allein zu offenen Fenstern (`transform: none` ist als
+  Regressionstest in `workspace-tiles.spec.ts` verankert). Rest
+  (Karten-Lift, K2-Messung) offen.
 - [x] **T86.7 — Layout-Orientierung (Nutzerwunsch 26.11.2026):**
   (a) Übersichtskarte zeigt links unten die **Kachel-Nummer** (`.card-tile-no`
   = `.tile-no` des Fensters, Schlüssel wie `tileRefOf`; main.tsx → App →

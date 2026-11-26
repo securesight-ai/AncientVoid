@@ -70,12 +70,37 @@
   animation: depth3d-side var(--depth3d-time) var(--ease-out) 1;
 }
 
-/* ── Fokussierte Kachel (Nutzerwunsch 26.11.2026, T86.4): hebt sich räumlich
- *    ab und ihr Rand glüht im Puls — „dieses Fenster ist aktiv“. Die ruhige
- *    Kante aus 02-layout.css (.tile.focused) bleibt darunter erhalten. ── */
+/* ── Fokussierte Kachel (Nutzerwunsch 26.11.2026, T86.4): ihr Rand glüht im
+ *    Puls und sagt „dieses Fenster ist aktiv“ — die Farbe folgt dem Zustand
+ *    der Session in der Kachel (StatusDot im Titelabschnitt, T86.7):
+ *    Akzent = arbeitet (Normalfall), Ruf-Farbe = Frage/Freigabe/fertig,
+ *    Fehler-Farbe = Fehler, stille Session = ruhige Kante ohne Puls.
+ *    Nutzerfund 26.11.2026: KEIN Transform auf der Kachel — der Text wurde
+ *    unscharf (Dauer-Skalierung); Unschärfe gehört allein zu offenen
+ *    Fenstern, wo der Hintergrund weicht. ── */
 :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused {
-  transform: perspective(var(--depth3d-dist)) translateZ(12px);
+  --depth3d-glow: var(--accent);
+  border-color: color-mix(in srgb, var(--depth3d-glow) 60%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--depth3d-glow) 25%, transparent),
+    0 0 18px 4px color-mix(in srgb, var(--depth3d-glow) 18%, transparent);
   animation: depth3d-focus-glow 2.4s ease-in-out infinite;
+}
+
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused:has(.session-top-titlerow .status[data-display="approval"]),
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused:has(.session-top-titlerow .status[data-display="question"]),
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused:has(.session-top-titlerow .status[data-display="done"]) {
+  --depth3d-glow: var(--call);
+}
+
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused:has(.session-top-titlerow .status[data-display="error"]) {
+  --depth3d-glow: var(--err);
+}
+
+/* Stille Kachel: Kante in Rahmengrau, kein Puls — nichts zu melden. */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused:has(.session-top-titlerow .status[data-display="quiet"]) {
+  --depth3d-glow: var(--fg-dim);
+  animation: none;
 }
 
 /* ── Sofort-Feedback (Nutzerfund 26.11.2026): Einschalten pulst offene
@@ -119,13 +144,13 @@
 @keyframes depth3d-focus-glow {
   0%, 100% {
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
-      0 0 16px 4px color-mix(in srgb, var(--accent) 15%, transparent);
+      0 0 0 1px color-mix(in srgb, var(--depth3d-glow) 25%, transparent),
+      0 0 18px 4px color-mix(in srgb, var(--depth3d-glow) 18%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent),
-      0 0 30px 8px color-mix(in srgb, var(--accent) 38%, transparent);
+      0 0 0 1px color-mix(in srgb, var(--depth3d-glow) 55%, transparent),
+      0 0 34px 8px color-mix(in srgb, var(--depth3d-glow) 38%, transparent);
   }
 }
 
