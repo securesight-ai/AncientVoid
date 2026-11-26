@@ -141,6 +141,9 @@ describe("codex app-server mode (T7.2)", () => {
     expect(ctx.events.find((e) => e.type === "thinking")?.payload).toMatchObject({ text: "Kurz überlegt." });
     expect(ctx.events.find((e) => (e.payload as { name?: string }).name === "todowrite")).toBeTruthy();
     expect(ctx.events.find((e) => (e.payload as { kind?: string }).kind === "codex.token_usage")?.tokensEst).toBe(120);
+    // P84: Codex meldet die Eingabe samt Cache; der Cache bleibt getrennt sichtbar und ist als enthalten markiert.
+    expect(ctx.events.find((e) => (e.payload as { kind?: string }).kind === "codex.token_usage")?.payload)
+      .toMatchObject({ usage: { input: 100, output: 20 }, cacheInputTokens: 40, cacheIncluded: true });
     const quota = ctx.events.find((e) => e.usageQuota)?.usageQuota;
     expect(quota?.windows.map((w) => [w.id, w.utilization])).toEqual([["five_hour", 0.12], ["seven_day", 0.4]]);
   });

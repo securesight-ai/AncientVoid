@@ -74,6 +74,8 @@ describe("pi usage (ADR-0032)", () => {
       { input: 1110, output: 22 },
     ]);
     expect(usage.map((e) => e.tokensEst)).toEqual([1092, 1132]);
+    // P84: der Cache bleibt getrennt sichtbar, damit die Kosten nicht zum Eingabepreis verfälscht werden.
+    expect(usage.map((e) => [e.payload.cacheInputTokens, e.payload.cacheIncluded])).toEqual([[undefined, undefined], [1057, true]]);
   });
 
   it("ohne usage kein Token-Event (nichts geraten)", () => {

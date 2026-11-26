@@ -126,6 +126,7 @@ export function createAppServerAdapter(cfg: AppServerConfig): Adapter {
                   ...(typeof last.inputTokens === "number" || typeof last.outputTokens === "number"
                     ? { usage: { ...(typeof last.inputTokens === "number" ? { input: last.inputTokens } : {}), ...(typeof last.outputTokens === "number" ? { output: last.outputTokens } : {}) } }
                     : {}),
+                  ...(typeof last.cachedInputTokens === "number" && last.cachedInputTokens > 0 ? { cacheInputTokens: last.cachedInputTokens, cacheIncluded: true } : {}),
                 },
                 ...(typeof last.totalTokens === "number" ? { tokensEst: last.totalTokens } : {}),
                 ...(cost !== undefined ? { costUsd: cost, costSource: "estimated" as const } : {}),

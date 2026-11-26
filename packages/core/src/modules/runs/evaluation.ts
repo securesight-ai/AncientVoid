@@ -38,7 +38,9 @@ export function measureEvaluationPhase(
     if (cacheInput !== undefined && (typeof cacheInput !== "number" || !Number.isSafeInteger(cacheInput) || cacheInput < 0)) {
       throw new Error("Evaluation received invalid cache input usage");
     }
-    inputTokens += input + (cacheInput ?? 0);
+    // Adapter wie Pi, OpenCode und Codex melden die Eingabe einschließlich Cache und markieren das;
+    // Claude meldet den Cache getrennt (frische Eingabe + Cache).
+    inputTokens += event.payload.cacheIncluded === true ? input : input + (cacheInput ?? 0);
     cacheInputTokens += cacheInput ?? 0;
     outputTokens += output;
   }
