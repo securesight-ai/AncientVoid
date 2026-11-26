@@ -1347,6 +1347,7 @@ export const en = {
   "settings.main_branch": "Main branch",
   "settings.main_sync": "Main synchronization",
   "settings.main_sync_note": "New sessions start on the current main branch (origin), running sessions are checked on beat. Must not happen: no rebase, no push to main, no merge into running turns — merges happen only into waiting sessions.",
+  "settings.depth3d": "3D depth",
   "settings.merge_automatically": "Merge automatically",
   "settings.model_tool": "Model & tool endpoints",
   "settings.model_tool_endpoints": "Model and tool endpoints",

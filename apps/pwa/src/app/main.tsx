@@ -25,6 +25,7 @@ import { t, applyLanguage } from "../shared/i18n/index.ts";
 import { initAppearance } from "./appearance.ts";
 import { applyPinchZoom, pinchZoomAllowed } from "./zoom.ts";
 import { applyCtxMotion, applyScale, ctxMotionOn, getScale, installScaleShortcuts } from "./ui-scale.ts";
+import { applyDepth3d, depth3dOn } from "./depth3d.ts";
 import { captureShareTarget, storeShareInbox } from "./share-inbox.ts";
 import { NotificationCenter } from "../features/notifications/Notifications.tsx";
 import { TileWorkspace } from "../features/workspace/TileWorkspace.tsx";
@@ -60,6 +61,8 @@ applyPinchZoom(pinchZoomAllowed());
 // EPIC-P20: UI scale (Ctrl+wheel, Ctrl +/−/0) and the context-bar shimmer, before the first paint.
 applyScale(getScale());
 applyCtxMotion(ctxMotionOn());
+// EPIC-P86 T86.1: Tiefenebene (Fensterflug) — Attribut vor dem ersten Paint, Standard an.
+applyDepth3d(depth3dOn());
 installScaleShortcuts();
 // EPIC-P51 T51.8: Kürzel-Hinweis-Pill bei Klicks auf Elemente mit Shortcut.
 installShortcutHints();

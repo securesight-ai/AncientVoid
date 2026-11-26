@@ -3,6 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import { applyTheme, getTheme, THEME_KEY, type Theme } from "../../app/theme.ts";
 import { applyCtxMotion, ctxMotionOn, getScale, setScale, SCALE_MAX, SCALE_MIN, SCALE_STEP } from "../../app/ui-scale.ts";
 import { applyShortcutHints, shortcutHintsOn } from "../../shared/shortcut-hint.ts";
+import { applyDepth3d, depth3dOn } from "../../app/depth3d.ts";
 import { AccentSetting } from "./AccentPicker.tsx";
 import { LanguageSettingRow } from "./LanguageSettings.tsx";
 import { SettingRow, SettingsSection, Segmented, Switch } from "./parts.tsx";
@@ -22,6 +23,8 @@ export function AppearanceSettings() {
   const [scale, setScaleState] = useState<number>(getScale());
   const [motion, setMotion] = useState<boolean>(ctxMotionOn());
   const [hints, setHints] = useState<boolean>(shortcutHintsOn());
+  // EPIC-P86 T86.1: Tiefenebene (Fensterflug), eigener Schalter.
+  const [depth3d, setDepth3d] = useState<boolean>(depth3dOn());
   useEffect(() => {
     const on = (e: Event) => setScaleState((e as CustomEvent<number>).detail);
     window.addEventListener("ancientvoid:scale", on);
@@ -68,6 +71,17 @@ export function AppearanceSettings() {
           onChange={(next) => {
             applyCtxMotion(next);
             setMotion(next);
+          }}
+        />
+      </SettingRow>
+      {/* EPIC-P86 T86.1: Tiefenebene — Fenster/Blätter fliegen beim Öffnen ein Stück heran. */}
+      <SettingRow label={t("settings.depth3d")} hint="Fenster und Blätter fliegen beim Öffnen ein Stück heran; „Bewegung reduzieren“ des Systems schaltet es immer ab">
+        <Switch
+          label={t("settings.depth3d")}
+          checked={depth3d}
+          onChange={(next) => {
+            applyDepth3d(next);
+            setDepth3d(next);
           }}
         />
       </SettingRow>
