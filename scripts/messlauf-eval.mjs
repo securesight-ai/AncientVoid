@@ -10,11 +10,12 @@ import { connectHub, preflight } from "./eval/hub.mjs";
 import { planSeries } from "./eval/protocol.mjs";
 import { runSeries } from "./eval/run-series.mjs";
 import { renderReport } from "./eval/report.mjs";
+import { exportSeries } from "./eval/export.mjs";
 import { extractRuns } from "./skill-runs.mjs";
 
 const { positionals: [mode], values: options } = parseArgs({
   allowPositionals: true,
-  options: Object.fromEntries(["protocol", "series", "scratch", "first", "repeat", "report", "data"].map((key) => [key, { type: "string" }])),
+  options: Object.fromEntries([...["protocol", "series", "scratch", "first", "repeat", "report", "data", "out", "invalid"].map((key) => [key, { type: "string" }]), ["partial", { type: "boolean" }]]),
 });
 const root = resolve(import.meta.dirname, "..");
 const required = (key) => {
@@ -37,8 +38,9 @@ async function readSeries(api, path) {
 }
 
 async function main() {
-  if (!["plan", "check", "run", "report"].includes(mode)) {
-    console.log("Usage: npm run messlauf:eval -- <plan|check|run|report> --protocol <file>\n" +
+  if (!["plan", "check", "run", "report", "export"].includes(mode)) {
+    console.log("Usage: npm run messlauf:eval -- <plan|check|run|report|export> --protocol <file>\n" +
+      "export: --first <sessions.jsonl> --out <neuer Ordner im Benchmark-Repo> [--invalid <invalid.jsonl>] [--partial]\n" +
       "run: --scratch <hub project root> --series <name>\n" +
       "report: --first <sessions.jsonl> --repeat <sessions.jsonl> --data <hub data dir> --report <dated markdown path>");
     if (mode) process.exitCode = 2;
@@ -62,6 +64,17 @@ async function main() {
     if (!/^[a-z0-9][a-z0-9._-]{0,95}$/.test(series)) throw new Error("Invalid series name");
     const receipts = await runSeries(api, root, scratch, series, plan);
     console.log(`P84 ${series}: ${plan.jobs.length} results recorded in the hub. Session references: ${receipts}`);
+    return;
+  }
+  if (mode === "export") {
+    const { stdout: sha } = await promisify(execFile)("git", ["rev-parse", "HEAD"], { cwd: root });
+    const out = resolve(required("out"));
+    const { manifest, files } = exportSeries({
+      rows: await readSeries(api, required("first")), receipts: required("first"), invalid: options.invalid, plan, out,
+      partial: options.partial === true,
+      meta: { date: new Date().toISOString().slice(0, 10), commit: sha.trim(), runtime: `${hostname()} / ${platform()} / Node ${process.version}` },
+    });
+    console.log(`P84 export ${out}: ${files.join(", ")} · messung_gueltig=${manifest.messung_gueltig}`);
     return;
   }
   const destination = required("report");

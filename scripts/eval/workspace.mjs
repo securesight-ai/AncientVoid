@@ -65,7 +65,10 @@ export async function judgeWorkspace(root, directory, candidate, task) {
   await installAcceptance(root, directory, task);
   await installDependencies(directory);
   const baseline = await checkAcceptance(directory, task);
-  if (!baseline.failed) throw new Error(`${task.id}: acceptance unexpectedly passes at start`);
+  if (task.negative ? baseline.failed : !baseline.failed) {
+    throw new Error(`${task.id}: acceptance ${task.negative ? "unexpectedly fails" : "unexpectedly passes"} at start`);
+  }
+  let changed = false;
   const candidateRoot = await realpath(candidate);
   for (const path of task.editable) {
     const from = join(candidateRoot, path);
@@ -75,18 +78,21 @@ export async function judgeWorkspace(root, directory, candidate, task) {
       return null;
     });
     if (!info) {
+      changed = true;
       await rm(to, { force: true });
       continue;
     }
     const canonical = await realpath(from);
     const relativePath = relative(candidateRoot, canonical);
     if (!info.isFile() || relativePath !== path || isAbsolute(relativePath)) throw new Error(`Unexpected candidate file: ${path}`);
+    if (task.negative && !(await readFile(canonical)).equals(await readFile(to))) changed = true;
     await mkdir(dirname(to), { recursive: true });
     await copyFile(canonical, to, constants.COPYFILE_FICLONE);
   }
   const result = await checkAcceptance(directory, task, { allowSuiteFailure: true });
   const [lint, typecheck] = await Promise.all([gate(directory, "lint"), gate(directory, "typecheck")]);
-  return { baseline: baseline.failed, acceptance: result.passed === baseline.passed + baseline.failed && result.failed === 0, lint, typecheck };
+  // Negativkontrolle: grün nur, wenn nichts geändert wurde (Lebenszeichen erzwingt die Token-Erfassung).
+  return { baseline: baseline.failed, acceptance: !changed && result.passed === baseline.passed + baseline.failed && result.failed === 0, lint, typecheck };
 }
 
 export async function carryPlan(planning, build) {

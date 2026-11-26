@@ -154,6 +154,17 @@ export function renderReport(primary, repeat, plan, { date, commit, runtime, ski
       }
     }
   }
+  const negatives = new Set(plan.corpus.tasks.filter((task) => task.negative).map((task) => task.id));
+  if (negatives.size) {
+    lines.push("", "## Negativkontrolle", "",
+      "Aufgabe ohne nötige Änderung: jede Änderung ist ein Fehler. Ein Lauf ohne Token-Lebenszeichen wird gar nicht erst erfasst (ungültig, nicht grün).", "");
+    for (const series of [a, b]) {
+      for (const arm of plan.arms.filter((candidate) => candidate.group === "core")) {
+        const rows = series.rows.filter((row) => row.input.arm === arm.id && negatives.has(row.input.task));
+        if (rows.length) lines.push(`- ${series.series}/${arm.id} · unverändert ${rows.filter((row) => row.input.acceptance).length}/${rows.length}`);
+      }
+    }
+  }
   lines.push("", "## Vergleichbarkeit und Prüfstand", "");
   for (const [i, arm] of plan.arms.entries()) {
     for (const other of plan.arms.slice(i + 1)) {

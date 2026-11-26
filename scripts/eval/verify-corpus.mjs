@@ -20,7 +20,11 @@ for (const task of tasks.filter(({ id }) => selected.size === 0 || selected.has(
     await installAcceptance(root, directory, task);
     await installDependencies(directory, offline);
     const red = await checkAcceptance(directory, task);
-    if (red.failed === 0) throw new Error(`${task.id}: baseline already passes`);
+    if (task.negative ? red.failed > 0 : red.failed === 0) throw new Error(`${task.id}: baseline ${task.negative ? "must already pass" : "already passes"}`);
+    if (task.negative) {
+      console.log(`${task.id}: negative control, ${red.passed} passing at start`);
+      continue;
+    }
     const greenDir = join(temporary, "reference");
     await checkoutTask(root, greenDir, task.reference);
     await installDependencies(greenDir, offline);

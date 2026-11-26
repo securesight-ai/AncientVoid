@@ -46,7 +46,7 @@ export const EvalRunInput = z.strictObject({
   rulesHash: hash,
   skills: z.boolean(),
   skillHash: hash.nullable(),
-  baseline: z.number().int().positive(),
+  baseline: count,
   acceptance: z.boolean(),
   lint: z.boolean(),
   typecheck: z.boolean(),

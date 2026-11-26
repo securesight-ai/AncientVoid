@@ -22,7 +22,10 @@ const taskSchema = z.strictObject({
   editable: z.array(repoPath).min(1),
   split: z.boolean(),
   contaminationRisk: z.boolean(),
-});
+  // Negativkontrolle: Kriterium gilt schon am Start (start === reference); jede Änderung ist ein Fehler.
+  negative: z.boolean().default(false),
+}).refine((task) => !task.negative || (task.start === task.reference && !task.split),
+  "A negative control starts at its reference and stays out of the split subset");
 
 export function readCorpus() {
   const bytes = readFileSync(new URL("corpus.json", import.meta.url));

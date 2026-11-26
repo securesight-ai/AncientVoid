@@ -113,6 +113,28 @@ Ein neuer Serienname startet einen unabhängigen Lauf. Der Report
 erfordert lückenlose, disjunkte Serien mit festem Protokollstand
 und weist Rangänderungen und Preisdatumswechsel aus.
 
+## Negativkontrolle
+
+Der Korpus enthält neben den zwölf Regressionen eine Negativkontrolle
+(`negative: true`, Start = Referenz, nicht im Split-Teilkorpus): Das Kriterium gilt schon,
+der Prompt erlaubt „nichts zu tun“, und **jede Änderung** der freigegebenen Dateien ist ein
+Fehler. Ein Lauf ohne Token-Lebenszeichen wird nicht erfasst und kann daher nie als
+fälschlich grüne Negativkontrolle zählen (eine tote Engine „ändert nichts“ auch).
+Der Report weist sie in einem eigenen Abschnitt aus.
+
+## Export in ein Benchmark-Repo
+
+```sh
+npm run messlauf:eval -- export --protocol protocol.json --first /pfad/eval/kern-a/sessions.jsonl \
+  --invalid /pfad/eval/kern-a/invalid.jsonl --out /pfad/benchmarks/evaluation/laeufe/JJJJ-MM-DD-kern-a
+```
+
+Der Ordner wird neu angelegt und nie überschrieben: `lauf.yaml` (Pflichtangaben, Zellen mit
+Preis-/Tarif-Snapshot, Kosten je Provider, verworfene Versuche, `messung_gueltig`),
+`ergebnisse.jsonl` (ein Datensatz je Lauf mit allen Metriken), `sessions.jsonl`,
+`invalid.jsonl` und `manifest.sha256`. Eine unvollständige Serie lässt sich nur mit `--partial`
+exportieren und ist dann nie `messung_gueltig`. Der Hub-Datadir bleibt die Quelle (K7).
+
 ## Mess-Registrierungen im Benchmark-Hub
 
 Die ACP-Anbindung von maki 0.6.5 meldet nur die Kontextfüllung, keine Richtungs-Tokens

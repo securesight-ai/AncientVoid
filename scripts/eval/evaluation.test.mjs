@@ -1,4 +1,8 @@
 import { randomUUID } from "node:crypto";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { exportSeries } from "./export.mjs";
 import { expect, it, vi } from "vitest";
 import { readCorpus } from "./corpus.mjs";
 import { BudgetGuard, isInfrastructureFailure, planSeries, runJobs } from "./protocol.mjs";
@@ -34,9 +38,9 @@ function measured(series) {
   });
 }
 
-it("plans a complete balanced 780-run matrix with the same four tasks in every split arm", () => {
+it("plans a complete balanced 840-run matrix (12 regressions + negative control) with the same four tasks in every split arm", () => {
   expect(plan.arms).toHaveLength(15);
-  expect(plan.jobs).toHaveLength(780);
+  expect(plan.jobs).toHaveLength(840);
   const split = plan.arms.filter((arm) => arm.group === "split");
   const ids = split.map((arm) => [...new Set(plan.jobs.filter((job) => job.arm === arm).map((job) => job.task.id))]);
   expect(ids[0]).toHaveLength(4);
@@ -166,4 +170,27 @@ it("shows cache tokens and cache cost and flags adapters that do not split the c
   expect(report).not.toContain("obere Schranke");
   for (const row of first.filter(({ input }) => input.arm === "pi-cloud-plain")) for (const phase of row.phases) phase.cacheInputTokens = 0;
   expect(renderReport(first, second, plan, meta).markdown).toContain("first/pi-cloud-plain · Cache-Tokens nicht getrennt gemeldet");
+});
+
+it("exports a complete series immutably with a hash manifest and marks partial series invalid", () => {
+  const dir = mkdtempSync(join(tmpdir(), "p84-export-"));
+  try {
+    const rows = measured("serie-a");
+    const receipts = join(dir, "sessions.jsonl");
+    const invalid = join(dir, "invalid.jsonl");
+    writeFileSync(receipts, "");
+    writeFileSync(invalid, JSON.stringify({ key: "x", attempt: 1, cause: "infrastructure" }) + "\n");
+    const meta = { date: "2026-11-26", commit: "fixture", runtime: "fixture" };
+    const done = exportSeries({ rows, receipts, invalid, plan, meta, out: join(dir, "ok") });
+    expect(done.manifest).toMatchObject({ lauf_id: "2026-11-26-serie-a", laeufe_erwartet: 840, laeufe_erfasst: 840, infrastruktur_versuche_verworfen: 1, messung_gueltig: true });
+    expect(done.manifest.kosten_cloud_usd_je_provider.fixture).toBeGreaterThan(0);
+    expect(readFileSync(join(dir, "ok", "manifest.sha256"), "utf8")).toContain("  lauf.yaml");
+    expect(() => exportSeries({ rows, receipts, invalid, plan, meta, out: join(dir, "ok") })).toThrow(/EEXIST/);
+    expect(() => exportSeries({ rows: rows.slice(1), receipts, plan, meta, out: join(dir, "teil") })).toThrow(/Incomplete/);
+    const partial = exportSeries({ rows: rows.slice(1), receipts, plan, meta, out: join(dir, "teil2"), partial: true });
+    expect(partial.manifest).toMatchObject({ messung_gueltig: false, laeufe_erfasst: 839 });
+    expect(partial.manifest.grund_ungueltig).toMatch(/Incomplete/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
