@@ -350,20 +350,21 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
       return !was;
     });
     if (!openRef.current) return;
-    // EPIC-P64 T64.4/T64.5: im Fluss-Modus hängt das Panel gemessen unter
-    // der Glocke (rechtsbündig zu ihr) — robust für jede Spaltenbreite und
-    // UI-Skalierung, statt die Geometrie in CSS nachzubauen. Rect ist in
-    // Render-Px, Inline-Styles in CSS-px — daher die Zoom-Division
-    // (--ui-zoom ist CSS `zoom` auf <html>, Muster siehe 14-notifications.css).
+    // EPIC-P64 T64.4/T64.5: im Fluss-Modus hängt das Panel gemessen unter der
+    // Kopfzeile der Listenspalte — bündig mit den Session-Karten darunter
+    // (Nutzerwunsch 27.11.2026: gleiche Breite und Kanten wie die Karten,
+    // statt 380 px rechtsbündig unter der Glocke). Rect ist in Render-Px,
+    // Inline-Styles in CSS-px — daher die Zoom-Division (--ui-zoom ist CSS
+    // `zoom` auf <html>, Muster siehe 14-notifications.css).
     if (flow) {
       const zoom = Number(document.documentElement.style.getPropertyValue("--ui-zoom")) || 1;
-      const rect = bellRef.current?.getBoundingClientRect();
+      const bar = bellRef.current?.closest(".topbar")?.getBoundingClientRect();
+      const rect = bar ?? bellRef.current?.getBoundingClientRect();
       if (rect) {
-        const width = Math.min(380, window.innerWidth / zoom - 16);
-        const cssRight = rect.right / zoom;
+        const width = Math.min(rect.width / zoom, window.innerWidth / zoom - 16);
         setPanelPos({
           top: `${Math.round(rect.bottom / zoom + 8)}px`,
-          left: `${Math.max(8, Math.round(cssRight - width))}px`,
+          left: `${Math.max(8, Math.round(rect.left / zoom))}px`,
           width: `${Math.round(width)}px`,
         });
       }
@@ -413,6 +414,7 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
           </button>
         )}
       </div>
+      {open && <div class="notif-backdrop window-backdrop" aria-hidden="true" onClick={closePanel} />}
       {open && (
         <div
           class={`notif-panel${corner ? " corner" : ""}${flow ? " flow" : ""}`}
@@ -434,7 +436,7 @@ export function NotificationCenter({ corner = false, flow = false }: { corner?: 
             >
               {soundMuted ? "🔇" : "🔊"}
             </Button>
-            <Button ref={closeBtn} onClick={closePanel}>
+            <Button ref={closeBtn} icon onClick={closePanel} aria-label={t("notifications.close")} title={t("notifications.close")}>
               ✕
             </Button>
           </div>

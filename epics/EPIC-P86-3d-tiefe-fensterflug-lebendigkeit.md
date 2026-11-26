@@ -209,6 +209,20 @@ Ablage nach `app/ui-scale.ts`-Muster (`ancientvoid.ctxMotion`):
   (b) Im Session-Kopf steht der **Zustand rechts neben dem Titel**
   (`session-top-titlerow`, statt in der `session-top-meta`-Zeile darunter) —
   auch in schmalen Kacheln sichtbar. Belegt in `workspace-tiles.spec.ts`.
+- [x] **T86.8 — Benachrichtigungs-Panel als Fenster + Abstands-Glättung
+  (Nutzerwunsch 27.11.2026):** Das Panel bekam die volle Fenster-Familie:
+  Hinterlegung (`.notif-backdrop`, neue Marke `.window-backdrop` für alle
+  drei Hinterlegungen — Sheet, Befehl, Benachrichtigung), Drop-Flug aus der
+  Tiefe, Panel-Fläche wie das Neue-Session-Modal (--border/--radius-lg/
+  --shadow-sheet, Sheet-Padding-Rhythmus statt 8/6-px-Rohwerte), Breite
+  bündig mit den Session-Karten (Fluss-Modus: an der Listenspalte gemessen,
+  max 420 px; Handy: 12 px wie der Karten-Inset der .app-page), Sound- und
+  ✕-Taste gleich groß (beide icon-Quadrate) mit festem Abstand statt
+  klebend. Klick auf die Hinterlegung schließt. Belegt in
+  `notifications.spec.ts` (Fenster-Verhalten, Bündig-Messung @desktop,
+  Tasten-Geometrie). Abstands-Audit der geteilten Flächen: Karten/Sheet/
+  Settings/Dock liegen bereits auf einem Rhythmus — das Panel war der
+  Ausreißer.
 - [ ] **T86.5 — three.js-Ambient** (nur nach klarem T86.0-Ja): lazy Modul,
   WebGL2-Gate, DPR-Cap, Hidden-Pause; E2E-Spec für K10 (offline ohne
   Ambient-Chunk kein White-Screen) und Basis-Bundle-Beweis (kein three im

@@ -28,16 +28,15 @@
  * Die Inhaltsflächen sind die direkten Kinder von #app (Übersicht .app-page,
  * Session .session-live, PC-Arbeitsplatz .split); Dock, Layer und Blätter
  * liegen daneben und bleiben scharf. */
-:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .app-page,
-:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .session-live,
-:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .split {
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.window-backdrop) #app > .app-page,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.window-backdrop) #app > .session-live,
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.window-backdrop) #app > .split {
   transform: scale(var(--depth3d-recede));
   transition: transform 320ms var(--ease-out);
 }
 
 /* ── Hinterlegung: Hintergrund defokussieren und abdunkeln ── */
-:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet-backdrop,
-:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-backdrop {
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .window-backdrop {
   backdrop-filter: blur(16px) brightness(0.8);
   animation: depth3d-veil var(--depth3d-time) linear 1;
 }
@@ -47,6 +46,16 @@
   transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift));
   box-shadow: var(--depth3d-shadow);
   animation: depth3d-rise var(--depth3d-time) var(--ease-out) 1;
+}
+
+/* ── Benachrichtigungs-Panel (Nutzerwunsch 27.11.2026): ein Fenster wie das
+ *    Neue-Session-Modal — schwebt vor dem zurückweichenden Hintergrund,
+ *    fliegt von oben aus der Tiefe ein. Anker bleibt die eigene Position
+ *    (oben rechts / Fluss / Ecke), deshalb eigener Drop-Flug. ── */
+:root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .notif-panel {
+  transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift));
+  box-shadow: var(--depth3d-shadow);
+  animation: depth3d-drop var(--depth3d-time) var(--ease-out) 1;
 }
 
 /* ── Zentrierte Fenster (Modal, Befehl): Grundstellung translate(-50%,-50%)
@@ -133,6 +142,7 @@
  *    bleibt bewegungslos. ── */
 :root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet:not(.ui-sheet--modal),
 :root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel,
+:root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .notif-panel,
 :root.depth3d-kick:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer {
   animation: depth3d-pulse 240ms var(--ease-out) 1;
 }
@@ -144,6 +154,12 @@
 
 @keyframes depth3d-veil {
   from { opacity: 0; }
+}
+
+@keyframes depth3d-drop {
+  from { transform: perspective(var(--depth3d-dist)) translateZ(-140px) translateY(-3%); opacity: 0; }
+  55% { opacity: 1; }
+  to { transform: perspective(var(--depth3d-dist)) translateZ(var(--depth3d-lift)); opacity: 1; }
 }
 
 @keyframes depth3d-rise {
@@ -201,16 +217,16 @@
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-sheet:not(.command-card),
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .browser-panel,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .files-sidebar.drawer,
-  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .ui-sheet-backdrop,
-  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .command-backdrop,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .window-backdrop,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .tile.focused,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) #app > .session-live,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .attachment-lightbox,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .session-card,
   :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .dock-item,
-  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .app-page,
-  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .session-live,
-  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.ui-sheet, .command-backdrop) #app > .split {
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.window-backdrop) #app > .app-page,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.window-backdrop) #app > .session-live,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) body:has(.window-backdrop) #app > .split,
+  :root:not([data-ctx-3d="off"]):not([data-ctx-motion="off"]) .notif-panel {
     animation: none;
     transition: none;
     transform: none;
