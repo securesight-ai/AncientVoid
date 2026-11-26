@@ -1,4 +1,4 @@
-# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P85)
+# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P86)
 
 **On hold seit 15.11.2026 (Nutzerentscheid): P30 und P31.** Beide bleiben
 im Inventar, sind aber aus Empfehlungen für die nächste Arbeit ausgeschlossen.
@@ -348,6 +348,12 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 | Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
 |---|---|---|---|
 | [P85 — Externe Links im Standardbrowser; Bildvorschau modular für alle Adapter](EPIC-P85-links-und-bildvorschau-fuer-alle-adapter.md) | Zentrale Link-Klick-Policy (eigener Ursprung → in-app, extern → Standardbrowser inkl. Plattformwege für installierte Clients; BUG-0290) + deklarativen Visualizer-Registry für die Bildvorschau: das Pi-Feature (`tool-image.ts`, nur exakt `name:"read"`) auf alle Familien mit feingranularen Events ausweiten (claude/cursor `Read`, codex `view_image`, `tool`-Schlüssel-Familie, ACP-`kind:read`) — **Planungsentwurf (Nutzerauftrag 25.11.2026)** | keine blockierende (Quer-Epic); P30/P31 On hold unberührt; Geräteläufe nach P000; Tracker #441 | 1–2 |
+
+## Nutzerauftrag vom 26.11.2026 — 3D-Tiefe und lebendige Oberfläche
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P86 — 3D-Tiefe: Fensterflug und lebendige Oberfläche (zuschaltbar)](EPIC-P86-3d-tiefe-fensterflug-lebendigkeit.md) | Stufe 1 (CSS-3D, ohne three.js): Blätter/Modals/Seitenfenster fliegen beim Öffnen auf den Nutzer zu (perspective() je Element, nur transform/opacity — K2), Schalter „3D an/aus“ in Einstellungen, Sidebar (PC) und „Mehr“-Blatt (Handy) mit Kaskade prefers-reduced-motion > Bewegung > 3D, Default an; Stufe 2 (three.js-Ambient, lazy) nur hinter T86.0-Mess-Tor (Bundle/FPS/Akku) — Nutzerentscheid: weglassen, falls es Performance/Kostbarkeit verschlechtert; Blaupause: securesight-Keynote (bunker-world3d) — **In Umsetzung: T86.1–T86.3 fertig auf `feat/p86-3d-tiefe-stufe1` (Unit + E2E grün), Nutzer-Sichtbewertung ausstehend** | keine blockierende (Quer-Epic); P30/P31 On hold unberührt; K2/K10 Messlatte; Sichtabnahme nach P000 | 1–2 (+0,5–1 Stufe 2) |
 
 ## Reihenfolge & Gating
 
