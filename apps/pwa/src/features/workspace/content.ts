@@ -46,3 +46,23 @@ export function contentHash(ref: import("./tiles.ts").TileRef | null | undefined
   }
   return sessionHash(ref.sessionId, ref.hostId);
 }
+
+/** Was die Browser-Historie mit einer Kacheländerung macht.
+ *
+ * Vor dem Zurück-Knopf der Welt (Handy-Geste, Browser-Leiste, Alt+←) darf nur stehen, was
+ * wirklich hintereinander besucht wurde. Eine Ansicht, die in keiner offenen Kachel steckt,
+ * ist ein echter Vorwärtsschritt (`pushState`). Ein Fokus-Sprung auf eine Kachel, die diese
+ * Ansicht schon zeigt, und das Schließen einer Kachel überschreiben nur die aktuelle Adresse
+ * (`replaceState`) — sonst bläht schon jedes Alt+1/2/3 die Historie auf. Nutzerfund
+ * 24.11.2026: vorher war jede Änderung `replaceState`, die Historie blieb ganz leer und
+ * Zurück warf aus der App oder auf eine uralte Seite. */
+export function warVorwaertsSchritt(
+  kachelnVorher: number,
+  kachelnNachher: number,
+  ziel: import("./tiles.ts").TileRef | null | undefined,
+  offen: (import("./tiles.ts").TileRef | null | undefined)[],
+): boolean {
+  if (kachelnNachher < kachelnVorher) return false; // Kachel geschlossen
+  const hash = contentHash(ziel);
+  return !offen.some((kachel) => contentHash(kachel) === hash);
+}

@@ -1,6 +1,6 @@
 import { fmtDateTime } from "../shared/i18n/format.ts";
 import { loadFilter } from "../features/session/event-filter.ts";
-import { contentHash } from "../features/workspace/content.ts";
+import { contentHash, warVorwaertsSchritt } from "../features/workspace/content.ts";
 import { onWorkspaceOpen } from "../features/workspace/open-content.ts";
 import { onLayerOpen } from "../shared/layers.ts";
 import { peekView, popEntry, popView, rememberView } from "../shared/nav-history.ts";
@@ -371,7 +371,11 @@ function Main() {
       }
     } else if (contentHash(visibleTiles(restored)[restored.focus]) !== contentHash(visibleTiles(ws)[ws.focus])) {
       rememberView(contentHash(visibleTiles(ws)[ws.focus]), visibleTiles(ws)[ws.focus] ?? undefined);
-      vorwaerts = true;
+      // Nur was in keiner offenen Kachel steckt, ist ein Vorwärtsschritt. Der Sprung auf
+      // eine Kachel, die diese Ansicht schon zeigt (Alt+1/2/3, Klick auf eine offene Karte),
+      // darf die Historie nicht füllen — sonst steht sie voller Schritte, die niemand
+      // „vor“ besucht hat.
+      vorwaerts = warVorwaertsSchritt(before, after, visibleTiles(restored)[restored.focus], visibleTiles(ws));
     }
     setWs(restored);
     localStorage.setItem(WORKSPACE_KEY, serializeWorkspace(restored));
@@ -383,8 +387,8 @@ function Main() {
     // stehen, was wirklich hintereinander besucht wurde. Nutzt eine neue Ansicht die
     // gleiche Kachel, war das bisher ein `replaceState` — die Historie blieb leer, und
     // Zurück warf Nutzer aus der App oder auf eine uralte Seite (Nutzerfund 24.11.2026:
-    // „Zurück-Taste funktioniert nicht, ich muss die App schließen“). Reine Fokus-
-    // Sprünge zwischen offenen Kacheln bleiben `replace` (wie oben dokumentiert).
+    // „Zurück-Taste funktioniert nicht, ich muss die App schließen“). Fokus-Sprung auf
+    // eine offene Kachel mit derselben Ansicht und Kachel-Schließen bleiben `replace`.
     if (location.hash !== hash) {
       if (vorwaerts) history.pushState(null, "", hash);
       else history.replaceState(null, "", hash);
