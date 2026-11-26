@@ -30,43 +30,44 @@ konfiguriert. `ANCIENTVOID_TOKEN` ist der menschliche Token dieses Hubs,
 und andere Last auf den Messhosts während der Serie pausieren. Die
 Arbeitskopien stammen aus Git-Archiven ohne erreichbaren Projektverlauf.
 
-Das Protokoll ist eine JSON-Datei. Diese Form zeigt einen Harness-Block.
-Die drei Schlüssel `pi`, `claude` und `opencode` erhalten je einen Block
-mit ihren tatsächlichen Modellkennungen und Versionen.
+Das Protokoll (Version 2) ist eine JSON-Datei mit einer Liste von **Zellen**
+(Harness × Modell). Jede Zelle nennt Harness, Adapter-Registrierung, CLI-Version,
+Konfigurations-Fingerprint, Modellkennung, Modell-Fingerprint, Provider und
+Abrechnung. `providerBudgetUsd` setzt je Provider einen harten Serien-Deckel:
+ist er erreicht, bricht der Runner laut ab (die bereits erfassten Läufe bleiben).
+`splits` benennt Plan-/Bau-Zellen innerhalb desselben Harness. `skillsAb: false`
+nimmt eine Zelle aus dem Skills-A/B heraus. `healthUrl` (lokale Engines) wird vor
+jedem Lauf geprüft. `maxInfraRetries` begrenzt Wiederholungen nach
+Infrastrukturausfall.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "fixturePolicy": "isolated-hub",
-  "repetitions": 5,
+  "repetitions": 3,
   "timeoutMs": 900000,
   "parallelCloudRuns": 1,
+  "maxInfraRetries": 2,
   "setup": "Prüfstand, Hardware, Messdomänen und Inferenz-Parameter",
-  "splitHarness": "pi",
-  "harnesses": {
-    "pi": {
-      "adapter": "pi",
-      "version": "CLI-Version",
+  "providerBudgetUsd": { "anthropic": 35, "zai": 20 },
+  "cells": [
+    {
+      "id": "pi-local", "harness": "pi", "adapter": "pi", "version": "CLI-Version",
       "configurationFingerprint": "Hash der bereinigten Konfiguration",
-      "local": {
-        "model": "provider/model-id",
-        "fingerprint": "Modellrevision, Quantisierung und Sampling",
-        "billing": { "kind": "local", "date": "2026-11-25", "host": "P81-Host-ID", "usdPerKwh": 0.25 }
-      },
-      "cloud": {
-        "model": "provider/anderes-model-id",
-        "fingerprint": "API-Modellrevision und Sampling",
-        "budgetUsd": 1,
-        "billing": {
-          "kind": "cloud",
-          "date": "2026-11-25",
-          "source": "https://example.com/prices",
-          "inputUsdPerMillion": 1,
-          "outputUsdPerMillion": 2
-        }
-      }
+      "model": "provider/model-id", "fingerprint": "Modellrevision, Quantisierung, Sampling",
+      "provider": "local", "healthUrl": "http://127.0.0.1:18099/health",
+      "billing": { "kind": "local", "date": "2026-11-26", "host": "P81-Host-ID",
+        "usdPerKwh": 0.3609, "eurPerKwh": 0.33, "usdPerEur": 1.0935, "fxDate": "2026-11-25" }
+    },
+    {
+      "id": "claude-sonnet", "harness": "claude", "adapter": "claude", "version": "CLI-Version",
+      "configurationFingerprint": "…", "model": "sonnet", "fingerprint": "…", "provider": "anthropic",
+      "budgetUsd": 1,
+      "billing": { "kind": "cloud", "date": "2026-11-26", "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "inputUsdPerMillion": 2, "cacheInputUsdPerMillion": 0.2, "outputUsdPerMillion": 10 }
     }
-  }
+  ],
+  "splits": [{ "id": "split-local-cloud", "plan": "pi-local", "build": "pi-cloud" }]
 }
 ```
 
@@ -92,7 +93,7 @@ npm run messlauf:eval -- report --protocol protocol.json \
   --data /pfad/hub-datadir --report docs/messlauf/JJJJ-MM-DD-p83-eval-kernserie.md
 ```
 
-Die Matrix umfasst pro Serie 720 Kernläufe und 60 Split-Läufe. Bei
+Die Matrix ergibt sich aus den Zellen: je Zelle ein Arm ohne und (außer `skillsAb: false`) ein Arm mit Skills, dazu die Split-Arme auf dem Split-Teilkorpus. Bei
 jedem Split arbeiten getrennte Plan- und Bau-Sessions auf demselben
 Startstand. Der Übergabeplan bleibt ein Datenartefakt. Der Kontrollarm
 nutzt denselben Cloud-Kandidaten in beiden Phasen. Skills-A/B bietet
@@ -117,3 +118,13 @@ und weist Rangänderungen und Preisdatumswechsel aus.
 - [ADR-0126](adr/0126-evaluation-in-turn-metriken.md)
 - [Korpus-Abnahme vom 25.11.2026](messlauf/2026-11-25-p84-korpus.md)
 - [Epic 84 und Tracker #427](../epics/EPIC-P84-ai-arbeit-evaluation-benchmark.md)
+
+## Gültigkeit der Messung
+
+Ausfälle der Infrastruktur (HTTP 5xx, Turn ohne Telemetrie, Engine ohne
+Gesundheitsantwort, Timeout bei toter Engine) zählen **nie** als Aufgabenfehler.
+Der Runner protokolliert den Versuch in `invalid.jsonl` neben `sessions.jsonl`,
+wiederholt höchstens `maxInfraRetries`-mal (Versuchsnummer im Datensatz als
+`attempt`) und bricht nach drei Ausfällen in Folge laut ab. Ein Timeout bei
+lebender Engine ist ein Abbruch des Agenten und beendet die Serie ebenfalls laut;
+ein Aufzeichnungspfad für Abbrüche ist offen (EPIC-P84).

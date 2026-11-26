@@ -30,3 +30,15 @@ OpenCode reicht vorhandene per-step Richtungstokens im bestehenden
 `payload.usage` weiter. Claude ergänzt die Eingabe um ausgewiesene
 Cache-Tokens. Vorhandene Gesamtzähler bleiben kompatibel. Pi meldet
 bereits die aggregierte Eingabe einschließlich der Cache-Tokens.
+
+## Nachtrag 2026-11-26: Protokoll Version 2
+
+Das Protokoll beschreibt Zellen (Harness × Modell) statt eines festen
+lokal/Cloud-Paares je Harness. Neu im Ergebnisdatensatz: `attempt`
+(Versuchsnummer nach Infrastrukturausfall), `cacheInputTokens` (nur die
+ausdrücklich gemeldeten Cache-Tokens; Adapter mit aggregierter Eingabe wie Pi
+werden zum Eingabepreis gerechnet und überschätzen daher die Kosten), optional
+`cacheInputUsdPerMillion` im Preis-Snapshot sowie `eurPerKwh`, `usdPerEur` und
+`fxDate` im Energie-Snapshot. Alle Felder sind additiv; bestehende
+Aufzeichnungen bleiben lesbar (`attempt` hat den Vorgabewert 1).
+`cacheInputTokens` ist für neue Aufzeichnungen Pflicht.

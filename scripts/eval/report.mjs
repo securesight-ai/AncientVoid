@@ -167,16 +167,14 @@ export function renderReport(primary, repeat, plan, { date, commit, runtime, ski
   }
   lines.push("", "### Preis- und Energiesnapshots", "",
     "Cloud-Kosten sind Listenpreisäquivalente. Lokale Kosten basieren auf den P81-Komponenten und enthalten deren Grundlast. Fehlende Komponenten sind im P81-Prüfstand festzuhalten.", "");
-  for (const [harness, config] of Object.entries(plan.config.harnesses)) {
-    lines.push(`- ${harness} · CLI ${config.version}, Adapter ${a.versions.get(config.adapter)}, Konfiguration ${config.configurationFingerprint}`);
-    for (const candidate of [config.cloud, config.local]) {
-      const bill = candidate.billing;
-      lines.push(bill.kind === "cloud"
-        ? `  - ${candidate.model} (${candidate.fingerprint}) · Cloud ${bill.date}, ${bill.inputUsdPerMillion}/${bill.outputUsdPerMillion} USD pro Mio. Input/Output. [Preisquelle](${bill.source})`
-        : `  - ${candidate.model} (${candidate.fingerprint}) · P81 ${bill.host}, ${bill.date}, ${bill.usdPerKwh} USD/kWh`);
-    }
+  for (const cell of plan.config.cells) {
+    const bill = cell.billing;
+    lines.push(`- ${cell.id} · ${cell.harness} CLI ${cell.version}, Adapter ${a.versions.get(cell.adapter)}, Konfiguration ${cell.configurationFingerprint}`);
+    lines.push(bill.kind === "cloud"
+      ? `  - ${cell.model} (${cell.fingerprint}) · ${cell.provider} ${bill.date}, ${bill.inputUsdPerMillion}/${bill.cacheInputUsdPerMillion ?? "–"}/${bill.outputUsdPerMillion} USD pro Mio. Input/Cache/Output. [Preisquelle](${bill.source})`
+      : `  - ${cell.model} (${cell.fingerprint}) · P81 ${bill.host}, ${bill.date}, ${bill.usdPerKwh} USD/kWh${bill.eurPerKwh ? ` (${bill.eurPerKwh} EUR/kWh × ${bill.usdPerEur} USD/EUR, ${bill.fxDate})` : ""}`);
   }
-  const dates = new Set(Object.values(plan.config.harnesses).map((entry) => entry.cloud.billing.date));
+  const dates = new Set(plan.config.cells.filter((cell) => cell.billing.kind === "cloud").map((cell) => cell.billing.date));
   if (dates.size > 1) lines.push("", "Cloud-Vergleiche umfassen unterschiedliche Preisstände.");
   for (const series of [a, b]) {
     const electricity = series.rows.flatMap((row) => row.input.phases).filter((phase) => phase.billing.kind === "local");

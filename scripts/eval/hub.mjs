@@ -23,17 +23,36 @@ export function connectHub(base, token) {
   };
 }
 
-export async function preflight(api, config) {
-  const adapters = await api("/api/adapters");
-  const checks = await Promise.allSettled(Object.values(config.harnesses).map(async (harness) => {
-    if (!adapters.some(({ id }) => id === harness.adapter)) throw new Error(`Missing hub adapter ${harness.adapter}`);
-    const { models } = await api(`/api/adapters/${encodeURIComponent(harness.adapter)}/models`);
-    for (const candidate of [harness.local, harness.cloud]) {
-      if (!models?.some((model) => model.id === candidate.model)) {
-        throw new Error(`${harness.adapter}: model ${candidate.model} missing from the configured catalogue`);
-      }
+export async function probeHealth(url, fetcher = globalThis.fetch) {
+  const response = await fetcher(url, { signal: globalThis.AbortSignal.timeout(10_000) });
+  if (!response.ok) throw new Error(`health probe ${url}: HTTP ${response.status}`);
+}
+
+/** Waits for a recovering engine; a dead one stays an infrastructure failure, never a task failure. */
+export async function awaitHealthy(url, { fetcher, waitMs = 60_000, stepMs = 5_000 } = {}) {
+  const end = performance.now() + waitMs;
+  for (;;) {
+    try {
+      return await probeHealth(url, fetcher);
+    } catch (error) {
+      if (performance.now() + stepMs > end) throw new Error(`health check failed: ${error.message}`, { cause: error });
+      await delay(stepMs);
     }
-    await checkEnergy(api, harness.local.billing.host);
+  }
+}
+
+export async function preflight(api, config, fetcher) {
+  const adapters = await api("/api/adapters");
+  const catalogues = new Map();
+  const checks = await Promise.allSettled(config.cells.map(async (cell) => {
+    if (!adapters.some(({ id }) => id === cell.adapter)) throw new Error(`Missing hub adapter ${cell.adapter}`);
+    if (!catalogues.has(cell.adapter)) catalogues.set(cell.adapter, api(`/api/adapters/${encodeURIComponent(cell.adapter)}/models`));
+    const { models } = await catalogues.get(cell.adapter);
+    if (!models?.some((model) => model.id === cell.model)) {
+      throw new Error(`${cell.adapter}: model ${cell.model} missing from the configured catalogue`);
+    }
+    if (cell.billing.kind === "local") await checkEnergy(api, cell.billing.host);
+    if (cell.healthUrl) await probeHealth(cell.healthUrl, fetcher);
   }));
   const failures = checks.filter((result) => result.status === "rejected").map((result) => result.reason);
   if (failures.length) throw new AggregateError(failures, "P84 preflight failed before any session was started");

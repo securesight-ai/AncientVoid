@@ -18,7 +18,7 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
     capabilities: () => ({ ...dummy.capabilities(), features: { ...dummy.capabilities().features!, modelChoice: "start" } }),
     async start(_spec, ctx) {
       ctx.emit({ type: "system", summary: EVAL_COMPLETE_EVENT, payload: { kind: EVAL_COMPLETE_EVENT } });
-      ctx.emit({ type: "system", summary: "metered", payload: { usage: { input: 20, output: 10 } }, tokensEst: 30 });
+      ctx.emit({ type: "system", summary: "metered", payload: { usage: { input: 20, output: 10 }, cacheInputTokens: 100 }, tokensEst: 130 });
       ctx.emit({ type: "system", summary: "finished", payload: { kind: "session.turn_end", code: 0 } });
       return { sessionId: ctx.sessionId };
     },
@@ -57,12 +57,12 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
     const records = await Promise.all(ids.map(async (id, index) => {
       const hash = "a".repeat(64);
       const payload: EvalRunInput = {
-        series: "fixture", arm: "metered", task: "task", repetition: index + 1,
+        series: "fixture", arm: "metered", task: "task", repetition: index + 1, attempt: 1,
         corpusHash: hash, protocolHash: hash, rulesHash: hash, skillHash: null,
         skills: false, acceptance: true, baseline: 1, lint: true, typecheck: true,
         phases: [{ sessionId: id, phase: "build", modelFingerprint: "v1", harnessVersion: "1.0.0", wallMs: 20,
           billing: index % 2 === 0
-            ? { kind: "cloud", date: "2026-11-25", source: "https://example.com/prices", inputUsdPerMillion: 2, outputUsdPerMillion: 4 }
+            ? { kind: "cloud", date: "2026-11-25", source: "https://example.com/prices", inputUsdPerMillion: 2, cacheInputUsdPerMillion: 0.5, outputUsdPerMillion: 4 }
             : { kind: "local", date: "2026-11-25", source: "p81:power:components", host: "test", kwh: 0.01, usdPerKwh: 0.25 },
         }],
       };
@@ -72,7 +72,7 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
       const first = await hub.app.inject(request);
       expect(first.statusCode, first.body).toBe(200);
       const record = first.json();
-      expect(record.phases[0]).toMatchObject({ inputTokens: 20, outputTokens: 10, costUsd: index % 2 === 0 ? 0.00008 : 0.0025 });
+      expect(record.phases[0]).toMatchObject({ inputTokens: 120, cacheInputTokens: 100, outputTokens: 10, costUsd: index % 2 === 0 ? 0.00013 : 0.0025 });
       expect((await hub.app.inject(request)).json()).toEqual(record);
       expect((await hub.app.inject({ ...request, payload: { ...payload, acceptance: false } })).statusCode).toBe(422);
       expect((await hub.store.replay(id)).filter((event) => event.summary === EVAL_COMPLETE_EVENT)).toHaveLength(1);

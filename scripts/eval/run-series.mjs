@@ -1,8 +1,8 @@
 import { appendFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { prepareWorkspace, carryPlan, judgeWorkspace } from "./workspace.mjs";
-import { preflight, runPhase } from "./hub.mjs";
-import { jobKey, runJobs } from "./protocol.mjs";
+import { awaitHealthy, preflight, probeHealth, runPhase } from "./hub.mjs";
+import { BudgetGuard, isInfrastructureFailure, jobKey, runJobs } from "./protocol.mjs";
 
 export async function runSeries(api, root, scratch, series, plan) {
   await preflight(api, plan.config);
@@ -10,7 +10,34 @@ export async function runSeries(api, root, scratch, series, plan) {
   mkdirSync(destination, { recursive: false, mode: 0o700 });
   const receipts = join(destination, "sessions.jsonl");
   writeFileSync(receipts, "", { flag: "wx", mode: 0o600 });
-  await runJobs(plan.jobs, plan.config.parallelCloudRuns, async (job) => {
+  const invalid = join(destination, "invalid.jsonl");
+  writeFileSync(invalid, "", { flag: "wx", mode: 0o600 });
+  const budget = new BudgetGuard(plan.config.providerBudgetUsd);
+  let infraStreak = 0;
+  const attemptJob = async (job) => {
+    const { arm } = job;
+    const key = jobKey(job);
+    for (let attempt = 1; ; attempt++) {
+      budget.assertOpen(job);
+      try {
+        for (const side of [arm.plan, arm.build]) if (side?.healthUrl) await awaitHealthy(side.healthUrl);
+        await runAttempt(job, attempt);
+        infraStreak = 0;
+        return;
+      } catch (error) {
+        // Ein Timeout zählt nur dann als Infrastruktur, wenn die Engine danach nicht antwortet.
+        const hung = /timed out/.test(error.message) && await Promise.any([arm.plan, arm.build].filter((side) => side?.healthUrl)
+          .map((side) => probeHealth(side.healthUrl).then(() => { throw new Error("alive"); }, () => true))).catch(() => false);
+        if (!isInfrastructureFailure(error) && !hung) throw error;
+        // Eine tote Engine ist keine Aufgabenschwäche: Versuch protokollieren, nie als gescheitert zählen.
+        appendFileSync(invalid, JSON.stringify({ key, attempt, at: new Date().toISOString(), cause: "infrastructure", message: error.message }) + "\n", { flush: true });
+        if (++infraStreak >= 3) throw new Error(`P84 ${series}: three consecutive infrastructure failures, measurement stopped (${error.message})`, { cause: error });
+        if (attempt > plan.config.maxInfraRetries) throw error;
+      }
+    }
+  };
+  await runJobs(plan.jobs, plan.config.parallelCloudRuns, attemptJob);
+  async function runAttempt(job, attempt) {
     const { arm, task, repetition } = job;
     const key = jobKey(job);
     const directory = mkdtempSync(join(destination, `${task.id}-`));
@@ -32,13 +59,13 @@ export async function runSeries(api, root, scratch, series, plan) {
         `${task.prompt}\n\n${toolScope}\nImplementiere und prüfe die Änderung.${handover}`, plan.config.timeoutMs));
       const verdict = await judgeWorkspace(root, join(directory, "judge"), build, task);
       const input = {
-        series, arm: arm.id, task: task.id, repetition,
+        series, arm: arm.id, task: task.id, repetition, attempt,
         corpusHash: plan.corpus.hash, protocolHash: plan.protocolHash,
         rulesHash: rules.rulesHash, skills: arm.skills, skillHash: rules.skillHash,
         ...verdict, phases,
       };
       const buildId = phases.at(-1).sessionId;
-      await api(`/api/sessions/${buildId}/evaluation`, input);
+      budget.record(job, await api(`/api/sessions/${buildId}/evaluation`, input));
       appendFileSync(receipts, JSON.stringify({ key, sessionId: buildId }) + "\n", { flush: true });
       console.log(`${key} → ${buildId}`);
       // Keep source files and session journal for audit. Dependency trees can be recreated.
@@ -48,6 +75,6 @@ export async function runSeries(api, root, scratch, series, plan) {
     } catch (error) {
       throw new Error(`P84 ${series}/${key} at ${directory}: ${error.message}`, { cause: error });
     }
-  });
+  }
   return receipts;
 }

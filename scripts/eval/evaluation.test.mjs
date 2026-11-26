@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { expect, it, vi } from "vitest";
 import { readCorpus } from "./corpus.mjs";
-import { planSeries, runJobs } from "./protocol.mjs";
+import { BudgetGuard, isInfrastructureFailure, planSeries, runJobs } from "./protocol.mjs";
 import { integrateEnergy } from "./energy.mjs";
 import { renderReport, summarise, validateSeries } from "./report.mjs";
-import { connectHub, preflight, runPhase } from "./hub.mjs";
+import { awaitHealthy, connectHub, preflight, runPhase } from "./hub.mjs";
 import { testProtocol } from "./protocol.fixture.mjs";
 
 const plan = planSeries(testProtocol, readCorpus());
@@ -15,7 +15,7 @@ function measured(series) {
     const input = {
       series, arm: arm.id, task: task.id, repetition,
       corpusHash: plan.corpus.hash, protocolHash: plan.protocolHash,
-      rulesHash: "a".repeat(64), skillHash: arm.skills ? "b".repeat(64) : null, skills: arm.skills,
+      attempt: 1, rulesHash: "a".repeat(64), skillHash: arm.skills ? "b".repeat(64) : null, skills: arm.skills,
       baseline: 1, acceptance: true, lint: true, typecheck: true,
       phases: candidates.map((candidate, idx) => ({
         sessionId: randomUUID(), phase: idx === 0 && arm.plan ? "plan" : "build",
@@ -26,7 +26,7 @@ function measured(series) {
     return {
       input, recordedAt: "2026-11-25T13:00:00.000Z",
       phases: candidates.map((candidate) => ({
-        adapter: candidate.adapter, model: candidate.model, adapterVersion: "0.1.0", inputTokens: 1000, outputTokens: 100,
+        adapter: candidate.adapter, model: candidate.model, adapterVersion: "0.1.0", inputTokens: 1000, cacheInputTokens: 0, outputTokens: 100,
         costUsd: 0.15, turnErrors: 0, toolErrors: 0, turns: 1,
         startedAt: "2026-11-25T12:59:59.000Z", endedAt: "2026-11-25T13:00:00.000Z",
       })),
@@ -110,6 +110,48 @@ it("uses turn completion and a stop acknowledgement before returning stage evide
     return { status: "idle" };
   });
   const stage = await runPhase(api, "build", plan.arms.find((arm) => arm.id === "pi-cloud-plain").build, "/tmp/repo", "sample", 1000);
-  expect(stage).toMatchObject({ phase: "build", sessionId: "completed", billing: testProtocol.harnesses.pi.cloud.billing });
+  expect(stage).toMatchObject({ phase: "build", sessionId: "completed", billing: testProtocol.cells.find((cell) => cell.id === "pi-cloud").billing });
   expect(api).toHaveBeenLastCalledWith("/api/sessions/completed/stop", {});
+});
+
+const corpus = readCorpus();
+const withCells = (mutate) => planSeries(mutate(JSON.parse(JSON.stringify(testProtocol))), corpus);
+
+it("rejects protocols that would confound or leave a provider unbudgeted", () => {
+  expect(() => withCells((p) => { delete p.providerBudgetUsd.fixture; return p; })).toThrow(/providerBudgetUsd/);
+  expect(() => withCells((p) => { p.cells[1].fingerprint = "shared-local"; return p; })).toThrow(/different models/);
+  expect(() => withCells((p) => { p.splits[0].build = "claude-cloud"; return p; })).toThrow(/one harness/);
+  expect(() => withCells((p) => { p.cells.push({ ...p.cells[0] }); return p; })).toThrow(/Duplicate/);
+  expect(() => withCells((p) => { p.cells = p.cells.filter((c) => c.harness === "pi"); return p; })).toThrow(/two harnesses/);
+});
+
+it("supports several cloud models per harness and a cell without Skills-A/B", () => {
+  const extended = withCells((p) => {
+    p.providerBudgetUsd.other = 5;
+    p.cells.push({ ...p.cells[3], id: "claude-opus", model: "fixture/opus", fingerprint: "opus", provider: "other", skillsAb: false });
+    return p;
+  });
+  expect(extended.arms.map((arm) => arm.id)).toContain("claude-opus-plain");
+  expect(extended.arms.map((arm) => arm.id)).not.toContain("claude-opus-skills");
+});
+
+it("stops a provider at its budget cap and counts only cloud phases", () => {
+  const guard = new BudgetGuard({ fixture: 0.3 });
+  const cloud = plan.jobs.find(({ arm }) => arm.build.billing.kind === "cloud" && !arm.plan);
+  const local = plan.jobs.find(({ arm }) => arm.build.billing.kind === "local" && !arm.plan);
+  guard.record(local, { phases: [{ costUsd: 9 }] });
+  guard.assertOpen(cloud);
+  guard.record(cloud, { phases: [{ costUsd: 0.2 }] });
+  guard.assertOpen(cloud);
+  guard.record(cloud, { phases: [{ costUsd: 0.2 }] });
+  expect(() => guard.assertOpen(cloud)).toThrow(/budget exhausted for fixture/);
+});
+
+it("separates dead infrastructure from task failures", async () => {
+  expect(isInfrastructureFailure(new Error("x: HTTP 504 upstream"))).toBe(true);
+  expect(isInfrastructureFailure(new Error("session: error before completed turn telemetry"))).toBe(true);
+  expect(isInfrastructureFailure(new Error("acceptance failed"))).toBe(false);
+  const down = vi.fn(async () => ({ ok: false, status: 504 }));
+  await expect(awaitHealthy("http://127.0.0.1:1/health", { fetcher: down, waitMs: 0, stepMs: 1 })).rejects.toThrow(/health check failed/);
+  await expect(awaitHealthy("http://127.0.0.1:1/health", { fetcher: async () => ({ ok: true }) })).resolves.toBeUndefined();
 });
