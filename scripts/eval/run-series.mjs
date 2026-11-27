@@ -69,7 +69,7 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
       }
       phases.push(await runPhase(api, "build", arm.build, build,
         `${task.prompt}\n\n${toolScope}\nImplementiere und prüfe die Änderung.${handover}`, plan.config.timeoutMs));
-      const verdict = await judgeWorkspace(root, join(directory, "judge"), build, task);
+      const { verdict, why } = await judgeWorkspace(root, join(directory, "judge"), build, task);
       const input = {
         series, arm: arm.id, task: task.id, repetition, attempt,
         corpusHash: plan.corpus.hash, protocolHash: plan.protocolHash,
@@ -79,6 +79,7 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
       const buildId = phases.at(-1).sessionId;
       budget.record(job, await api(`/api/sessions/${buildId}/evaluation`, input));
       appendFileSync(receipts, JSON.stringify({ key, sessionId: buildId }) + "\n", { flush: true });
+      appendFileSync(join(destination, "verdicts.jsonl"), JSON.stringify({ key, sessionId: buildId, ...why }) + "\n", { flush: true });
       console.log(`${key} → ${buildId}`);
       // Keep source files and session journal for audit. Dependency trees can be recreated.
       const { rm } = await import("node:fs/promises");

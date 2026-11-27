@@ -136,14 +136,37 @@ Der Report weist sie in einem eigenen Abschnitt aus.
 
 ```sh
 npm run messlauf:eval -- export --protocol protocol.json --first /pfad/eval/kern-a/sessions.jsonl \
-  --invalid /pfad/eval/kern-a/invalid.jsonl --out /pfad/benchmarks/evaluation/laeufe/JJJJ-MM-DD-kern-a
+  --invalid /pfad/eval/kern-a/invalid.jsonl --data /pfad/hub-datadir \
+  --out /pfad/benchmarks/evaluation/laeufe/JJJJ-MM-DD-kern-a
 ```
 
 Der Ordner wird neu angelegt und nie überschrieben: `lauf.yaml` (Pflichtangaben, Zellen mit
 Preis-/Tarif-Snapshot, Kosten je Provider, verworfene Versuche, `messung_gueltig`),
 `ergebnisse.jsonl` (ein Datensatz je Lauf mit allen Metriken), `sessions.jsonl`,
-`invalid.jsonl` und `manifest.sha256`. Eine unvollständige Serie lässt sich nur mit `--partial`
+`invalid.jsonl` und `manifest.sha256`. Liegen neben den Belegen `aborted.jsonl` (Abbrüche) und
+`verdicts.jsonl` (Fehlermeldungen der Abnahme), gehen sie mit; `--data` ergänzt die Laufdiagnose. Eine unvollständige Serie lässt sich nur mit `--partial`
 exportieren und ist dann nie `messung_gueltig`. Der Hub-Datadir bleibt die Quelle (K7).
+
+## Laufdiagnose: warum ein Lauf so ausging
+
+```sh
+npm run messlauf:eval -- diagnose --first /pfad/eval/kern-a/sessions.jsonl \
+  --data /pfad/hub-datadir --out /pfad/kern-a-diagnose.jsonl
+```
+
+Je erfasstem und abgebrochenem Lauf liest [diagnose.mjs](../scripts/eval/diagnose.mjs) das
+Sitzungsjournal und die Arbeitskopie: Werkzeugaufrufe nach Art, Fehler und vom Harness
+abgelehnte Aufrufe, selbst gestartete Tests/Lint/Typecheck, Zeit bis zur ersten Änderung,
+geänderte Dateien (eigene Tests getrennt von Quellen außerhalb des erlaubten Umfangs),
+Fehlerproben und Schlussantwort. Pfade werden durch `<workspace>` und `~` ersetzt; vor dem
+Commit ins Benchmark-Repo trotzdem auf Zugangsdaten prüfen. Kein LLM, kein Urteil: Die Werte
+beschreiben Verhalten und belegen keine Ursache. Ein Zug, den der Anbieter abbricht (Kontingent,
+Rate-Limit, Anmeldung, Netz, Server), ist im Runner ein ungültiger Versuch (`invalid.jsonl`) und
+kein Aufgabenfehler; ältere Datensätze dieser Art zeigt die Diagnose als `provider:<Art>`. Läufe mit abgelehnten Aufrufen messen die
+Harness-Konfiguration mit und gehören in die Abweichungen der Serie.
+
+Beim Fahren schreibt der Runner je Lauf zusätzlich `verdicts.jsonl` mit den fehlgeschlagenen
+Abnahmefällen und dem Ende der Lint-/Typecheck-Ausgabe.
 
 ## Mess-Registrierungen im Benchmark-Hub
 

@@ -11,6 +11,7 @@ import { planSeries } from "./eval/protocol.mjs";
 import { runSeries } from "./eval/run-series.mjs";
 import { renderReport } from "./eval/report.mjs";
 import { exportSeries } from "./eval/export.mjs";
+import { diagnoseSeries, diagnosisTable } from "./eval/diagnose.mjs";
 import { renderPilotReport } from "./eval/pilot-report.mjs";
 import { extractRuns } from "./skill-runs.mjs";
 
@@ -39,13 +40,22 @@ async function readSeries(api, path) {
 }
 
 async function main() {
-  if (!["plan", "check", "run", "report", "export", "pilot-report"].includes(mode)) {
-    console.log("Usage: npm run messlauf:eval -- <plan|check|run|report|export|pilot-report> --protocol <file>\n" +
+  if (!["plan", "check", "run", "report", "export", "pilot-report", "diagnose"].includes(mode)) {
+    console.log("Usage: npm run messlauf:eval -- <plan|check|run|report|export|pilot-report|diagnose> --protocol <file>\n" +
+      "diagnose (ohne --protocol): --first <sessions.jsonl> --data <hub data dir> [--out <neue .jsonl>]\n" +
       "pilot-report: --series <name> --report docs/JJJJ-MM-TT_p84-pilotserie.md [--invalid-reason <text>]\n" +
-      "export: --first <sessions.jsonl> --out <neuer Ordner im Benchmark-Repo> [--invalid <invalid.jsonl>] [--partial]\n" +
+      "export: --first <sessions.jsonl> --out <neuer Ordner im Benchmark-Repo> [--invalid <invalid.jsonl>] [--partial] [--data <hub data dir>]\n" +
       "run: --scratch <hub project root> --series <name> [--resume] [--skip-provider <name,…>]\n" +
       "report: --first <sessions.jsonl> --repeat <sessions.jsonl> --data <hub data dir> --report <dated markdown path>");
     if (mode) process.exitCode = 2;
+    return;
+  }
+  // Ohne Protokoll und Hub: liest nur Belege, Journale und Arbeitskopien, auch von Serien eines älteren Korpus.
+  const diagnose = async () => diagnoseSeries({ receipts: required("first"), data: await realpath(required("data")), tasks: readCorpus().tasks });
+  if (mode === "diagnose") {
+    const rows = await diagnose();
+    if (options.out) writeFileSync(options.out, rows.map((row) => JSON.stringify(row)).join("\n") + "\n", { flag: "wx" });
+    console.log(diagnosisTable(rows));
     return;
   }
   const plan = planSeries(JSON.parse(readFileSync(required("protocol"), "utf8")), readCorpus());
@@ -88,7 +98,7 @@ async function main() {
     const out = resolve(required("out"));
     const { manifest, files } = exportSeries({
       rows: await readSeries(api, required("first")), receipts: required("first"), invalid: options.invalid, plan, out,
-      partial: options.partial === true,
+      partial: options.partial === true, diagnosis: options.data ? await diagnose() : undefined,
       meta: { date: new Date().toISOString().slice(0, 10), commit: sha.trim(), runtime: `${hostname()} / ${platform()} / Node ${process.version}` },
     });
     console.log(`P84 export ${out}: ${files.join(", ")} · messung_gueltig=${manifest.messung_gueltig}`);
