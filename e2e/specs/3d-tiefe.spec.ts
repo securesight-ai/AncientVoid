@@ -1,0 +1,109 @@
+import { test, expect } from "../support/fixtures.ts";
+
+/**
+ * EPIC-P86 T86.1–T86.3: die Tiefenebene. Geprüft wird über die computed
+ * animation-name (deterministisch, kein Timing-Fenster): Overlays tragen
+ * mit 3D an eine Perspektiv-Animation, mit 3D aus keine. Die drei
+ * Schalterflächen — „Mehr“-Blatt (Handy), Sidebar (PC), Einstellungen —
+ * zeigen denselben Stand, und der überlebt den Reload.
+ */
+test.describe("3D-Tiefe", () => {
+  test("T86.3: Blatt fliegt mit Perspektive auf; der Schalter im „Mehr“-Blatt stellt ab und überlebt Reload", async ({ app }) => {
+    const attr = () => app.evaluate(() => document.documentElement.getAttribute("data-ctx-3d"));
+
+    // T86.1: Standard an, vor dem ersten Paint gesetzt (main.tsx).
+    await expect.poll(attr).toBe("on");
+
+    await app.getByRole("button", { name: "Mehr", exact: true }).click();
+    const sheet = app.getByRole("dialog", { name: "Mehr" });
+    await expect(sheet).toBeVisible();
+    await expect(sheet).toHaveCSS("animation-name", "depth3d-rise");
+    // Nutzerfeedback 26.11.2026 („herausgelöst“): Der Hintergrund weicht
+    // zurück (Unschärfe + kleiner), das Fenster schwebt persistend davor.
+    await expect(app.locator(".ui-sheet-backdrop")).toHaveCSS("backdrop-filter", /blur\(16px\)/);
+    await expect(sheet).toHaveCSS("transform", /matrix/);
+    await expect(app.locator("#app > .app-page")).toHaveCSS("transform", /matrix/);
+
+    // T86.2: Schalter im offenen Blatt — sofort wirksam, ohne Reload.
+    await sheet.getByRole("button", { name: "3D-Tiefe" }).click();
+    await expect.poll(attr).toBe("off");
+    expect(await app.evaluate(() => localStorage.getItem("ancientvoid.depth3d"))).toBe("0");
+
+    await sheet.getByRole("button", { name: "Einstellungen" }).click();
+    await app.getByRole("button", { name: "Mehr", exact: true }).click();
+    const again = app.getByRole("dialog", { name: "Mehr" });
+    await expect(again).toBeVisible();
+    await expect(again).toHaveCSS("animation-name", "none");
+    await expect(app.locator(".ui-sheet-backdrop")).toHaveCSS("backdrop-filter", "none");
+    await expect(again).toHaveCSS("transform", "none");
+    await expect(app.locator("#app > .app-page")).toHaveCSS("transform", "none");
+    await again.getByRole("button", { name: "Einstellungen" }).click();
+
+    // T86.1: Ablage überlebt den Reload (Muster ctxMotion).
+    await app.reload();
+    await expect.poll(attr).toBe("off");
+
+    // Zurück auf an — auch das überlebt den Reload.
+    await app.getByRole("button", { name: "Mehr", exact: true }).click();
+    await app.getByRole("dialog", { name: "Mehr" }).getByRole("button", { name: "3D-Tiefe" }).click();
+    // Nutzerfund 26.11.2026: ein Wechsel ohne sichtbare Reaktion wirkt wie
+    // ein toter Schalter — Einschalten pulst deshalb die offene Fläche
+    // kurz in der Tiefe (Kick, gesetzt von app/depth3d.ts).
+    const kick = await app.evaluate(() => ({
+      cls: document.documentElement.classList.contains("depth3d-kick"),
+      pulse: document.querySelector(".ui-sheet") ? getComputedStyle(document.querySelector(".ui-sheet")!).animationName : null,
+    }));
+    expect(kick.cls, "Kick-Klasse am Wurzelelement nach dem Einschalten").toBe(true);
+    expect(kick.pulse, "offenes Blatt pulst in der Tiefe").toBe("depth3d-pulse");
+    await expect.poll(attr).toBe("on");
+    await app.reload();
+    await expect.poll(attr).toBe("on");
+    expect(await app.evaluate(() => localStorage.getItem("ancientvoid.depth3d"))).toBeNull();
+  });
+
+  test("T86.4: Session-Ansicht fliegt beim Öffnen ein; Karten kommen dem Druck entgegen", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "opencode", prompt: "Tiefenflug" });
+    const card = app.locator(".session-card").filter({ hasText: "Tiefenflug" });
+    await expect(card).toBeVisible();
+
+    // Press-Tiefe (Dock-Taste): gehaltener Druck hebt, Loslassen federt zurück.
+    const mehr = app.getByRole("button", { name: "Mehr", exact: true });
+    await mehr.hover();
+    await app.mouse.down();
+    await expect(mehr).toHaveCSS("transform", /matrix/);
+    await app.mouse.up();
+    await expect(mehr).toHaveCSS("transform", "none");
+    await app.keyboard.press("Escape");
+
+    // Press-Tiefe (Karte): gehaltener Druck hebt die Karte.
+    await card.hover();
+    await app.mouse.down();
+    await expect(card).toHaveCSS("transform", /matrix/);
+    // Loslassen = Öffnen: die Session-Ansicht fliegt als Fenster aus der Tiefe.
+    await app.mouse.up();
+    const view = app.locator("#app > .session-live");
+    await expect(view).toBeVisible();
+    await expect(view).toHaveCSS("animation-name", "depth3d-enter");
+    // Einmal-Flug, kein Dauer-Transform: danach natürliche Position.
+    await expect(view).toHaveCSS("transform", "none");
+  });
+
+  test("T86.2: Sidebar und Einstellungen zeigen denselben Stand und schalten gegenseitig @desktop", async ({ app }) => {
+    const sidebar = app.getByRole("button", { name: "3D an/aus", exact: true });
+    await app.setViewportSize({ width: 1280, height: 800 });
+    await expect(sidebar).toBeVisible();
+    await expect(sidebar).toHaveAttribute("aria-pressed", "true");
+
+    await sidebar.click();
+    await expect(sidebar).toHaveAttribute("aria-pressed", "false");
+
+    // Einstellungen → Darstellung: derselbe Stand, zurück schaltet die Sidebar live.
+    await app.getByRole("button", { name: "Einstellungen", exact: true }).click();
+    const toggle = app.getByRole("switch", { name: "3D-Tiefe", exact: true });
+    await expect(toggle).not.toBeChecked();
+    await toggle.click();
+    await expect(toggle).toBeChecked();
+    await expect(sidebar).toHaveAttribute("aria-pressed", "true");
+    expect(await app.evaluate(() => document.documentElement.getAttribute("data-ctx-3d"))).toBe("on");
+  });
+});

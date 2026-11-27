@@ -25,6 +25,7 @@ import { t, applyLanguage } from "../shared/i18n/index.ts";
 import { initAppearance } from "./appearance.ts";
 import { applyPinchZoom, pinchZoomAllowed } from "./zoom.ts";
 import { applyCtxMotion, applyScale, ctxMotionOn, getScale, installScaleShortcuts } from "./ui-scale.ts";
+import { applyDepth3d, depth3dOn } from "./depth3d.ts";
 import { captureShareTarget, storeShareInbox } from "./share-inbox.ts";
 import { NotificationCenter } from "../features/notifications/Notifications.tsx";
 import { TileWorkspace } from "../features/workspace/TileWorkspace.tsx";
@@ -60,6 +61,8 @@ applyPinchZoom(pinchZoomAllowed());
 // EPIC-P20: UI scale (Ctrl+wheel, Ctrl +/−/0) and the context-bar shimmer, before the first paint.
 applyScale(getScale());
 applyCtxMotion(ctxMotionOn());
+// EPIC-P86 T86.1: Tiefenebene (Fensterflug) — Attribut vor dem ersten Paint, Standard an.
+applyDepth3d(depth3dOn());
 installScaleShortcuts();
 // EPIC-P51 T51.8: Kürzel-Hinweis-Pill bei Klicks auf Elemente mit Shortcut.
 installShortcutHints();
@@ -577,6 +580,17 @@ function Main() {
 
   if (!ready) return <TokenGate onReady={() => void becomeReady()} rejected={gateError} />;
 
+  // EPIC-P86 T86.7 (Nutzerwunsch 26.11.2026): Kachel-Nummern für die
+  // Übersichtskarten — dieselbe Nummer wie .tile-no am Fensterrand, damit
+  // Sessions ihren Fenstern zuzuordnen sind. Schlüssel wie tileRefOf
+  // (remoteHost), erste Kachel gewinnt.
+  const tileNos = new Map<string, number>();
+  visibleTiles(ws).forEach((ref, i) => {
+    if (ref) {
+      const key = `${ref.hostId ?? ""}:${ref.sessionId}`;
+      if (!tileNos.has(key)) tileNos.set(key, i + 1);
+    }
+  });
   return (
     <>
       <TooltipLayer />
@@ -630,7 +644,7 @@ function Main() {
         // T8.5 (AC-P8-6): from 1280 px list and session side by side.
         <div class={`split${listCollapsed ? " list-collapsed" : ""}`}>
           <aside class="split-list">
-            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={filesWide && !listCollapsed} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
+            <App wide onOpen={openFromList} ready={() => setReady(false)} page={route.view === "list" ? route.page : "dashboard"} bell={filesWide && !listCollapsed} tileNos={tileNos} {...(route.view === "list" && route.vaultFile ? { vaultFile: route.vaultFile } : {})} />
           </aside>
           <section class="split-detail">
             {/* EPIC-P18: up to four sessions as tiles. */}

@@ -221,6 +221,20 @@
   -webkit-box-orient: vertical;
 }
 
+/* EPIC-P86 T86.7 (Nutzerwunsch 26.11.2026): Nummer der Kachel, in der diese
+ * Session rechts offen ist — Zuordnung Liste ↔ Fenster, dieselbe Nummer wie
+ * .tile-no am Fensterrand. */
+.card-tile-no {
+  flex: 0 0 auto;
+  align-self: center;
+  font: 600 var(--text-xs) var(--font-mono);
+  line-height: 1;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+}
+
 .session-ago {
   flex: 0 0 auto;
   font-size: var(--text-xs);

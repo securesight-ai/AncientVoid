@@ -103,11 +103,45 @@ test.describe("Fehler und Benachrichtigungen (ADR-0015)", () => {
     expect(close, "✕ vorhanden").toBeTruthy();
     // Gleiche Zeile: beide Zentren liegen auf der Kopfzeile.
     expect(Math.abs(sound.y + sound.height / 2 - (close.y + close.height / 2))).toBeLessThanOrEqual(4);
-    // Direkt benachbart: zwischen beiden Tasten liegt Knopfabstand, keine Lücke
-    // (vor dem Fix rückte space-between die Sound-Taste fast in die Panel-Mitte).
+    // Nutzerwunsch 27.11.2026: beide Tasten gleich groß (icon-Quadrate) und
+    // mit festem Abstand statt aneinander klebend (vorher: Text-Taste ✕
+    // breiter als die Sound-Taste, kein Spalt).
+    expect(Math.abs(sound.height - close.height), `Höhen ${sound.height}/${close.height}`).toBeLessThanOrEqual(2);
     const gap = close.x - (sound.x + sound.width);
-    expect(gap).toBeGreaterThanOrEqual(-1);
-    expect(gap, `Spalt ${gap} px zwischen Sound-Taste und ✕`).toBeLessThanOrEqual(12);
+    expect(gap, `Spalt ${gap} px zwischen Sound-Taste und ✕`).toBeGreaterThanOrEqual(4);
+    expect(gap).toBeLessThanOrEqual(12);
+  });
+
+  test("das Panel ist ein Fenster: Hinterlegung schiebt den Hintergrund zurück, Klick daneben schließt (Nutzerwunsch 27.11.)", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "opencode", prompt: "Kurz" });
+    await app.getByRole("button", { name: /Benachrichtigungen/ }).click();
+    const panel = app.locator(".notif-panel");
+    await expect(panel).toBeVisible();
+    // Wie beim Sheet-Baustein: Hintergrund defokussiert, Panel schwebt davor.
+    await expect(app.locator(".notif-backdrop")).toHaveCSS("backdrop-filter", /blur\(16px\)/);
+    await expect(panel).toHaveCSS("transform", /matrix/);
+    await expect(app.locator("#app > .app-page")).toHaveCSS("transform", /matrix/); // Hintergrund weicht zurück
+    await app.locator(".notif-backdrop").click({ position: { x: 8, y: 8 } });
+    await expect(panel).toHaveCount(0);
+  });
+
+  test("im Fluss-Modus liegt das Panel bündig über den Session-Karten @desktop", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "opencode", prompt: "Kartenbund" });
+    // Geometrie untransformiert messen: 3D aus (der Bündig-Vergleich würde
+    // sonst die Schwebungs-Skalierung von Panel und Karten sehen).
+    await app.evaluate(() => localStorage.setItem("ancientvoid.depth3d", "0"));
+    await app.reload();
+    const card = app.locator(".split-list .session-card").first();
+    await expect(card).toBeVisible();
+    const cb = (await card.boundingBox())!;
+    await app.getByRole("button", { name: /Benachrichtigungen/ }).click();
+    const panel = app.locator(".notif-panel");
+    await expect(panel).toBeVisible();
+    const pb = (await panel.boundingBox())!;
+    // Nutzerwunsch 27.11.2026: gleiche Kanten und Breite wie die Karten der
+    // Listenspalte — gemessen an der Topbar-Spalte (Notifications.tsx).
+    expect(Math.abs(pb.x - cb.x), `links ${pb.x} vs. Karte ${cb.x}`).toBeLessThanOrEqual(2);
+    expect(Math.abs(pb.x + pb.width - (cb.x + cb.width)), `rechts ${pb.x + pb.width} vs. Karte ${cb.x + cb.width}`).toBeLessThanOrEqual(2);
   });
 
   test("Abschnitte einklappbar — nur Ungesehenes steht per Vorgabe offen (Nutzerwunsch 2026-11-18)", async ({ app, hub }) => {

@@ -12,6 +12,7 @@ import { openCommandBar } from "../features/commands/CommandBar.tsx";
 import { openLayer } from "../shared/layers.ts";
 import { ariaCombo, comboLabel, registerShortcut } from "../shared/shortcuts/registry.ts";
 import { t } from "../shared/i18n/index.ts";
+import { DEPTH3D_EVENT, DEPTH3D_KEY, depth3dAllowed, toggleDepth3d } from "./depth3d.ts";
 export type { ListPage as Page } from "./route.ts";
 import type { ListPage as Page } from "./route.ts";
 
@@ -46,6 +47,19 @@ export function GlobalDock({ active, onNavigate }: { active: Page | null; onNavi
       setMore(false);
     });
   }, [more]);
+  // EPIC-P86 T86.2: 3D-Schalter im „Mehr“-Blatt; der Zustand ist der
+  // effektive (Kaskade: Bewegung/reduced-motion schlagen 3D) und folgt
+  // Änderungen von anderen Flächen und Tabs.
+  const [depth3d, setDepth3d] = useState(depth3dAllowed);
+  useEffect(() => {
+    const sync = () => setDepth3d(depth3dAllowed());
+    const obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-ctx-3d", "data-ctx-motion"] });
+    const storage = (e: StorageEvent) => { if (e.key === DEPTH3D_KEY || e.key === null) sync(); };
+    window.addEventListener(DEPTH3D_EVENT, sync);
+    window.addEventListener("storage", storage);
+    return () => { obs.disconnect(); window.removeEventListener(DEPTH3D_EVENT, sync); window.removeEventListener("storage", storage); };
+  }, []);
   const go = (page: Page) => {
     setMore(false);
     onNavigate(page);
@@ -106,6 +120,11 @@ export function GlobalDock({ active, onNavigate }: { active: Page | null; onNavi
             <button class="more-item" type="button" onClick={() => { setMore(false); openLayer("files"); }}>
               <TabIcon name="baum" />
               <span>{t("dock.filetree")}</span>
+            </button>
+            {/* EPIC-P86 T86.2: 3D-Tiefe im „Mehr“-Blatt; am PC liegt der Schalter in der Sidebar. */}
+            <button class={`more-item ${depth3d ? "active" : ""}`} type="button" aria-pressed={depth3d} onClick={() => toggleDepth3d()}>
+              <TabIcon name="tiefe" />
+              <span>{t("dock.depth3d")}</span>
             </button>
         </Sheet>
       )}

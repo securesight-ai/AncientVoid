@@ -157,36 +157,54 @@
   position: fixed;
   top: calc(env(safe-area-inset-top) + 52px);
   right: max(8px, calc((100vw / var(--ui-zoom) - 680px) / 2 + 8px));
-  z-index: var(--z-overlay);
-  width: min(380px, calc(100vw / var(--ui-zoom) - 16px));
+  z-index: var(--z-sheet);
+  /* Nutzerwunsch 27.11.2026: so breit wie die Spalte der Session-Karten
+   * (höchstens 420 px) und dieselbe Fläche wie das Neue-Session-Modal
+   * (ui-sheet--modal): Rand, Ecke und Schatten aus einem Vokabular. */
+  width: min(420px, calc(100vw / var(--ui-zoom) - 24px));
   max-height: min(70vh, calc(100dvh / var(--ui-zoom) - env(safe-area-inset-top) - 68px));
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--bg-elev);
-  border: 1px solid var(--bg-chip);
-  border-radius: 12px;
-  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sheet);
+  padding: var(--space-3) var(--space-4);
   display: grid;
-  gap: 6px;
+  gap: var(--space-2);
+}
+/* Hinterlegung wie beim Sheet-Baustein (Nutzerwunsch 27.11.2026: das
+ * Benachrichtigungs-Panel ist ein Fenster wie das Neue-Session-Modal —
+ * Klick daneben schließt, die 3D-Ebene (61-depth3d.css) defokussiert den
+ * Hintergrund dahinter). */
+.notif-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--backdrop);
+  z-index: var(--z-overlay);
 }
 /* Phone: pinned to both edges instead of a computed right offset, so a wider layout viewport
  * (page overflow, pinch zoom, safe areas) can never push the ✕ out of reach. */
 @media (max-width: 639px) {
   .notif-panel {
-    left: calc(8px + env(safe-area-inset-left));
-    right: calc(8px + env(safe-area-inset-right));
+    /* 12 px = Innenabstand der .app-page: bündig mit den Session-Karten. */
+    left: calc(12px + env(safe-area-inset-left));
+    right: calc(12px + env(safe-area-inset-right));
     width: auto;
   }
 }
 .notif-panel-head {
   position: sticky;
-  top: -8px;
+  top: calc(var(--space-3) * -1);
   z-index: var(--z-base);
   background: var(--bg-elev);
-  margin: -8px -8px 0;
-  padding: 4px;
+  margin: calc(var(--space-3) * -1) calc(var(--space-4) * -1) 0;
+  padding: var(--space-1) var(--space-1) 0;
   display: flex;
   align-items: center;
+  /* Nutzerwunsch 27.11.2026: Sound- und ✕-Taste gleich groß (beide
+   * icon-Quadrate) und kleben nicht aneinander. */
+  gap: var(--space-2);
 }
 /* BUG-0210: space-between verteilte Titel, Sound-Taste und ✕ auf die ganze
  * Breite — die Sound-Taste (EPIC-P65 T65.4) rutschte damit fast in die
@@ -198,7 +216,7 @@
  * Abschnitt nutzt die Überschrift der Übersicht (.section-title). */
 .notif-section {
   display: grid;
-  gap: 6px;
+  gap: var(--space-2);
 }
 .notif-section .section-title {
   min-height: 0;

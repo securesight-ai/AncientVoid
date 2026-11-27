@@ -2,7 +2,8 @@
 
 **Art:** erklaerung
 
-**Stand:** 2026-10-27 · gehört zu [EPIC-P20](../epics/EPIC-P20-oberflaeche-feinschliff.md) T20.4.
+**Stand:** 2026-11-27 · gehört zu [EPIC-P20](../epics/EPIC-P20-oberflaeche-feinschliff.md) T20.4,
+ergänzt um Bewegung/Tiefe ([EPIC-P86](../epics/EPIC-P86-3d-tiefe-fensterflug-lebendigkeit.md) T86.6).
 Das hier ist eine **Empfehlungsliste**. Umgesetzt ist nur, was in der Spalte „Stand“ steht.
 
 ## Heute vorhanden
@@ -18,6 +19,27 @@ Die Seite besteht aus vier Karten (`apps/pwa/src/app/App.tsx`, Seite `settings`)
 
 Mit EPIC-P20 kommt in „Allgemein“ dazu: **Zoom der Oberfläche** (70–200 %, Strg + Mausrad,
 Strg + `+`/`−`/`0`) und **Schimmer der Kontextleiste** (an/aus, folgt „Bewegung reduzieren“).
+
+## Bewegung und Tiefe: zwei Schalter, eine Kaskade (EPIC-P43, EPIC-P86)
+
+In **Darstellung** liegen zwei Schalter, die steuern, wie viel sich bewegt —
+in dieser Reihenfolge:
+
+1. **„Bewegung reduzieren“ des Systems/Browsers** schlägt alles: kein Flug,
+   kein Puls, nichts bewegt sich (statische Zustände wie die Unschärfe
+   hinter offenen Fenstern bleiben — sie sind kein Bewegungsreiz).
+2. **„Bewegung“** — Atmen, Schimmer, Ruf und Übergänge; aus schaltet auch
+   die 3D-Ebene ab.
+3. **„3D-Tiefe“** (auch am PC in der Sidebar und am Handy im „Mehr“-Blatt):
+   Fenster öffnen sich aus der Tiefe, der Hintergrund weicht zurück (kleiner,
+   unscharf, dunkler), offene Fenster schweben davor, die fokussierte Kachel
+   glüht im Zustands-Puls. Einschalten pulst offene Flächen kurz als
+   sofortiges Feedback; Ausschalten bewegt bewusst nichts.
+
+Beide liegen pro Gerät im `localStorage` (`ancientvoid.ctxMotion`,
+`ancientvoid.depth3d`) — an ist der Default, gesetzt wird nur das explizite
+„0“ (Muster `app/ui-scale.ts`, Logik `app/depth3d.ts`, Ebenen in
+`app/styles/61-depth3d.css`).
 
 ## Empfehlungen
 

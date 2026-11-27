@@ -36,6 +36,7 @@ export function App({
   wide = false,
   dock = true,
   bell = false,
+  tileNos,
 }: {
   /** `newTile`: Ctrl/⌘-click — open next to the others (EPIC-P18). */
   onOpen: (session: SessionRecord, opts?: { newTile?: boolean; seq?: number; seqAt?: number }) => void;
@@ -54,6 +55,8 @@ export function App({
   dock?: boolean;
   /** EPIC-P64 T64.4: Glocke als Flusselement im Topbar (nur am PC mit sichtbarer Liste — main.tsx rendert sie sonst). */
   bell?: boolean;
+  /** EPIC-P86 T86.7: Nummer der Kachel (1–4), in der eine Session rechts offen ist — für die Zuordnung auf den Übersichtskarten (nur PC-Spalte). */
+  tileNos?: Map<string, number>;
 }) {
   const shown: Page = wide ? "dashboard" : page;
   useEffect(() => setHere({ page, sessionId: null, hostId: null, sessionRevision: null }), [page]);
@@ -236,6 +239,7 @@ export function App({
             onOpenApprovals={() => setPage("approvals")}
             lastSession={getLastSession()}
             probeAvailable={adapters.some((a) => a.id === "dummy")}
+            tileNos={tileNos}
           />
         ))}
 

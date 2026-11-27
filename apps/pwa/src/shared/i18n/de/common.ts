@@ -81,6 +81,7 @@ export const de = {
   "common.open_file_tree": "Dateibaum öffnen",
   "common.open_in_window": "In eigenem Fenster öffnen",
   "common.open_repo_graph": "Repo-Graph von {name} öffnen",
+  "common.tile_no": "Fenster {n} — Session ist rechts in dieser Kachel offen",
   "common.open_window": "Fenster öffnen",
   "common.overview_view": "Übersichtsansicht",
   "common.own_window": "⧉ eigenes Fenster",

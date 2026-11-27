@@ -60,7 +60,8 @@ export function Sheet({ open, onClose, label, variant = "sheet", preferred, test
   const classes = ["ui-sheet", variant === "modal" ? "ui-sheet--modal" : null, cls].filter(Boolean).join(" ");
   return (
     <>
-      <div class="ui-sheet-backdrop" onClick={onClose} aria-hidden="true" />
+      {/* window-backdrop: gemeinsame Marke aller Fenster-Hinterlegungen (61-depth3d.css). */}
+      <div class="ui-sheet-backdrop window-backdrop" onClick={onClose} aria-hidden="true" />
       <div
         ref={ref as never}
         role="dialog"

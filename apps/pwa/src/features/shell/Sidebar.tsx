@@ -5,6 +5,7 @@ import { TabIcon } from "../../shared/TabIcon.tsx";
 import { openCommandBar } from "../commands/CommandBar.tsx";
 import { openLayer } from "../../shared/layers.ts";
 import { loadSidebar, saveSidebar, SIDEBAR_ENTRIES, SIDEBAR_EVENT, SIDEBAR_KEY } from "./sidebar.ts";
+import { DEPTH3D_EVENT, DEPTH3D_KEY, depth3dAllowed, toggleDepth3d } from "../../app/depth3d.ts";
 
 export function Sidebar({ active, onNavigate }: { active: ListPage | null; onNavigate: (page: ListPage) => void }) {
   const [prefs, setPrefs] = useState(loadSidebar);
@@ -14,6 +15,20 @@ export function Sidebar({ active, onNavigate }: { active: ListPage | null; onNav
     window.addEventListener(SIDEBAR_EVENT, sync);
     window.addEventListener("storage", storage);
     return () => { window.removeEventListener(SIDEBAR_EVENT, sync); window.removeEventListener("storage", storage); };
+  }, []);
+  // EPIC-P86 T86.2: der 3D-Eintrag zeigt den effektiven Zustand (Kaskade:
+  // reduced-motion/Bewegung schlagen 3D). Attribut-Wandel am Wurzelelement
+  // (auch von anderen Flächen/Tabs) synchronisiert ihn (MutationObserver
+  // wie GraphPane).
+  const [depth3d, setDepth3d] = useState(depth3dAllowed);
+  useEffect(() => {
+    const sync = () => setDepth3d(depth3dAllowed());
+    const obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-ctx-3d", "data-ctx-motion"] });
+    const storage = (e: StorageEvent) => { if (e.key === DEPTH3D_KEY || e.key === null) sync(); };
+    window.addEventListener(DEPTH3D_EVENT, sync);
+    window.addEventListener("storage", storage);
+    return () => { obs.disconnect(); window.removeEventListener(DEPTH3D_EVENT, sync); window.removeEventListener("storage", storage); };
   }, []);
   return <nav class={`dock sidebar${prefs.minimized ? " minimized" : ""}`} aria-label={t("shell.sidebar")} onKeyDown={(e) => {
     if (!["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(e.key)) return;
@@ -27,7 +42,15 @@ export function Sidebar({ active, onNavigate }: { active: ListPage | null; onNav
     <div class="sidebar-entries" hidden={prefs.minimized}>
       {prefs.order.filter((id) => !prefs.hidden.includes(id)).map((id) => {
         const entry = SIDEBAR_ENTRIES.find((e) => e.id === id)!;
-        return <button key={id} type="button" class={`dock-item${active === entry.page ? " active" : ""}`} title={entry.label} aria-label={id === "new" ? t("common.new_session") : entry.label} data-sidebar-id={id} onClick={() => entry.page ? onNavigate(entry.page) : id === "search" ? openCommandBar() : openLayer("files")}>
+        // EPIC-P86 T86.2: Aktions-Einträge togglen statt zu navigieren.
+        const is3d = entry.action === "toggle-depth3d";
+        const active3d = is3d && depth3d;
+        return <button key={id} type="button" class={`dock-item${active3d || (!is3d && active === entry.page) ? " active" : ""}`} title={entry.label} aria-label={id === "new" ? t("common.new_session") : entry.label} {...(is3d ? { "aria-pressed": depth3d } : {})} data-sidebar-id={id} onClick={() => {
+          if (is3d) toggleDepth3d();
+          else if (entry.page) onNavigate(entry.page);
+          else if (id === "search") openCommandBar();
+          else openLayer("files");
+        }}>
           <TabIcon name={entry.icon} /><span class="lb">{entry.label}</span>
         </button>;
       })}
