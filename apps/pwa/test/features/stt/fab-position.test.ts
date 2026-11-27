@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampFabPos, defaultFabPos, FAB_SIZE, fabBreakpoint } from "../../../src/features/stt/fab-position.ts";
+import { clampFabPos, defaultFabPos, FAB_SIZE, fabBreakpoint, isKeyboardResize } from "../../../src/features/stt/fab-position.ts";
 
 describe("fab-position", () => {
   it("mappt Breakpoints", () => {
@@ -29,5 +29,31 @@ describe("fab-position", () => {
 
   it("clamp hält im Viewport", () => {
     expect(clampFabPos({ x: -10, y: 9999 }, 400, 700)).toEqual({ x: 0, y: 700 - FAB_SIZE });
+  });
+
+});
+
+describe("isKeyboardResize (Nutzerwunsch 27.11.2026: FAB bleibt bei Tastatur stehen)", () => {
+  const tastatur = { coarse: true, editableFocused: true };
+
+  it("Tastatur: Breite gleich, Hoehe um Hunderte geschrumpft, Editierfeld fokussiert", () => {
+    expect(isKeyboardResize({ w: 390, h: 844 }, { w: 390, h: 480 }, tastatur)).toBe(true);
+    expect(isKeyboardResize({ w: 844, h: 390 }, { w: 844, h: 120 }, tastatur)).toBe(true);
+  });
+
+  it("Drehung ist keine Tastatur: die Breite aendert sich", () => {
+    expect(isKeyboardResize({ w: 390, h: 844 }, { w: 844, h: 390 }, tastatur)).toBe(false);
+  });
+
+  it("Adressleiste/Rahmen schrumpfen nur um Dutzend Pixel — keine Tastatur", () => {
+    expect(isKeyboardResize({ w: 390, h: 844 }, { w: 390, h: 800 }, tastatur)).toBe(false);
+  });
+
+  it("Desktop ohne Touch wird nie als Tastatur gelesen (Fensterhoehen-Drag bleibt echt)", () => {
+    expect(isKeyboardResize({ w: 1280, h: 800 }, { w: 1280, h: 500 }, { coarse: false, editableFocused: true })).toBe(false);
+  });
+
+  it("ohne fokussiertes Editierfeld ist keine Tastatur auf", () => {
+    expect(isKeyboardResize({ w: 390, h: 844 }, { w: 390, h: 480 }, { coarse: true, editableFocused: false })).toBe(false);
   });
 });

@@ -298,3 +298,39 @@ test.describe("Nyx-FAB (Speech-to-Text)", () => {
     await expect(app.locator('[data-testid=nyx-fab-toast]')).toHaveCount(0);
   });
 });
+test.describe("Nyx-FAB: Bildschirmtastatur", () => {
+  // Handy mit Touch: nur dort kann die Bildschirmtastatur aufgehen, und
+  // matchMedia("(pointer: coarse)") muss sie fuer die Erkennung melden.
+  test.use({ viewport: { width: 390, height: 844 }, contextOptions: { hasTouch: true } });
+
+  test("Tastatur auf und zu: der FAB bleibt an derselben Stelle stehen (Nutzerwunsch 27.11.2026)", async ({ app, hub }) => {
+    const id = await hub.createSession({ adapter: "dummy" });
+    await app.goto(`${hub.origin}/#/sessions/${id}`);
+    // Eigenplatzierte Position (wie vom Nutzer gezogen): genau sie muss stehen
+    // bleiben — automatisch Gewaehltes folgt weiter der Dock-Oberkante (BUG-0138).
+    await app.evaluate(`localStorage.setItem("ancientvoid.nyx-fab.v1", JSON.stringify({ phone: { x: 200, y: 650 } }))`);
+    await app.reload();
+    await expect(app.locator('[data-testid=nyx-fab]')).toBeVisible();
+    await app.locator("textarea.composer-input").first().focus();
+    const before = (await app.locator('[data-testid=nyx-fab]').boundingBox())!;
+    // Tastatur simulieren (vor dem Fix sprang der FAB 158 px): fokussiertes
+    // Editierfeld, Breite unveraendert, sichtbare Hoehe schrumpft — iOS Safari
+    // und Chrome (resizes-content) feuern dafuer window-resize.
+    const tastatur = (h: number) =>
+      app.evaluate(
+        `(() => {
+          Object.defineProperty(window, "innerHeight", { value: ${h}, configurable: true });
+          window.dispatchEvent(new Event("resize"));
+        })()`,
+      );
+    await tastatur(480);
+    await app.waitForTimeout(600); // settle-Timer (300/1000) der Platzierung
+    const waehrend = (await app.locator('[data-testid=nyx-fab]').boundingBox())!;
+    await tastatur(844);
+    await app.waitForTimeout(600);
+    const danach = (await app.locator('[data-testid=nyx-fab]').boundingBox())!;
+    expect(waehrend).toEqual(before);
+    expect(danach).toEqual(before);
+  });
+});
+

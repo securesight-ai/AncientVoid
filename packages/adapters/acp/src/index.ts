@@ -729,10 +729,9 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       const cmd = cfg.modelsCommand ?? (command?.at(-1) === "acp" ? [...command.slice(0, -1), "models"] : undefined);
       if (!cmd) return [];
       const start = spawnArgv(cmd[0]!, cmd.slice(1));
-      const { stdout } = await run(start.file, start.args, { timeout: 20_000, maxBuffer: 1024 * 1024, ...(start.shell ? { shell: true } : {}) });
+      const { stdout } = await run(start.file, start.args, { timeout: 20_000, maxBuffer: 1024 * 1024, ...(start.shell ? { shell: true } : {}), ...(Object.keys(env).length > 0 ? { env: { ...process.env, ...env } } : {}) });
       return stdout
         .split("\n")
-        .map((line) => line.trim())
         .filter((line) => /^[\w.-]+\/\S+$/.test(line))
         .map((id) => ({ id }));
     },

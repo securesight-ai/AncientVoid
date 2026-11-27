@@ -17,6 +17,8 @@ import { modelsFromCommand, resolveContextWindow } from "@ancientvoid/models";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { normalizeOpencodeLine } from "./normalize.ts";
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
 
 const run = promisify(execFile);
 
@@ -56,6 +58,12 @@ const OpencodeConfig = z.object({
   /** Passed as `--model` when the session does not name one. The live
    * default observed 2026-09-22 was `zai-coding-plan/glm-5.3`. */
   model: z.string().min(1).optional(),
+  /** Extra environment for every opencode process — model listing and turns.
+   *  ADR-0054/0060 pattern (like ACP/pi): provider keys reach the harness
+   *  without landing in the config, e.g. ZAI_API_KEY for GLM. */
+  env: z.record(z.string(), z.string()).default({}),
+  /** Umgebungsvariable → Datei mit dem Wert (`~/` aufgelöst); Schlüssel stehen so nie in der Config. */
+  envFiles: z.record(z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/), z.string().min(1)).default({}),
   /** ADR-0054 (EPIC-P35 T35.7): listendes Kommando für den Modell-Katalog —
    * Überschreibung des abgeleiteten `<command> models`. */
   modelsCommand: z.array(z.string().min(1)).min(1).optional(),
@@ -89,6 +97,9 @@ interface SessionMeta {
 
 export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapter {
   const cfg: OpencodeConfig = OpencodeConfig.parse(config ?? {});
+  /** Env für jeden opencode-Prozess (Listing wie Züge): Config `env` plus `envFiles`. */
+  const env: Record<string, string> = { ...cfg.env };
+  for (const [name, file] of Object.entries(cfg.envFiles)) env[name] = readFileSync(file.replace(/^~(?=\/)/, homedir()), "utf8").trim();
   const procs = new Map<string, WorkerProcess>();
   const sessions = new Map<string, SessionMeta>();
 
@@ -189,9 +200,9 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
      * konfiguriertes `modelsCommand` geht durch den geteilten Parser
      * (Labels/bare Ids erlaubt), der native Pfad bleibt bei parseModelList. */
     async models(): Promise<ModelOption[]> {
-      if (cfg.modelsCommand) return modelsFromCommand(cfg.modelsCommand);
+      if (cfg.modelsCommand) return modelsFromCommand(cfg.modelsCommand, { env });
       const start = spawnArgv(cfg.command, ["models"]);
-      const { stdout } = await run(start.file, start.args, { timeout: 20_000, maxBuffer: 1024 * 1024, ...(start.shell ? { shell: true } : {}) });
+      const { stdout } = await run(start.file, start.args, { timeout: 20_000, maxBuffer: 1024 * 1024, ...(start.shell ? { shell: true } : {}), ...(Object.keys(env).length > 0 ? { env: { ...process.env, ...env } } : {}) });
       return parseModelList(stdout);
     },
 
@@ -232,7 +243,9 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
         });
         return { sessionId: ctx.sessionId };
       }
-      const proc = await ctx.spawnWorker(buildArgs(w.prompt, resumeSessionId, agent, model, w.files), spec.env ? { env: spec.env } : undefined);
+      // Config-Env plus die Env des Session-Starts (SessionSpec.env gewinnt, wie ACP/pi).
+      const spawnEnv = { ...env, ...spec.env };
+      const proc = await ctx.spawnWorker(buildArgs(w.prompt, resumeSessionId, agent, model, w.files), Object.keys(spawnEnv).length > 0 ? { env: spawnEnv } : undefined);
       attach(ctx.sessionId, proc, ctx, meta);
       const handle: SessionHandle = {
         sessionId: ctx.sessionId,
@@ -246,7 +259,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
       switch (input.kind) {
         case "prompt": {
           const w = withFiles(input.text, input.attachments);
-          const proc = await ctx.spawnWorker(buildArgs(w.prompt, meta?.resumeSessionId, undefined, undefined, w.files));
+          const proc = await ctx.spawnWorker(buildArgs(w.prompt, meta?.resumeSessionId, undefined, undefined, w.files), Object.keys(env).length > 0 ? { env } : undefined);
           attach(handle.sessionId, proc, ctx, meta ?? { healthy: true });
           return { ok: true };
         }

@@ -146,4 +146,22 @@ describe("aider adapter — lifecycle against a synthetic (unverified-happy-path
     expect(seen!.cmd.join(" ")).not.toContain("sekret");
     expect(seen!.env).toMatchObject({ OPENAI_API_BASE: "https://api.z.ai/api/coding/paas/v4", OPENAI_API_KEY: "sekret" });
   });
+
+  it("Nutzerwunsch 27.11.2026: env/envFiles (litellm-Provider-Keys) laufen in jedem aider-Lauf mit", async () => {
+    const { mkdtempSync, writeFileSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const keyFile = join(mkdtempSync(join(tmpdir(), "aider-env-")), "anthropic");
+    writeFileSync(keyFile, "file-key\n");
+    let seen: Record<string, string> | undefined;
+    const ctx = makeRecordingContext({
+      spawnWorker: async (_cmd, opts) => {
+        seen = opts?.env;
+        return fakeAiderProcess("ok");
+      },
+    });
+    const adapter = createAdapter({ env: { ZAI_API_KEY: "direct-key" }, envFiles: { ANTHROPIC_API_KEY: keyFile } });
+    await adapter.start({ adapter: "aider", project: "/tmp", prompt: "say ok", model: "zai/glm-5.3" }, ctx);
+    expect(seen).toMatchObject({ ZAI_API_KEY: "direct-key", ANTHROPIC_API_KEY: "file-key" });
+  });
 });

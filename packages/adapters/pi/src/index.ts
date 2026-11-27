@@ -13,6 +13,7 @@ import {
   type SteerInput,
   type WorkerProcess,
 } from "@ancientvoid/contracts";
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,10 +37,19 @@ import { findSessionFile, isSessionId, readTranscript } from "./transcript.ts";
  * Config (hub.config.json -> adapters[].config):
  *   command:   executable (default "pi").
  *   extraArgs: extra CLI args appended verbatim.
+ *   env:       extra environment for every pi process (listing, turns, compaction).
+ *   envFiles:  env var -> file with the value (`~/` resolved) — credentials stay
+ *              out of the config, e.g. ZAI_API_KEY for the GLM Coding Plan
+ *              (pi lists and runs zai models once the key is reachable).
  */
 const PiConfig = z.object({
   command: z.string().min(1).default("pi"),
   extraArgs: z.array(z.string()).default([]),
+  /** Extra environment for every pi process — listing, turns, compaction. ADR-0054/0060
+   *  pattern (like ACP): credentials reach the harness without landing in the config. */
+  env: z.record(z.string(), z.string()).default({}),
+  /** Umgebungsvariable → Datei mit dem Wert (`~/` aufgelöst); Schlüssel stehen so nie in der Config. */
+  envFiles: z.record(z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/), z.string().min(1)).default({}),
   /** Registered default `--model provider/id` (e.g. the gpubox qwen). A
    * session's own model choice (SessionSpec.model) always wins — without
    * either, pi runs its own default and the hub says so honestly. */
@@ -84,6 +94,10 @@ interface SessionMeta {
 
 export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapter {
   const cfg: PiConfig = PiConfig.parse(config ?? {});
+  /** Env für jeden pi-Prozess (Listing, Züge, Verdichtung): Konfiguration
+   * `env` plus `envFiles` — wie ACP bleiben Schlüssel außerhalb der Config. */
+  const env: Record<string, string> = { ...cfg.env };
+  for (const [name, file] of Object.entries(cfg.envFiles)) env[name] = readFileSync(file.replace(/^~(?=\/)/, homedir()), "utf8").trim();
   const procs = new Map<string, WorkerProcess>();
   const sessions = new Map<string, SessionMeta>();
   const sessionModels = new Map<string, string | undefined>();
@@ -119,7 +133,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
   /** Ein Steuerprozess für eine Session: starten, Protokoll an den Hub hänken,
    * die native Session-Datei festhalten (für /compact, Übernahme, Fortsetzen). */
   async function startWorker(sessionId: string, ctx: AdapterContext, meta: SessionMeta, model: string | undefined): Promise<PiWorker> {
-    const proc = await ctx.spawnWorker(rpcArgs(model, resumes.get(sessionId)), { stdin: "pipe", persistent: true });
+    const proc = await ctx.spawnWorker(rpcArgs(model, resumes.get(sessionId)), { stdin: "pipe", persistent: true, env });
     return steuereProzess(sessionId, ctx, meta, proc);
   }
 
@@ -248,7 +262,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
     async models(): Promise<ModelOption[]> {
       // `pi --list-models` zeigt nur Provider mit nutzbarer Anmeldung (pi docs/models.md); ein eigener
       // `modelsCommand` liefert Zeilen `provider/model`.
-      return cfg.modelsCommand ? modelsFromCommand(cfg.modelsCommand) : modelsFromCommand([cfg.command, "--list-models"], { parse: parseModelTable });
+      return cfg.modelsCommand ? modelsFromCommand(cfg.modelsCommand, { env }) : modelsFromCommand([cfg.command, "--list-models"], { env, parse: parseModelTable });
     },
 
     capabilities(): AdapterCapabilities {
@@ -354,9 +368,11 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
           ...(arbeiterNeu.proc.pid !== undefined ? { pid: arbeiterNeu.proc.pid } : {}),
         };
       }
+      // Config-Env plus die Env des Session-Starts (SessionSpec.env gewinnt, wie ACP).
+      const spawnEnv = { ...env, ...spec.env };
       const proc = await ctx.spawnWorker(
         buildArgs(spec.prompt ?? "(Session startet — bitte bestätigen mit OK)", model, true, resumes.get(ctx.sessionId)),
-        spec.env ? { env: spec.env } : undefined,
+        Object.keys(spawnEnv).length > 0 ? { env: spawnEnv } : undefined,
       );
       settleFork(ctx.sessionId);
       attach(ctx, proc, meta);
@@ -415,7 +431,7 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
           }
           meta.busy = true;
           try {
-            const proc = await ctx.spawnWorker(args);
+            const proc = await ctx.spawnWorker(args, Object.keys(env).length > 0 ? { env } : undefined);
             if (file) resumes.set(handle.sessionId, { file, fork: false });
             settleFork(handle.sessionId);
             attach(ctx, proc, meta);

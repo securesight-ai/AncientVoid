@@ -49,6 +49,10 @@ import type {
  * Config (hub.config.json -> adapters[].config):
  *   command:   executable to spawn (default "aider").
  *   extraArgs: extra CLI args appended verbatim.
+ *   model:     default model (required unless the session names one).
+ *   apiBase/apiKeyFile: one OpenAI-compatible endpoint (OPENAI_API_BASE/OPENAI_API_KEY).
+ *   env/envFiles: any provider key aider/litellm understands (ZAI_API_KEY,
+ *   ANTHROPIC_API_KEY, OPENROUTER_API_KEY ...) — envFiles keeps keys out of the config.
  */
 
 const AiderConfig = z.object({
@@ -60,6 +64,11 @@ const AiderConfig = z.object({
   apiBase: z.string().url().optional(),
   /** Datei mit dem API-Key (setzt OPENAI_API_KEY); `~/` wird aufgelöst. Der Key steht nie in der Config. */
   apiKeyFile: z.string().min(1).optional(),
+  /** Beliebige Env für jeden aider-Lauf (litellm-Provider-Keys, z. B. ZAI_API_KEY für
+   *  GLM) — dasselbe Muster wie ACP/pi/opencode; Keys via envFiles nie in der Config. */
+  env: z.record(z.string(), z.string()).default({}),
+  /** Umgebungsvariable → Datei mit dem Wert (`~/` aufgelöst). */
+  envFiles: z.record(z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/), z.string().min(1)).default({}),
 });
 type AiderConfig = z.infer<typeof AiderConfig>;
 
@@ -69,7 +78,10 @@ interface SessionMeta {
 
 export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapter {
   const cfg: AiderConfig = AiderConfig.parse(config ?? {});
+  const env: Record<string, string> = { ...cfg.env };
+  for (const [name, file] of Object.entries(cfg.envFiles)) env[name] = readFileSync(file.replace(/^~(?=\/)/, homedir()), "utf8").trim();
   const providerEnv = (): Record<string, string> => ({
+    ...env,
     ...(cfg.apiBase ? { OPENAI_API_BASE: cfg.apiBase } : {}),
     ...(cfg.apiKeyFile ? { OPENAI_API_KEY: readFileSync(cfg.apiKeyFile.replace(/^~(?=\/)/, homedir()), "utf8").trim() } : {}),
   });

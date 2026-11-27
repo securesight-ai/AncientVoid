@@ -372,6 +372,40 @@ pi braucht dafür keine Config mehr: ohne `modelsCommand` listet es `pi --list-m
 Endpunkt“ am Modell-Dropdown): ein Eintrag im Hub-Register (alle oder gewählte
 Harnesses) bzw. für pi ein Provider in `~/.pi/agent/models.json` — siehe ADR-0060.
 
+**Anmeldung über Env (Nutzerwunsch 27.11.2026):** `pi --list-models` und `/model`
+zeigen nur Provider mit nutzbarer Anmeldung — z.ai/GLM ist in pi eingebaut, taucht
+aber ohne Schlüssel nie im Katalog auf. Der pi-Adapter nimmt deshalb `env` und
+`envFiles` (wie ACP; Wert aus der Datei, `~/` aufgelöst — Schlüssel nie in der
+Config) und reicht sie an jedes pi-Kommando durch, Listing wie Züge:
+
+```json
+{ "id": "pi", "module": "@ancientvoid/adapter-pi",
+  "config": { "envFiles": { "ZAI_API_KEY": "~/.secrets/zai.key" } } }
+```
+
+Damit listet `pi --list-models` die zai-Modelle von selbst (GLM-4.7 … GLM-5.4),
+wählbar im Startformular und lauffähig in den Sessions — ohne `pi /login` auf
+dem Host. Alternativ bleibt `pi auth login zai` (OAuth/Key in
+`~/.pi/agent/auth.json`) oder ein Provider-Eintrag in `models.json`.
+
+## Modellanbindung je Harness (Nutzerentscheid 27.11.2026)
+
+claude, cursor und codex laufen bewusst auf ihren Standard-Modellen (Abonnement-
+CLIs, keine Config-Fläche). Alle modellflexiblen Harnesses folgen **einem** Muster:
+Credentials per `env`/`envFiles` (Variable → Datei, `~/` aufgelöst — Schlüssel nie
+in der Config), Katalog und Züge laufen mit derselben Env:
+
+| Harness | Modelle erscheinen über | Beispiele lokal + Cloud |
+|---|---|---|
+| pi | `pi --list-models` (Provider mit Anmeldung) | Cloud: `ZAI_API_KEY` (GLM-4.7 … 5.4); lokal: Provider in `~/.pi/agent/models.json` (z. B. gpubox, llama.cpp, Ollama — `openai-completions`, baseUrl) |
+| ACP: dsh, maki, omp | Agent-Antwort der ACP-Session (`probeModelCatalog`) bzw. `modelsCommand` | Keys je Agent, z. B. `ZHIPU_API_KEY`/`ZAI_API_KEY` via `envFiles`; dsh-Provider in dessen eigener Config (`apiKeyEnv`) |
+| opencode | `opencode models` (konfigurierte Provider) | Cloud: Keys der Provider aus `~/.config/opencode/opencode.json` via `envFiles`; lokal: Ollama/Llama-Provider in der opencode-Config |
+| aider | kein List-Kommando verifiziert — Auswahl über das Hub-Register (ADR-0060), freie Eingabe | Cloud: litellm-Keys (`ZAI_API_KEY`, `OPENROUTER_API_KEY`) via `env/envFiles`, Modell `zai/glm-5.3`; lokal: `apiBase`/`apiKeyFile` auf Ollama/gpubox, Modell `openai/<id>` |
+
+Fehlt die Anmeldung, scheitert der Zug sichtbar beim Provider (ADR-0054/0060 —
+nie ein Ersatzmodell). Session-eigene Env (`spec.env`) gewinnt überall über die
+Config-Env.
+
 Ohne `modelsCommand` bleibt die Modellwahl sonst freie Eingabe (Durchreichen an die
 CLI — ein unbekanntes Modell scheitert sichtbar beim Provider, nie still als
 Ersatzmodell). `contextWindows` (opencode, pi) schlägt die kuratierte
