@@ -209,6 +209,52 @@
       "split": false,
       "contaminationRisk": true,
       "negative": true
+    },
+    {
+      "id": "transcript-typo",
+      "createdOn": "2026-11-23",
+      "start": "50c6b179ca5602371a87b022005a3987cca69aab",
+      "reference": "d0a953cf4c4fe4f42be1337f58820392c5d01197",
+      "test": "packages/core/test/transcript-search.test.ts",
+      "selector": "rätselt nicht, sondern berichtigt|findet einen vertippten Begriff",
+      "prompt": "Die Sitzungstext-Suche liefert bei Tippfehlern stumm nichts: „tokdek“ findet „tokdeck“ nicht. Ergänze nach den bestehenden Suchstufen als letzte Stufe eine Tippfehlerkorrektur gegen die Wörter des Suchindex. Schnittstelle (exportiert aus `session-text-index.ts` und damit aus dem Core-Paket): `editDistance(a, b, max)` liefert die Levenshtein-Distanz oder, wenn sie über `max` liegt, einen Wert größer `max`. `isSubsequence(needle, hay)` sagt, ob die Zeichen von `needle` in dieser Reihenfolge in `hay` vorkommen. `rankCandidates(term, candidates, limit = 3)` liefert die besten Ersatzwörter als Liste: Begriffe unter fünf Zeichen werden nicht korrigiert; erlaubt sind bei höchstens zwei Zeichen Längenunterschied die Distanz 1, ab acht Zeichen 2, außerdem längere Wörter, in denen der Begriff als Teilfolge steckt; nähere Kandidaten zuerst, der Begriff selbst zählt nicht. Findet erst diese Stufe Treffer, meldet das Suchergebnis `mode: \"typo\"` und in `corrected` die tatsächlich gesuchten Wörter. Ohne passendes Wort bleibt das Ergebnis leer, mit `mode: \"and\"` und ohne `corrected`.",
+      "editable": [
+        "packages/contracts/src/search/search.ts",
+        "packages/core/src/modules/search/session-text-index.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "queue-order",
+      "createdOn": "2026-11-17",
+      "start": "22c1217cfc6bed2aad77e5895209f7a992dc3517",
+      "reference": "aea38e7f51b7649f9fa73cdc4b1ed5ca408a45d2",
+      "test": "packages/core/test/modules/sessions/session-queue.test.ts",
+      "selector": "die Reihe ist gespeichert|ändert den Text, und der Verlauf|fällt ans Ende zurück|midTurnInput|bei unklarer Annahme sind Text und Reihe",
+      "prompt": "Vorgemerkte Nachrichten sollen nachträglich änderbar und umsortierbar sein. Die Reihenfolge wird dauerhaft gespeichert (neue Datenbank-Migration für `session_queue`, bestehende Einträge behalten ihre Reihenfolge). Schnittstelle: Jeder Eintrag aus `SessionManager.queued()` trägt `position` (0 geht als Nächstes raus; nach dem Umsortieren lückenlos ab 0). Neu ist `SessionManager.editQueued(sessionId, queueId, { text, move }, actor)` mit optionalem `text`, optionalem `move` (`\"front\"` oder `\"back\"`) und optionalem `actor`; es liefert ein `Ack`, bei Erfolg mit `detail` = `position <n>` (ab 1 gezählt), auch wenn sich die Stelle nicht ändert. Eine Textänderung erzeugt das Sitzungsereignis `session.queue_edited`, ein Verschieben `session.queue_moved`. Leerer Text, unbekannte Einträge und Einträge mit unklarer Annahme (`delivery: \"unknown\"`) werden mit `ok: false` abgelehnt und bleiben unverändert. Ausgesendet wird in der gespeicherten Reihenfolge. `steer` mit `{ queue: false }` geht bei einem Adapter mit der Fähigkeit `midTurnInput` auch im laufenden Zug sofort an den Adapter; ohne diese Fähigkeit bleibt die Nachricht bei `promptDelivery: \"next-turn\"` vorgemerkt (Antwort `{ ok: true, detail: \"queued\" }`).",
+      "editable": [
+        "packages/core/src/modules/sessions/session-manager.ts",
+        "packages/core/src/modules/sessions/session-queue.ts",
+        "packages/core/src/platform/db.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "sync-notices",
+      "createdOn": "2026-11-19",
+      "start": "3bd937ee6308eb213a2d2faea86f97b70e28fa66",
+      "reference": "b64bcd214d2fcbbf7b9ed08f77d7f0700f33863c",
+      "test": "packages/core/test/modules/workspace/main-sync-scheduler.test.ts",
+      "selector": "20 Sessions eines Projekts|BUG-0224",
+      "prompt": "Der Main-Sync-Scheduler flutet die Benachrichtigungen (über 2000 Einträge in zwei Tagen), weil er dieselbe Lage je Session und je Takt meldet. Jede Lage soll genau einmal erscheinen. Verhalten: Ein gescheiterter Fetch wird je Projekt einmal gemeldet (`kind: \"failed\"`, `reason: \"fetch-failed\"`), bis ein Fetch wieder gelingt. Der Rückstand wird je Projekt und Stand einmal gemeldet; die `behind`-Meldung bekommt das Feld `sessions` (Anzahl der zurückliegenden Sessions) und trägt in `behind` den größten Rückstand. Konflikte werden je Session und Dateiliste einmal gemeldet, Fehler beim Probelauf oder Anwenden je Session und Ursache einmal. Ist ein Stand wieder aktuell, darf sich dieselbe Lage erneut melden. Die Benachrichtigung im Hub nennt bei mehreren Sessions deren Anzahl.",
+      "editable": [
+        "apps/hub/src/main.ts",
+        "packages/core/src/modules/workspace/main-sync-scheduler.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
     }
   ]
 }
