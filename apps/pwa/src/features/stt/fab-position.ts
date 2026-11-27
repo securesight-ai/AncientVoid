@@ -69,6 +69,24 @@ export function saveFabPos(bp: FabBreakpoint, pos: FabPos): void {
   }
 }
 
+/**
+ * Tastatur-Resize erkennen: auf dem Handy (Grobzeiger) schrumpft beim Aufgehen der Bildschirmtastatur
+ * die sichtbare Hoehe deutlich, die Breite bleibt, und ein Editierfeld haelt den Fokus — iOS Safari
+ * und Chrome (resizes-content) feuern dafuer window-resize. Fixe Elemente bewegt der Browser dabei
+ * nicht; nur das Neuplatzieren mit der geschrumpften Hoehe liess den FAB springen (gemessen 158 px
+ * bei 844→480). Der FAB bleibt stehen (Nutzerwunsch 27.11.2026) — Achtung, Schwellen: Adressleisten
+ * und PWA-Rahmen aendern die Hoehe nur um Dutzend Pixel, Tastaturen um Hunderte.
+ */
+export function isKeyboardResize(
+  prev: { w: number; h: number },
+  next: { w: number; h: number },
+  opts: { coarse: boolean; editableFocused: boolean },
+): boolean {
+  if (!opts.coarse || !opts.editableFocused) return false;
+  if (Math.abs(next.w - prev.w) > 2) return false;
+  return next.h < prev.h - 120;
+}
+
 export function clampFabPos(pos: FabPos, vw: number, vh: number, size = FAB_SIZE): FabPos {
   return {
     x: Math.min(Math.max(0, pos.x), Math.max(0, vw - size)),

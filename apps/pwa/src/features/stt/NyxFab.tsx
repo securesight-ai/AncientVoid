@@ -1,7 +1,7 @@
 import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { NyxSprite } from "../nyx/Nyx.tsx";
-import { clampFabPos, fabBreakpoint, hasStoredFabPos, loadFabPos, saveFabPos, type FabPos } from "./fab-position.ts";
+import { clampFabPos, fabBreakpoint, hasStoredFabPos, isKeyboardResize, loadFabPos, saveFabPos, type FabPos } from "./fab-position.ts";
 import { placeFabAvoiding, type FabRect } from "./fab-clearance.ts";
 import { installFocusTracker } from "./paste-target.ts";
 import { recordingSupported } from "../../shared/local-stt.ts";
@@ -17,6 +17,21 @@ const DRAG_THRESHOLD = 8;
 const HALTEN_MS = 1500;
 
 /**
+ * Zuletzt gemessene Fenstergröße ohne Tastatur — der „stabile Rahmen“ für alles, was den FAB
+ * platziert oder klemmt. Die Bildschirmtastatur schrumpft nur den sichtbaren Ausschnitt;
+ * dagegen gerechnet wäre der FAB jedes Mal auf- und zugesprungen (Nutzerwunsch 27.11.2026:
+ * er bleibt an derselben Stelle stehen, auch hinter der Tastatur).
+ */
+const stableFrame = (): { w: number; h: number } => ({ w: window.innerWidth, h: window.innerHeight });
+
+/** Halten die Tasten gerade ein Editierfeld? Nur dann kann die Bildschirmtastatur auf sein. */
+const editableFocused = (): boolean => {
+  const el = document.activeElement;
+  if (!(el instanceof HTMLElement)) return false;
+  return el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable;
+};
+
+/**
  * Globaler, verschiebbarer Nyx-FAB: einziger Auslöser für Speech-to-Text in die
  * fokussierte Eingabe (+ Zwischenablage). Position je Breakpoint persistiert.
  */
@@ -26,6 +41,9 @@ export function NyxFab() {
   const [pos, setPos] = useState<FabPos>(() => loadFabPos(fabBreakpoint(), window.innerWidth, window.innerHeight));
   const posRef = useRef(pos);
   posRef.current = pos;
+  // Stabiler Rahmen: letzte Groesse ohne Tastatur — Platzierung, Klemmen und Toast rechnen
+  // gegen ihn, nicht gegen die gerade zusammengeschrumpfte sichtbare Hoehe.
+  const frame = useRef(stableFrame());
   const drag = useRef<{ sx: number; sy: number; ox: number; oy: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
   const suppressClick = useRef(false);
@@ -47,7 +65,14 @@ export function NyxFab() {
     let observed: Element | null = null;
     const place = () => {
       if (drag.current) return; // Handy: Adressleiste/Tastatur feuern resize mitten im Ziehen
-      const next = fabBreakpoint();
+      // Tastatur auf (Breite gleich, Hoehe geschrumpft, Editierfeld fokussiert, Touchgeraet):
+      // der FAB bleibt stehen — der Browser bewegt fixe Elemente nicht, nur das Neuplatzieren
+      // gegen die geschrumpfte Hoehe wuerde ihn springen lassen (gemessen 158 px).
+      if (isKeyboardResize(frame.current, stableFrame(), { coarse: matchMedia("(pointer: coarse)").matches, editableFocused: editableFocused() })) return;
+      frame.current = stableFrame();
+      const vw = frame.current.w;
+      const vh = frame.current.h;
+      const next = fabBreakpoint(vw);
       const dock = document.querySelector(".dock-stack");
       if (dock !== observed) {
         if (observed) dockObserver.unobserve(observed);
@@ -56,8 +81,8 @@ export function NyxFab() {
       }
       const rect = dock?.getBoundingClientRect();
       // Nur ein Dock, der unten über die Breite liegt — die senkrechte Icon-Leiste am Desktop zählt nicht.
-      const bottomDock = rect && rect.width >= window.innerWidth / 2 && rect.bottom >= window.innerHeight - 4;
-      const target = loadFabPos(next, window.innerWidth, window.innerHeight, bottomDock ? rect.top : undefined);
+      const bottomDock = rect && rect.width >= vw / 2 && rect.bottom >= vh - 4;
+      const target = loadFabPos(next, vw, vh, bottomDock ? rect.top : undefined);
       userPlaced.current = hasStoredFabPos(next);
       setBp(next);
       setPos((prev) => (prev.x === target.x && prev.y === target.y ? prev : target));
@@ -119,6 +144,9 @@ export function NyxFab() {
     let wartend = 0;
     const pruefen = () => {
       if (drag.current) return;
+      // Tastatur offen (sichtbare Hoehe unter dem stabilen Rahmen): nichts verschieben —
+      // der FAB bleibt an derselben Stelle, das Ausweichen kehrt mit der Tastatur zurueck.
+      if (window.innerHeight < frame.current.h - 8) return;
       if (userPlaced.current) {
         setAusweg(null);
         setVerdeckt(false);
@@ -126,7 +154,7 @@ export function NyxFab() {
       }
       collect(); // frisch: beim Scrollen kommen neue Controls ins Bild
       const base = posRef.current;
-      const fund = placeFabAvoiding(base, blockedAt, window.innerWidth, window.innerHeight);
+      const fund = placeFabAvoiding(base, blockedAt, frame.current.w, frame.current.h);
       setAusweg((prev) => (prev?.x === fund.pos?.x && prev?.y === fund.pos?.y ? prev : fund.pos));
       setVerdeckt(fund.pos === null);
     };
@@ -198,7 +226,9 @@ export function NyxFab() {
       }
     }
     if (d.moved) {
-      const next = clampFabPos({ x: d.ox + dx, y: d.oy + dy }, window.innerWidth, window.innerHeight);
+      // Gegen den stabilen Rahmen klemmen: feuert die Tastatur mitten im Ziehen resize,
+      // soll der Knopf nicht auf einmal in den geschrumpften Bereich rutschen.
+      const next = clampFabPos({ x: d.ox + dx, y: d.oy + dy }, frame.current.w, frame.current.h);
       posRef.current = next;
       setPos(next);
     }
@@ -214,7 +244,7 @@ export function NyxFab() {
     if (!d) return;
     if (d.moved) {
       suppressClick.current = true;
-      const next = clampFabPos(posRef.current, window.innerWidth, window.innerHeight);
+      const next = clampFabPos(posRef.current, frame.current.w, frame.current.h);
       posRef.current = next;
       userPlaced.current = true;
       setPos(next);
@@ -269,7 +299,8 @@ export function NyxFab() {
           role="status"
           aria-live="polite"
           data-testid="nyx-fab-toast"
-          style={{ left: `${Math.max(8, Math.min(shownPos.x, window.innerWidth - Math.min(320, window.innerWidth - 16) - 8))}px`, bottom: `${window.innerHeight - shownPos.y + 12}px` }}
+          /* Stabiler Rahmen statt window.*: der Toast springt nicht mit der Tastatur mit. */
+          style={{ left: `${Math.max(8, Math.min(shownPos.x, frame.current.w - Math.min(320, frame.current.w - 16) - 8))}px`, bottom: `${frame.current.h - shownPos.y + 12}px` }}
         >
           {stt.active && (
             <div class="nyx-fab-state" data-testid="nyx-fab-state">
