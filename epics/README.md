@@ -1,4 +1,4 @@
-# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P86)
+# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P89)
 
 **On hold seit 15.11.2026 (Nutzerentscheid): P30 und P31.** Beide bleiben
 im Inventar, sind aber aus Empfehlungen für die nächste Arbeit ausgeschlossen.
@@ -354,6 +354,17 @@ Reihenfolge: P60 quer wie P50–P53 (je Aufgabe eigener Branch/MR nach main; ADR
 | Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
 |---|---|---|---|
 | [P86 — 3D-Tiefe: Fensterflug und lebendige Oberfläche (zuschaltbar)](EPIC-P86-3d-tiefe-fensterflug-lebendigkeit.md) | Stufe 1 (CSS-3D, ohne three.js), „herausgelöst“: Hintergrund weicht zurück (scale + Unschärfe/Abdunkeln über Hinterlegung), Fenster schweben persistend davor, Seitenfenster Milchglas, Ansichten fliegen ein, Press-Tiefe, fokussierte Kachel glüht im zustandsfarbenen Puls; Schalter „3D an/aus“ in Einstellungen, Sidebar (PC) und „Mehr“-Blatt (Handy) mit Kaskade prefers-reduced-motion > Bewegung > 3D, Default an; T86.7 Layout-Orientierung (Kachel-Nummer auf der Karte, Status neben dem Titel), T86.8 Benachrichtigungs-Panel als bündiges Fenster; Doku der Kaskade in docs/einstellungen-empfehlungen.md; **Stufe 2 (three.js) entfallen** per Nutzerentscheid („lightweight und performant“); Blaupause: securesight-Keynote (bunker-world3d) — **Stufe 1 fertig auf `feat/p86-3d-tiefe-stufe1` (PR offen), Nutzer-Vorabnahme 26./27.11.; Rest: T86.4 K2-Messung (Loadtest auf ausdrücklichen Auftrag); Live-Abnahme in P000 T000.40** | keine blockierende (Quer-Epic); P30/P31 On hold unberührt; K2/K10 Messlatte | 1–2 |
+
+## Nutzerauftrag vom 27.11.2026 — Messserie, Empfehlungen, eigenes Router-Modell
+
+Alle drei sind **Planungsentwürfe**; Umsetzung und Messlauf brauchen ein
+eigenes Go.
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P87 — Zweite Messserie](EPIC-P87-messserie-aufgabenklassen.md) | Schwerere Aufgaben, Aufgabenklassen, Serie `pilot-7` (88 Läufe) mit Kostenrahmen | P84-Werkzeuge; Startfreigabe | 1 + Messzeit |
+| [P88 — Empfehlungen und Routing](EPIC-P88-empfehlungen-routing.md) | Empfehlungen mit Beleglage im UI; eine Auswahl für Sessions, Teams, Loops, Automationen | P84-Ergebnisvertrag; Automatik erst mit P87-Daten | 2–3 |
+| [P89 — Eigenes Router-Modell](EPIC-P89-eigenes-router-modell.md) | Eigene Daten, Finetuning, Prüfung gegen Regeln und Klassifikator, Nutzung mit Rückfall | P88 grün; Daten-Spike mit Go/No-go | 3–4 |
 
 ## Reihenfolge & Gating
 
