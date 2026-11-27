@@ -4,10 +4,10 @@ import { readCorpus } from "./corpus.mjs";
 import { selectedSource, testNames, unnamed } from "./solvability.mjs";
 
 describe("P84 frozen corpus", () => {
-  it("pins twelve distinct historical regressions, one negative control and a shared split subset", () => {
+  it("pins fifteen distinct historical changes, one negative control and a shared split subset", () => {
     const { tasks, hash } = readCorpus();
-    expect(tasks).toHaveLength(13);
-    expect(new Set(tasks.map((task) => task.start)).size).toBe(13);
+    expect(tasks).toHaveLength(16);
+    expect(new Set(tasks.map((task) => task.start)).size).toBe(16);
     expect(tasks.filter((task) => task.split)).toHaveLength(4);
     const negative = tasks.filter((task) => task.negative);
     expect(negative).toHaveLength(1);

@@ -2,8 +2,8 @@
 
 **Art:** how-to
 
-Der [eingefrorene Korpus](../scripts/eval/corpus.json) enthält zwölf
-Regressionen mit Start-Commit, Referenz-Commit, Aufgabentext,
+Der [eingefrorene Korpus](../scripts/eval/corpus.json) enthält 15
+historische Änderungen mit Start-Commit, Referenz-Commit, Aufgabentext,
 Dateiumfang, Abnahme-Selektor und dem Datum der ursprünglichen
 Referenz. Der [SHA-256](../scripts/eval/corpus.sha256) bindet das Manifest
 einschließlich der über die Git-Objekte adressierten Referenztests. Ein
@@ -125,7 +125,7 @@ und weist Rangänderungen und Preisdatumswechsel aus.
 
 ## Negativkontrolle
 
-Der Korpus enthält neben den zwölf Regressionen eine Negativkontrolle
+Der Korpus enthält neben den 15 historischen Änderungen eine Negativkontrolle
 (`negative: true`, Start = Referenz, nicht im Split-Teilkorpus): Das Kriterium gilt schon,
 der Prompt erlaubt „nichts zu tun“, und **jede Änderung** der freigegebenen Dateien ist ein
 Fehler. Ein Lauf ohne Token-Lebenszeichen wird nicht erfasst und kann daher nie als
