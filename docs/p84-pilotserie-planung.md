@@ -108,10 +108,10 @@ Aufgabentext stehen. Ein Fehlschlag misst dort Namensraten, nicht Qualität.
 | `queue-steering` | Funktion `sendNowPossible` |
 | `halogen-rates` | Metriken `derived:decode_active`, `derived:requests_per_min` |
 
-Vor der Kernserie (T84.6) müssen diese Aufgabentexte den Schnittstellenvertrag
-nennen (neuer Korpus-Hash) oder die Aufgaben ersetzt werden. Die Korpus-Abnahme
-vom 25.11.2026 prüfte nur „rot am Start, grün an der Referenz“, nicht die
-Lösbarkeit aus dem Text.
+Seit 2026-11-27 nennen diese Aufgabentexte den Schnittstellenvertrag (neuer
+Korpus-Hash), und `scripts/eval/corpus.test.mjs` prüft das für jede Aufgabe.
+Die Serie `pilot-6` läuft noch auf dem alten Korpus ohne diese sieben Aufgaben;
+Läufe beider Korpus-Stände werden nicht zusammengerechnet.
 
 ## Ausdrücklich offen
 
