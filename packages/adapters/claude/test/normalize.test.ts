@@ -40,7 +40,10 @@ describe("normalizeClaudeLine — real captured stream-json (claude 2.1.263)", (
     // token fields (which the fixture also carries but which don't count
     // toward the billed input/output split).
     expect(resultEvents[0]!.tokensEst).toBe(6);
-    expect(resultEvents[0]!.payload.cacheInputTokens).toBe(27203);
+    // ADR-0127: Cache-Lesen (16 683) und Cache-Schreiben (10 520) getrennt —
+    // vorher eine Zahl (27 203) zum einheitlichen Lesepreis.
+    expect(resultEvents[0]!.payload.cacheInputTokens).toBe(16_683);
+    expect(resultEvents[0]!.payload.cacheWriteInputTokens).toBe(10_520);
     // ADR-0032: the input part is the context fill — it travels on the event.
     expect((resultEvents[0]!.payload as { usage?: { input?: number; output?: number } }).usage).toEqual({ input: 2, output: 4 });
   });

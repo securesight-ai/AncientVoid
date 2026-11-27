@@ -11,6 +11,9 @@ export const EvalCloudPrice = z.strictObject({
   source: z.url().max(300),
   inputUsdPerMillion: z.number().positive(),
   cacheInputUsdPerMillion: z.number().positive().optional(),
+  /** ADR-0127: Preis für ins Cache geschriebene Tokens (z. B. 0 bei z.ai,
+   * 1,25 × Input bei Anthropic). Fehlt er, wird Schreiben zum Inputpreis gerechnet. */
+  cacheWriteUsdPerMillion: z.number().nonnegative().optional(),
   outputUsdPerMillion: z.number().positive(),
 });
 
@@ -69,6 +72,9 @@ export const EvalResult = z.strictObject({
     model: label,
     inputTokens: count,
     cacheInputTokens: count,
+    /** ADR-0127: Cache-Schreib-Tokens. Fehlt das Feld (alte Datensätze),
+     * steckt der Schreibanteil noch in `cacheInputTokens` — Parse ergänzt 0. */
+    cacheWriteInputTokens: count.default(0),
     outputTokens: count,
     costUsd: z.number().positive(),
     turnErrors: count,

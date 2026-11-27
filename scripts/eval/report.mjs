@@ -27,13 +27,16 @@ function values({ input, phases }) {
     failure: Number(!(input.acceptance && input.lint && input.typecheck && phases.every((phase) => phase.turnErrors === 0))),
     wall: total(input.phases, (phase) => phase.wallMs),
     in: total(phases, (phase) => phase.inputTokens),
-    cache: total(phases, (phase) => phase.cacheInputTokens),
+    cache: total(phases, (phase) => phase.cacheInputTokens + (phase.cacheWriteInputTokens ?? 0)),
     out: total(phases, (phase) => phase.outputTokens),
     cost: total(phases, (phase) => phase.costUsd),
     cloudCost: total(phases, (phase, index) => input.phases[index].billing.kind === "cloud" ? phase.costUsd : 0),
+    // ADR-0127: Cache-Lesen zum Lesepreis, Cache-Schreiben zum Schreibpreis (ohne Angabe: Inputpreis).
     cacheCost: total(phases, (phase, index) => {
       const billing = input.phases[index].billing;
-      return billing.kind === "cloud" ? phase.cacheInputTokens * (billing.cacheInputUsdPerMillion ?? billing.inputUsdPerMillion) / 1_000_000 : 0;
+      if (billing.kind !== "cloud") return 0;
+      return (phase.cacheInputTokens * (billing.cacheInputUsdPerMillion ?? billing.inputUsdPerMillion) +
+        (phase.cacheWriteInputTokens ?? 0) * (billing.cacheWriteUsdPerMillion ?? billing.inputUsdPerMillion)) / 1_000_000;
     }),
     energyCost: total(phases, (phase, index) => input.phases[index].billing.kind === "local" ? phase.costUsd : 0),
     rework: total(phases, (phase) => phase.toolErrors),

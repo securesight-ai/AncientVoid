@@ -271,8 +271,10 @@ function normalizeResult(line: Record<string, unknown>, mainModel?: string): Emi
   // one combined number, not a second in/out split field.
   const usage = line.usage as Record<string, unknown> | undefined;
   const inputTokens = typeof usage?.input_tokens === "number" ? usage.input_tokens : undefined;
-  const cacheInput = [usage?.cache_read_input_tokens, usage?.cache_creation_input_tokens]
-    .reduce<number>((sum, value) => sum + (typeof value === "number" ? value : 0), 0);
+  // ADR-0127: Cache-Lesen (cache_read) und Cache-Schreiben (cache_creation) sind
+  // getrennt gemeldet und werden getrennt weitergegeben — sie haben unterschiedliche Preise.
+  const cacheRead = typeof usage?.cache_read_input_tokens === "number" ? usage.cache_read_input_tokens : 0;
+  const cacheWrite = typeof usage?.cache_creation_input_tokens === "number" ? usage.cache_creation_input_tokens : 0;
   const outputTokens = typeof usage?.output_tokens === "number" ? usage.output_tokens : undefined;
   const tokensEst = inputTokens !== undefined && outputTokens !== undefined ? inputTokens + outputTokens : undefined;
   const models = line.modelUsage && typeof line.modelUsage === "object"
@@ -293,7 +295,8 @@ function normalizeResult(line: Record<string, unknown>, mainModel?: string): Emi
         ...(typeof modelDetails[1]?.contextWindow === "number" && modelDetails[1].contextWindow > 0 ? { contextWindowTokens: modelDetails[1].contextWindow } : {}),
         ...(typeof modelDetails[1]?.maxOutputTokens === "number" && modelDetails[1].maxOutputTokens > 0 ? { maxOutputTokens: modelDetails[1].maxOutputTokens } : {}),
       } : {}),
-      ...(cacheInput > 0 ? { cacheInputTokens: cacheInput } : {}),
+      ...(cacheRead > 0 ? { cacheInputTokens: cacheRead } : {}),
+      ...(cacheWrite > 0 ? { cacheWriteInputTokens: cacheWrite } : {}),
       ...(inputTokens !== undefined || outputTokens !== undefined
         ? { usage: { ...(inputTokens !== undefined ? { input: inputTokens } : {}), ...(outputTokens !== undefined ? { output: outputTokens } : {}) } }
         : {}),

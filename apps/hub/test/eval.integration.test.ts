@@ -106,3 +106,60 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+it("ADR-0127: Cache-Schreib-Tokens laufen getrennt durch Messung, Datensatz und Zusammenfassung", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "p84-cachewrite-"));
+  const registry = new AdapterRegistry();
+  const dummy = createAdapter();
+  registry.register("metered-write", () => ({
+    ...dummy,
+    capabilities: () => ({ ...dummy.capabilities(), features: { ...dummy.capabilities().features!, modelChoice: "start" } }),
+    async start(_spec, ctx) {
+      ctx.emit({ type: "system", summary: EVAL_COMPLETE_EVENT, payload: { kind: EVAL_COMPLETE_EVENT } });
+      ctx.emit({ type: "system", summary: "metered", payload: { usage: { input: 20, output: 10 }, cacheInputTokens: 100, cacheWriteInputTokens: 50 }, tokensEst: 180 });
+      ctx.emit({ type: "system", summary: "finished", payload: { kind: "session.turn_end", code: 0 } });
+      return { sessionId: ctx.sessionId };
+    },
+  }));
+  const db = new HubDatabase(join(dir, "hub.db"));
+  const store = new EventStore(dir);
+  const sessions = new SessionManager(db, store, registry, new ProcessRunner());
+  const tokens = new TokenService(db);
+  const app = await createHubApp({ sessions, tokens, registry, store, projectRoots: [dir], auth: { tokens, enforceTailnetIdentity: false } });
+  try {
+    const headers = { authorization: `Bearer ${tokens.issue("p84-operator").token}` };
+    const project = join(dir, "repo");
+    await mkdir(project);
+    const created = await app.inject({
+      method: "POST", url: "/api/sessions", headers,
+      payload: { adapter: "metered-write", model: "test/model", project, workspaceMode: "direct", prompt: "Task" },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const { id } = created.json();
+    await expect.poll(() => sessions.turnMetrics(id as string).length).toBe(1);
+    expect((await app.inject({ method: "POST", url: `/api/sessions/${id}/stop`, headers, payload: {} })).statusCode).toBe(200);
+    const hash = "a".repeat(64);
+    // Lesen 0,5 / Schreiben 2,5: (170−100−50)·2 + 100·0,5 + 50·2,5 + 10·4 = 255 → 0,000255 USD.
+    const response = await app.inject({
+      method: "POST", url: `/api/sessions/${id}/evaluation`, headers,
+      payload: {
+        series: "adr0127", arm: "metered-write", task: "task", repetition: 1, attempt: 1,
+        corpusHash: hash, protocolHash: hash, rulesHash: hash, skillHash: null,
+        skills: false, acceptance: true, baseline: 1, lint: true, typecheck: true,
+        phases: [{ sessionId: id, phase: "build", modelFingerprint: "v1", harnessVersion: "1.0.0", wallMs: 20,
+          billing: { kind: "cloud", date: "2026-11-27", source: "https://example.com/prices", inputUsdPerMillion: 2, cacheInputUsdPerMillion: 0.5, cacheWriteUsdPerMillion: 2.5, outputUsdPerMillion: 4 } }],
+      },
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().phases[0]).toMatchObject({ inputTokens: 170, cacheInputTokens: 100, cacheWriteInputTokens: 50, outputTokens: 10, costUsd: 0.000255 });
+    const summary = (await app.inject({ method: "GET", url: "/api/evaluation/series/adr0127", headers })).json();
+    const total = summary.rows.find((row: { task: string }) => row.task === "gesamt");
+    expect(total.metrics.cacheTokens.median).toBe(150);
+    // Lesen + Schreiben je Preis: (100·0,5 + 50·2,5)/1e6 = 0,000175 USD.
+    expect(total.metrics.cacheCostUsd.median).toBeCloseTo(0.000175, 10);
+  } finally {
+    await app.close();
+    db.close();
+    await rm(dir, { recursive: true, force: true });
+  }
+});

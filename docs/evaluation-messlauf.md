@@ -192,7 +192,11 @@ Claude-Registrierung mit `command` auf einen Wrapper, der `ANTHROPIC_BASE_URL`
 (`https://api.z.ai/api/anthropic`), den Key aus einer Datei und ein eigenes Profil setzt.
 Das von Claude Code gemeldete `costUsd` ist dort ein Anthropic-Preis und wird nicht verwendet.
 
-Cache-Tokens: Claude meldet sie getrennt von der frischen Eingabe. Pi, OpenCode und Codex
+Cache-Tokens: Claude meldet sie getrennt von der frischen Eingabe und seit
+[ADR-0127](adr/0127-cache-token-getrennt-bepreisen.md) zusätzlich nach Lesen
+(`cacheInputTokens`) und Schreiben (`cacheWriteInputTokens`) getrennt — mit
+eigenem Schreib-Preis im Tarif (`cacheWriteUsdPerMillion`; fehlt er, gilt der
+Input-Preis, z. B. 1,25 × Input bei Anthropic, 0 bei z.ai). Pi, OpenCode und Codex
 melden die Eingabe einschließlich Cache und markieren das mit `cacheIncluded`; der Cache
 bleibt über `cacheInputTokens` sichtbar und wird zum Cache-Preis gerechnet. Bei Adaptern
 ohne Cache-Angabe weist der Report die Kosten als obere Schranke aus. ACP-Adapter

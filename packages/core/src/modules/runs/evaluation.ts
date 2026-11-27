@@ -25,6 +25,7 @@ export function measureEvaluationPhase(
   const usage = completed.filter((event) => event.payload.usage !== undefined || event.tokensEst !== undefined);
   let inputTokens = 0;
   let cacheInputTokens = 0;
+  let cacheWriteInputTokens = 0;
   let outputTokens = 0;
   for (const event of usage) {
     const split = event.payload.usage as { input?: unknown; output?: unknown } | undefined;
@@ -38,17 +39,23 @@ export function measureEvaluationPhase(
     if (cacheInput !== undefined && (typeof cacheInput !== "number" || !Number.isSafeInteger(cacheInput) || cacheInput < 0)) {
       throw new Error("Evaluation received invalid cache input usage");
     }
+    const cacheWrite = event.payload.cacheWriteInputTokens;
+    if (cacheWrite !== undefined && (typeof cacheWrite !== "number" || !Number.isSafeInteger(cacheWrite) || cacheWrite < 0)) {
+      throw new Error("Evaluation received invalid cache write usage");
+    }
     // Adapter wie Pi, OpenCode und Codex melden die Eingabe einschließlich Cache und markieren das;
-    // Claude meldet den Cache getrennt (frische Eingabe + Cache).
-    inputTokens += event.payload.cacheIncluded === true ? input : input + (cacheInput ?? 0);
+    // Claude meldet den Cache getrennt (frische Eingabe + Cache-Lesen/Schreiben, ADR-0127).
+    inputTokens += event.payload.cacheIncluded === true ? input : input + (cacheInput ?? 0) + (cacheWrite ?? 0);
     cacheInputTokens += cacheInput ?? 0;
+    cacheWriteInputTokens += cacheWrite ?? 0;
     outputTokens += output;
   }
   if (inputTokens + outputTokens === 0) throw new Error("Evaluation has no positive token usage");
   const billing = phase.billing;
   const costUsd = billing.kind === "cloud"
-    ? ((inputTokens - cacheInputTokens) * billing.inputUsdPerMillion +
+    ? ((inputTokens - cacheInputTokens - cacheWriteInputTokens) * billing.inputUsdPerMillion +
         cacheInputTokens * (billing.cacheInputUsdPerMillion ?? billing.inputUsdPerMillion) +
+        cacheWriteInputTokens * (billing.cacheWriteUsdPerMillion ?? billing.inputUsdPerMillion) +
         outputTokens * billing.outputUsdPerMillion) / 1_000_000
     : billing.kwh * billing.usdPerKwh;
   return {
@@ -57,6 +64,7 @@ export function measureEvaluationPhase(
     model: session.model,
     inputTokens,
     cacheInputTokens,
+    cacheWriteInputTokens,
     outputTokens,
     costUsd,
     turnErrors: turns.filter((turn) => turn.outcome === "error").length,

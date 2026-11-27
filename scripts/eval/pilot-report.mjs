@@ -28,7 +28,9 @@ export function renderPilotReport(rawSummary, plan, meta) {
     row(["Zelle", "Harness", "CLI-Version", "Modell", "Fingerprint", "Provider", "Abrechnung"]), row(["---", "---", "---", "---", "---", "---", "---"]),
     ...plan.config.cells.map((entry) => row([entry.id, entry.harness, entry.version, entry.model, entry.fingerprint, entry.provider,
       entry.billing.kind === "cloud"
-        ? `Cloud ${entry.billing.date}: ${entry.billing.inputUsdPerMillion}/${entry.billing.cacheInputUsdPerMillion ?? "–"}/${entry.billing.outputUsdPerMillion} USD/Mio. (Input/Cache/Output)`
+        ? entry.billing.cacheWriteUsdPerMillion !== undefined
+          ? `Cloud ${entry.billing.date}: ${entry.billing.inputUsdPerMillion}/${entry.billing.cacheInputUsdPerMillion ?? "–"}/${entry.billing.cacheWriteUsdPerMillion}/${entry.billing.outputUsdPerMillion} USD/Mio. (Input/Cache-Lesen/Cache-Schreiben/Output)`
+          : `Cloud ${entry.billing.date}: ${entry.billing.inputUsdPerMillion}/${entry.billing.cacheInputUsdPerMillion ?? "–"}/${entry.billing.outputUsdPerMillion} USD/Mio. (Input/Cache/Output; Schreiben zum Inputpreis, ADR-0127)`
         : `P81 ${entry.billing.host} ${entry.billing.date}: ${entry.billing.usdPerKwh} USD/kWh`])), "",
     "## Rohwerte", "",
     "Jede Zelle: Median; Mittelwert; Minimum–Maximum über n Läufe. Einheiten stehen im Spaltenkopf. `n/a` gibt es nicht: nicht erfasste Läufe fehlen in n.", "",

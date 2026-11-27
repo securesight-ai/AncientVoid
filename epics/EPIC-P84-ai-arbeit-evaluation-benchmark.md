@@ -153,8 +153,10 @@ nach und nach erfassen, was wie gut funktioniert und warum):
   je Art zuerst „Start rot, Referenz grün“ belegen. → AC-P84-1
 - [ ] **T84.13** Zeitlimit und offene Rückfrage als Ergebnis im Vertrag (ADR),
   damit Mediane nicht nur überlebende Läufe zeigen. → AC-P84-2
-- [ ] **T84.14** Cache-Schreib- und -Lese-Token beim Claude-Adapter getrennt
-  bepreisen (ADR). → AC-P84-3
+- [x] **T84.14** Cache-Schreib- und -Lese-Token beim Claude-Adapter getrennt
+  bepreisen ([ADR-0127](../docs/adr/0127-cache-token-getrennt-bepreisen.md):
+  Ereignis, Datensatz und Tarif führen `cacheWriteInputTokens` bzw.
+  `cacheWriteUsdPerMillion`; Zusammenfassung bepreist getrennt). → AC-P84-3
 - [ ] **T84.15** Serienübersicht im Benchmark-Repo (Serie × Zelle × Aufgabe);
   Serien mit anderem Korpus- oder Konfigurationsstand nie zusammenrechnen.
   → AC-P84-6
