@@ -22,7 +22,7 @@
       "reference": "5e6a78e548ba3cbbb3fd0150244bec1944ec3e0d",
       "test": "packages/core/test/modules/runs/turn-metrics.test.ts",
       "selector": "eigene Züge der Session",
-      "prompt": "Liefere die Anzahl und den Median der erfolgreichen abgeschlossenen Züge einer Sitzung auch dann, wenn die Stichprobe für die allgemeine Laufzeitschätzung noch zu klein ist.",
+      "prompt": "Liefere die Anzahl und den Median der erfolgreichen abgeschlossenen Züge einer Sitzung auch dann, wenn die Stichprobe für die allgemeine Laufzeitschätzung noch zu klein ist. Schnittstelle: `RunEstimate` bekommt die optionalen Felder `sessionTurns` (Zahl der eigenen Züge mit Ergebnis ok und Dauer über 0) und `sessionMedianMs` (Median dieser Dauern in Millisekunden, `null` bei weniger als zwei). `TurnMetricStore.estimate(adapter, model, sessionId)` liefert beide Felder auf jeder Stufe der Rückfallkette; ohne `sessionId` fehlen sie ganz. Die Sitzungsansicht nutzt den Wert des Servers, wenn er da ist.",
       "editable": [
         "apps/pwa/src/features/session/SessionTail.tsx",
         "apps/pwa/src/shared/api.ts",
@@ -57,7 +57,7 @@
       "reference": "5f0df46730a5882acc17f93f3b7f72cd73ffec47",
       "test": "packages/core/test/aimetrics/sampler.test.ts",
       "selector": "GPU-Leistung|CPU-Paket|power1_average geht|nicht zuordenbar",
-      "prompt": "Lies AMD-Leistung aus hwmon. Unterscheide gesteckte GPU und APU-Paket, gib Durchschnittswerten den Vorrang und behandle fehlende oder ungültige Werte als unbekannt.",
+      "prompt": "Lies AMD-Leistung aus hwmon. Unterscheide gesteckte GPU und APU-Paket, gib Durchschnittswerten den Vorrang und behandle fehlende oder ungültige Werte als unbekannt. Schnittstelle: Die Host-Quelle meldet die GPU-Leistung unter `sysfs:power_watts` und neu die CPU-Paket-Leistung unter `sysfs:package_power_watts` (Watt). Quelle ist das hwmon-Verzeichnis mit `name` = `amdgpu` unter `card*/device/hwmon`; die Werte stehen in Mikrowatt in `power1_average`, ersatzweise `power1_input`. `in1_label` = `vddnb` kennzeichnet ein APU-Paket, ein lesbares `power1_cap` eine gesteckte Karte. Trifft beides oder keines zu, bleiben beide Felder `null`; leere oder nichtnumerische Dateien ergeben `null`, nie 0.",
       "editable": [
         "apps/pwa/src/features/statistics/StatisticsPage.tsx",
         "packages/core/src/modules/aimetrics/sampler.ts"
@@ -72,7 +72,7 @@
       "reference": "53069cf5a0cc790a8c2a33e557e3268731091d3e",
       "test": "apps/pwa/test/features/tool-image.test.ts",
       "selector": "eigene Sitzung mit eigener hostId",
-      "prompt": "Zeige Werkzeug-Bildvorschauen in eigenen Sitzungen auch mit expliziter lokaler Host-ID an. Fremde Sitzungen bleiben ausgeschlossen.",
+      "prompt": "Zeige Werkzeug-Bildvorschauen in eigenen Sitzungen auch mit expliziter lokaler Host-ID an. Fremde Sitzungen bleiben ausgeschlossen. Schnittstelle: `tool-image.ts` exportiert `sessionRefFor(session, remoteHostId)`. `session` ist der Sitzungsdatensatz (`id`, `project`, `hostId`) oder `undefined`; `remoteHostId` ist die ID des fremden Rechners oder `null` für den eigenen Hub. Ergebnis ist `{ id, project }`; bei fremdem Rechner, fehlendem Datensatz oder fehlendem Projekt `undefined`. Die Sitzungsansicht verwendet diese Funktion; die Vorschau erscheint auch in den Arbeitsschritten der Chat-Ansicht.",
       "editable": [
         "apps/pwa/src/app/styles/08-session-events.css",
         "apps/pwa/src/features/session/ChatTurns.tsx",
@@ -104,7 +104,7 @@
       "reference": "c9ea0ab468a02f290e52f68e9bdc9bf93ffd062c",
       "test": "packages/core/test/inference.test.ts",
       "selector": "Anteile: Einheit der Engine|num\\(\\): Zahlen als Text",
-      "prompt": "Normalisiere Inferenz-Auslastung auf Anteile zwischen 0 und 1, mit expliziter Einheit. Akzeptiere numerische Werte aus der Engine auch als Text, lasse ungültige Werte unbekannt.",
+      "prompt": "Normalisiere Inferenz-Auslastung auf Anteile zwischen 0 und 1, mit expliziter Einheit. Akzeptiere numerische Werte aus der Engine auch als Text, lasse ungültige Werte unbekannt. Schnittstelle: `engine.ts` des Inferenz-Moduls exportiert `anteilNormalisieren(value, kerne?)`. Werte von 0 bis 1 gelten unverändert, Werte über 1 bis 100 als Prozent. Werte über 100 gelten nur mit Kernzahl als Summe über alle Kerne (höchstens 100 × Kerne) und werden durch 100 × Kerne geteilt. Negative, nichtnumerische oder darüber liegende Werte ergeben `null`. `num` nimmt Zahlen auch als Text an (mit umgebendem Leerraum); leerer oder sonstiger Text, Wahrheitswerte und nicht endliche Zahlen ergeben `null`.",
       "editable": [
         "apps/pwa/src/app/styles/57-inference.css",
         "apps/pwa/src/features/inference/InferencePage.tsx",
@@ -136,7 +136,7 @@
       "reference": "4d21e311b53ca0d83c98c4d3fe6a26c269e196d0",
       "test": "apps/pwa/test/features/session/host-commands.test.ts",
       "selector": "baut den Session-Deep-Link",
-      "prompt": "Erzeuge den Continue-Link aus der Sitzungs-ID als Deep-Link zur Sitzung. Der Link muss auch funktionieren, wenn die Ansicht in einer Kachel geöffnet ist und die URL der Seite keinen Sitzungs-Hash trägt.",
+      "prompt": "Erzeuge den Continue-Link aus der Sitzungs-ID als Deep-Link zur Sitzung. Der Link muss auch funktionieren, wenn die Ansicht in einer Kachel geöffnet ist und die URL der Seite keinen Sitzungs-Hash trägt. Schnittstelle: `HostCommands.tsx` exportiert `continueSessionLink(sessionId, hostId?)`. Ergebnis ist der Origin der Seite, gefolgt von `/#/sessions/<sessionId>`, mit der `hostId` einer Gegenstelle von `/#/hosts/<hostId>/sessions/<sessionId>`.",
       "editable": [
         "apps/pwa/src/features/session/HostCommands.tsx",
         "apps/pwa/src/features/session/ReportPane.tsx"
@@ -165,7 +165,7 @@
       "reference": "579333ad91015085e7c86bdbcd5bdc6bea05d4ec",
       "test": "apps/pwa/test/features/queue-send-moeglich.test.ts",
       "selector": "im Leerlauf geht|im laufenden Zug nur",
-      "prompt": "Biete sofortiges Senden vorgemerkter Eingaben an, wenn die Sitzung bereit ist oder ihr Adapter mitten im laufenden Zug Eingaben annimmt. Andere laufende Züge sollen die Eingabe vorgemerkt lassen.",
+      "prompt": "Biete sofortiges Senden vorgemerkter Eingaben an, wenn die Sitzung bereit ist oder ihr Adapter mitten im laufenden Zug Eingaben annimmt. Andere laufende Züge sollen die Eingabe vorgemerkt lassen. Schnittstelle: `QueueList.tsx` exportiert `sendNowPossible(working, steerable)`; `working` heißt, ein Zug läuft, `steerable`, der Adapter nimmt mitten im Zug Eingaben an. `QueueList` erhält beides von der Sitzungsansicht als Props `working` (Standard `false`) und `steerable` (Standard `true`). Ist sofortiges Senden nicht möglich, steht statt des Knopfs ein Hinweis (deutsch und englisch), dass die Eingabe nach dem Zug automatisch gesendet wird.",
       "editable": [
         "apps/pwa/src/app/styles/08-session-events.css",
         "apps/pwa/src/features/session/QueueList.tsx",
@@ -184,7 +184,7 @@
       "reference": "7b876b95fb464bbe650be2c63745e2f4aa690b7f",
       "test": "packages/core/test/aimetrics/halogen.test.ts",
       "selector": "eine Anfrage zwischen|Neustart der Engine|Zähler weg",
-      "prompt": "Leite Halogen-Anfrageraten aus Zählerdifferenzen ab. Erhalte den letzten positiven Wert samt Zeitpunkt, behandle einen Zähler-Reset korrekt und melde fehlende Zähler sichtbar.",
+      "prompt": "Leite Halogen-Anfrageraten aus Zählerdifferenzen ab. Erhalte den letzten positiven Wert samt Zeitpunkt, behandle einen Zähler-Reset korrekt und melde fehlende Zähler sichtbar. Schnittstelle: Je Modellserver gibt es optional `metricsUrl` (in der Konfiguration und am Sampler-Server). Dort liegen die Prometheus-Zähler, wenn das Gateway unter `url` kein `/metrics` durchreicht; diese Abfrage geht ohne API-Schlüssel, der Schlüssel geht nur ans Gateway. Die Werte aus dem `/health` des Gateways (etwa `halogen:slots`) bleiben auch dann erhalten, wenn die Zähler geliefert werden. Neue abgeleitete Felder: `derived:decode_active` und `derived:prefill_active` (Zuwachs der Tokens je Zuwachs der gerechneten Sekunden: `llamacpp:tokens_predicted_total` zu `llamacpp:tokens_predicted_seconds_total` bzw. `llamacpp:predicted_tokens_seconds_total`, und `llamacpp:prompt_tokens_total` zu `llamacpp:prompt_seconds_total`) sowie `derived:requests_per_min` (aus `halogen:requests_total`, ohne neue Anfrage 0). Ohne neue Arbeit entsteht kein neuer Tempo-Wert, der letzte bleibt mit seinem Zeitstempel stehen; nach einem Zähler-Reset entstehen weder negative noch neue Raten. `llamacpp:predicted_tokens_seconds_total` wird auch gefüllt, wenn die Engine nur `llamacpp:tokens_predicted_seconds_total` meldet. Ist `metricsUrl` gesetzt und nicht erreichbar, während `/health` antwortet, meldet die Quelle `ok: false` mit einem Fehler, der mit `Zähler nicht erreichbar:` beginnt; die Health-Werte bleiben.",
       "editable": [
         "apps/hub/src/main.ts",
         "apps/pwa/src/features/statistics/MetricSource.tsx",
@@ -209,6 +209,52 @@
       "split": false,
       "contaminationRisk": true,
       "negative": true
+    },
+    {
+      "id": "transcript-typo",
+      "createdOn": "2026-11-23",
+      "start": "50c6b179ca5602371a87b022005a3987cca69aab",
+      "reference": "d0a953cf4c4fe4f42be1337f58820392c5d01197",
+      "test": "packages/core/test/transcript-search.test.ts",
+      "selector": "rätselt nicht, sondern berichtigt|findet einen vertippten Begriff",
+      "prompt": "Die Sitzungstext-Suche liefert bei Tippfehlern stumm nichts: „tokdek“ findet „tokdeck“ nicht. Ergänze nach den bestehenden Suchstufen als letzte Stufe eine Tippfehlerkorrektur gegen die Wörter des Suchindex. Schnittstelle (exportiert aus `session-text-index.ts` und damit aus dem Core-Paket): `editDistance(a, b, max)` liefert die Levenshtein-Distanz oder, wenn sie über `max` liegt, einen Wert größer `max`. `isSubsequence(needle, hay)` sagt, ob die Zeichen von `needle` in dieser Reihenfolge in `hay` vorkommen. `rankCandidates(term, candidates, limit = 3)` liefert die besten Ersatzwörter als Liste: Begriffe unter fünf Zeichen werden nicht korrigiert; erlaubt sind bei höchstens zwei Zeichen Längenunterschied die Distanz 1, ab acht Zeichen 2, außerdem längere Wörter, in denen der Begriff als Teilfolge steckt; nähere Kandidaten zuerst, der Begriff selbst zählt nicht. Findet erst diese Stufe Treffer, meldet das Suchergebnis `mode: \"typo\"` und in `corrected` die tatsächlich gesuchten Wörter. Ohne passendes Wort bleibt das Ergebnis leer, mit `mode: \"and\"` und ohne `corrected`.",
+      "editable": [
+        "packages/contracts/src/search/search.ts",
+        "packages/core/src/modules/search/session-text-index.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "queue-order",
+      "createdOn": "2026-11-17",
+      "start": "22c1217cfc6bed2aad77e5895209f7a992dc3517",
+      "reference": "aea38e7f51b7649f9fa73cdc4b1ed5ca408a45d2",
+      "test": "packages/core/test/modules/sessions/session-queue.test.ts",
+      "selector": "die Reihe ist gespeichert|ändert den Text, und der Verlauf|fällt ans Ende zurück|midTurnInput|bei unklarer Annahme sind Text und Reihe",
+      "prompt": "Vorgemerkte Nachrichten sollen nachträglich änderbar und umsortierbar sein. Die Reihenfolge wird dauerhaft gespeichert (neue Datenbank-Migration für `session_queue`, bestehende Einträge behalten ihre Reihenfolge). Schnittstelle: Jeder Eintrag aus `SessionManager.queued()` trägt `position` (0 geht als Nächstes raus; nach dem Umsortieren lückenlos ab 0). Neu ist `SessionManager.editQueued(sessionId, queueId, { text, move }, actor)` mit optionalem `text`, optionalem `move` (`\"front\"` oder `\"back\"`) und optionalem `actor`; es liefert ein `Ack`, bei Erfolg mit `detail` = `position <n>` (ab 1 gezählt), auch wenn sich die Stelle nicht ändert. Eine Textänderung erzeugt das Sitzungsereignis `session.queue_edited`, ein Verschieben `session.queue_moved`. Leerer Text, unbekannte Einträge und Einträge mit unklarer Annahme (`delivery: \"unknown\"`) werden mit `ok: false` abgelehnt und bleiben unverändert. Ausgesendet wird in der gespeicherten Reihenfolge. `steer` mit `{ queue: false }` geht bei einem Adapter mit der Fähigkeit `midTurnInput` auch im laufenden Zug sofort an den Adapter; ohne diese Fähigkeit bleibt die Nachricht bei `promptDelivery: \"next-turn\"` vorgemerkt (Antwort `{ ok: true, detail: \"queued\" }`).",
+      "editable": [
+        "packages/core/src/modules/sessions/session-manager.ts",
+        "packages/core/src/modules/sessions/session-queue.ts",
+        "packages/core/src/platform/db.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "sync-notices",
+      "createdOn": "2026-11-19",
+      "start": "3bd937ee6308eb213a2d2faea86f97b70e28fa66",
+      "reference": "b64bcd214d2fcbbf7b9ed08f77d7f0700f33863c",
+      "test": "packages/core/test/modules/workspace/main-sync-scheduler.test.ts",
+      "selector": "20 Sessions eines Projekts|BUG-0224",
+      "prompt": "Der Main-Sync-Scheduler flutet die Benachrichtigungen (über 2000 Einträge in zwei Tagen), weil er dieselbe Lage je Session und je Takt meldet. Jede Lage soll genau einmal erscheinen. Verhalten: Ein gescheiterter Fetch wird je Projekt einmal gemeldet (`kind: \"failed\"`, `reason: \"fetch-failed\"`), bis ein Fetch wieder gelingt. Der Rückstand wird je Projekt und Stand einmal gemeldet; die `behind`-Meldung bekommt das Feld `sessions` (Anzahl der zurückliegenden Sessions) und trägt in `behind` den größten Rückstand. Konflikte werden je Session und Dateiliste einmal gemeldet, Fehler beim Probelauf oder Anwenden je Session und Ursache einmal. Ist ein Stand wieder aktuell, darf sich dieselbe Lage erneut melden. Die Benachrichtigung im Hub nennt bei mehreren Sessions deren Anzahl.",
+      "editable": [
+        "apps/hub/src/main.ts",
+        "packages/core/src/modules/workspace/main-sync-scheduler.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
     }
   ]
 }

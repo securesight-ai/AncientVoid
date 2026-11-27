@@ -122,10 +122,10 @@ Skill-Zuordnung pro Lauf nachträglich.
 - [x] **T84.5** Skills-A/B innerhalb je eines Harness (an/aus auf
   identischen Aufgaben; immer geladene Regel-Last konstant halten und
   ausweisen). → AC-P84-4
-- [ ] **T84.1b** Blocker für T84.6: Sieben Aufgaben sind aus dem Aufgabentext
-  nicht lösbar ([Befund](../docs/p84-pilotserie-planung.md)); Texte ergänzen
-  oder Aufgaben ersetzen, dazu ein Prüfschritt „Namen im Test stehen am Start
-  oder im Text“. → AC-P84-2
+- [x] **T84.1b** Sieben aus dem Text nicht lösbare Aufgaben
+  ([Befund](../docs/p84-pilotserie-planung.md)) nennen ihren
+  Schnittstellenvertrag; `scripts/eval/corpus.test.mjs` prüft „Namen im Test
+  stehen am Start oder im Text“. → AC-P84-2
 - [ ] **T84.6** Erste Kernserie auf der reduzierten Matrix (n ≥ 5 je Arm,
   Median + Streuung je Metrik und Aufgabe). → AC-P84-2, AC-P84-6
 - [ ] **T84.7** Split-Szenarien (a)/(b)/(c) auf demselben Korpus,
@@ -133,6 +133,29 @@ Skill-Zuordnung pro Lauf nachträglich.
 - [ ] **T84.8** Report-Generator (Code fertig, `scripts/eval/report.mjs`) + erster datierter Report
   `docs/messlauf/JJJJ-MM-DD-p83-eval-kernserie.md`; datenbasierte
   Kombinations-Empfehlung (Anhang im Report) als Entscheidungsvorlage. → AC-P84-2…6
+
+Nachtrag 2026-11-27 (Nutzerauftrag: vollständige Daten, mehr Aufgabenarten,
+nach und nach erfassen, was wie gut funktioniert und warum):
+
+- [ ] **T84.9** Laufdiagnose je Lauf (Werkzeuge, Fehler, abgelehnte Aufrufe,
+  eigene Prüfungen, geänderte Dateien, Abnahmefehler) und Ablage je Serie im
+  Benchmark-Repo. → AC-P84-2
+- [ ] **T84.10** Claude Code gegen z.ai: In `pilot-5`/`pilot-6` hatte jeder Lauf
+  abgelehnte Aufrufe („Auto mode is unavailable“). Berechtigungsmodus für
+  `claude` und `claude-zai` auf `default` (Rückfragen über das Hub-Gate),
+  Smoke ohne Ablehnung, dann beide Zellen neu messen. → AC-P84-6
+- [x] **T84.11** Drei schwerere Aufgaben
+  ([Abnahme](../docs/messlauf/2026-11-25-p84-korpus.md)). → AC-P84-1
+- [ ] **T84.12** Weitere Aufgabenarten: Fehlersuche nur aus dem Symptom,
+  Adapter-Aufgabe, UI-Abnahme, Verständnisfrage mit deterministischer Prüfung;
+  je Art zuerst „Start rot, Referenz grün“ belegen. → AC-P84-1
+- [ ] **T84.13** Zeitlimit und offene Rückfrage als Ergebnis im Vertrag (ADR),
+  damit Mediane nicht nur überlebende Läufe zeigen. → AC-P84-2
+- [ ] **T84.14** Cache-Schreib- und -Lese-Token beim Claude-Adapter getrennt
+  bepreisen (ADR). → AC-P84-3
+- [ ] **T84.15** Serienübersicht im Benchmark-Repo (Serie × Zelle × Aufgabe);
+  Serien mit anderem Korpus- oder Konfigurationsstand nie zusammenrechnen.
+  → AC-P84-6
 
 ## 5. Acceptance Criteria
 

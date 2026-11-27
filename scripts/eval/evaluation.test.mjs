@@ -43,9 +43,9 @@ function measured(series) {
   });
 }
 
-it("plans a complete balanced 840-run matrix (12 regressions + negative control) with the same four tasks in every split arm", () => {
+it("plans a complete balanced 1020-run matrix (15 regressions + negative control) with the same four tasks in every split arm", () => {
   expect(plan.arms).toHaveLength(15);
-  expect(plan.jobs).toHaveLength(840);
+  expect(plan.jobs).toHaveLength(1020);
   const split = plan.arms.filter((arm) => arm.group === "split");
   const ids = split.map((arm) => [...new Set(plan.jobs.filter((job) => job.arm === arm).map((job) => job.task.id))]);
   expect(ids[0]).toHaveLength(4);
@@ -187,7 +187,7 @@ it("exports a complete series immutably with a hash manifest and marks partial s
     writeFileSync(invalid, JSON.stringify({ key: "x", attempt: 1, cause: "infrastructure" }) + "\n");
     const meta = { date: "2026-11-26", commit: "fixture", runtime: "fixture" };
     const done = exportSeries({ rows, receipts, invalid, plan, meta, out: join(dir, "ok") });
-    expect(done.manifest).toMatchObject({ lauf_id: "2026-11-26-serie-a", laeufe_erwartet: 840, laeufe_erfasst: 840, infrastruktur_versuche_verworfen: 1, messung_gueltig: true });
+    expect(done.manifest).toMatchObject({ lauf_id: "2026-11-26-serie-a", laeufe_erwartet: 1020, laeufe_erfasst: 1020, infrastruktur_versuche_verworfen: 1, messung_gueltig: true });
     expect(done.manifest.kosten_cloud_usd_je_provider.fixture).toBeGreaterThan(0);
     expect(readFileSync(join(dir, "ok", "manifest.sha256"), "utf8")).toContain("  lauf.yaml");
     expect(() => exportSeries({ rows, receipts, invalid, plan, meta, out: join(dir, "ok") })).toThrow(/EEXIST/);
@@ -198,7 +198,7 @@ it("exports a complete series immutably with a hash manifest and marks partial s
     expect(partial.manifest.laeufe_abgebrochen).toBe(1);
     expect(partial.files).toEqual(expect.arrayContaining(["aborted.jsonl", "diagnose.jsonl", "diagnose.md"]));
     expect(readFileSync(join(dir, "teil2", "manifest.sha256"), "utf8")).toContain("  diagnose.jsonl");
-    expect(partial.manifest).toMatchObject({ messung_gueltig: false, laeufe_erfasst: 839 });
+    expect(partial.manifest).toMatchObject({ messung_gueltig: false, laeufe_erfasst: 1019 });
     expect(partial.manifest.grund_ungueltig).toMatch(/Incomplete/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -210,7 +210,7 @@ it("renders the pilot report from the same summary and table as the PWA tab", ()
   const meta = { date: "2026-11-26", commit: "fixture", runtime: "fixture", valid: true, invalidReason: "" };
   const markdown = renderPilotReport(summary, plan, meta);
   const table = evaluationTable(summary);
-  expect(summary.runs).toBe(840);
+  expect(summary.runs).toBe(1020);
   expect(markdown).toContain(`| ${table.columns.join(" | ")} |`);
   for (const row of table.rows) expect(markdown).toContain(`| ${row.join(" | ")} |`);
   expect(markdown).toContain("Pflichtangaben");

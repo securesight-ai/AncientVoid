@@ -2,8 +2,8 @@
 
 **Art:** how-to
 
-Der [eingefrorene Korpus](../scripts/eval/corpus.json) enthält zwölf
-Regressionen mit Start-Commit, Referenz-Commit, Aufgabentext,
+Der [eingefrorene Korpus](../scripts/eval/corpus.json) enthält 15
+historische Änderungen mit Start-Commit, Referenz-Commit, Aufgabentext,
 Dateiumfang, Abnahme-Selektor und dem Datum der ursprünglichen
 Referenz. Der [SHA-256](../scripts/eval/corpus.sha256) bindet das Manifest
 einschließlich der über die Git-Objekte adressierten Referenztests. Ein
@@ -17,6 +17,15 @@ Der Prüfer installiert am jeweiligen Stand die Abhängigkeiten aus dem
 Lockfile. Er führt denselben ausgewählten Test am Start- und
 Referenzstand aus. `--offline` verwendet den vorhandenen npm-Cache.
 Weitere Argumente sind Korpus-IDs und beschränken die Prüfung.
+
+„Rot am Start, grün an der Referenz“ belegt noch nicht, dass eine Aufgabe aus
+ihrem Text lösbar ist: Der Abnahmetest bleibt verborgen. Deshalb muss der Text
+jeden Namen nennen, den erst die Lösung einführt und den der ausgewählte Test
+benutzt (Funktionen mit ihrer Datei, Felder, Metrik-Schlüssel), dazu Signatur
+und Verhalten, aber nicht den Lösungsweg.
+`npx vitest run scripts/eval/corpus.test.mjs` prüft die Namen
+([solvability.mjs](../scripts/eval/solvability.mjs)); ob Signatur und Verhalten
+ausreichen, bleibt Prüfung durch Lesen.
 
 ## Prüfstand und Protokoll
 
@@ -116,7 +125,7 @@ und weist Rangänderungen und Preisdatumswechsel aus.
 
 ## Negativkontrolle
 
-Der Korpus enthält neben den zwölf Regressionen eine Negativkontrolle
+Der Korpus enthält neben den 15 historischen Änderungen eine Negativkontrolle
 (`negative: true`, Start = Referenz, nicht im Split-Teilkorpus): Das Kriterium gilt schon,
 der Prompt erlaubt „nichts zu tun“, und **jede Änderung** der freigegebenen Dateien ist ein
 Fehler. Ein Lauf ohne Token-Lebenszeichen wird nicht erfasst und kann daher nie als
