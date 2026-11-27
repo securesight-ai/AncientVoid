@@ -196,6 +196,27 @@
   white-space: nowrap;
 }
 
+/* EPIC-P86 T86.7 (Nutzerwunsch 26.11.2026): Zustand rechts neben dem Titel —
+ * in schmalen Kacheln immer sichtbar; der Titel kürzt sich zuerst, der
+ * Zustand nie. */
+.session-top-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.session-top-titlerow .session-top-title,
+.session-top-titlerow .rename-form {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-top-titlerow .status {
+  flex: none;
+  white-space: nowrap;
+}
+
 .session-top-meta {
   font-size: var(--text-sm);
   overflow: hidden;

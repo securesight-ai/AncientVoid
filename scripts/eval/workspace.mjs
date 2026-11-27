@@ -63,9 +63,10 @@ export async function prepareWorkspace(root, directory, task, skills) {
 async function gate(directory, command) {
   try {
     await run("npm", ["run", command], { cwd: directory, timeout: 180_000, maxBuffer: 8 * 1024 * 1024 });
-    return true;
+    return { ok: true, output: "" };
   } catch (error) {
-    if (error.code === 1 && !error.killed) return false;
+    const output = `${error.stdout ?? ""}${error.stderr ?? ""}`.replaceAll(directory, "<workspace>").slice(-2000);
+    if (error.code === 1 && !error.killed) return { ok: false, output };
     throw error;
   }
 }
@@ -102,7 +103,11 @@ export async function judgeWorkspace(root, directory, candidate, task) {
   const result = await checkAcceptance(directory, task, { allowSuiteFailure: true });
   const [lint, typecheck] = await Promise.all([gate(directory, "lint"), gate(directory, "typecheck")]);
   // Negativkontrolle: grün nur, wenn nichts geändert wurde (Lebenszeichen erzwingt die Token-Erfassung).
-  return { baseline: baseline.failed, acceptance: !changed && result.passed === baseline.passed + baseline.failed && result.failed === 0, lint, typecheck };
+  // `why` gehört nicht in den Ergebnisvertrag; der Runner legt es neben die Belege.
+  return {
+    verdict: { baseline: baseline.failed, acceptance: !changed && result.passed === baseline.passed + baseline.failed && result.failed === 0, lint: lint.ok, typecheck: typecheck.ok },
+    why: { unwantedChange: changed && Boolean(task.negative), failures: result.failures, lint: lint.output, typecheck: typecheck.output },
+  };
 }
 
 export async function carryPlan(planning, build) {

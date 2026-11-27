@@ -113,8 +113,9 @@ Korpus-Hash), und `scripts/eval/corpus.test.mjs` prüft das für jede Aufgabe.
 Die Serie `pilot-6` läuft noch auf dem alten Korpus ohne diese sieben Aufgaben;
 Läufe beider Korpus-Stände werden nicht zusammengerechnet.
 
-## Ausdrücklich offen
+## Ergebnis
 
-Der Nutzer hat den Lauf am 2026-11-26 freigegeben. Der datierte Pilotbericht
-entsteht erst aus echten Daten per `pilot-report` und wird nicht von Hand
-geschrieben.
+`pilot-6` endete am 2026-11-27 mit 105 von 110 Läufen und ist als unvollständig
+markiert. Rohwerte, Abweichungen und Laufdiagnose stehen im
+[Pilotbericht](2026-11-27_p84-pilotserie.md); sein Zahlenteil stammt unverändert
+aus `pilot-report`.

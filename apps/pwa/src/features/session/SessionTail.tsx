@@ -1893,6 +1893,10 @@ export function SessionTail({
               <TabIcon name="uebersicht" />
             </Button>
             <div class="session-top-main">
+              {/* Nutzerwunsch 26.11.2026 (EPIC-P86 T86.7): der Zustand steht
+                  rechts neben dem Titel — auch in schmalen Kacheln immer
+                  sichtbar, nicht erst in der Zeile darunter. */}
+              <div class="session-top-titlerow">
               {renaming ? (
                 <form
                   class="rename-form"
@@ -1919,6 +1923,8 @@ export function SessionTail({
                   {title ?? projectName(session.project)}
                 </div>
               )}
+                <LiveStatus sessionId={session.id} status={status} />
+              </div>
               <div class="dim session-top-meta">
                 {mainSync && mainSync.behind > 0 && (
                   <>
@@ -1948,8 +1954,7 @@ export function SessionTail({
                     (session.hostId === "local"
                       ? t("common.this_machine")
                       : session.hostId.slice(0, 8)))
-                  : t("common.this_machine")}{" "}
-                · <LiveStatus sessionId={session.id} status={status} />
+                  : t("common.this_machine")}
                 {session.controlMode !== "mirror" && (
                   <>
                     {" · "}

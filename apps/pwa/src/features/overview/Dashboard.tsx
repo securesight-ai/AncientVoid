@@ -66,6 +66,8 @@ export interface DashboardProps {
   lastSession?: LastSession | null;
   /** EPIC-P57 T57.9: der Testadapter „dummy“ ist registriert — der Einstieg bietet dann die Probe-Session an. */
   probeAvailable?: boolean;
+  /** EPIC-P86 T86.7: Session-Id → Nummer der Kachel (1–4), in der sie rechts offen ist (PC-Spalte; Schlüssel wie tileRefOf). */
+  tileNos?: Map<string, number>;
 }
 
 /**
@@ -132,7 +134,7 @@ const VIEW_KEY = "ancientvoid.overviewView";
 const VIEWS = ["sessions", "projects", "hosts"] as const;
 const VIEW_TITLE: Record<(typeof VIEWS)[number], string> = { sessions: t("common.sessions_cap"), projects: t("common.projects"), hosts: t("common.hosts") };
 
-export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, approvals = [], onOpenApprovals, lastSession = null, probeAvailable = false }: DashboardProps) {
+export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, approvals = [], onOpenApprovals, lastSession = null, probeAvailable = false, tileNos }: DashboardProps) {
   const windowKeys = new Set(Object.values(useOpenWindows()).map((e) => targetKey(e.target)));
   // Once per visit (not per 3 s poll): bring the remembered session into view.
   const hasSessions = sessions.length > 0;
@@ -494,6 +496,7 @@ export function Dashboard({ sessions, hosts = [], onOpen, pendingApprovals = 0, 
                         onDecided={(id) => setDecided((prev) => new Set(prev).add(id))}
                         moved={moved.current.has(`${s.hostId ?? ""}:${s.id}`)}
                         inWindow={windowKeys.has(targetKey({ kind: "session", sessionId: s.id, ...(remoteHost(s.hostId) ? { hostId: remoteHost(s.hostId)! } : {}) }))}
+                        tileNo={tileNos?.get(`${remoteHost(s.hostId) ?? ""}:${s.id}`)}
                         onArchive={archive}
                         onPin={pin}
                         onDelete={(record) => void remove([record])}
@@ -625,6 +628,7 @@ function SessionRow({
   onOpen,
   isLast,
   inWindow,
+  tileNo,
   approval,
   onDecided,
   moved,
@@ -636,6 +640,8 @@ function SessionRow({
 }: {
   /** EPIC-P34 T34.10: die Session läuft in einem eigenen Fenster. */
   inWindow: boolean;
+  /** EPIC-P86 T86.7: Nummer der Kachel, in der diese Session rechts offen ist (undefined = keine). */
+  tileNo: number | undefined;
   /** EPIC-P43 T43.3: die offene Anfrage dieser Session (nur eigener Hub). */
   approval: ApprovalRequest | null;
   onDecided: (approvalId: string) => void;
@@ -744,6 +750,7 @@ function SessionRow({
           </div>
         ) : null}
         <div class="session-activity">
+          {tileNo !== undefined && <span class="card-tile-no" title={t("common.tile_no", { n: tileNo })} data-testid="card-tile-no">{tileNo}</span>}
           <span class="session-activity-text">{session.lastActivity?.text ?? t("common.nothing_yet")}</span>
           <span class="dim session-ago">
             {unseen && <span class="badge new-badge">{t("common.new")}</span>} {ago(session.lastActivity?.at ?? session.updatedAt)}

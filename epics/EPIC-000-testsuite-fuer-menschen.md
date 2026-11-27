@@ -263,6 +263,18 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   Klarheit und unnötige Änderungen je Patch mit Kurzbegründung bewerten.
   Beleg: Datum, anonymisierte Patch-IDs und Einzelurteile.
 
+### Übernommen aus EPIC-P86 (2026-11-27)
+
+- [ ] **T000.40 — 3D-Tiefe auf den echten Geräten abnehmen.**
+  (Herkunft: [EPIC-P86](EPIC-P86-3d-tiefe-fensterflug-lebendigkeit.md)
+  AC-P86-1/AC-P86-6) Handy und PC gegen den Live-Hub: „Mehr“-Blatt, Modal
+  und Befehl öffnen (Fenster fliegt aus der Tiefe, Hintergrund weicht
+  zurück), 3D ausstellen und den Unterschied direkt vergleichen; die
+  fokussierte Kachel glüht im Zustands-Puls; nichts springt oder verdeckt
+  Bedienflächen. Beleg: Datum, Geräte, Urteil. Vorbewertung 26./27.11.2026
+  gegen den Dev-Server („passt, sieht gut aus“) — hier zählt der gemergte
+  Stand.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine

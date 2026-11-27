@@ -1346,6 +1346,7 @@ export const de = {
   "settings.main_branch": "Hauptbranch",
   "settings.main_sync": "Main-Synchronisation",
   "settings.main_sync_note": "Neue Sessions starten auf dem aktuellen Hauptbranch (origin), laufende Sessions werden im Takt geprüft. Nicht passieren: kein Rebase, kein Push nach main, kein Merge in laufende Züge — gemergt wird nur in wartende Sessions.",
+  "settings.depth3d": "3D-Tiefe",
   "settings.merge_automatically": "Automatisch mergen",
   "settings.model_tool": "Modell- &amp; Tool-Endpoints",
   "settings.model_tool_endpoints": "Modell- und Tool-Endpoints",

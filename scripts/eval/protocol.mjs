@@ -123,7 +123,9 @@ export class BudgetGuard {
   }
 }
 
-const INFRA = /HTTP 5\d\d|ECONN|fetch failed|before completed turn telemetry|no positive token usage|did not confirm stop|health/i;
+/** Fehlerarten des Anbieters, die nichts über den Arm aussagen; `context` und `unknown` zählen mit. */
+export const OUTAGES = ["quota", "rate_limit", "auth", "network", "server"];
+const INFRA = /HTTP 5\d\d|ECONN|fetch failed|before completed turn telemetry|no positive token usage|did not confirm stop|health|provider [a-z_]+ during turn/i;
 export const isInfrastructureFailure = (error) => INFRA.test(String(error?.message ?? error));
 
 export const jobKey = ({ arm, task, repetition }) => `${arm.id}/${task.id}/${repetition}`;

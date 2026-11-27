@@ -24,8 +24,46 @@ test.describe("Desktop-Workspace (EPIC-P18)", () => {
       await expect(tile(app, n + 1).locator(".run-tokens")).toContainText("Tokens");
     }
     await expect(tile(app, 4)).toHaveClass(/focused/);
+    // EPIC-P86 T86.4: Text bleibt scharf — die fokussierte Kachel trägt
+    // KEINEN Transform (Nutzerfund 26.11.2026: Dauer-Skalierung machte den
+    // Text unscharf). Puls und Farbe folgen dem Zustand; diese Dummy-Sessions
+    // sind nach dem Lauf still, daher kein Gluh-Puls hier — der steht im
+    // Test unten mit einer dauerhaft arbeitenden Session.
+    await expect(tile(app, 4)).toHaveCSS("transform", "none");
+    await expect(tile(app, 1)).toHaveCSS("animation-name", "none");
+    // EPIC-P86 T86.7: die Karte links zeigt die Kachel-Nummer — dieselbe wie
+    // .tile-no, damit die Sessions ihren Fenstern zuzuordnen sind.
+    for (const [n, name] of ["Eins", "Zwei", "Drei", "Vier"].entries()) {
+      await expect(card(app, `Aufgabe ${name}`).locator(".card-tile-no")).toHaveText(String(n + 1));
+    }
+    // T86.7 (Nutzerwunsch 26.11.2026): der Zustand steht neben dem Titel,
+    // nicht erst in der Zeile darunter.
+    const row = tile(app, 1).locator(".session-top-titlerow");
+    await expect(row.locator(".session-top-title")).toHaveText("Aufgabe Eins");
+    await expect(row.locator(".status")).toBeVisible();
     // Half-height tiles: every tile folds its controls, not only new ones.
     for (const n of [1, 2, 3, 4]) await expect(tile(app, n).getByRole("button", { name: "Steuerung einblenden" })).toBeVisible();
+  });
+
+  test("EPIC-P86 T86.4: der Rand der fokussierten Kachel glüht im Zustands-Puls — arbeitende Session, Text scharf", async ({ app, hub }) => {
+    await hub.createSession({ adapter: "opencode", prompt: "Arbeite LANGSAM" });
+    await hub.createSession({ adapter: "opencode", prompt: "Aufgabe Ruhig" });
+    await card(app, "Arbeite LANGSAM").click();
+    await app.getByRole("button", { name: "Layout lösen" }).click();
+    await card(app, "Aufgabe Ruhig").click({ modifiers: ["Control"] });
+    // Fokus zurück auf Kachel 1 (LANGSAM arbeitet dauerhaft).
+    await app.keyboard.press("Alt+1");
+    const working = tile(app, 1);
+    await expect(working).toHaveClass(/focused/);
+    await expect(working.locator(".session-top-titlerow .status")).toHaveAttribute("data-display", "working");
+    // arbeitet: Gluh-Puls in Akzentfarbe, Rand und Schatten folgen --depth3d-glow.
+    await expect(working).toHaveCSS("animation-name", "depth3d-focus-glow");
+    const cssVar = (name: string) => working.evaluate((el, n) => getComputedStyle(el).getPropertyValue(n), name);
+    expect(await cssVar("--depth3d-glow")).toBe(await cssVar("--accent"));
+    // Nutzerfund 26.11.2026: kein Dauer-Transform auf der Textfläche.
+    await expect(working).toHaveCSS("transform", "none");
+    // Die ruhige zweite Kachel pulst nicht.
+    await expect(tile(app, 2)).toHaveCSS("animation-name", "none");
   });
 
   test("Layout „Drei nebeneinander“ zeigt drei Kacheln mit zwei ziehbaren Spaltengrenzen", async ({ app, hub }) => {
