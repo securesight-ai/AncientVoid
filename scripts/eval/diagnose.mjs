@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
+import { OUTAGES } from "./protocol.mjs";
 
 const run = promisify(execFile);
 const jsonLines = (path) => readFileSync(path, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line));
@@ -62,7 +63,7 @@ export function journalFacts(events) {
     durationMs: start && end ? time(end) - time(start) : null,
     msToFirstEdit: start && firstEdit !== null ? firstEdit - time(start) : null,
     tools, toolErrors, deniedCalls, checks,
-    providerErrors: events.filter((event) => event.payload?.kind === "provider.error").length,
+    providerErrors: events.filter((event) => event.payload?.kind === "provider.error").map((event) => event.payload.category ?? "unknown"),
     errorSamples,
     finalAnswer: clean(answer.join("")).slice(-1500),
   };
@@ -97,14 +98,19 @@ export async function diagnoseSeries({ receipts, data, tasks }) {
     const task = tasks.find((entry) => entry.id === taskId);
     if (!task || !UUID.test(sessionId)) throw new Error(`Unknown run: ${key}`);
     const events = jsonLines(join(data, "sessions", sessionId, "events.jsonl"));
-    const input = events.findLast((event) => event.payload?.kind === "evaluation.completed")?.payload.result.input;
-    if (!cause && !input) throw new Error(`Run ${key} has no recorded verdict`);
-    const outcome = cause ?? (input.acceptance && input.lint && input.typecheck ? "pass" : "fail");
+    const result = events.findLast((event) => event.payload?.kind === "evaluation.completed")?.payload.result;
+    if (!cause && !result) throw new Error(`Run ${key} has no recorded verdict`);
+    const input = result?.input;
+    const turnErrors = result?.phases.reduce((sum, phase) => sum + phase.turnErrors, 0);
+    const journal = journalFacts(events);
+    const outage = turnErrors ? journal.providerErrors.find((category) => OUTAGES.includes(category)) : undefined;
+    // „bestanden“ wie in der Zusammenfassung der App; ein Anbieterausfall ist weder bestanden noch gescheitert.
+    const outcome = cause ?? (outage ? `provider:${outage}` : input.acceptance && input.lint && input.typecheck && !turnErrors ? "pass" : "fail");
     const project = events.find((event) => event.payload?.kind === "session.created")?.payload.project;
     rows.push({
       key, arm, task: taskId, repetition: Number(repetition), sessionId, outcome,
-      verdict: input ? { acceptance: input.acceptance, lint: input.lint, typecheck: input.typecheck } : null,
-      journal: journalFacts(events),
+      verdict: input ? { acceptance: input.acceptance, lint: input.lint, typecheck: input.typecheck, turnErrors } : null,
+      journal,
       workspace: project ? await workspaceFacts(project, task.editable) : null,
     });
   }
@@ -130,7 +136,7 @@ export function diagnosisTable(rows) {
       count((row) => row.workspace?.testFiles.length), count((row) => row.workspace?.outsideEditable.length)].join(" | ")} |`;
   });
   return [
-    "| Arm | Läufe | bestanden | gescheitert | abgebrochen | Werkzeugaufrufe (Median) | Werkzeugfehler (Median) | Läufe mit abgelehnten Aufrufen | selbst getestet | s bis zur ersten Änderung (Median) | Läufe mit eigener Testdatei | Läufe mit Quelländerung außerhalb |",
+    "| Arm | Läufe | bestanden | gescheitert | abgebrochen oder Anbieterausfall | Werkzeugaufrufe (Median) | Werkzeugfehler (Median) | Läufe mit abgelehnten Aufrufen | selbst getestet | s bis zur ersten Änderung (Median) | Läufe mit eigener Testdatei | Läufe mit Quelländerung außerhalb |",
     "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ...lines,
   ].join("\n");

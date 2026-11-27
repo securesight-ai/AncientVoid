@@ -1,6 +1,7 @@
 import { URL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { checkEnergy, phaseBilling } from "./energy.mjs";
+import { OUTAGES } from "./protocol.mjs";
 
 export function connectHub(base, token) {
   if (!token) throw new Error("ANCIENTVOID_TOKEN for the isolated evaluation hub is required");
@@ -58,12 +59,25 @@ export async function preflight(api, config, fetcher) {
   if (failures.length) throw new AggregateError(failures, "P84 preflight failed before any session was started");
 }
 
+async function assertNoOutage(api, sessionId) {
+  for (let after = 0; ;) {
+    const page = await api(`/api/sessions/${sessionId}/events?afterSeq=${after}&limit=2000`);
+    if (!page.length) return;
+    const cut = page.find(({ payload }) => payload?.kind === "provider.error" && OUTAGES.includes(payload.category));
+    if (cut) throw new Error(`${sessionId}: provider ${cut.payload.category} during turn`);
+    after = page.at(-1).seq;
+  }
+}
+
 async function waitForTurn(api, sessionId, timeoutMs) {
   const end = performance.now() + timeoutMs;
   const path = `/api/sessions/${sessionId}`;
   while (performance.now() < end) {
     const [{ status }, { turns }] = await Promise.all([api(path), api(`${path}/turns`)]);
-    if (turns.length && ["idle", "error", "stopped", "parked"].includes(status)) return status;
+    if (turns.length && ["idle", "error", "stopped", "parked"].includes(status)) {
+      if (turns.some((turn) => turn.outcome === "error")) await assertNoOutage(api, sessionId);
+      return status;
+    }
     if (["error", "stopped", "parked", "interrupted", "waiting_approval"].includes(status)) {
       throw new Error(`${sessionId}: ${status} before completed turn telemetry`);
     }

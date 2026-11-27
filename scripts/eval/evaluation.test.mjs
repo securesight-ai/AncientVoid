@@ -263,3 +263,19 @@ it("resumes a series: skips recorded and aborted jobs and deferred providers, an
   expect(() => resumeJobs(plan, { rows: foreign, aborted: [], skipProviders: [], budget })).toThrow(/different protocol/);
   expect(() => resumeJobs(plan, { rows: [], aborted: [], skipProviders: ["tippfehler"], budget })).toThrow(/Unknown provider/);
 });
+
+it("counts a turn cut off by the provider as infrastructure, never as a task failure", async () => {
+  const hub = (category) => vi.fn(async (path) => {
+    if (path === "/api/sessions") return { id: "cut", model: "fixture/cloud", adapter: "pi" };
+    if (path.endsWith("/turns")) return { turns: [{ turn: 1, outcome: "error" }] };
+    if (path.endsWith("/stop")) return { ok: true };
+    if (path.includes("/events")) return path.includes("afterSeq=0&") ? [{ seq: 7, payload: { kind: "provider.error", category } }] : [];
+    return { status: "idle" };
+  });
+  const run = (api) => runPhase(api, "build", plan.arms.find((arm) => arm.id === "pi-cloud-plain").build, "/tmp/repo", "sample", 1000);
+  const outage = await run(hub("quota")).catch((error) => error);
+  expect(outage.message).toBe("cut: provider quota during turn");
+  expect(isInfrastructureFailure(outage)).toBe(true);
+  // Ein übergelaufener Kontext gehört zum Verhalten des Arms und bleibt ein erfasster Lauf.
+  await expect(run(hub("context"))).resolves.toMatchObject({ sessionId: "cut" });
+});

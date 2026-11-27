@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -48,7 +48,7 @@ describe("P84 run diagnosis", () => {
       toolErrors: 3,
       deniedCalls: 1,
       checks: { test: 1, lint: 1, typecheck: 1 },
-      providerErrors: 0,
+      providerErrors: [],
       errorSamples: ["Shell: FAIL <workspace>/apps/a.test.ts", "shell: lint kaputt", "Write: Auto mode is unavailable: its safety check does not run"],
       finalAnswer: "Fertig: siehe <workspace>/apps/a.ts",
     });
@@ -66,7 +66,7 @@ describe("P84 run diagnosis", () => {
     await snapshotWorkspace(workspace);
     writeFileSync(join(workspace, "apps/extra.ts"), "new\n");
     writeFileSync(join(workspace, "apps/a.test.ts"), "test\n");
-    const verdict = { type: "system", ts: at(30), summary: "evaluation.completed", payload: { kind: "evaluation.completed", result: { input: { acceptance: false, lint: true, typecheck: true } } } };
+    const verdict = { type: "system", ts: at(30), summary: "evaluation.completed", payload: { kind: "evaluation.completed", result: { input: { acceptance: false, lint: true, typecheck: true }, phases: [{ turnErrors: 0 }] } } };
     for (const [index, id] of sessions.entries()) {
       mkdirSync(join(dir, "sessions", id), { recursive: true });
       const events = [...journal(workspace), ...(index ? [] : [verdict])];
@@ -78,6 +78,13 @@ describe("P84 run diagnosis", () => {
     const tasks = [{ id: "task", editable: ["apps/a.ts"] }];
 
     const rows = await diagnoseSeries({ receipts, data: dir, tasks });
+    // Wie die Zusammenfassung der App: Ein Zug mit Fehler ist nie „bestanden“; ein Anbieterausfall heißt so.
+    const cut = join(dir, "sessions", sessions[0], "events.jsonl");
+    const outage = [{ type: "system", ts: at(29), summary: "Kontingent", payload: { kind: "provider.error", category: "quota" } },
+      { ...verdict, payload: { ...verdict.payload, result: { input: { acceptance: true, lint: true, typecheck: true }, phases: [{ turnErrors: 1 }] } } }];
+    appendFileSync(cut, outage.map((entry) => JSON.stringify(entry)).join("\n") + "\n");
+    const [interrupted] = await diagnoseSeries({ receipts, data: dir, tasks });
+    expect(interrupted).toMatchObject({ outcome: "provider:quota", verdict: { acceptance: true, turnErrors: 1 }, journal: { providerErrors: ["quota"] } });
     expect(rows.map((row) => [row.key, row.outcome])).toEqual([["arm-plain/task/1", "fail"], ["arm-plain/task/2", "timeout"]]);
     expect(rows[0].workspace).toEqual({
       files: [

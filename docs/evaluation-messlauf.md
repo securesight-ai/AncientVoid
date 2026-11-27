@@ -151,7 +151,9 @@ abgelehnte Aufrufe, selbst gestartete Tests/Lint/Typecheck, Zeit bis zur ersten 
 geänderte Dateien (eigene Tests getrennt von Quellen außerhalb des erlaubten Umfangs),
 Fehlerproben und Schlussantwort. Pfade werden durch `<workspace>` und `~` ersetzt; vor dem
 Commit ins Benchmark-Repo trotzdem auf Zugangsdaten prüfen. Kein LLM, kein Urteil: Die Werte
-beschreiben Verhalten und belegen keine Ursache. Läufe mit abgelehnten Aufrufen messen die
+beschreiben Verhalten und belegen keine Ursache. Ein Zug, den der Anbieter abbricht (Kontingent,
+Rate-Limit, Anmeldung, Netz, Server), ist im Runner ein ungültiger Versuch (`invalid.jsonl`) und
+kein Aufgabenfehler; ältere Datensätze dieser Art zeigt die Diagnose als `provider:<Art>`. Läufe mit abgelehnten Aufrufen messen die
 Harness-Konfiguration mit und gehören in die Abweichungen der Serie.
 
 Beim Fahren schreibt der Runner je Lauf zusätzlich `verdicts.jsonl` mit den fehlgeschlagenen
