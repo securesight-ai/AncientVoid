@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { failuresOf } from "./acceptance.mjs";
 import { diagnoseSeries, diagnosisTable, journalFacts } from "./diagnose.mjs";
 import { snapshotWorkspace } from "./workspace.mjs";
 
@@ -96,5 +97,23 @@ describe("P84 run diagnosis", () => {
     const receipts = join(dir, "sessions.jsonl");
     writeFileSync(receipts, `${JSON.stringify({ key: "a/task/1", sessionId: "33333333-3333-4333-8333-333333333333" })}\n`);
     await expect(diagnoseSeries({ receipts, data: dir, tasks: [{ id: "task", editable: [] }] })).rejects.toThrow("ENOENT");
+  });
+});
+
+describe("P84 acceptance failures", () => {
+  it("keeps failed cases and an unloadable test file, without the workspace path", () => {
+    const report = { testResults: [
+      { status: "failed", assertionResults: [
+        { status: "passed", fullName: "ok" },
+        { status: "failed", fullName: "suite broken", failureMessages: [`expected 1\n at /w/judge/a.ts ${"x".repeat(900)}`] },
+      ] },
+      { status: "failed", assertionResults: [], message: "Cannot find module /w/judge/missing.ts" },
+      { status: "passed", assertionResults: [] },
+    ] };
+    const failures = failuresOf(report, "/w/judge");
+    expect(failures.map((entry) => entry.name)).toEqual(["suite broken", "<testdatei>"]);
+    expect(failures[0].message).toHaveLength(800);
+    expect(failures[0].message).toContain("<workspace>/a.ts");
+    expect(failures[1].message).toBe("Cannot find module <workspace>/missing.ts");
   });
 });

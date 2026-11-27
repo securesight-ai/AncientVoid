@@ -154,6 +154,9 @@ Commit ins Benchmark-Repo trotzdem auf Zugangsdaten prüfen. Kein LLM, kein Urte
 beschreiben Verhalten und belegen keine Ursache. Läufe mit abgelehnten Aufrufen messen die
 Harness-Konfiguration mit und gehören in die Abweichungen der Serie.
 
+Beim Fahren schreibt der Runner je Lauf zusätzlich `verdicts.jsonl` mit den fehlgeschlagenen
+Abnahmefällen und dem Ende der Lint-/Typecheck-Ausgabe.
+
 ## Mess-Registrierungen im Benchmark-Hub
 
 Die ACP-Anbindung von maki 0.6.5 meldet nur die Kontextfüllung, keine Richtungs-Tokens
