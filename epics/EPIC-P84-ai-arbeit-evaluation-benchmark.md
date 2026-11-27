@@ -151,8 +151,11 @@ nach und nach erfassen, was wie gut funktioniert und warum):
 - [ ] **T84.12** Weitere Aufgabenarten: Fehlersuche nur aus dem Symptom,
   Adapter-Aufgabe, UI-Abnahme, Verständnisfrage mit deterministischer Prüfung;
   je Art zuerst „Start rot, Referenz grün“ belegen. → AC-P84-1
-- [ ] **T84.13** Zeitlimit und offene Rückfrage als Ergebnis im Vertrag (ADR),
-  damit Mediane nicht nur überlebende Läufe zeigen. → AC-P84-2
+- [x] **T84.13** Zeitlimit und offene Rückfrage als Ergebnis im Vertrag
+  ([ADR-0128](../docs/adr/0128-zeitlimit-und-rueckfrage-als-ergebnis.md):
+  `EvalRunInput.outcome`, abgebrochene Läufe in der Ergebnistabelle —
+  Mediane zeigen nicht mehr nur Überlebende; ein Timeout an toter Engine
+  bleibt Infrastruktur-Wiederholung). → AC-P84-2
 - [x] **T84.14** Cache-Schreib- und -Lese-Token beim Claude-Adapter getrennt
   bepreisen ([ADR-0127](../docs/adr/0127-cache-token-getrennt-bepreisen.md):
   Ereignis, Datensatz und Tarif führen `cacheWriteInputTokens` bzw.

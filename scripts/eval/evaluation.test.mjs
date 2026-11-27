@@ -123,6 +123,26 @@ it("uses turn completion and a stop acknowledgement before returning stage evide
   expect(api).toHaveBeenLastCalledWith("/api/sessions/completed/stop", {});
 });
 
+it("ADR-0128: reports time limit and open question as a structured outcome instead of throwing", async () => {
+  const hub = (status) => vi.fn(async (path) => {
+    if (path === "/api/sessions") return { id: "stuck", model: "fixture/cloud", adapter: "pi" };
+    if (path.endsWith("/turns")) return { turns: [] };
+    if (path.endsWith("/stop")) return { ok: true };
+    return { status };
+  });
+  const cell = plan.arms.find((arm) => arm.id === "pi-cloud-plain").build;
+  // Zeitlimit: der Lauf ist ein Ergebnis mit positiver Wandzeit und Stopp.
+  const timed = await runPhase(hub("running"), "build", cell, "/tmp/repo", "sample", 1000);
+  expect(timed).toMatchObject({ sessionId: "stuck", aborted: "timeout" });
+  expect(timed.wallMs).toBeGreaterThan(0);
+  expect(timed.billing).toMatchObject({ kind: "cloud" });
+  // Offene Rückfrage vor dem ersten Zug: ebenfalls Ergebnis, kein Ausfall.
+  const asked = await runPhase(hub("waiting_approval"), "build", cell, "/tmp/repo", "sample", 1000);
+  expect(asked).toMatchObject({ sessionId: "stuck", aborted: "approval" });
+  // Andere Vor-Zug-Status bleiben Fehler (Provider/Infrastruktur-Pfad im Runner).
+  await expect(runPhase(hub("error"), "build", cell, "/tmp/repo", "sample", 1000)).rejects.toThrow(/before completed turn telemetry$/);
+});
+
 const corpus = readCorpus();
 const withCells = (mutate) => planSeries(mutate(JSON.parse(JSON.stringify(testProtocol))), corpus);
 

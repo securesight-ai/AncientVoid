@@ -864,7 +864,7 @@ export abstract class SessionManagerRuntime {
       const phases = await Promise.all(input.phases.map(async (phase) => {
         const record = this.get(phase.sessionId);
         if (!record || record.status !== "stopped") throw new Error("Evaluation phases must be stopped before recording");
-        return measureEvaluationPhase(phase, record, await this.store.replay(record.id));
+        return measureEvaluationPhase(phase, record, await this.store.replay(record.id), input.outcome);
       }));
       if (phases[0] && phases[1] && phases[0].endedAt > phases[1].startedAt) {
         throw new Error("Evaluation plan must finish before the build begins");

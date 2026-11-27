@@ -6,7 +6,7 @@ const hash = "a".repeat(64);
 const run = (arm: string, task: string, repetition: number, over: Partial<{ acceptance: boolean; cost: number; kwh: number; cacheWrite: number; cacheWritePrice: number }> = {}): EvalResult => ({
   input: {
     series: "s", arm, task, repetition, attempt: 1, corpusHash: hash, protocolHash: hash, rulesHash: hash, skills: false, skillHash: null,
-    baseline: 1, acceptance: over.acceptance ?? true, lint: true, typecheck: true,
+    baseline: 1, acceptance: over.acceptance ?? true, lint: true, typecheck: true, outcome: "completed",
     phases: [{
       sessionId: crypto.randomUUID(), phase: "build", harnessVersion: "1", modelFingerprint: "m", wallMs: 100 * repetition,
       billing: over.kwh === undefined
@@ -38,6 +38,12 @@ describe("P84 summary", () => {
     // z.ai-artiger Tarif: Schreiben kostenlos.
     const free = evalRunValues(run("c", "t", 1, { cacheWrite: 100, cacheWritePrice: 0 }));
     expect(free.cacheCostUsd).toBeCloseTo(0.0002, 10);
+  });
+
+  it("ADR-0128: an aborted run counts as failure even with untouched acceptance flags", () => {
+    const aborted = run("c", "t", 1);
+    aborted.input.outcome = "timeout";
+    expect(evalRunValues(aborted).failure).toBe(1);
   });
 
   it("summarises per arm and task with median, mean, min and max, plus a total row", () => {

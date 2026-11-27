@@ -24,7 +24,7 @@ export function summarise(values) {
 
 function values({ input, phases }) {
   return {
-    failure: Number(!(input.acceptance && input.lint && input.typecheck && phases.every((phase) => phase.turnErrors === 0))),
+    failure: Number((input.outcome ?? "completed") !== "completed" || !(input.acceptance && input.lint && input.typecheck && phases.every((phase) => phase.turnErrors === 0))),
     wall: total(input.phases, (phase) => phase.wallMs),
     in: total(phases, (phase) => phase.inputTokens),
     cache: total(phases, (phase) => phase.cacheInputTokens + (phase.cacheWriteInputTokens ?? 0)),

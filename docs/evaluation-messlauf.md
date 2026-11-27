@@ -217,10 +217,12 @@ Gesundheitsantwort, Timeout bei toter Engine) zählen **nie** als Aufgabenfehler
 Der Runner protokolliert den Versuch in `invalid.jsonl` neben `sessions.jsonl`,
 wiederholt höchstens `maxInfraRetries`-mal (Versuchsnummer im Datensatz als
 `attempt`) und bricht nach drei Ausfällen in Folge laut ab. Ein Timeout bei
-lebender Engine oder eine offene Rückfrage ist ein Abbruch des Agenten: Er steht
-in `aborted.jsonl`, die Serie läuft weiter und ist partiell. Abbrüche fehlen in
-der Ergebnistabelle (Überlebenden-Verzerrung); der Report muss sie nennen.
-Vor jeder Serie muss jede Zelle einen Zug mit Werkzeugnutzung bestehen.
+lebender Engine oder eine offene Rückfrage ist seit
+[ADR-0128](adr/0128-zeitlimit-und-rueckfrage-als-ergebnis.md) ein **Ergebnis**
+des Laufs (`outcome: timeout|approval`, Fehlerquote 1, partielle Token): Er
+steht zusätzlich in `aborted.jsonl` für die Laufdiagnose, und die Serie bleibt
+vollständig. Vor jeder Serie muss jede Zelle einen Zug mit Werkzeugnutzung
+bestehen.
 
 Ein erschöpftes Anbieter-Kontingent (Abo-Limit) erscheint als Ausfall ohne Token
 und hält die Serie an. `run … --series <name> --resume` setzt dieselbe Serie unter

@@ -15,13 +15,16 @@ export function measureEvaluationPhase(
   phase: EvalRunInput["phases"][number],
   session: SessionRecord,
   events: readonly NormalizedEvent[],
+  outcome: EvalRunInput["outcome"] = "completed",
 ): EvalResult["phases"][number] {
   const turns = deriveTurnMetrics(events, { sessionId: session.id, adapter: session.adapter, model: session.model });
   const first = turns[0];
   const last = turns.at(-1);
-  if (!first || !last || !session.model) throw new Error("Evaluation requires a completed turn and an explicit model");
+  if (!session.model || (outcome === "completed" && (!first || !last))) {
+    throw new Error("Evaluation requires a completed turn and an explicit model");
+  }
   const lastTurnEnd = events.findLastIndex((event) => event.type === "system" && event.payload.kind === "session.turn_end");
-  const completed = events.slice(0, lastTurnEnd + 1);
+  const completed = outcome === "completed" ? events.slice(0, lastTurnEnd + 1) : events;
   const usage = completed.filter((event) => event.payload.usage !== undefined || event.tokensEst !== undefined);
   let inputTokens = 0;
   let cacheInputTokens = 0;
@@ -50,7 +53,7 @@ export function measureEvaluationPhase(
     cacheWriteInputTokens += cacheWrite ?? 0;
     outputTokens += output;
   }
-  if (inputTokens + outputTokens === 0) throw new Error("Evaluation has no positive token usage");
+  if (outcome === "completed" && inputTokens + outputTokens === 0) throw new Error("Evaluation has no positive token usage");
   const billing = phase.billing;
   const costUsd = billing.kind === "cloud"
     ? ((inputTokens - cacheInputTokens - cacheWriteInputTokens) * billing.inputUsdPerMillion +
@@ -71,7 +74,8 @@ export function measureEvaluationPhase(
     toolErrors: completed.filter((event) => event.type === "tool_result" &&
       (event.payload.isError === true || event.payload.is_error === true)).length,
     turns: turns.length,
-    startedAt: first.startedAt,
-    endedAt: last.endedAt,
+    // ADR-0128: ohne vollendeten Zug (Abbruch) begrenzen die Ereignisse den Lauf.
+    startedAt: first?.startedAt ?? events[0]?.ts ?? new Date(0).toISOString(),
+    endedAt: last?.endedAt ?? events.at(-1)?.ts ?? new Date(0).toISOString(),
   };
 }

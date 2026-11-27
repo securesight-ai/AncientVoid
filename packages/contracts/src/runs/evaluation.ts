@@ -38,6 +38,9 @@ const phase = z.strictObject({
   billing: z.discriminatedUnion("kind", [EvalCloudPrice, EvalEnergy]),
 });
 
+export const EvalOutcome = z.enum(["completed", "timeout", "approval"]);
+export type EvalOutcome = z.infer<typeof EvalOutcome>;
+
 export const EvalRunInput = z.strictObject({
   series: id,
   arm: id,
@@ -53,13 +56,16 @@ export const EvalRunInput = z.strictObject({
   acceptance: z.boolean(),
   lint: z.boolean(),
   typecheck: z.boolean(),
+  /** ADR-0128: Zeitlimit und offene Rückfrage sind Ergebnisse (keine Lücke).
+   * `approval` = Abbruch auf unbeantwortete Rückfrage, `timeout` = Zeitlimit. */
+  outcome: EvalOutcome.default("completed"),
   phases: z.array(phase).min(1).max(2),
 }).refine((run) => {
   const phases = run.phases;
-  return phases.at(-1)?.phase === "build" &&
+  return (run.outcome === "completed" ? phases.at(-1)?.phase === "build" : phases.at(-1) !== undefined) &&
     (phases.length === 1 || (phases[0]?.phase === "plan" && phases[0].sessionId !== phases[1]?.sessionId)) &&
     run.skills === (run.skillHash !== null);
-}, "Expected build, or distinct plan and build phases, with a hash for enabled skills");
+}, "Expected build, or distinct plan and build phases, with a hash for enabled skills; aborted runs may end on the plan phase");
 
 export type EvalRunInput = z.infer<typeof EvalRunInput>;
 
@@ -76,14 +82,17 @@ export const EvalResult = z.strictObject({
      * steckt der Schreibanteil noch in `cacheInputTokens` — Parse ergänzt 0. */
     cacheWriteInputTokens: count.default(0),
     outputTokens: count,
-    costUsd: z.number().positive(),
+    /** ADR-0128: abgebrochene Läufe dürfen 0 Züge und 0 Kosten haben. */
+    costUsd: z.number().nonnegative(),
     turnErrors: count,
     toolErrors: count,
-    turns: z.number().int().positive(),
+    turns: z.number().int().nonnegative(),
     startedAt: z.iso.datetime(),
     endedAt: z.iso.datetime(),
   })).min(1).max(2),
-});
+}).refine((result) => result.input.outcome !== "completed" ||
+  result.phases.every((entry) => entry.turns > 0 && entry.costUsd > 0),
+"Completed runs require positive turns and cost per phase");
 export type EvalResult = z.infer<typeof EvalResult>;
 
 export const EVAL_COMPLETE_EVENT = "evaluation.completed";

@@ -12,7 +12,7 @@ export function evalRunValues({ input, phases }: EvalResult): Record<EvalMetricI
   const sum = (pick: (phase: EvalResult["phases"][number], index: number) => number) => phases.reduce((total, phase, index) => total + pick(phase, index), 0);
   const cloud = (index: number) => input.phases[index]?.billing.kind === "cloud";
   return {
-    failure: Number(!(input.acceptance && input.lint && input.typecheck && phases.every((phase) => phase.turnErrors === 0))),
+    failure: Number(input.outcome !== "completed" || !(input.acceptance && input.lint && input.typecheck && phases.every((phase) => phase.turnErrors === 0))),
     wallMs: input.phases.reduce((total, phase) => total + phase.wallMs, 0),
     inputTokens: sum((phase) => phase.inputTokens),
     cacheTokens: sum((phase) => phase.cacheInputTokens + (phase.cacheWriteInputTokens ?? 0)),

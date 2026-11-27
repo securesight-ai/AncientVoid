@@ -118,7 +118,8 @@ export class BudgetGuard {
 
   record(job, result) {
     [job.arm.plan, job.arm.build].filter(Boolean).forEach((side, index) => {
-      if (side.billing.kind === "cloud") this.spent[side.provider] = (this.spent[side.provider] ?? 0) + result.phases[index].costUsd;
+      // ADR-0128: bei Abbruch in der Planphase fehlt die Bau-Phase — 0 USD statt Absturz.
+      if (side.billing.kind === "cloud") this.spent[side.provider] = (this.spent[side.provider] ?? 0) + (result.phases[index]?.costUsd ?? 0);
     });
   }
 }
