@@ -56,7 +56,7 @@ describe("Sheet (EPIC-P63 T63.8)", () => {
     const node = Sheet({ open: true, onClose: () => (closed += 1), label: "X", children: "y" })!;
     const kids = (node as { props: { children: unknown } }).props.children;
     const list = Array.isArray(kids) ? kids : [kids];
-    const backdrop = list.find((c) => (c as { props?: { class?: string } })?.props?.class === "ui-sheet-backdrop") as {
+    const backdrop = list.find((c) => ((c as { props?: { class?: string } })?.props?.class ?? "").includes("ui-sheet-backdrop")) as {
       props: { onClick: () => void };
     };
     backdrop.props.onClick();
