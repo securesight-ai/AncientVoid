@@ -1,6 +1,6 @@
 # EPIC-P86 — 3D-Tiefe: Fensterflug und lebendige Oberfläche (zuschaltbar)
 
-**Status:** In Umsetzung — Stufe 1 (T86.1–T86.3, „herausgelöst“, vom Nutzer abgenommen 26.11.2026) plus T86.7 (Layout-Orientierung) und der Kachel-Gluh aus T86.4 umgesetzt auf `feat/p86-3d-tiefe-stufe1`; Nutzerentscheid: three.js (Stufe 2) nur falls die Messung klar überzeugt („lightweight und performant“) · **Phase:** P86 · **Dauer:** 1–2 Agenten-Wochen (Stufe 1) + 0,5–1 (Stufe 2 nach T86.0-Beschluss)
+**Status:** In Umsetzung — Stufe 1 (T86.1–T86.3, „herausgelöst“), T86.7/T86.8 (Layout-Orientierung, Benachrichtigungs-Fenster) und der Kachel-Gluh (T86.4 teils) fertig auf `feat/p86-3d-tiefe-stufe1`, Nutzer-Vorabnahme 26./27.11.2026 (Dev-Server), Live-Abnahme nach P000 (T000.40); **Stufe 2 (three.js) entfallen** per Nutzerentscheid („lightweight und performant“, T86.0/T86.5). Offen: T86.4-Rest K2-Messung (Loadtest nur auf ausdrücklichen Auftrag) · **Phase:** P86 · **Dauer:** 1–2 Agenten-Wochen (Stufe 1) + 0,5–1 (Stufe 2 nach T86.0-Beschluss)
 **Abhängigkeit:** keine blockierende (Quer-Epic, Muster P80/P85); P30/P31 bleiben On hold und unberührt. Sichtabnahme auf echtem Handy → [P000](EPIC-000-testsuite-fuer-menschen.md).
 
 ## 1. Ziel
@@ -163,11 +163,11 @@ Ablage nach `app/ui-scale.ts`-Muster (`ancientvoid.ctxMotion`):
 
 ## 4. Aufgaben
 
-- [ ] **T86.0 — Stufe-2-Evaluationsprototyp** (abgekapselt, kein Merge in
-  die App): `three`-Lazy-Chunk mit Minimal-Ambient, Messung Bundle-Delta,
-  FPS neben Session-Tail (K2), 10-min-Aknu-Idle-Vergleich auf
-  Referenz-Handy. Ergebnis (Zahlen + Ja/Nein-Empfehlung) hier in §3.4
-  nachgetragen; Gate für T86.5.
+- [x] **T86.0 — Stufe-2-Evaluationsprototyp** — **entfallen** (Nutzerentscheid
+  26./27.11.2026: „eigentlich eine lightweight Anwendung, die performant ist —
+  wenn three.js das alles verschlechtert, lassen wir es eher weg“; kein
+  Messauftrag ergangen). Stufe 2 bleibt Entwurf in §3.4; Wiederaufnahme nur
+  auf neuen Nutzerauftrag.
 - [x] **T86.1 — Tiefen-Präferenz:** `depth3d`-Modul, Kaskade
   `depth3dAllowed()`, SettingRow in AppearanceSettings, i18n-Keys;
   Unit-Tests rot-dann-grün (Ablage/Default/Sync nach `ui-scale`-Muster) —
@@ -223,13 +223,13 @@ Ablage nach `app/ui-scale.ts`-Muster (`ancientvoid.ctxMotion`):
   Tasten-Geometrie). Abstands-Audit der geteilten Flächen: Karten/Sheet/
   Settings/Dock liegen bereits auf einem Rhythmus — das Panel war der
   Ausreißer.
-- [ ] **T86.5 — three.js-Ambient** (nur nach klarem T86.0-Ja): lazy Modul,
-  WebGL2-Gate, DPR-Cap, Hidden-Pause; E2E-Spec für K10 (offline ohne
-  Ambient-Chunk kein White-Screen) und Basis-Bundle-Beweis (kein three im
-  Haupt-Chunk, `check:knip` grün).
-- [ ] **T86.6 — Doku:** Schalter-Kaskade (reduced-motion > Bewegung > 3D)
-  in der Settings-Doku/README der PWA; Sichtabnahme-Eintrag nach P000
-  („sieht reel aus“-Urteil auf echtem Gerät).
+- [x] **T86.5 — three.js-Ambient** — **entfallen** (wie T86.0, derselbe
+  Nutzerentscheid; kein Lazy-Chunk gebaut, das Basis-Bundle bleibt three-frei).
+- [x] **T86.6 — Doku:** Schalter-Kaskade (reduced-motion > Bewegung > 3D)
+  steht in [`docs/einstellungen-empfehlungen.md`](../docs/einstellungen-empfehlungen.md)
+  („Bewegung und Tiefe: zwei Schalter, eine Kaskade“); Sichtabnahme-Eintrag
+  nach P000: [T000.40](EPIC-000-testsuite-fuer-menschen.md) (Vorbewertung
+  26./27.11. am Dev-Server, Live-Abnahme ausstehend).
 
 ## 5. Acceptance Criteria
 
