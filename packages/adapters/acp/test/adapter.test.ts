@@ -364,6 +364,14 @@ describe("acp adapter (T7.2)", () => {
     await expect(failing.models?.()).rejects.toThrow();
   });
 
+
+  it("Nutzerwunsch 27.11.2026: das modelsCommand läuft mit env/envFiles — Provider-Keys erreichen auch den Katalog", async () => {
+    const script = 'if (process.env.ZAI_API_KEY === "test-key") process.stdout.write("zai/glm-5.3\\n")';
+    const adapter = createAdapter({ command: ["x"], env: { ZAI_API_KEY: "test-key" }, modelsCommand: [process.execPath, "-e", script] });
+    expect((await adapter.models?.() ?? []).map((m) => m.id)).toEqual(["zai/glm-5.3"]);
+    const ohne = createAdapter({ command: ["x"], modelsCommand: [process.execPath, "-e", script] });
+    expect(await ohne.models?.()).toEqual([]);
+  });
   it("BUG-0036: recover() plays a loaded history back silently — no second copy of the turn", async () => {
     const turns: string[] = [];
     const ctx = context({ turns });

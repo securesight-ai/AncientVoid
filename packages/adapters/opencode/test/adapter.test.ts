@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import type { WorkerProcess } from "@ancientvoid/contracts";
@@ -252,6 +253,50 @@ describe("opencode model catalog (ADR-0018)", () => {
       { id: "opencode/big-pickle" },
       { id: "zai-coding-plan/glm-5.3" },
     ]);
+  });
+});
+
+
+describe("opencode env/envFiles — Provider-Keys erreichen Katalog und Züge (Nutzerwunsch 27.11.2026)", () => {
+  it("models(): das Listing läuft mit der Env; ohne Key bleibt es ehrlich leer", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "opencode-env-"));
+    const keyFile = join(dir, "zai.key");
+    writeFileSync(keyFile, "test-key\n");
+    const bin = join(dir, "opencode");
+    writeFileSync(bin, ["#!/bin/sh", 'if [ "$ZAI_API_KEY" = "test-key" ]; then echo "zai/glm-5.3"; fi', ""].join("\n"));
+    chmodSync(bin, 0o755);
+    const mit = createAdapter({ command: bin, envFiles: { ZAI_API_KEY: keyFile } });
+    expect(((await mit.models?.()) ?? []).map((m) => m.id)).toEqual(["zai/glm-5.3"]);
+    const ohne = createAdapter({ command: bin });
+    expect((((await ohne.models?.()) ?? []).map((m) => m.id))).toEqual([]);
+  });
+
+  it("start() und steer() reichen die Env an jeden opencode-Prozess durch", async () => {
+    const spawns: ({ env?: Record<string, string> })[] = [];
+    const ctx = makeRecordingContext({
+      spawnWorker: async (_cmd, opts?: { env?: Record<string, string> }) => {
+        spawns.push(opts?.env ? { env: opts.env } : {});
+        return fakeOpencodeProcess("");
+      },
+    });
+    const adapter = createAdapter({ env: { ZAI_API_KEY: "config-key" } });
+    const handle = await adapter.start({ adapter: "opencode", project: "/tmp", prompt: "x" }, ctx);
+    expect(spawns[0]?.env).toMatchObject({ ZAI_API_KEY: "config-key" });
+    await adapter.steer(handle, { kind: "prompt", text: "y" }, ctx);
+    expect(spawns[1]?.env).toMatchObject({ ZAI_API_KEY: "config-key" });
+  });
+
+  it("start(): die Env des Session-Starts gewinnt über die Config-Env (wie ACP/pi)", async () => {
+    const spawns: ({ env?: Record<string, string> })[] = [];
+    const ctx = makeRecordingContext({
+      spawnWorker: async (_cmd, opts?: { env?: Record<string, string> }) => {
+        spawns.push(opts?.env ? { env: opts.env } : {});
+        return fakeOpencodeProcess("");
+      },
+    });
+    const adapter = createAdapter({ env: { ZAI_API_KEY: "config-key" } });
+    await adapter.start({ adapter: "opencode", project: "/tmp", prompt: "x", env: { ZAI_API_KEY: "session-key" } }, ctx);
+    expect(spawns[0]?.env).toMatchObject({ ZAI_API_KEY: "session-key" });
   });
 });
 
