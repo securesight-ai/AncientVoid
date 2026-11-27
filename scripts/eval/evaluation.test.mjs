@@ -192,7 +192,12 @@ it("exports a complete series immutably with a hash manifest and marks partial s
     expect(readFileSync(join(dir, "ok", "manifest.sha256"), "utf8")).toContain("  lauf.yaml");
     expect(() => exportSeries({ rows, receipts, invalid, plan, meta, out: join(dir, "ok") })).toThrow(/EEXIST/);
     expect(() => exportSeries({ rows: rows.slice(1), receipts, plan, meta, out: join(dir, "teil") })).toThrow(/Incomplete/);
-    const partial = exportSeries({ rows: rows.slice(1), receipts, plan, meta, out: join(dir, "teil2"), partial: true });
+    writeFileSync(join(dir, "aborted.jsonl"), JSON.stringify({ key: "y", cause: "timeout" }) + "\n");
+    const diagnosis = [{ arm: "a", outcome: "pass", journal: { tools: { read: 1 }, toolErrors: 0, deniedCalls: 0, checks: { test: 1 }, msToFirstEdit: null }, workspace: null }];
+    const partial = exportSeries({ rows: rows.slice(1), receipts, plan, meta, out: join(dir, "teil2"), partial: true, diagnosis });
+    expect(partial.manifest.laeufe_abgebrochen).toBe(1);
+    expect(partial.files).toEqual(expect.arrayContaining(["aborted.jsonl", "diagnose.jsonl", "diagnose.md"]));
+    expect(readFileSync(join(dir, "teil2", "manifest.sha256"), "utf8")).toContain("  diagnose.jsonl");
     expect(partial.manifest).toMatchObject({ messung_gueltig: false, laeufe_erfasst: 839 });
     expect(partial.manifest.grund_ungueltig).toMatch(/Incomplete/);
   } finally {
