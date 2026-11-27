@@ -147,6 +147,21 @@ Preis-/Tarif-Snapshot, Kosten je Provider, verworfene Versuche, `messung_gueltig
 `verdicts.jsonl` (Fehlermeldungen der Abnahme), gehen sie mit; `--data` ergänzt die Laufdiagnose. Eine unvollständige Serie lässt sich nur mit `--partial`
 exportieren und ist dann nie `messung_gueltig`. Der Hub-Datadir bleibt die Quelle (K7).
 
+## Serienübersicht im Benchmark-Repo
+
+```sh
+npm run messlauf:eval -- overview --repo /pfad/benchmarks [--out /pfad/benchmarks/evaluation/uebersicht.md]
+```
+
+[T84.15](../epics/EPIC-P84-ai-arbeit-evaluation-benchmark.md): generiert
+`evaluation/uebersicht.md` (Serie × Zelle × Aufgabe mit n, bestanden,
+Zeitlimit/Rückfrage und Fehlerquote) aus den exportierten Lauf-Ordnern —
+ohne Hub und Protokoll. Serien mit unterschiedlichem Korpus- oder
+Protokollstand stehen in getrennten Abschnitten und werden **nie
+zusammengerechnet**; die Übersicht ist eine generierte Sicht und wird neu
+erzeugt, nie von Hand gepflegt. Vor ADR-0128 exportierte Serien zählen als
+`completed` (Abbrüche standen damals nicht in den Ergebnissen).
+
 ## Laufdiagnose: warum ein Lauf so ausging
 
 ```sh

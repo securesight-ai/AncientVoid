@@ -160,9 +160,10 @@ nach und nach erfassen, was wie gut funktioniert und warum):
   bepreisen ([ADR-0127](../docs/adr/0127-cache-token-getrennt-bepreisen.md):
   Ereignis, Datensatz und Tarif führen `cacheWriteInputTokens` bzw.
   `cacheWriteUsdPerMillion`; Zusammenfassung bepreist getrennt). → AC-P84-3
-- [ ] **T84.15** Serienübersicht im Benchmark-Repo (Serie × Zelle × Aufgabe);
-  Serien mit anderem Korpus- oder Konfigurationsstand nie zusammenrechnen.
-  → AC-P84-6
+- [x] **T84.15** Serienübersicht im Benchmark-Repo (Serie × Zelle × Aufgabe):
+  `npm run messlauf:eval -- overview --repo <benchmarks>` generiert
+  `evaluation/uebersicht.md` je Korpus-/Protokollstand — Serien mit
+  anderem Stand werden nie zusammengerechnet. → AC-P84-6
 
 Die nächste Messserie mit Aufgabenklassen ist in
 [EPIC-P87](EPIC-P87-messserie-aufgabenklassen.md) geplant.

@@ -52,4 +52,6 @@ CSV-Block zum Weiterrechnen. Beleg: `scripts/eval/evaluation.test.mjs`
   `wx` angelegt und nie überschrieben.
 - Serie im Epic ([EPIC-P84](../epics/EPIC-P84-ai-arbeit-evaluation-benchmark.md))
   abhaken, Abweichungen im Report eintragen, Ordner im Benchmark-Repo prüfen
-  (`manifest.sha256`, `messung_gueltig`).
+  (`manifest.sha256`, `messung_gueltig`) und die
+  [Serienübersicht](evaluation-messlauf.md#serienübersicht-im-benchmark-repo)
+  neu generieren.
