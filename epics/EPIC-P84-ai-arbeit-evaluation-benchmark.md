@@ -159,6 +159,9 @@ nach und nach erfassen, was wie gut funktioniert und warum):
   Serien mit anderem Korpus- oder Konfigurationsstand nie zusammenrechnen.
   → AC-P84-6
 
+Die nächste Messserie mit Aufgabenklassen ist in
+[EPIC-P87](EPIC-P87-messserie-aufgabenklassen.md) geplant.
+
 ## 5. Acceptance Criteria
 
 - **AC-P84-1 (Korpus):** Korpus eingefroren + gehasht; jede Aufgabe hat eine

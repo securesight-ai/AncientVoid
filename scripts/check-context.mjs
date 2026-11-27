@@ -18,7 +18,7 @@ export const LINE_BUDGETS = [
   { glob: "AGENTS.md", limit: 200 },
   { glob: "CONTRIBUTING.md", limit: 200 },
   { glob: "README.md", limit: 300 },
-  { glob: "epics/README.md", limit: 415 }, // +10 am 2026-11-20: P75-Epoche (Sprachausgabe); +15 am 2026-11-24: P82-Epoche (Audit-Räumen); +15 am 2026-11-25: P85-Epoche (Links/Bildvorschau)
+  { glob: "epics/README.md", limit: 425 }, // +10 am 2026-11-27: P87–P89-Epoche (Messserie, Routing, Router-Modell); +10 am 2026-11-20: P75-Epoche (Sprachausgabe); +15 am 2026-11-24: P82-Epoche (Audit-Räumen); +15 am 2026-11-25: P85-Epoche (Links/Bildvorschau)
   { glob: ".claude/skills/README.md", limit: 120 },
   { glob: ".claude/skills/*/SKILL.md", limit: 250 },
   { glob: ".claude/agents/*.md", limit: 150 },
