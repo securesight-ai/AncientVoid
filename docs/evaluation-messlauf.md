@@ -175,7 +175,11 @@ Die ACP-Anbindung von maki 0.6.5 meldet nur die Kontextfüllung, keine Richtungs
 Läufe laut ab. Für die Messung läuft maki deshalb über den Claude-Adapter im
 stream-json-Modus (`maki -p --output-format stream-json` ist Claude-kompatibel). Offen:
 maki fragt Werkzeug-Erlaubnisse als `control_request`, den der Claude-Adapter nicht
-beantwortet; mit Werkzeugen hängt der Zug in beiden `permissionPrompts`-Modi:
+beantwortet; mit Werkzeugen hängt der Zug in beiden `permissionPrompts`-Modi.
+Befund 2026-11-27: maki erwartet `behavior` direkt in `response`
+(`{"type":"control_response","response":{"request_id":"…","behavior":"allow"}}`);
+die Claude-Verschachtelung wertet es als Ablehnung. Umsetzung:
+[EPIC-P87](../epics/EPIC-P87-messserie-aufgabenklassen.md) T87.3.
 
 ```json
 { "id": "maki-sdk", "module": "@ancientvoid/adapter-claude",

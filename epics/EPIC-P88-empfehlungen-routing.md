@@ -25,7 +25,7 @@ Vorgaben, mit sichtbarer Beleglage. Optimalität wird nie behauptet.
 - Opt-in-Eskalation: nach roten Prüfungen ein stärkerer Versuch, begrenzt.
 
 ### Out
-- Kein lernendes Modell ([P89](EPIC-P89-eigenes-router-modell.md)), kein LLM als
+- Kein lernendes Modell ([P89](EPIC-P89-eigene-kleine-modelle.md)), kein LLM als
   Entscheider.
 - Kein Modellwechsel mitten in einer Session (Übergabe bleibt P21).
 - Keine Änderung an Berechtigungsmodus, Sandbox oder Freigaben.
@@ -42,7 +42,9 @@ Vorschlag ist als solcher markiert. Unbekannt bleibt unbekannt.
 ### 3.2 Kandidaten
 Registrierte Adapter, Modellkataloge und eigene Modelle (ADR-0060), erreichbare
 Hosts, zuletzt gemeldete Kontingentausfälle, Budgetrest. Was nicht verfügbar
-ist, wird mit Grund ausgeschlossen und angezeigt.
+ist, wird mit Grund ausgeschlossen und angezeigt. Dazu zählen Zugänge, deren
+Bedingungen das Werkzeug nicht erlauben (GLM Coding Plan: nur die in
+[P87](EPIC-P87-messserie-aufgabenklassen.md) verlinkte Werkzeugliste).
 
 ### 3.3 Beleglage
 | Stufe | Bedeutung |
@@ -61,7 +63,9 @@ gezeigt (T84.14).
 ### 3.4 Regel
 Erst Grenzen filtern, dann Bestehensquote mit n, dann das gewählte Ziel
 (Wandzeit oder Kosten). Ergebnis: bis zu drei Vorschläge mit Begründung und den
-Ausschlussgründen. Gleiche Eingabe ergibt gleiche Ausgabe.
+Ausschlussgründen. Gleiche Eingabe ergibt gleiche Ausgabe. Ein kleines Modell
+wird für eine Klasse nur vorgeschlagen, wenn seine gemessene Bestehensquote dort
+über der Schwelle aus P87 liegt; die Kontextstufe der Messung steht dabei.
 
 ### 3.5 Contract und Route
 `packages/contracts/src/routing/`, Core-Modul `routing`, Route
@@ -110,8 +114,8 @@ Regeln oder Einstellungen. Budgetdeckel und Freigaben gelten unverändert.
 - **AC-P88-1:** ADR angenommen; alle Verbraucher nutzen denselben Contract.
 - **AC-P88-2:** Keine Anzeige nennt „gemessen“ bei n < 3, gemischtem Stand oder
   geändertem Fingerprint (Test).
-- **AC-P88-3:** Nicht verfügbare oder verbotene Kombinationen werden nie
-  gewählt; ohne Daten gibt es keine Scheinempfehlung.
+- **AC-P88-3:** Nicht verfügbare, verbotene oder nach Anbieterbedingungen
+  unzulässige Kombinationen werden nie gewählt; ohne Daten gibt es keine Scheinempfehlung.
 - **AC-P88-4:** Nach Hub-Neustart sind alle Entscheidungen samt Ergebnis
   rekonstruiert; eine ausgefallene Auswahl ist als Ereignis sichtbar.
 - **AC-P88-5:** Empfehlung, Begründung und Rohwerte sind auf Handy und Desktop
