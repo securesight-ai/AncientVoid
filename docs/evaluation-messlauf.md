@@ -18,6 +18,15 @@ Lockfile. Er führt denselben ausgewählten Test am Start- und
 Referenzstand aus. `--offline` verwendet den vorhandenen npm-Cache.
 Weitere Argumente sind Korpus-IDs und beschränken die Prüfung.
 
+„Rot am Start, grün an der Referenz“ belegt noch nicht, dass eine Aufgabe aus
+ihrem Text lösbar ist: Der Abnahmetest bleibt verborgen. Deshalb muss der Text
+jeden Namen nennen, den erst die Lösung einführt und den der ausgewählte Test
+benutzt (Funktionen mit ihrer Datei, Felder, Metrik-Schlüssel), dazu Signatur
+und Verhalten, aber nicht den Lösungsweg.
+`npx vitest run scripts/eval/corpus.test.mjs` prüft die Namen
+([solvability.mjs](../scripts/eval/solvability.mjs)); ob Signatur und Verhalten
+ausreichen, bleibt Prüfung durch Lesen.
+
 ## Prüfstand und Protokoll
 
 Einen eigenen Hub mit eigenem Datadir und einem gemeinsamen Scratch-Pfad
