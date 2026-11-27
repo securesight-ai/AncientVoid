@@ -6,6 +6,7 @@ Tracker: [#427](https://github.com/securesight-ai/AncientVoid/issues/427) ·
 [Messlauf-Anleitung](../docs/evaluation-messlauf.md) ·
 [Pilotserie-Planung](../docs/p84-pilotserie-planung.md) ·
 [Serien-Vorlage](../docs/p84-serien-vorlage.md) ·
+[Pilotbericht](../docs/2026-11-27_p84-pilotserie.md) ·
 [ADR-0126](../docs/adr/0126-evaluation-in-turn-metriken.md)
 
 ## 1. Ziel
@@ -137,13 +138,14 @@ Skill-Zuordnung pro Lauf nachträglich.
 Nachtrag 2026-11-27 (Nutzerauftrag: vollständige Daten, mehr Aufgabenarten,
 nach und nach erfassen, was wie gut funktioniert und warum):
 
-- [ ] **T84.9** Laufdiagnose je Lauf (Werkzeuge, Fehler, abgelehnte Aufrufe,
+- [x] **T84.9** Laufdiagnose je Lauf (Werkzeuge, Fehler, abgelehnte Aufrufe,
   eigene Prüfungen, geänderte Dateien, Abnahmefehler) und Ablage je Serie im
-  Benchmark-Repo. → AC-P84-2
+  Benchmark-Repo (erstmals für
+  [`pilot-6`](../docs/2026-11-27_p84-pilotserie.md)). → AC-P84-2
 - [ ] **T84.10** Claude Code gegen z.ai: In `pilot-5`/`pilot-6` hatte jeder Lauf
   abgelehnte Aufrufe („Auto mode is unavailable“). Berechtigungsmodus für
-  `claude` und `claude-zai` auf `default` (Rückfragen über das Hub-Gate),
-  Smoke ohne Ablehnung, dann beide Zellen neu messen. → AC-P84-6
+  `claude` und `claude-zai` auf `manual` (Hub-Config `defaultPermissionMode`,
+  Rückfragen über das Hub-Gate), Smoke ohne Ablehnung, dann beide Zellen neu messen. → AC-P84-6
 - [x] **T84.11** Drei schwerere Aufgaben
   ([Abnahme](../docs/messlauf/2026-11-25-p84-korpus.md)). → AC-P84-1
 - [ ] **T84.12** Weitere Aufgabenarten: Fehlersuche nur aus dem Symptom,
