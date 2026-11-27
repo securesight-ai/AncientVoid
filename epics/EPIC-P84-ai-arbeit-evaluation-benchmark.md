@@ -145,7 +145,10 @@ nach und nach erfassen, was wie gut funktioniert und warum):
 - [ ] **T84.10** Claude Code gegen z.ai: In `pilot-5`/`pilot-6` hatte jeder Lauf
   abgelehnte Aufrufe („Auto mode is unavailable“). Berechtigungsmodus für
   `claude` und `claude-zai` auf `manual` (Hub-Config `defaultPermissionMode`,
-  Rückfragen über das Hub-Gate), Smoke ohne Ablehnung, dann beide Zellen neu messen. → AC-P84-6
+  Rückfragen über das Hub-Gate), Smoke ohne Ablehnung, dann beide Zellen neu messen.
+  → AC-P84-6
+  *(Stand 27.11.2026: Benchmark-Hub-Konfiguration steht auf `manual`, Hub neu
+  gestartet und gesund; Smoke und Neu-Messung warten auf Anbieterkontingent.)*
 - [x] **T84.11** Drei schwerere Aufgaben
   ([Abnahme](../docs/messlauf/2026-11-25-p84-korpus.md)). → AC-P84-1
 - [ ] **T84.12** Weitere Aufgabenarten: Fehlersuche nur aus dem Symptom,
