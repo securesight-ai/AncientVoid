@@ -2,10 +2,14 @@
 
 **Art:** how-to
 
-Der [eingefrorene Korpus](../scripts/eval/corpus.json) enthält 15
-historische Änderungen mit Start-Commit, Referenz-Commit, Aufgabentext,
-Dateiumfang, Abnahme-Selektor und dem Datum der ursprünglichen
-Referenz. Der [SHA-256](../scripts/eval/corpus.sha256) bindet das Manifest
+Der [eingefrorene Korpus](../scripts/eval/corpus.json) enthält 19
+historische Änderungen plus eine Negativkontrolle mit Start-Commit,
+Referenz-Commit, Aufgabentext, Dateiumfang, Abnahme-Selektor und dem Datum
+der ursprünglichen Referenz. Erste Abnahme: 25.11. (15 Änderungen); die
+vier Aufgabenarten vom 27.11. (Symptom-Fehlersuche, Adapter, UI,
+Verständnisfrage) ergänzen ihn auf 20 —
+[Abnahme](messlauf/2026-11-27-p84-korpus-arten.md). Der
+[SHA-256](../scripts/eval/corpus.sha256) bindet das Manifest
 einschließlich der über die Git-Objekte adressierten Referenztests. Ein
 vollständiger lokaler Git-Verlauf ist erforderlich.
 
@@ -125,7 +129,7 @@ und weist Rangänderungen und Preisdatumswechsel aus.
 
 ## Negativkontrolle
 
-Der Korpus enthält neben den 15 historischen Änderungen eine Negativkontrolle
+Der Korpus enthält neben den historischen Änderungen eine Negativkontrolle
 (`negative: true`, Start = Referenz, nicht im Split-Teilkorpus): Das Kriterium gilt schon,
 der Prompt erlaubt „nichts zu tun“, und **jede Änderung** der freigegebenen Dateien ist ein
 Fehler. Ein Lauf ohne Token-Lebenszeichen wird nicht erfasst und kann daher nie als

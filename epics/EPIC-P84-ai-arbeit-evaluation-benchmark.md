@@ -151,9 +151,11 @@ nach und nach erfassen, was wie gut funktioniert und warum):
   gestartet und gesund; Smoke und Neu-Messung warten auf Anbieterkontingent.)*
 - [x] **T84.11** Drei schwerere Aufgaben
   ([Abnahme](../docs/messlauf/2026-11-25-p84-korpus.md)). → AC-P84-1
-- [ ] **T84.12** Weitere Aufgabenarten: Fehlersuche nur aus dem Symptom,
-  Adapter-Aufgabe, UI-Abnahme, Verständnisfrage mit deterministischer Prüfung;
-  je Art zuerst „Start rot, Referenz grün“ belegen. → AC-P84-1
+- [x] **T84.12** Weitere Aufgabenarten: Fehlersuche nur aus dem Symptom
+  (`steer-lag-symptom`), Adapter-Aufgabe (`pi-env-files`), UI-Abnahme
+  (`neu-modal`), Verständnisfrage mit deterministischer Prüfung
+  (`k7-verstaendnis`); je Art „Start rot, Referenz grün" belegt
+  ([Abnahme](../docs/messlauf/2026-11-27-p84-korpus-arten.md)). → AC-P84-1
 - [x] **T84.13** Zeitlimit und offene Rückfrage als Ergebnis im Vertrag
   ([ADR-0128](../docs/adr/0128-zeitlimit-und-rueckfrage-als-ergebnis.md):
   `EvalRunInput.outcome`, abgebrochene Läufe in der Ergebnistabelle —

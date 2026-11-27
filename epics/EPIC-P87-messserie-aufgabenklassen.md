@@ -69,11 +69,17 @@ Maß ist die Referenzänderung in den freigegebenen Dateien, nie ein Messergebni
 50 neue Zeilen. `mittel`: alles andere. Die Negativkontrolle hat keine Klasse.
 Die Zuordnung liegt neben dem Korpus, damit dessen Hash stabil bleibt.
 
-| Klasse | Aufgaben (Korpus 27.11.2026) |
+| Klasse | Aufgaben (Korpus 27.11.2026, 20 Aufgaben) |
 |---|---|
-| klein | `notizen-route`, `halogen-endpoints`, `halogen-throughput`, `millions-format`, `continue-link`, `host-power` |
+| klein | `notizen-route`, `halogen-endpoints`, `halogen-throughput`, `millions-format`, `continue-link`, `host-power`, `steer-lag-symptom`, `pi-env-files` |
 | mittel | `session-median`, `notification-retention`, `local-image`, `inference-share`, `queue-steering`, `halogen-rates` |
-| schwer | `transcript-typo`, `queue-order`, `sync-notices` |
+| schwer | `transcript-typo`, `queue-order`, `sync-notices`, `neu-modal` |
+
+Neue Aufgabenarten (T84.12, [Abnahme 27.11.2026](../docs/messlauf/2026-11-27-p84-korpus-arten.md)):
+Fehlersuche nur aus dem Symptom, Adapter-Aufgabe, UI-Abnahme,
+Verständnisfrage. Die Verständnisfrage hat wie die Negativkontrolle keine
+Klasse. Korpus-Stände vor dem 27.11. (15 Aufgaben) mischen nie mit dem
+aktuellen (20 Aufgaben, Hash dort).
 
 ### 3.2 Kontextstufen
 | Stufe | Inhalt |
