@@ -372,6 +372,22 @@ pi braucht dafür keine Config mehr: ohne `modelsCommand` listet es `pi --list-m
 Endpunkt“ am Modell-Dropdown): ein Eintrag im Hub-Register (alle oder gewählte
 Harnesses) bzw. für pi ein Provider in `~/.pi/agent/models.json` — siehe ADR-0060.
 
+**Anmeldung über Env (Nutzerwunsch 27.11.2026):** `pi --list-models` und `/model`
+zeigen nur Provider mit nutzbarer Anmeldung — z.ai/GLM ist in pi eingebaut, taucht
+aber ohne Schlüssel nie im Katalog auf. Der pi-Adapter nimmt deshalb `env` und
+`envFiles` (wie ACP; Wert aus der Datei, `~/` aufgelöst — Schlüssel nie in der
+Config) und reicht sie an jedes pi-Kommando durch, Listing wie Züge:
+
+```json
+{ "id": "pi", "module": "@ancientvoid/adapter-pi",
+  "config": { "envFiles": { "ZAI_API_KEY": "~/.secrets/zai.key" } } }
+```
+
+Damit listet `pi --list-models` die zai-Modelle von selbst (GLM-4.7 … GLM-5.4),
+wählbar im Startformular und lauffähig in den Sessions — ohne `pi /login` auf
+dem Host. Alternativ bleibt `pi auth login zai` (OAuth/Key in
+`~/.pi/agent/auth.json`) oder ein Provider-Eintrag in `models.json`.
+
 Ohne `modelsCommand` bleibt die Modellwahl sonst freie Eingabe (Durchreichen an die
 CLI — ein unbekanntes Modell scheitert sichtbar beim Provider, nie still als
 Ersatzmodell). `contextWindows` (opencode, pi) schlägt die kuratierte

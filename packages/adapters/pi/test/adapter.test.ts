@@ -84,6 +84,69 @@ describe("pi adapter model handling", () => {
   });
 });
 
+describe("pi adapter env/envFiles — GLM ohne /login wählbar (Nutzerwunsch 27.11.2026)", () => {
+  /** Fake-pi: listet zai-Modelle nur, wenn die Env den Schlüssel bringt — genau wie das
+   * echte `pi --list-models` Provider ohne nutzbare Anmeldung versteckt. */
+  function piMitEnvSchluessel(): { bin: string; keyFile: string } {
+    const dir = mkdtempSync(join(tmpdir(), "ancientvoid-pi-env-"));
+    const keyFile = join(dir, "zai.key");
+    writeFileSync(keyFile, "test-key");
+    const bin = join(dir, "pi");
+    writeFileSync(
+      bin,
+      [
+        "#!/bin/sh",
+        'if [ "$ZAI_API_KEY" = "test-key" ]; then',
+        '  printf "provider  model  context  max-out  thinking  images\\nzai  glm-5.3  1M  131.1K  yes  no\\n"',
+        "fi",
+        "",
+      ].join("\n"),
+    );
+    chmodSync(bin, 0o755);
+    return { bin, keyFile };
+  }
+
+  it("models(): der envFiles-Schlüssel erreicht das Listing — zai/glm-5.3 erscheint", async () => {
+    const { bin, keyFile } = piMitEnvSchluessel();
+    const adapter = createAdapter({ command: bin, envFiles: { ZAI_API_KEY: keyFile } });
+    const models = await adapter.models!();
+    expect(models.map((m) => m.id)).toContain("zai/glm-5.3");
+  });
+
+  it("models() ohne Env bleibt ehrlich leer — kein Erraten von Providern", async () => {
+    const { bin } = piMitEnvSchluessel();
+    const adapter = createAdapter({ command: bin });
+    const models = await adapter.models!();
+    expect(models).toEqual([]);
+  });
+
+  it("start(): Config-Env erreicht jeden pi-Prozess", async () => {
+    const spawns: { env?: Record<string, string> }[] = [];
+    const ctx = makeRecordingContext({
+      spawnWorker: async (_cmd, opts?: { env?: Record<string, string> }) => {
+        spawns.push(opts?.env ? { env: opts.env } : {});
+        return fakeProcess();
+      },
+    });
+    const adapter = createAdapter({ env: { ZAI_API_KEY: "config-key" } });
+    await adapter.start({ adapter: "pi", project: process.cwd(), prompt: "x" }, ctx);
+    expect(spawns[0]!.env).toMatchObject({ ZAI_API_KEY: "config-key" });
+  });
+
+  it("start(): die Env des Session-Starts gewinnt über die Config-Env (wie ACP)", async () => {
+    const spawns: { env?: Record<string, string> }[] = [];
+    const ctx = makeRecordingContext({
+      spawnWorker: async (_cmd, opts?: { env?: Record<string, string> }) => {
+        spawns.push(opts?.env ? { env: opts.env } : {});
+        return fakeProcess();
+      },
+    });
+    const adapter = createAdapter({ env: { ZAI_API_KEY: "config-key" } });
+    await adapter.start({ adapter: "pi", project: process.cwd(), prompt: "y", env: { ZAI_API_KEY: "session-key" } }, ctx);
+    expect(spawns[0]!.env).toMatchObject({ ZAI_API_KEY: "session-key" });
+  });
+});
+
 describe("pi adapter prompt argv (BUG-0066)", () => {
   // Run the built command line through a real `sh`, with the pi binary
   // replaced by a script that prints its argv — so the test sees exactly
