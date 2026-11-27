@@ -1,0 +1,5 @@
+Die Zug-Metriken (Turn-Metriken) einer Sitzung leitet der Hub mit deriveTurnMetrics
+in packages/core/src/modules/runs/derive.ts direkt aus dem Ereignisstrom ab — das
+SQLite-Feld ist nur ein wieder aufbaubarer Cache (K7). Die abgeschlossene Abnahme
+einer Evaluationsmessung schreibt der Hub als Ereignis evaluation.completed in das
+Sitzungsjournal (Konstante EVAL_COMPLETE_EVENT in packages/contracts).
