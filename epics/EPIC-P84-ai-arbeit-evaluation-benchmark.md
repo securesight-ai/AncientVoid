@@ -161,6 +161,9 @@ nach und nach erfassen, was wie gut funktioniert und warum):
 
 Die nächste Messserie mit Aufgabenklassen ist in
 [EPIC-P87](EPIC-P87-messserie-aufgabenklassen.md) geplant.
+Die [Repo-Evaluation in P90](EPIC-P90-namen-scroll-prompt-enhancer.md)
+erweitert den P84-Ergebnisweg und die bestehende Eval-Suite um kontrollierte
+Vergleiche von Kontext, Skills, Hooks, Guardrails und Regeln je Repo.
 
 ## 5. Acceptance Criteria
 
