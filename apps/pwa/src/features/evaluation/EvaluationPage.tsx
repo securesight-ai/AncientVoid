@@ -193,7 +193,17 @@ export function EvaluationPage() {
         </div>
       )}
       {repoRuns.slice(0, 4).map((run) => (
-        <p key={run.series} role="status">{run.series} · {t(`evaluation.launch.${run.state}`)}</p>
+        <section key={run.series}>
+          <p role="status">{run.series} · {t(`evaluation.launch.${run.state}`)}</p>
+          {!!run.interruptions?.length && (
+            <details>
+              <summary>{t("evaluation.interruptions")}</summary>
+              <ul>{run.interruptions.map(({ key, cause }, index) => (
+                <li key={`${key}/${index}`}>{key} · {t(`evaluation.interruption.${cause}`)}</li>
+              ))}</ul>
+            </details>
+          )}
+        </section>
       ))}
       {series ? (
         <Select label={t("evaluation.series")} value={series}

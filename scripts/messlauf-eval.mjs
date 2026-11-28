@@ -89,6 +89,13 @@ async function main() {
       resume: options.resume === true, skipProviders: options["skip-provider"]?.split(",") ?? [], energyApi,
     });
     console.log(`P84 ${series}: run finished. Session references: ${receipts}`);
+    if (plan.config.repoScan) {
+      const recorded = readFileSync(receipts, "utf8").trim().split("\n").filter(Boolean).length;
+      if (recorded < plan.jobs.length) {
+        console.log(`P90 ${series}: partial comparison, ${recorded} of ${plan.jobs.length} runs recorded; inspect aborted.jsonl and invalid.jsonl.`);
+        process.exitCode = 2;
+      }
+    }
     return;
   }
   if (mode === "pilot-report") {

@@ -20,13 +20,32 @@ const presetsSchema = z.array(z.strictObject({
 })).max(50).refine((presets) => new Set(presets.map((preset) => preset.id)).size === presets.length, "duplicate evaluation preset");
 
 const launchSchema = z.object({
-  series: z.string(),
-  preset: z.string(),
+  series: z.string().regex(/^eval-\d+-[a-f0-9]{8}$/),
+  preset: id,
   repo: z.string(),
   startedAt: z.iso.datetime(),
-  state: z.enum(["running", "finished", "failed", "interrupted"]),
+  state: z.enum(["running", "finished", "partial", "failed", "interrupted"]),
+});
+const interruption = z.object({
+  key: z.string().regex(/^[a-z0-9._-]+\/[a-z0-9._-]+\/[1-9][0-9]*$/).max(250),
+  cause: z.enum(["timeout", "approval", "infrastructure"]),
 });
 const runner = fileURLToPath(new URL("../../../../../scripts/messlauf-eval.mjs", import.meta.url));
+
+async function interruptions(scratch: string, series: string): Promise<NonNullable<EvalLaunch["interruptions"]>> {
+  const files = await Promise.all(["aborted.jsonl", "invalid.jsonl"].map(async (name) => {
+    try {
+      return await readFile(join(scratch, series, name), "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return "";
+      throw error;
+    }
+  }));
+  return files.flatMap((file) => file.split("\n").slice(0, -1).flatMap((line) => {
+    const entry = interruption.safeParse(JSON.parse(line));
+    return entry.success ? [entry.data] : [];
+  })).slice(-30);
+}
 
 export class EvaluationLauncher {
   private readonly directory: string;
@@ -48,7 +67,8 @@ export class EvaluationLauncher {
   }
 
   async list() {
-    const presets = (await this.configured()).map(({ id, label, repo }) => ({ id, label, repo }));
+    const configured = await this.configured();
+    const presets = configured.map(({ id, label, repo }) => ({ id, label, repo }));
     let files: string[];
     try {
       files = await readdir(this.directory);
@@ -56,14 +76,16 @@ export class EvaluationLauncher {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return { presets, runs: [] };
       throw error;
     }
-    const runs = await Promise.all(files.filter((name) => /^run-[a-z0-9.-]+\.jsonl$/.test(name)).sort().slice(-30).map(async (name) => {
+    const journals = await Promise.all(files.filter((name) => /^run-[a-z0-9.-]+\.jsonl$/.test(name)).sort().slice(-30).map(async (name) => {
       const raw = await readFile(join(this.directory, name), "utf8");
-      const entries = raw.trim().split("\n");
+      const entries = raw.split("\n").slice(0, -1);
+      if (entries.length === 0) return null;
       const launch = launchSchema.parse(JSON.parse(entries.at(-1)!));
       if (launch.state === "running" && launch.series !== this.active) launch.state = "interrupted";
-      return launch;
+      const preset = configured.find(({ id }) => id === launch.preset);
+      return preset ? { ...launch, interruptions: await interruptions(preset.scratch, launch.series) } : launch;
     }));
-    return { presets, runs };
+    return { presets, runs: journals.filter((entry) => entry !== null) };
   }
 
   async start(presetId: string): Promise<EvalLaunch | null> {
@@ -99,7 +121,8 @@ export class EvaluationLauncher {
         });
         this.child.once("error", (error) => console.error("Evaluation process could not start", error.message));
         this.child.once("close", (code) => {
-          void appendFile(journal, JSON.stringify({ ...launch, state: code === 0 ? "finished" : "failed" }) + "\n", { flush: true })
+          const state = code === 0 ? "finished" : code === 2 ? "partial" : "failed";
+          void appendFile(journal, JSON.stringify({ ...launch, state }) + "\n", { flush: true })
             .catch((error: unknown) => console.error("Evaluation journal could not be updated", error))
             .finally(() => { this.active = null; this.child = null; });
         });

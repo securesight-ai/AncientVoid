@@ -53,8 +53,10 @@ const checkRun: Record<Check["id"], (run: EvalResult) => boolean | undefined> = 
   policy: ({ input }) => input.comparison?.policyPassed,
 };
 type Effort = NonNullable<Task["effort"]>[number];
+const executionMs = ({ input }: EvalResult) => input.phases.reduce((sum, phase) => sum + phase.wallMs, 0);
 const effortValue: Record<Effort["id"], (run: EvalResult) => number | undefined> = {
-  wallMs: ({ input }) => input.phases.reduce((sum, phase) => sum + phase.wallMs, 0),
+  wallMs: executionMs,
+  totalMs: (run) => executionMs(run) + (run.input.comparison?.enhancer?.wallMs ?? 0),
   tokens: ({ phases }) => phases.reduce((sum, phase) => sum + phase.inputTokens + phase.outputTokens, 0),
   costUsd: ({ phases }) => phases.reduce((sum, phase) => sum + phase.costUsd, 0),
   enhancerMs: ({ input }) => input.comparison?.enhancer?.wallMs,
@@ -98,6 +100,7 @@ function compareTask(task: string, runs: EvalResult[], consistent: boolean, comp
     }];
   });
   const effort = (Object.keys(effortValue) as Effort["id"][]).flatMap((id) => {
+    if (id === "totalMs" && runs.some(({ input }) => Boolean(input.comparison?.enhancer) !== Boolean(runs[0]?.input.comparison?.enhancer))) return [];
     const evaluate = effortValue[id];
     const measurements = pairs.flatMap(({ baseline, changed }) => {
       const before = evaluate(baseline);
@@ -117,8 +120,14 @@ function compareTask(task: string, runs: EvalResult[], consistent: boolean, comp
     return { ...result, status: "insufficient", reason: drift ? "drift" : unverified ? "unverified" : "coverage" };
   }
   const regressed = checks.some((check) => check.candidate < check.reference);
-  const improved = checks.some((check) => (check.candidate - check.reference) / pairs.length >= comparison.minimumEffect);
-  return { ...result, status: regressed ? "regressed" : improved ? "improved" : "unchanged", reason: "measured" };
+  const qualityImproved = checks.some((check) => (check.candidate - check.reference) / pairs.length >= comparison.minimumEffect);
+  const time = effort.find(({ id }) => id === "totalMs");
+  const efficiencyImproved = time && checks.every((check) => check.evidence.length === 0) &&
+    time.pairedDifference.max < 0 && -time.pairedDifference.median >= time.reference.median * comparison.minimumEffect;
+  return { ...result,
+    status: regressed ? "regressed" : qualityImproved || efficiencyImproved ? "improved" : "unchanged",
+    reason: efficiencyImproved ? "efficiency" : "measured",
+  };
 }
 
 function compareRuns(runs: EvalResult[], consistent: boolean): Comparison | undefined {

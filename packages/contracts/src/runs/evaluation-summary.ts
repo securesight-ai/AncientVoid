@@ -42,7 +42,7 @@ const comparison = z.strictObject({
     task: z.string(),
     pairs: z.number().int().nonnegative(),
     status: z.enum(["improved", "regressed", "unchanged", "insufficient"]),
-    reason: z.enum(["drift", "coverage", "unverified", "measured"]),
+    reason: z.enum(["drift", "coverage", "unverified", "measured", "efficiency"]),
     checks: z.array(z.strictObject({
       id: z.enum(["acceptance", "lint", "typecheck", "runtime", "policy"]),
       reference: z.number().int().nonnegative(),
@@ -50,7 +50,7 @@ const comparison = z.strictObject({
       evidence: z.array(z.uuid()),
     })),
     effort: z.array(z.strictObject({
-      id: z.enum(["wallMs", "tokens", "costUsd", "enhancerMs", "contextChars"]),
+      id: z.enum(["wallMs", "totalMs", "tokens", "costUsd", "enhancerMs", "contextChars"]),
       reference: stat,
       candidate: stat,
       pairedDifference: stat,
@@ -82,7 +82,8 @@ export interface EvalLaunch {
   preset: string;
   repo: string;
   startedAt: string;
-  state: "running" | "finished" | "failed" | "interrupted";
+  state: "running" | "finished" | "partial" | "failed" | "interrupted";
+  interruptions?: { key: string; cause: "timeout" | "approval" | "infrastructure" }[];
 }
 
 export interface EvalLaunchList {

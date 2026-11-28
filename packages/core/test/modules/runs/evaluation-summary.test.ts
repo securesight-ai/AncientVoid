@@ -64,5 +64,22 @@ describe("P84 summary", () => {
     });
     expect(summariseSeries("s", routeRuns.slice(2), repo).comparison?.tasks[0]?.status).toBe("insufficient");
     expect(summariseSeries("s", routeRuns, "/fixture/two").runs).toBe(0);
+    expect(summariseSeries("s", [...routeRuns, routeRuns[0]!], repo).comparison?.tasks[0]?.reason).toBe("coverage");
+    routeRuns[1]!.input.phases[0]!.modelFingerprint = "other";
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks[0]?.reason).toBe("drift");
+    routeRuns[1]!.input.phases[0]!.modelFingerprint = "m";
+    routeRuns[1]!.input.acceptance = true;
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks[0]?.status).toBe("unchanged");
+    for (const entry of routeRuns) {
+      entry.input.comparison!.expected = { repetitions: 5, tasks: ["t", "not-run"] };
+    }
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks).toEqual([
+      expect.objectContaining({ task: "not-run", status: "insufficient", pairs: 0 }),
+      expect.objectContaining({ task: "t", status: "unchanged", pairs: 5 }),
+    ]);
+    for (const entry of routeRuns.filter(({ input }) => input.arm === "candidate")) entry.input.phases[0]!.wallMs *= 0.65;
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks[1]).toMatchObject({ status: "improved", reason: "efficiency" });
+    routeRuns[1]!.input.acceptance = false;
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks[1]).toMatchObject({ status: "regressed", reason: "measured" });
   });
 });
