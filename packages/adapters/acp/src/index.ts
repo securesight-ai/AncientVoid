@@ -231,6 +231,11 @@ interface AgentSession {
    * off until the load answered; the hub's tail already has it all. */
   replay: boolean;
   stuckTimer: ReturnType<typeof setTimeout> | null;
+  /** BUG-0293: Trailing-Flush nach dem letzten Update — harness-getriebene
+   * Züge (Hintergrund-Ergebnisse, Nacharbeit nach Gate-Antwort) laufen ohne
+   * ausstehenden Hub-Prompt und enden oft mit reiner Textnachricht; ohne
+   * diesen Debounce hätte der Mapper-Puffer dann keinen Trigger mehr. */
+  trailingFlush: ReturnType<typeof setTimeout> | null;
   /** Open permission requests — the agent waits for the phone, not stuck. */
   pendingPermissions: number;
   /** Prompts sent while a turn runs — delivered when it ends (FIFO). */
@@ -265,6 +270,21 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
     state.stuckTimer = null;
     if (cfg.stuckTurnMs <= 0) return;
     state.stuckTimer = setTimeout(() => unstickTurn(state, ctx), cfg.stuckTurnMs);
+  }
+
+  /** BUG-0293: re-arm the trailing flush — LIVE_FLUSH_MS nach dem letzten
+   * Update wird der Mapper-Puffer auch ohne ausstehenden Prompt geleert.
+   * liveFlush deckt nur Hub-Prompt-Züge ab; der Trailing-Debounce liefert
+   * Zug-Abschlussnachrichten harness-getriebener Züge (kein Tool-Call, keine
+   * Prompt-Resolution danach) noch rechtzeitig in den Strom. */
+  function armTrailingFlush(state: AgentSession, ctx: AdapterContext): void {
+    if (state.trailingFlush) clearTimeout(state.trailingFlush);
+    state.trailingFlush = setTimeout(() => {
+      state.trailingFlush = null;
+      // Replay-Inhalt hat der Load-Abschluss bereits geflusht (BUG-0036).
+      if (state.replay) return;
+      emitAll(ctx, state.mapper.flush());
+    }, LIVE_FLUSH_MS);
   }
 
   /** BUG-0032: a busy turn gone silent is cancelled loudly; an agent that
@@ -320,11 +340,12 @@ export function createAdapter(config?: Readonly<Record<string, unknown>>): Adapt
   }
 
   function connect(sessionId: string, proc: WorkerProcess, ctx: AdapterContext): AgentSession {
-    const state: AgentSession = { proc, conn: null as unknown as AcpConnection, acpSessionId: null, busy: false, mapper: new UpdateMapper(label), healthy: true, images: false, calls: new Map(), activeTools: new Set(), configOptions: undefined, onConfig: null, turnSeq: 0, replay: false, stuckTimer: null, pendingPermissions: 0, queued: [] };
+    const state: AgentSession = { proc, conn: null as unknown as AcpConnection, acpSessionId: null, busy: false, mapper: new UpdateMapper(label), healthy: true, images: false, calls: new Map(), activeTools: new Set(), configOptions: undefined, onConfig: null, turnSeq: 0, replay: false, stuckTimer: null, trailingFlush: null, pendingPermissions: 0, queued: [] };
     state.conn = new AcpConnection((line) => proc.write(line), {
       onNotification: (method, params) => {
         if (method !== "session/update") return;
         armStuckWatch(state, ctx); // BUG-0032: an update is activity
+        armTrailingFlush(state, ctx); // BUG-0293: update gesehen — gepufferten Text ohne Prompt-Trigger ausliefern
         const update = (params as { update?: SessionUpdate }).update;
         if (!update) return;
         if (update.sessionUpdate === "config_option_update") {

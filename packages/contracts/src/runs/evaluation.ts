@@ -11,6 +11,9 @@ export const EvalCloudPrice = z.strictObject({
   source: z.url().max(300),
   inputUsdPerMillion: z.number().positive(),
   cacheInputUsdPerMillion: z.number().positive().optional(),
+  /** ADR-0127: Preis für ins Cache geschriebene Tokens (z. B. 0 bei z.ai,
+   * 1,25 × Input bei Anthropic). Fehlt er, wird Schreiben zum Inputpreis gerechnet. */
+  cacheWriteUsdPerMillion: z.number().nonnegative().optional(),
   outputUsdPerMillion: z.number().positive(),
 });
 
@@ -34,6 +37,9 @@ const phase = z.strictObject({
   wallMs: z.number().positive(),
   billing: z.discriminatedUnion("kind", [EvalCloudPrice, EvalEnergy]),
 });
+
+export const EvalOutcome = z.enum(["completed", "timeout", "approval"]);
+export type EvalOutcome = z.infer<typeof EvalOutcome>;
 
 export const EvalRunInput = z.strictObject({
   series: id,
@@ -70,17 +76,20 @@ export const EvalRunInput = z.strictObject({
       contextChars: z.number().int().nonnegative(),
     }).optional(),
   }).optional(),
+  /** ADR-0128: Zeitlimit und offene Rückfrage sind Ergebnisse (keine Lücke).
+   * `approval` = Abbruch auf unbeantwortete Rückfrage, `timeout` = Zeitlimit. */
+  outcome: EvalOutcome.default("completed"),
   phases: z.array(phase).min(1).max(2),
 }).refine((run) => {
   const phases = run.phases;
-  return phases.at(-1)?.phase === "build" &&
+  return (run.outcome === "completed" ? phases.at(-1)?.phase === "build" : phases.at(-1) !== undefined) &&
     (phases.length === 1 || (phases[0]?.phase === "plan" && phases[0].sessionId !== phases[1]?.sessionId)) &&
     run.skills === (run.skillHash !== null) &&
     (!run.comparison || (
       (run.arm === "reference" || run.arm === "candidate") &&
       run.comparison.reference !== run.comparison.candidate
     ));
-}, "Expected build, or distinct plan and build phases, with a hash for enabled skills");
+}, "Expected build, or distinct plan and build phases, with a hash for enabled skills; aborted runs may end on the plan phase");
 
 export type EvalRunInput = z.infer<typeof EvalRunInput>;
 
@@ -93,15 +102,21 @@ export const EvalResult = z.strictObject({
     model: label,
     inputTokens: count,
     cacheInputTokens: count,
+    /** ADR-0127: Cache-Schreib-Tokens. Fehlt das Feld (alte Datensätze),
+     * steckt der Schreibanteil noch in `cacheInputTokens` — Parse ergänzt 0. */
+    cacheWriteInputTokens: count.default(0),
     outputTokens: count,
-    costUsd: z.number().positive(),
+    /** ADR-0128: abgebrochene Läufe dürfen 0 Züge und 0 Kosten haben. */
+    costUsd: z.number().nonnegative(),
     turnErrors: count,
     toolErrors: count,
-    turns: z.number().int().positive(),
+    turns: z.number().int().nonnegative(),
     startedAt: z.iso.datetime(),
     endedAt: z.iso.datetime(),
   })).min(1).max(2),
-});
+}).refine((result) => result.input.outcome !== "completed" ||
+  result.phases.every((entry) => entry.turns > 0 && entry.costUsd > 0),
+"Completed runs require positive turns and cost per phase");
 export type EvalResult = z.infer<typeof EvalResult>;
 
 export const EVAL_COMPLETE_EVENT = "evaluation.completed";

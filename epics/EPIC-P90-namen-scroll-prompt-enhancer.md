@@ -256,7 +256,7 @@ konkrete Befunde stehen in der Eval-Suite und im Messlaufprotokoll.
   Neustart-Recovery in `e2e/specs/session-naming.spec.ts`.
 - [x] **T90.3** PWA: Ursprung/Fokus-Anzeige (Liste + Detail), Übergabe-Badge,
   Umbenennungsfluss; e2e-Spec `e2e/specs/session-naming.spec.ts`.
-- [x] **T90.4** Scroll-Defekt: Repro-Spec (rot), [BUG-0293](../bugs/bug-0293-chat-historie-touch-und-seitenluecke.md),
+- [x] **T90.4** Scroll-Defekt: Repro-Spec (rot), [BUG-0294](../bugs/bug-0294-chat-historie-touch-und-seitenluecke.md),
   Fix (grün), mobiles Projekt, ohne Sprung; `Fixes #480` im Epic-PR (#481). K2 (Nachladelast).
 - [x] **T90.5** Settings-Store + Einstellungs-Abschnitt; Engine-Kette respektiert
   Pin mit sichtbarem Fallback; `enhanceFlavorFor` + pi-One-Shot; Unit-Tests mit

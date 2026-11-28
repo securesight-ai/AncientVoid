@@ -255,6 +255,70 @@
       ],
       "split": false,
       "contaminationRisk": true
+    },
+    {
+      "id": "steer-lag-symptom",
+      "createdOn": "2026-11-27",
+      "start": "fd45610ae25152decca1def4936c7da1121981b0",
+      "reference": "09e973f8cb74c202912395de112d55f1cc82f58e",
+      "test": "packages/core/test/modules/sessions/steer-wait-timeout.test.ts",
+      "selector": "BUG-0286",
+      "prompt": "Nutzerbericht: Eine vorgemerkte Eingabe (Warteschlange) soll erst im nächsten Zug gehen. Manchmal rutscht sie in den noch laufenden Zug — zu beobachten, wenn das Sitzungsjournal langsam schreibt. Sorge dafür, dass vorgemerkte Eingaben auch bei langsamem Journal nie im laufenden Zug landen.",
+      "editable": [
+        "packages/core/src/modules/sessions/session-activity.ts",
+        "packages/core/src/modules/sessions/session-manager-lifecycle.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "pi-env-files",
+      "createdOn": "2026-11-27",
+      "start": "26f9af83508e70f47af4be55cbaa762f0590be0a",
+      "reference": "bdb4ee366b4975773f0a9ec11ccfcb69b5973615",
+      "test": "packages/adapters/pi/test/adapter.test.ts",
+      "selector": "erreicht das Listing|Config-Env",
+      "prompt": "Im Harness pi lassen sich Anbietermodelle wie z.ai/GLM nicht auswählen: pi listet nur Provider mit nutzbarer Anmeldung, und der Hub kann pi keine Zugangsdaten mitgeben. Erweitere den pi-Adapter um env und envFiles (Umgebungsvariable → Datei, ~/ aufgelöst; dasselbe Muster wie der ACP-Adapter — Schlüssel nie in der Config, Beispiel ZAI_API_KEY für den GLM Coding Plan) und reiche die Umgebung an jedes pi-Kommando durch: Modell-Listing (modelsFromCommand), RPC-Steuerprozess und Oneshot-Züge einschließlich Verdichtung. Die Env des Session-Starts (SessionSpec.env) gewinnt über die Config-Env.",
+      "editable": [
+        "packages/adapters/pi/src/index.ts"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "neu-modal",
+      "createdOn": "2026-11-27",
+      "start": "8fc4f7f81b9f291e72d209b344d58e3f873dc23c",
+      "reference": "d18d6ad090e3d9d6e1e31c6c40b943def310db81",
+      "test": "apps/pwa/test/features/workspace/tiles.test.ts",
+      "selector": "Neu-Kacheln",
+      "prompt": "Auf dem PC belegt das Neue-Session-Formular keine Kachel mehr: Es öffnet als zentriertes Modal über dem Raster (Sheet-Baustein, Variante modal) und schließt beim Starten von selbst. Beim Laden fallen gespeicherte Neu-Kacheln aus Vor-Ständen still weg (kompakt), abgelöste (detached) Neu-Kacheln ebenso — detached bleibt ohne sie gültig. Eine Neu-Kachel ist erkennbar an leerem sessionId und content page \"new\".",
+      "editable": [
+        "apps/pwa/src/app/main.tsx",
+        "apps/pwa/src/app/route.ts",
+        "apps/pwa/src/app/styles/04-chips-and-forms.css",
+        "apps/pwa/src/features/new-session/CreateSession.tsx",
+        "apps/pwa/src/features/new-session/NewSessionModal.tsx",
+        "apps/pwa/src/features/shell/ToolPane.tsx",
+        "apps/pwa/src/features/workspace/tiles.ts",
+        "apps/pwa/src/shared/ui/Sheet.tsx"
+      ],
+      "split": false,
+      "contaminationRisk": true
+    },
+    {
+      "id": "k7-verstaendnis",
+      "createdOn": "2026-11-27",
+      "start": "08007492809a2d5fac9f596ced49b2acdf18b7ac",
+      "reference": "55e07be2f7dd11bd45061ec4efac58e10135b327",
+      "test": "apps/hub/test/eval-verstaendnis.test.ts",
+      "selector": "nennt Funktion samt Datei",
+      "prompt": "Verständnisfrage — genau eine Datei anlegen: apps/hub/test/eval-verstaendnis-antwort.txt. Frage: Aus welchem Modul leitet der Hub die Zug-Metriken (Turn-Metriken) einer Sitzung her — nenne Funktionsname und Datei — und unter welchem Ereignisnamen schreibt er die abgeschlossene Abnahme einer Evaluationsmessung in das Sitzungsjournal? Die Antwort (wenige Sätze Klartext) muss Funktion samt Datei und den Ereignisnamen nennen. Kein Code ändern.",
+      "editable": [
+        "apps/hub/test/eval-verstaendnis-antwort.txt"
+      ],
+      "split": false,
+      "contaminationRisk": true
     }
   ]
 }

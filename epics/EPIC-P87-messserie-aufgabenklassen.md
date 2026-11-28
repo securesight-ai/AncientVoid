@@ -69,11 +69,17 @@ Maß ist die Referenzänderung in den freigegebenen Dateien, nie ein Messergebni
 50 neue Zeilen. `mittel`: alles andere. Die Negativkontrolle hat keine Klasse.
 Die Zuordnung liegt neben dem Korpus, damit dessen Hash stabil bleibt.
 
-| Klasse | Aufgaben (Korpus 27.11.2026) |
+| Klasse | Aufgaben (Korpus 27.11.2026, 20 Aufgaben) |
 |---|---|
-| klein | `notizen-route`, `halogen-endpoints`, `halogen-throughput`, `millions-format`, `continue-link`, `host-power` |
+| klein | `notizen-route`, `halogen-endpoints`, `halogen-throughput`, `millions-format`, `continue-link`, `host-power`, `steer-lag-symptom`, `pi-env-files` |
 | mittel | `session-median`, `notification-retention`, `local-image`, `inference-share`, `queue-steering`, `halogen-rates` |
-| schwer | `transcript-typo`, `queue-order`, `sync-notices` |
+| schwer | `transcript-typo`, `queue-order`, `sync-notices`, `neu-modal` |
+
+Neue Aufgabenarten (T84.12, [Abnahme 27.11.2026](../docs/messlauf/2026-11-27-p84-korpus-arten.md)):
+Fehlersuche nur aus dem Symptom, Adapter-Aufgabe, UI-Abnahme,
+Verständnisfrage. Die Verständnisfrage hat wie die Negativkontrolle keine
+Klasse. Korpus-Stände vor dem 27.11. (15 Aufgaben) mischen nie mit dem
+aktuellen (20 Aufgaben, Hash dort).
 
 ### 3.2 Kontextstufen
 | Stufe | Inhalt |
@@ -112,7 +118,9 @@ Kontextüberlauf.
 Lokal bedient evox2 derzeit nur Halogen; weitere Modelldateien dort gehören zu
 anderen Projekten. Auf omarchy wurde keines gefunden, der GPU-Treiber antwortete
 nicht. Kleinere Modelle werden nach Lizenz (Training erlaubt, siehe P89),
-Werkzeugfähigkeit und Platz ausgewählt und erst nach Zustimmung geladen.
+Werkzeugfähigkeit und Platz ausgewählt und erst nach Zustimmung geladen
+(Kandidaten mit Belegen und Tunbarkeit:
+[Snapshot 27.11.2026](../docs/2026-11-27_lokale-modellkandidaten.md)).
 
 ### 3.4 Kostenrahmen Stufe 1 (Nutzerrahmen 10–20 USD je Anbieter)
 Listenpreise; „bisher“ zählt erfasste Läufe aller Serien. Schätzungen grob.
@@ -125,9 +133,14 @@ Listenpreise; „bisher“ zählt erfasste Läufe aller Serien. Schätzungen gro
 
 ### 3.5 Offene Entscheidungen (Nutzer, vor dem Start)
 - Startfreigabe, Deckel, Zeitlimit 30 oder 60 Minuten.
-- GLM für maki, omp und aider über einen nutzungsabhängigen Zugang (bis zu 6
-  Zellen mehr) oder nur lokal.
-- Welche kleineren lokalen Modelle geladen werden.
+- Welche kleineren lokalen Modelle geladen werden (Kandidatenvorschlag:
+  [Snapshot 27.11.2026](../docs/2026-11-27_lokale-modellkandidaten.md);
+  Auswahl bleibt Handentscheid des Nutzers).
+
+Entschieden 27.11.2026 (Nutzer): GLM in maki, omp und aider **nur lokal**
+(nutzungsabhängiger Zugang kommt nicht dazu). Messläufe erst später —
+Anbieterkontingente sind derzeit erschöpft; die Serie startet nur auf
+ausdrücklichen Auftrag.
 
 ## 4. Aufgaben
 

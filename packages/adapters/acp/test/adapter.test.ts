@@ -327,6 +327,22 @@ describe("acp adapter (T7.2)", () => {
     expect(texts(ctx.events, "assistant").join("")).toBe("Antwort auf: STREAM · ACP");
   });
 
+  it("BUG-0293: Updates ohne ausstehenden Prompt flusht die Zug-Abschlussnachricht", async () => {
+    const turns: string[] = [];
+    const ctx = context({ turns });
+    const adapter = createAdapter({ command: [agent] });
+    await adapter.start({ adapter: "acp", project: process.cwd(), prompt: "HINTERGRUND" }, ctx);
+    // Der erste Zug endet regulär (end_turn → idle). Danach sendet der Agent
+    // von sich aus Updates — wie ein Background-Task-Ergebnis in opencode:
+    // kein session/prompt steht aus, und der Abschlussnachricht folgt kein
+    // Tool-Call mehr. Der Mapper-Puffer braucht einen Trigger (Trailing-Flush).
+    await waitFor(() => turns.includes("idle"), 8_000);
+    await waitFor(() => texts(ctx.events, "assistant").some((t) => (t ?? "").includes("Hintergrund-Ergebnis")), 4_000);
+    // Das Thinking kam live schon mit dem ersten Message-Chunk (Mapper-Flush
+    // des Thought-Puffers) — das war im Live-Fund seq 358, der Text fehlte.
+    expect(texts(ctx.events, "thinking").join("")).toContain("Hintergrund-Ergebnis da.");
+  });
+
   it("ADR-0032: without totalTokens the turn counts input+output as its tokens", async () => {
     const turns: string[] = [];
     const ctx = context({ turns });

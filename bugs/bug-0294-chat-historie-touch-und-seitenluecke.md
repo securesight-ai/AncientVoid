@@ -1,5 +1,5 @@
 ---
-id: BUG-0293
+id: BUG-0294
 slug: chat-historie-touch-und-seitenluecke
 status: fixed
 severity: S2

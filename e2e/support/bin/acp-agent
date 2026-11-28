@@ -54,6 +54,18 @@ async function prompt(id, { sessionId, prompt: blocks }) {
   if (text.includes("KONTINGENT_1308")) return send({ id, error: { code: -32000, message: "429 已达到 5 小时的使用上限。您的限额将在 2026-11-21 06:34:19 重置。 (type=1308)" } });
   if (text.includes("FEHLER")) return send({ id, error: { code: -32000, message: "Rate limit exceeded (429) — slow down" } });
   if (text.includes("STUMM")) return;
+  if (text.includes("HINTERGRUND")) {
+    // BUG-0293: the turn answers normally (end_turn) — then, like a
+    // background-task result in opencode, updates arrive on their own:
+    // a thought and a turn-final message, with no session/prompt pending
+    // and no tool call after the text.
+    setTimeout(() => {
+      update(sessionId, { sessionUpdate: "agent_thought_chunk", content: { type: "text", text: "Hintergrund-Ergebnis da." } });
+      for (const part of ["Hintergrund-Ergebnis ", "verarbeitet — ", "Zug abgeschlossen."])
+        update(sessionId, { sessionUpdate: "agent_message_chunk", content: { type: "text", text: part } });
+    }, 300);
+    return send({ id, result: { stopReason: "end_turn", usage: { totalTokens: 42, inputTokens: 30, outputTokens: 12 } } });
+  }
   update(sessionId, { sessionUpdate: "agent_thought_chunk", content: { type: "text", text: "Ich überlege" } });
   update(sessionId, { sessionUpdate: "agent_thought_chunk", content: { type: "text", text: " kurz." } });
   let tail = "";

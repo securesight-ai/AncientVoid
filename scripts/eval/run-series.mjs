@@ -59,6 +59,39 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
     }
   };
   await runJobs(jobs, plan.config.parallelCloudRuns, attemptJob);
+  // ADR-0128: Zeitlimit und offene Rückfrage sind Ergebnisse — der Lauf wird erfasst
+  // (Fehlerquote 1, partielle Token/Kosten), nicht nur in aborted.jsonl sichtbar.
+  const engineHung = async (arm) => {
+    const sides = [arm.plan, arm.build].filter((side) => side?.healthUrl);
+    if (!sides.length) return false;
+    return await Promise.any(sides.map((side) => probeHealth(side.healthUrl).then(() => { throw new Error("alive"); }, () => true))).catch(() => false);
+  };
+  const release = async (directory, build, planning) => {
+    const { rm } = await import("node:fs/promises");
+    await Promise.all([build, planning, join(directory, "judge")].map((workspace) =>
+      rm(join(workspace, "node_modules"), { recursive: true, force: true })));
+  };
+  async function recordAborted(job, attempt, abortedPhase, phases, rules, directory, build, planning) {
+    const { arm, task, repetition } = job;
+    const key = jobKey(job);
+    // Ein Timeout an toter Engine ist Infrastruktur (Wiederholung), kein Ergebnis.
+    if (abortedPhase.aborted === "timeout" && await engineHung(arm)) {
+      throw new Error(`${abortedPhase.sessionId}: timed out waiting for a finished turn`);
+    }
+    const input = {
+      series, arm: arm.id, task: task.id, repetition, attempt,
+      corpusHash: plan.corpus.hash, protocolHash: plan.protocolHash,
+      rulesHash: rules.rulesHash, skills: arm.skills, skillHash: rules.skillHash,
+      baseline: 0, acceptance: false, lint: false, typecheck: false,
+      outcome: abortedPhase.aborted, phases,
+    };
+    const sessionId = phases.at(-1).sessionId;
+    budget.record(job, await api(`/api/sessions/${sessionId}/evaluation`, input));
+    appendFileSync(receipts, JSON.stringify({ key, sessionId }) + "\n", { flush: true });
+    appendFileSync(aborted, JSON.stringify({ key, attempt, at: new Date().toISOString(), cause: abortedPhase.aborted, message: `${sessionId}: ${abortedPhase.aborted}` }) + "\n", { flush: true });
+    console.log(`${key} → ${sessionId} (${abortedPhase.aborted})`);
+    await release(directory, build, planning);
+  }
   async function runAttempt(job, attempt) {
     const { arm, task, repetition } = job;
     const key = jobKey(job);
@@ -76,6 +109,7 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
         if (plannedRules.rulesHash !== rules.rulesHash) throw new Error("Plan and build received different rules");
         phases.push(await runPhase(api, "plan", arm.plan, planning,
           `${task.prompt}\n\n${toolScope}\nErarbeite einen Plan und schreibe ihn in PLAN.md. Belasse die Quelldateien unverändert.`, plan.config.timeoutMs, energyApi));
+        if (phases.at(-1).aborted) return await recordAborted(job, attempt, phases.at(-1), phases, rules, directory, build, planning);
         if (await carryPlan(planning, build)) handover = "\nPLAN.md enthält einen Vorschlag aus einem getrennten Planungszug. Prüfe ihn anhand der Aufgabe.";
       }
       const comparison = plan.config.repoScan;
@@ -100,6 +134,7 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
       }
       phases.push(await runPhase(api, "build", arm.build, build,
         `${prompt}\n\n${toolScope}\nImplementiere und prüfe die Änderung.${handover}`, plan.config.timeoutMs, energyApi));
+      if (phases.at(-1).aborted) return await recordAborted(job, attempt, phases.at(-1), phases, rules, directory, build, planning);
       const { verdict, why } = await judgeWorkspace(root, join(directory, "judge"), build, task);
       const buildId = phases.at(-1).sessionId;
       if (variant && variants) {
@@ -123,9 +158,7 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
       appendFileSync(join(destination, "verdicts.jsonl"), JSON.stringify({ key, sessionId: buildId, ...why }) + "\n", { flush: true });
       console.log(`${key} → ${buildId}`);
       // Keep source files and session journal for audit. Dependency trees can be recreated.
-      const { rm } = await import("node:fs/promises");
-      await Promise.all([build, planning, join(directory, "judge")].map((workspace) =>
-        rm(join(workspace, "node_modules"), { recursive: true, force: true })));
+      await release(directory, build, planning);
     } catch (error) {
       throw new Error(`P84 ${series}/${key} at ${directory}: ${error.message}`, { cause: error });
     }
