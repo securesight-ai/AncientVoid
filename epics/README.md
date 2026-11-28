@@ -1,4 +1,4 @@
-# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P89)
+# AncientVoid — Epic-Paket (P0–P4.5 und Planungsentwürfe bis P90)
 
 **On hold seit 15.11.2026 (Nutzerentscheid): P30 und P31.** Beide bleiben
 im Inventar, sind aber aus Empfehlungen für die nächste Arbeit ausgeschlossen.
@@ -365,6 +365,12 @@ eigenes Go.
 | [P87 — Wo kleine Modelle kippen](EPIC-P87-messserie-aufgabenklassen.md) | pi, maki, omp, aider, opencode mit lokalen Modellen und GLM, kleine Cloud-Modelle: Klassen, Kontextstufen, Kipppunkt | P84-Werkzeuge; Startfreigabe | 2 + Messzeit |
 | [P88 — Empfehlungen und Routing](EPIC-P88-empfehlungen-routing.md) | Empfehlungen mit Beleglage im UI; eine Auswahl für Sessions, Teams, Loops, Automationen | P84-Ergebnisvertrag; Automatik erst mit P87-Daten | 2–3 |
 | [P89 — Eigene kleine Modelle](EPIC-P89-eigene-kleine-modelle.md) | Arbeitsmodelle und Router finetunen: Mitschnitt, Rechte je Quelle, zurückgehaltene Aufgaben, Nutzung nur bei belegtem Vorteil | P87-Daten (Spur A), P88 (Spur B); Daten-Spike mit Go/No-go | 4–6 |
+
+## Nutzerauftrag vom 27.11.2026 — Namens-Ursprung und Fokus, Chat-Scroll, Prompt-Verbesserer mit Beleg
+
+| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
+|---|---|---|---|
+| [P90 — Session-Namen mit Ursprung und Fokus; Chat bis oben scrollbar; Prompt-Verbesserer mit Beleg, Einstellungen und deterministischem Scan](EPIC-P90-namen-scroll-prompt-enhancer.md) | Unveränderlicher Ursprung + Fokus mit definierten Revidierungs-Anlässen; Übergabe als knappes Badge; Scrollen bis zur Chat-Spitze (Repro zuerst, Bug-Datei); Verbesserer: Engine in Einstellungen konfigurierbar (Default lokal — qwen über Pi; pi-One-Shot-Stufe), deterministischer Repo-Scan plus Angebotsmodus für angebundene Wissensquellen, Go-Regel-Messlauf mit/ohne Scan | keine blockierende (Quer-Epic); P68/P72 abgeschlossen und Aufbau-Grundlage; P74 nur optional; ADR-0127 | ~2 |
 
 ## Reihenfolge & Gating
 
