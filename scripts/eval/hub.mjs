@@ -103,9 +103,18 @@ export async function runPhase(api, phase, candidate, project, prompt, timeoutMs
   let status;
   let wallMs;
   let end;
+  let aborted;
   try {
     if (record.model !== candidate.model || record.adapter !== candidate.adapter) throw new Error("Hub selected a different adapter or model");
-    status = await waitForTurn(api, record.id, timeoutMs);
+    try {
+      status = await waitForTurn(api, record.id, timeoutMs);
+    } catch (error) {
+      // ADR-0128: Zeitlimit und offene Rückfrage sind Ergebnisse des Laufs, kein
+      // Infrastrukturausfall — runPhase liefert sie als `aborted` zurück.
+      if (/: waiting_approval before completed turn telemetry$/.test(error.message)) aborted = "approval";
+      else if (/: timed out waiting for a finished turn$/.test(error.message)) aborted = "timeout";
+      else throw error;
+    }
     wallMs = Math.max(performance.now() - timer, 0.001);
     end = Math.max(Date.now(), start + 1);
   } finally {
@@ -116,5 +125,6 @@ export async function runPhase(api, phase, candidate, project, prompt, timeoutMs
   return {
     sessionId: record.id, phase, harnessVersion: candidate.harnessVersion, modelFingerprint: candidate.fingerprint,
     wallMs, billing: await phaseBilling(api, candidate.billing, start, end),
+    ...(aborted ? { aborted } : {}),
   };
 }

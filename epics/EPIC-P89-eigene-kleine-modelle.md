@@ -60,6 +60,11 @@ Korpus aus P84 und P87 samt Referenz-Commits ist gesperrt; ein Test weist
 4. Dieselben Zellen neu messen. Erfolg: höhere Bestehensquote mit
    Konfidenzintervall ohne Verschlechterung der Negativkontrolle.
 
+Basiskandidaten mit Lizenz-, Beleg- und Tuninglage:
+[Snapshot 27.11.2026](../docs/2026-11-27_lokale-modellkandidaten.md)
+(Apache-2.0-Qwen dicht und MoE; Halogens Basis trägt die Qwen Community
+License 1.0 und ungeklärte Finetune-Herkunft — vor Spur A zu prüfen).
+
 ### 3.5 Spur B: Router
 Ein Datensatz je Entscheidung (Aufgabenprofil, Kandidaten, Wahl, Ergebnis).
 Alltagsdaten zeigen nur die gewählte Kombination; unverzerrt sind Benchmarks.

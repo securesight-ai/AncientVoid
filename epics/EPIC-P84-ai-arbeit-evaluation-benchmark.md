@@ -145,19 +145,30 @@ nach und nach erfassen, was wie gut funktioniert und warum):
 - [ ] **T84.10** Claude Code gegen z.ai: In `pilot-5`/`pilot-6` hatte jeder Lauf
   abgelehnte Aufrufe („Auto mode is unavailable“). Berechtigungsmodus für
   `claude` und `claude-zai` auf `manual` (Hub-Config `defaultPermissionMode`,
-  Rückfragen über das Hub-Gate), Smoke ohne Ablehnung, dann beide Zellen neu messen. → AC-P84-6
+  Rückfragen über das Hub-Gate), Smoke ohne Ablehnung, dann beide Zellen neu messen.
+  → AC-P84-6
+  *(Stand 27.11.2026: Benchmark-Hub-Konfiguration steht auf `manual`, Hub neu
+  gestartet und gesund; Smoke und Neu-Messung warten auf Anbieterkontingent.)*
 - [x] **T84.11** Drei schwerere Aufgaben
   ([Abnahme](../docs/messlauf/2026-11-25-p84-korpus.md)). → AC-P84-1
-- [ ] **T84.12** Weitere Aufgabenarten: Fehlersuche nur aus dem Symptom,
-  Adapter-Aufgabe, UI-Abnahme, Verständnisfrage mit deterministischer Prüfung;
-  je Art zuerst „Start rot, Referenz grün“ belegen. → AC-P84-1
-- [ ] **T84.13** Zeitlimit und offene Rückfrage als Ergebnis im Vertrag (ADR),
-  damit Mediane nicht nur überlebende Läufe zeigen. → AC-P84-2
-- [ ] **T84.14** Cache-Schreib- und -Lese-Token beim Claude-Adapter getrennt
-  bepreisen (ADR). → AC-P84-3
-- [ ] **T84.15** Serienübersicht im Benchmark-Repo (Serie × Zelle × Aufgabe);
-  Serien mit anderem Korpus- oder Konfigurationsstand nie zusammenrechnen.
-  → AC-P84-6
+- [x] **T84.12** Weitere Aufgabenarten: Fehlersuche nur aus dem Symptom
+  (`steer-lag-symptom`), Adapter-Aufgabe (`pi-env-files`), UI-Abnahme
+  (`neu-modal`), Verständnisfrage mit deterministischer Prüfung
+  (`k7-verstaendnis`); je Art „Start rot, Referenz grün" belegt
+  ([Abnahme](../docs/messlauf/2026-11-27-p84-korpus-arten.md)). → AC-P84-1
+- [x] **T84.13** Zeitlimit und offene Rückfrage als Ergebnis im Vertrag
+  ([ADR-0128](../docs/adr/0128-zeitlimit-und-rueckfrage-als-ergebnis.md):
+  `EvalRunInput.outcome`, abgebrochene Läufe in der Ergebnistabelle —
+  Mediane zeigen nicht mehr nur Überlebende; ein Timeout an toter Engine
+  bleibt Infrastruktur-Wiederholung). → AC-P84-2
+- [x] **T84.14** Cache-Schreib- und -Lese-Token beim Claude-Adapter getrennt
+  bepreisen ([ADR-0127](../docs/adr/0127-cache-token-getrennt-bepreisen.md):
+  Ereignis, Datensatz und Tarif führen `cacheWriteInputTokens` bzw.
+  `cacheWriteUsdPerMillion`; Zusammenfassung bepreist getrennt). → AC-P84-3
+- [x] **T84.15** Serienübersicht im Benchmark-Repo (Serie × Zelle × Aufgabe):
+  `npm run messlauf:eval -- overview --repo <benchmarks>` generiert
+  `evaluation/uebersicht.md` je Korpus-/Protokollstand — Serien mit
+  anderem Stand werden nie zusammengerechnet. → AC-P84-6
 
 Die nächste Messserie mit Aufgabenklassen ist in
 [EPIC-P87](EPIC-P87-messserie-aufgabenklassen.md) geplant.

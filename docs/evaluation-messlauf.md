@@ -2,10 +2,14 @@
 
 **Art:** how-to
 
-Der [eingefrorene Korpus](../scripts/eval/corpus.json) enthält 15
-historische Änderungen mit Start-Commit, Referenz-Commit, Aufgabentext,
-Dateiumfang, Abnahme-Selektor und dem Datum der ursprünglichen
-Referenz. Der [SHA-256](../scripts/eval/corpus.sha256) bindet das Manifest
+Der [eingefrorene Korpus](../scripts/eval/corpus.json) enthält 19
+historische Änderungen plus eine Negativkontrolle mit Start-Commit,
+Referenz-Commit, Aufgabentext, Dateiumfang, Abnahme-Selektor und dem Datum
+der ursprünglichen Referenz. Erste Abnahme: 25.11. (15 Änderungen); die
+vier Aufgabenarten vom 27.11. (Symptom-Fehlersuche, Adapter, UI,
+Verständnisfrage) ergänzen ihn auf 20 —
+[Abnahme](messlauf/2026-11-27-p84-korpus-arten.md). Der
+[SHA-256](../scripts/eval/corpus.sha256) bindet das Manifest
 einschließlich der über die Git-Objekte adressierten Referenztests. Ein
 vollständiger lokaler Git-Verlauf ist erforderlich.
 
@@ -125,7 +129,7 @@ und weist Rangänderungen und Preisdatumswechsel aus.
 
 ## Negativkontrolle
 
-Der Korpus enthält neben den 15 historischen Änderungen eine Negativkontrolle
+Der Korpus enthält neben den historischen Änderungen eine Negativkontrolle
 (`negative: true`, Start = Referenz, nicht im Split-Teilkorpus): Das Kriterium gilt schon,
 der Prompt erlaubt „nichts zu tun“, und **jede Änderung** der freigegebenen Dateien ist ein
 Fehler. Ein Lauf ohne Token-Lebenszeichen wird nicht erfasst und kann daher nie als
@@ -146,6 +150,21 @@ Preis-/Tarif-Snapshot, Kosten je Provider, verworfene Versuche, `messung_gueltig
 `invalid.jsonl` und `manifest.sha256`. Liegen neben den Belegen `aborted.jsonl` (Abbrüche) und
 `verdicts.jsonl` (Fehlermeldungen der Abnahme), gehen sie mit; `--data` ergänzt die Laufdiagnose. Eine unvollständige Serie lässt sich nur mit `--partial`
 exportieren und ist dann nie `messung_gueltig`. Der Hub-Datadir bleibt die Quelle (K7).
+
+## Serienübersicht im Benchmark-Repo
+
+```sh
+npm run messlauf:eval -- overview --repo /pfad/benchmarks [--out /pfad/benchmarks/evaluation/uebersicht.md]
+```
+
+[T84.15](../epics/EPIC-P84-ai-arbeit-evaluation-benchmark.md): generiert
+`evaluation/uebersicht.md` (Serie × Zelle × Aufgabe mit n, bestanden,
+Zeitlimit/Rückfrage und Fehlerquote) aus den exportierten Lauf-Ordnern —
+ohne Hub und Protokoll. Serien mit unterschiedlichem Korpus- oder
+Protokollstand stehen in getrennten Abschnitten und werden **nie
+zusammengerechnet**; die Übersicht ist eine generierte Sicht und wird neu
+erzeugt, nie von Hand gepflegt. Vor ADR-0128 exportierte Serien zählen als
+`completed` (Abbrüche standen damals nicht in den Ergebnissen).
 
 ## Laufdiagnose: warum ein Lauf so ausging
 
@@ -192,7 +211,11 @@ Claude-Registrierung mit `command` auf einen Wrapper, der `ANTHROPIC_BASE_URL`
 (`https://api.z.ai/api/anthropic`), den Key aus einer Datei und ein eigenes Profil setzt.
 Das von Claude Code gemeldete `costUsd` ist dort ein Anthropic-Preis und wird nicht verwendet.
 
-Cache-Tokens: Claude meldet sie getrennt von der frischen Eingabe. Pi, OpenCode und Codex
+Cache-Tokens: Claude meldet sie getrennt von der frischen Eingabe und seit
+[ADR-0127](adr/0127-cache-token-getrennt-bepreisen.md) zusätzlich nach Lesen
+(`cacheInputTokens`) und Schreiben (`cacheWriteInputTokens`) getrennt — mit
+eigenem Schreib-Preis im Tarif (`cacheWriteUsdPerMillion`; fehlt er, gilt der
+Input-Preis, z. B. 1,25 × Input bei Anthropic, 0 bei z.ai). Pi, OpenCode und Codex
 melden die Eingabe einschließlich Cache und markieren das mit `cacheIncluded`; der Cache
 bleibt über `cacheInputTokens` sichtbar und wird zum Cache-Preis gerechnet. Bei Adaptern
 ohne Cache-Angabe weist der Report die Kosten als obere Schranke aus. ACP-Adapter
@@ -213,10 +236,12 @@ Gesundheitsantwort, Timeout bei toter Engine) zählen **nie** als Aufgabenfehler
 Der Runner protokolliert den Versuch in `invalid.jsonl` neben `sessions.jsonl`,
 wiederholt höchstens `maxInfraRetries`-mal (Versuchsnummer im Datensatz als
 `attempt`) und bricht nach drei Ausfällen in Folge laut ab. Ein Timeout bei
-lebender Engine oder eine offene Rückfrage ist ein Abbruch des Agenten: Er steht
-in `aborted.jsonl`, die Serie läuft weiter und ist partiell. Abbrüche fehlen in
-der Ergebnistabelle (Überlebenden-Verzerrung); der Report muss sie nennen.
-Vor jeder Serie muss jede Zelle einen Zug mit Werkzeugnutzung bestehen.
+lebender Engine oder eine offene Rückfrage ist seit
+[ADR-0128](adr/0128-zeitlimit-und-rueckfrage-als-ergebnis.md) ein **Ergebnis**
+des Laufs (`outcome: timeout|approval`, Fehlerquote 1, partielle Token): Er
+steht zusätzlich in `aborted.jsonl` für die Laufdiagnose, und die Serie bleibt
+vollständig. Vor jeder Serie muss jede Zelle einen Zug mit Werkzeugnutzung
+bestehen.
 
 Ein erschöpftes Anbieter-Kontingent (Abo-Limit) erscheint als Ausfall ohne Token
 und hält die Serie an. `run … --series <name> --resume` setzt dieselbe Serie unter

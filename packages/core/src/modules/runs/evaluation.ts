@@ -15,16 +15,20 @@ export function measureEvaluationPhase(
   phase: EvalRunInput["phases"][number],
   session: SessionRecord,
   events: readonly NormalizedEvent[],
+  outcome: EvalRunInput["outcome"] = "completed",
 ): EvalResult["phases"][number] {
   const turns = deriveTurnMetrics(events, { sessionId: session.id, adapter: session.adapter, model: session.model });
   const first = turns[0];
   const last = turns.at(-1);
-  if (!first || !last || !session.model) throw new Error("Evaluation requires a completed turn and an explicit model");
+  if (!session.model || (outcome === "completed" && (!first || !last))) {
+    throw new Error("Evaluation requires a completed turn and an explicit model");
+  }
   const lastTurnEnd = events.findLastIndex((event) => event.type === "system" && event.payload.kind === "session.turn_end");
-  const completed = events.slice(0, lastTurnEnd + 1);
+  const completed = outcome === "completed" ? events.slice(0, lastTurnEnd + 1) : events;
   const usage = completed.filter((event) => event.payload.usage !== undefined || event.tokensEst !== undefined);
   let inputTokens = 0;
   let cacheInputTokens = 0;
+  let cacheWriteInputTokens = 0;
   let outputTokens = 0;
   for (const event of usage) {
     const split = event.payload.usage as { input?: unknown; output?: unknown } | undefined;
@@ -38,17 +42,23 @@ export function measureEvaluationPhase(
     if (cacheInput !== undefined && (typeof cacheInput !== "number" || !Number.isSafeInteger(cacheInput) || cacheInput < 0)) {
       throw new Error("Evaluation received invalid cache input usage");
     }
+    const cacheWrite = event.payload.cacheWriteInputTokens;
+    if (cacheWrite !== undefined && (typeof cacheWrite !== "number" || !Number.isSafeInteger(cacheWrite) || cacheWrite < 0)) {
+      throw new Error("Evaluation received invalid cache write usage");
+    }
     // Adapter wie Pi, OpenCode und Codex melden die Eingabe einschließlich Cache und markieren das;
-    // Claude meldet den Cache getrennt (frische Eingabe + Cache).
-    inputTokens += event.payload.cacheIncluded === true ? input : input + (cacheInput ?? 0);
+    // Claude meldet den Cache getrennt (frische Eingabe + Cache-Lesen/Schreiben, ADR-0127).
+    inputTokens += event.payload.cacheIncluded === true ? input : input + (cacheInput ?? 0) + (cacheWrite ?? 0);
     cacheInputTokens += cacheInput ?? 0;
+    cacheWriteInputTokens += cacheWrite ?? 0;
     outputTokens += output;
   }
-  if (inputTokens + outputTokens === 0) throw new Error("Evaluation has no positive token usage");
+  if (outcome === "completed" && inputTokens + outputTokens === 0) throw new Error("Evaluation has no positive token usage");
   const billing = phase.billing;
   const costUsd = billing.kind === "cloud"
-    ? ((inputTokens - cacheInputTokens) * billing.inputUsdPerMillion +
+    ? ((inputTokens - cacheInputTokens - cacheWriteInputTokens) * billing.inputUsdPerMillion +
         cacheInputTokens * (billing.cacheInputUsdPerMillion ?? billing.inputUsdPerMillion) +
+        cacheWriteInputTokens * (billing.cacheWriteUsdPerMillion ?? billing.inputUsdPerMillion) +
         outputTokens * billing.outputUsdPerMillion) / 1_000_000
     : billing.kwh * billing.usdPerKwh;
   return {
@@ -57,13 +67,15 @@ export function measureEvaluationPhase(
     model: session.model,
     inputTokens,
     cacheInputTokens,
+    cacheWriteInputTokens,
     outputTokens,
     costUsd,
     turnErrors: turns.filter((turn) => turn.outcome === "error").length,
     toolErrors: completed.filter((event) => event.type === "tool_result" &&
       (event.payload.isError === true || event.payload.is_error === true)).length,
     turns: turns.length,
-    startedAt: first.startedAt,
-    endedAt: last.endedAt,
+    // ADR-0128: ohne vollendeten Zug (Abbruch) begrenzen die Ereignisse den Lauf.
+    startedAt: first?.startedAt ?? events[0]?.ts ?? new Date(0).toISOString(),
+    endedAt: last?.endedAt ?? events.at(-1)?.ts ?? new Date(0).toISOString(),
   };
 }

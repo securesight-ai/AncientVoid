@@ -12,16 +12,19 @@ export function evalRunValues({ input, phases }: EvalResult): Record<EvalMetricI
   const sum = (pick: (phase: EvalResult["phases"][number], index: number) => number) => phases.reduce((total, phase, index) => total + pick(phase, index), 0);
   const cloud = (index: number) => input.phases[index]?.billing.kind === "cloud";
   return {
-    failure: Number(!(input.acceptance && input.lint && input.typecheck && phases.every((phase) => phase.turnErrors === 0))),
+    failure: Number(input.outcome !== "completed" || !(input.acceptance && input.lint && input.typecheck && phases.every((phase) => phase.turnErrors === 0))),
     wallMs: input.phases.reduce((total, phase) => total + phase.wallMs, 0),
     inputTokens: sum((phase) => phase.inputTokens),
-    cacheTokens: sum((phase) => phase.cacheInputTokens),
+    cacheTokens: sum((phase) => phase.cacheInputTokens + (phase.cacheWriteInputTokens ?? 0)),
     outputTokens: sum((phase) => phase.outputTokens),
     costUsd: sum((phase) => phase.costUsd),
     cloudCostUsd: sum((phase, index) => (cloud(index) ? phase.costUsd : 0)),
+    // ADR-0127: Lesen und Schreiben getrennt zu ihrem Preis (Schreiben ohne Angabe = Inputpreis).
     cacheCostUsd: sum((phase, index) => {
       const billing = input.phases[index]?.billing;
-      return billing?.kind === "cloud" ? phase.cacheInputTokens * (billing.cacheInputUsdPerMillion ?? billing.inputUsdPerMillion) / 1_000_000 : 0;
+      if (billing?.kind !== "cloud") return 0;
+      return (phase.cacheInputTokens * (billing.cacheInputUsdPerMillion ?? billing.inputUsdPerMillion) +
+        (phase.cacheWriteInputTokens ?? 0) * (billing.cacheWriteUsdPerMillion ?? billing.inputUsdPerMillion)) / 1_000_000;
     }),
     energyCostUsd: sum((phase, index) => (cloud(index) ? 0 : phase.costUsd)),
     energyKwh: sum((_phase, index) => {
