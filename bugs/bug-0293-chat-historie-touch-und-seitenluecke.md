@@ -5,7 +5,7 @@ status: fixed
 severity: S2
 area: pwa
 instance: dev
-commit: ""
+commit: "b8055d90"
 forge: "https://github.com/securesight-ai/AncientVoid/issues/480"
 epic: P90
 created: 2026-11-28
