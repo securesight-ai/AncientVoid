@@ -1,6 +1,6 @@
 # EPIC-P90 — Session-Namen mit Ursprung und Fokus; Chat bis oben scrollbar; Prompt-Verbesserer mit Beleg, Einstellungen und deterministischem Scan
 
-**Status:** offen (Planungsentwurf) · **Phase:** P90 · **Dauer:** ~2 Agenten-Wochen (Messlauf ohne Laufzeit) · **Abhängigkeit:** keine blockierende — Quer-Epic wie P87–P89; baut auf P68 (Engine-Kette, ADR-0089) und P72 (Skill-Pflege, beide abgeschlossen) auf; P74 nur als optionale Quelle (Angebotsmodus); P84-Werkzeuge für den Messlauf vorhanden. P30/P31 bleiben On hold und unberührt. Tracker-Issue wird bei Start nach `docs/issues.md` angelegt.
+**Status:** In Umsetzung — Code komplett und getestet; Vollserie des Scan-Vergleichs und Übertragbarkeitsvergleich (rea) laufen über die Eval-Suite; Go-Entscheidung, Regel-/Hook-/Guardrail-/Skill-Vergleiche und Abschluss-Notiz offen · **Phase:** P90 · **Dauer:** 3–4 Agenten-Wochen plus Messlaufzeit (Schätzung) · **Abhängigkeit:** Quer-Epic wie P87–P89; baut auf P68 (Engine-Kette, ADR-0089) und P72 (Skill-Pflege, beide abgeschlossen) auf; P74 liefert optionale Wissensquellen; die Repo-Eval baut auf den vorhandenen P84-Werkzeugen und ADR-0126 auf. P30/P31 bleiben On hold. Tracker [#479](https://github.com/securesight-ai/AncientVoid/issues/479).
 
 Quelle: Nutzerauftrag vom 27.11.2026, drei Punkte: (1) Session-Namen sind oft
 nichtssagend — der **initiale Gedanke darf nicht verloren gehen**, und ein
@@ -36,6 +36,13 @@ Session nichts mehr suchen muss**.
   geschrieben, aber noch nie ausgewertet. `enhanceFlavorFor()` kennt kein `pi` —
   bei gewähltem pi-Adapter und belegtem lokalem Modell fällt die Kette auf
   OpenCode zurück, obwohl pi-one-shot-fähig ist (pi läuft one-shot je Zug).
+- **Evaluation.** Die [P84-Eval-Seite](../apps/pwa/src/features/evaluation/EvaluationPage.tsx)
+  zeigt aggregierte Rohwerte je Serie, Arm und Aufgabe. Der
+  [P84-Vertrag](../packages/contracts/src/runs/evaluation.ts) erfasst bereits
+  Abnahme, Lint und Typecheck und schreibt die Ergebnisse über
+  [ADR-0126](../docs/adr/0126-evaluation-in-turn-metriken.md) ins Session-Journal.
+  Es fehlen Repo-Zuordnung, ein Vergleich der wirksamen Konfigurationen und
+  Befunde zu einzelnen Prüfungen.
 
 ## 1. Ziel
 
@@ -54,14 +61,22 @@ Zug-Projektion, ohne Sprünge (erwartetes Verhalten wie bei BUG-0211).
 **Spur C — Prompt-Verbesserer (Priorität; 3–5 Tage + Messlauf).**
 (1) Die bevorzugte Engine ist **in den Einstellungen konfigurierbar**; Default
 `auto` erhält P68s Kette (lokales Modell zuerst — aktuell qwen3.8; über Pi via
-eigener pi-One-Shot-Stufe), pinnen auf ein规定的其他 Modell (Katalog
+eigener pi-One-Shot-Stufe), pinnen auf ein bestimmtes Modell (Katalog
 `assistant.model`/Connections/custom models) übersteuert die Kette sichtbar.
 (2) Ein **deterministischer Repo-Scan** ergänzt den festen Projektkontext um die
 tatsächlich vorhandenen, zum Auftrag passenden Code-Stellen (Pfade, Symbole,
 Kommandos, Skills); angebundene Wissensquellen (P74) werden nur gefragt, wenn
 angebunden **und** gefragt. (3) Der **Nutzen ist belegt**: ein Messlauf nach
 `messlauf`-Muster mit und ohne Scan entscheidet ehrlich per Go-Regel — ein
-nicht belegter Scan bleibt aus.
+nicht belegter Scan bleibt standardmäßig aus.
+
+**Spur D — Repo-Evaluation.** In der bestehenden Eval-Suite kann jedes
+angebundene Repo den aktuellen Stand von Kontext, Skills, Hooks, Guardrails
+und Regeln gegen eine Änderung prüfen. Die Seite zeigt je Repo, Aufgabe und
+Änderung, was sich an Codequalität, Regeltreue und Aufwand ändert.
+Bei Rückschritten, fehlendem Mehrwert oder zu wenig Evidenz zeigt sie den
+konkreten Verbesserungs- oder Messbedarf samt Begründung. Der Prompt-Scan ist
+der erste reale Vergleich mit dieser Funktion.
 
 ## 2. Scope (In / Out)
 
@@ -77,8 +92,10 @@ nicht belegter Scan bleibt aus.
   One-Shot-Stufe in `enhanceFlavorFor`.
 - Deterministischer `repoFacts`-Scan (feste Extractoren, nur reale Pfade),
   optionale Wissens-Abfrage nur wenn angebunden und gefragt.
-- Messlauf (korpusbasiert, Arme mit/ohne Scan) mit Protokoll in `docs/messlauf/`
-  und Go-Regel; Auswertung des bestehenden Feedback-JSONL.
+- Repo-Auswahl, konfigurierbarer Aufgabenkorpus und Vergleich von Referenz-
+  und Kandidatenstand in der bestehenden Eval-Suite. Ergebnisse und Befunde
+  bleiben je Repo abrufbar. Der Prompt-Scan nutzt denselben Ergebnisweg,
+  mit Go-Regel und Protokoll in `docs/messlauf/`.
 - Scroll-Defekt: Repro (E2E-Harness wie BUG-0211), Bug-Datei, Fix, Spec.
 
 **Out**
@@ -159,52 +176,156 @@ Budgets, der Prompt ist keine Event-Payload (K5 bleibt unangetastet).
 
 ### 3.5 Beleg (das „hilft es?“)
 
-Messlauf nach `messlauf`-Muster (Werkzeuge wie P84, Start ohne zusätzlichen
-Freigabe-Hang weil Teil dieses Epics):
+Erster Vergleich nach §3.6 mit zehn eingefrorenen Initial-Aufträgen aus
+AncientVoid (Bugfix, Refactoring und modulübergreifende Änderungen). Beide
+Arme nutzen dieselbe Enhancer-Engine und dasselbe Modell für die Folge-Session.
+Der Referenzarm verwendet den P68-Kontext, der Kandidat ergänzt den Scan.
+Die Suite erfasst Abnahme und Qualitätsprüfungen des resultierenden Diffs,
+Suchaufrufe bis zur ersten Änderung, Zeit bis zur ersten grünen gezielten
+Prüfung sowie Tokens und Kosten beider Phasen. Läufe ohne grüne Prüfung zählen
+zur Fehlerquote und bleiben im Befund sichtbar. Die Akzeptanzrate aus
+`prompt-optimizer-feedback.jsonl` ergänzt die Messung als Nutzungssignal.
 
-- Korpus: 10 eingefrorene, realistische Initial-Aufträge aus diesem Repo
-  (gemischt: bugfix-artig, refactor-artig, quer-zu-modulen).
-- Arme: `Scan aus` (P68-stand) vs. `Scan an` (Spur C), Engine in beiden Armen
-  dasselbe konfigurierbare Modell; n ≥ 5 je Arm.
-- Metriken (deterministisch aus dem Event-Strom der Folgesession):
-  (a) Explorer-Tool-Calls (ls/grep/read-artig) bis zum ersten
-  Inhaltsschreibens — je weniger, desto besser vorbereitet war der Prompt;
-  (b) Akzeptanzrate der Vorschläge aus `prompt-optimizer-feedback.jsonl`;
-  (c) Wandzeit bis zum ersten grünen gezielten Test.
-- **Go-Regel:** Der Scan wird nur Default, wenn (a) oder (c) sich messbar
-  verbessert und (b) nicht einbricht. Bleibt der Nutzen aus, bleibt der Scan
-  als Option aus, und der Messlauf ist das ehrliche Ergebnis des Epics.
+**Go-Regel:** Der Scan wird Standard, wenn die Codequalität nachweislich
+steigt oder der Aufwand bei gleichwertiger Qualität nachweislich sinkt.
+Pflichtprüfungen, Guardrails und Regeltreue müssen die vorab festgelegten
+Grenzen erfüllen. Bei einer Regression, fehlendem Mehrwert oder unklarer
+Evidenz bleibt der Scan standardmäßig aus. Serie, Entscheidungsgrund und
+konkrete Befunde stehen in der Eval-Suite und im Messlaufprotokoll.
+
+### 3.6 Vergleich pro Repo in der Eval-Suite (Spur D)
+
+1. **Vergleich konfigurieren und starten.** Repo, versionierten Aufgabenkorpus,
+   Referenzstand und Kandidat in der bestehenden Eval-Seite auswählen. Ein
+   angebundenes Repo ohne Korpus zeigt, wie es Aufgaben mit einer
+   ausführbaren Abnahme hinzufügen kann. P84-Runner und Prüfpfad
+   wiederverwenden. Je Aufgabe sind Start-Commit,
+   Eingabe, zulässiger Änderungsumfang und ausführbare Abnahme eingefroren.
+   Regelfälle prüfen zusätzlich das gewünschte Verhalten und erlaubtes
+   Verhalten als Negativkontrolle, etwa erlaubte Schreibvorgänge, die ein
+   Guardrail weiterhin durchlassen soll. Referenz und Kandidat laufen in
+   frischen isolierten Arbeitskopien mit gleicher erzwungener Plattform-Policy,
+   gleichen Limits, gleichem Harness und gleicher Modellrevision. Korpus und
+   Prüfungen liegen außerhalb des vom Agenten veränderbaren Arbeitsbereichs.
+2. **Wirksame Änderung belegen.** Pro Vergleich genau eine fachliche Änderung
+   an Kontextauswahl, Skill, Hook, Guardrail oder Regel variieren. Versions- und
+   Konfigurations-Fingerprints erfassen auch globale bzw. geerbte Vorgaben,
+   externe Quellen und die Reihenfolge wirksamer Regeln. Pro Lauf belegen, ob
+   der jeweilige Kontext ausgeliefert, ein Hook ausgelöst oder die Regel bzw.
+   der Guardrail geprüft wurde. Unklare Wirkung, Drift und
+   Infrastrukturfehler sind sichtbar. Timeouts und fehlgeschlagene Abnahmen
+   zählen als Laufresultate. Befunde über mehrere gleichzeitig geänderte
+   Komponenten bleiben auf das Änderungspaket beschränkt.
+3. **Auswertung vorab festlegen.** Abnahmetests und Regressionstests, repo-eigene
+   Lint-/Typprüfungen, Diff-Umfang sowie Kategorien wie falsche Blockierung
+   und Regelverstoß einzeln erfassen. Nicht anwendbare Checks ausweisen.
+   Sekundär Zeit, Tokens, Kosten und Suchaufwand messen. Die primäre Metrik,
+   Mindestverbesserung und Toleranz für gleichwertige Ergebnisse vor dem
+   Lauf festlegen. Mindestens fünf gepaarte Wiederholungen je Aufgabe und
+   Arm. Die Reihenfolge der Arme wechselt zwischen den Paaren. Die Seite
+   zeigt Stichprobe, Streuung und Differenz pro Prüfung und Aufgabe. Der Befund
+   unterscheidet „verbessert“, „kein messbarer Mehrwert“, „verschlechtert“
+   und „Evidenz fehlt“. Unvollständige oder nicht vergleichbare Paare liefern
+   keinen Wirkungsnachweis. Fehlende Messwerte bleiben offen.
+4. **Warum und wo anzeigen.** Jeder negative oder offene Befund nennt die
+   betroffene Quelle, Aufgabe und Prüfung mit Soll-/Ist-Verhalten, die
+   Messwerte beider Arme, einen Link zum Laufbeleg und den nächsten konkreten
+   Prüfschritt. Beispiel: Ein Hook blockiert in vier von fünf Kandidatenläufen
+   erlaubte Änderungen an einer Fixture-Datei. Die Seite zeigt Hook und Pfad,
+   verlinkt die Blockierungsereignisse und nennt die Ausnahmeregel als
+   Prüfpunkt. Wo die Ursache ungeklärt ist, kennzeichnet die Seite die
+   Vermutung und empfiehlt den fehlenden Kontrollvergleich.
+5. **Nachweis erhalten.** Repo-Zuordnung über die vorhandene Projektidentität,
+   Serienmetadaten, Belege und Ergebnisse über den Eval-Vertrag und
+   Session-Journale nach ADR-0126. Größere, bereinigte Nachweise über den
+   Blob-Pfad (K5). Ableitungen bleiben nach Neustart rekonstruierbar (K7).
+   Legacy-Serien bleiben lesbar, ohne ihnen nachträglich Repo-Zugehörigkeit
+   oder Wirkung zuzuschreiben. Nur bereinigte Belege und Fingerprints
+   speichern. Secrets und Rohkontext verbleiben außerhalb der Eval-Daten.
 
 ## 4. Aufgaben (Checkliste T90.m)
 
-- [ ] **T90.1** ADR-0127 (Vertragsfelder `originIntent`/`focus`,
+- [x] **T90.1** [ADR-0127](../docs/adr/0127-sitzungsursprung-fokus-und-prompt-verbesserer.md) (Vertragsfelder `originIntent`/`focus`,
   Settings-Schlüssel, pi-One-Shot-Stufe), ADR-Index. Messlatte: Contracts-first.
-- [ ] **T90.2** Contracts + Core: Felder, Migration/Recovery-Pfad (K7),
+- [x] **T90.2** Contracts + Core: Felder, Migration/Recovery-Pfad (K7),
   Benennungspolitik inkl. Wort-Overlap-Heuristik; Unit-Tests rot-dann-grün.
-- [ ] **T90.3** PWA: Ursprung/Fokus-Anzeige (Liste + Detail), Übergabe-Badge,
+  Belege: Migration #41 (`platform/db.ts`), Lazy-Backfill `sessionOrigin()`,
+  `packages/core/test/modules/sessions/session-origin-focus.test.ts`
+  (Immutability über Umbenennung/Übergabe, Backfill aus dem Journal,
+  beide Zweige der Overlap-Heuristik) + `session-ai-title.test.ts` +
+  Neustart-Recovery in `e2e/specs/session-naming.spec.ts`.
+- [x] **T90.3** PWA: Ursprung/Fokus-Anzeige (Liste + Detail), Übergabe-Badge,
   Umbenennungsfluss; e2e-Spec `e2e/specs/session-naming.spec.ts`.
-- [ ] **T90.4** Scroll-Defekt: Repro-Spec (rot), Bug-Datei nach `bug-report`,
-  Fix (grün), mobiles Projekt, ohne Sprung; `Fixes #` im PR. K2 (Nachladelast).
-- [ ] **T90.5** Settings-Store + Einstellungs-Abschnitt; Engine-Kette respektiert
+- [x] **T90.4** Scroll-Defekt: Repro-Spec (rot), [BUG-0294](../bugs/bug-0294-chat-historie-touch-und-seitenluecke.md),
+  Fix (grün), mobiles Projekt, ohne Sprung; `Fixes #480` im Epic-PR (#481). K2 (Nachladelast).
+- [x] **T90.5** Settings-Store + Einstellungs-Abschnitt; Engine-Kette respektiert
   Pin mit sichtbarem Fallback; `enhanceFlavorFor` + pi-One-Shot; Unit-Tests mit
   Fake-Provider/Fake-Runner. K10 (sichtbarer Grund).
-- [ ] **T90.6** `repoFacts`-Scan (nur reale Pfade, Budgets, Rahmung,
+  Belege: `apps/hub/test/modules/prompts/enhance-pin-route.test.ts` (Route,
+  gepinnte pi-Stufe mit freiem Modell, Ausfall mit Grund, Fake-CLI und
+  Fake-Provider), `enhance-chain.test.ts`, `e2e/specs/prompt-enhancer-settings.spec.ts`.
+- [x] **T90.6** `repoFacts`-Scan (nur reale Pfade, Budgets, Rahmung,
   Angebotsmodus für P74-Quellen); Tests: gefundene Pfade existieren, Budget hält,
   Injection-Rahmen steht, Quelle nicht angebunden ⇒ still. K5/K7.
+  Belege: `apps/hub/test/modules/prompts/project-context.test.ts`
+  (inkl. Endmarker-Test), `enhance-pin-route.test.ts` (Wissensquelle
+  angebunden/nicht angebunden).
 - [ ] **T90.7** Messlauf: Korpus einfrieren, Arme, Metriken, Protokoll
-  `docs/messlauf/`, Go-Regel anwenden; Feedback-JSONL-Auswertung als Skript.
-- [ ] **T90.8** `docs/funktionsinventar.md`, `docs/einstellungen-empfehlungen.md`,
-  Epic-Abschluss-Notiz; Menschen-Abnahmen (echtes lokales Modell, Scrollen auf dem
-  Handy, Badges mit echten Augen) nach **P000** verschoben.
+  `docs/messlauf/`, Go-Regel anwenden, Ergebnis in der Eval-Suite belegen;
+  Feedback-JSONL auswerten. — Pilotserie gültig und exportiert
+  ([Protokoll](../docs/messlauf/2026-11-28-p90-repo-scan-pilot.md),
+  [Bericht](../docs/2026-11-28_p84-p90-repo-scan-pilot.md), „verbessert“, aber
+  eine Aufgabe); Feedback-JSONL ausgewertet
+  ([Skript](../scripts/eval/optimizer-feedback.mjs), 79/79, Baseline). Die
+  **Vollserie (10 Aufgaben, 100 Läufe) läuft über den Laufstart der
+  Eval-Suite** (Preset `p90-scan-full`); die Go-Entscheidung für den Standard
+  wird erst nach vollständiger Serie gefällt — bis dahin bleibt der Scan
+  Opt-in.
+- [ ] **T90.8** `docs/funktionsinventar.md` (S83, G82 ergänzt),
+  `docs/einstellungen-empfehlungen.md`, Epic-Abschluss-Notiz. Geräte- und
+  Alltagsabnahme in [T000.41](EPIC-000-testsuite-fuer-menschen.md). — Doku
+  steht; die Abschluss-Notiz folgt mit dem Serieergebnis.
+- [x] **T90.9** Repo-Auswahl bis gespeicherter A/B-Befund: Eval-Vertrag und
+  ADR-0126 ergänzen, Repo-Korpus und Vorprüfung an P84 anbinden, gestartete
+  Serie pro Repo in der Suite wiederfinden. Contract-/Route-Tests in
+  `packages/contracts/test/runs-evaluation-summary.test.ts` und
+  `apps/hub/test/eval.integration.test.ts` für Altbestand, Wiederholung,
+  fehlende Prüfdaten, Repo-Trennung und Journal-Recovery (K5/K7).
+- [x] **T90.10** Diagnose vom Prüfergebnis bis zur Eval-Seite: Vergleich und
+  Beleglinks je Aufgabe und Änderung. `packages/core/test/modules/runs/evaluation-summary.test.ts`
+  prüft Rückschritt, Gleichstand, Drift und unvollständige Paare.
+  `e2e/specs/evaluation.spec.ts` prüft Repo-Wechsel, fehlenden Korpus
+  (repoEmpty), Laufstart, Vergleich und konkreten Befund samt Beleg.
+- [ ] **T90.11** Übertragbarkeit belegen: neben AncientVoid ein zweites Repo
+  mit eigenem Korpus über denselben Ablauf prüfen. Für Kontext-/Skill-,
+  Hook-, Guardrail- und Regeländerungen je einen isolierten Vergleich mit
+  nachvollziehbarer Wirkung bzw. einem gezielt erwarteten Fehlbefund testen.
+  — Korpus für **rea** eingefroren ([rea-tasks.json](../../../ancientvoid-benchmarks/evaluation/rea-tasks.json),
+  3 Aufgaben aus realer Historie, rot/grün nachgestellt), der
+  Kontextvergleich läuft über dasselbe Preset-Verfahren (`p90-rea-scan`); der
+  `repoVariant`-Vergleich für Skill/Hook/Guardrail/Regel ist gebaut und
+  getestet (Protokoll-Schema, Git-Revisionen sauber anwendbar), die isolierten
+  Vergleiche je Änderungsart stehen noch aus.
 
-Reihenfolge: T90.1 → T90.2/T90.3 und T90.4 (unabhängig) → T90.5 → T90.6 →
-T90.7 → T90.8.
+Reihenfolge: T90.1 → T90.2/T90.3, T90.4 separat, T90.5 → T90.6.
+Die Eval-Spur T90.9 → T90.10 kann daneben laufen. T90.7 und T90.11 benötigen
+beide Spuren. T90.8 folgt zum Abschluss.
+
+**Stand 28.11.2026 (Abend):** Alle Codeträger T90.1–T90.6, T90.9, T90.10 sind
+umgesetzt und gezielt getestet (rot-dann-grün, Spec-Namen je Haken). Die
+Pilotserie des Scan-Vergleichs ist gültig gelaufen und exportiert
+(„verbessert“ auf einer Aufgabe); die Vollserie (10 Aufgaben, 100 Läufe,
+Preset `p90-scan-full`) und der Übertragbarkeitsvergleich am zweiten Repo
+(rea, eigenes Korpus, Preset `p90-rea-scan`) laufen über den Laufstart der
+Eval-Suite. Offen bis zum Epic-Abschluss: die vollständige Serie mit
+Go-Entscheidung (T90.7), die isolierten Skill-/Hook-/Guardrail-/Regelvergleiche
+(T90.11, Mechanik `repoVariant` steht) und die Abschluss-Notiz (T90.8).
 
 ## 5. Acceptance Criteria (AC-P90-k)
 
-- **AC-P90-1:** `originIntent` ist nach dem Setzen unveränderlich (nur
-  Menschen-Umbenennung ändert `focus`); ein Test belegt die Immutability und den
-  Recovery-Pfad aus JSONL/Platte (K7).
+- **AC-P90-1:** `originIntent` ist nach dem Setzen unveränderlich. `focus`
+  reagiert auf die in §3.1 definierten Anlässe. Tests belegen beide Regeln
+  und den Recovery-Pfad aus JSONL/Platte (K7).
 - **AC-P90-2:** Eine Session mit Fokus-Revidierung zeigt im UI-Test Fokus und
   Ursprung beide; eine angenommene Übergabe zeigt das Badge, ohne den Titel zu
   verändern.
@@ -218,12 +339,22 @@ T90.7 → T90.8.
 - **AC-P90-5:** `repoFacts` enthält nur im Repo existierende Pfade/Kommandos;
   Budgets halten; ohne angebundene Wissensquelle bleibt der Angebotsblock leer;
   der Rahmen „Daten, keine Anweisungen“ steht (Test).
-- **AC-P90-6:** Der Messlauf läuft mit n ≥ 5 je Arm und dokumentiert die
-  Go-Regel-Entscheidung (Protokoll in `docs/messlauf/`); „hilft“ oder „hilft
-  nicht“ ist entschieden, nicht offengelassen.
+- **AC-P90-6:** Der Scan-Messlauf mit n ≥ 5 pro Aufgabe und Arm liefert in
+  der Eval-Suite und in `docs/messlauf/` dieselbe begründete Go-Entscheidung
+  nach §3.5. Ein Vorteil bei Suchaufwand allein kann eine Verschlechterung
+  der Codequalität oder Regeltreue nicht ausgleichen.
 - **AC-P90-7:** Die Einstellungs-Änderung ist persistent (Settings-Store) und in
   der Vorschau-Engine-Anzeige sichtbar; die Vorschau bleibt eine Vorschau —
   senden tut nur der Mensch.
+- **AC-P90-8:** Die Eval-Suite startet und zeigt Vergleiche je Repo mit
+  Referenz, Kandidat, Konfigurationsstand, Qualitätsdifferenzen und
+  Stichprobe. Zwei Repos mit gleich benannter Serie bleiben getrennt.
+  Historie und Befunde sind nach Neustart verfügbar.
+- **AC-P90-9:** Die Seite zeigt bei Rückschritten, Gleichstand und fehlender
+  Evidenz den jeweils zutreffenden Befund. Ein absichtlich fehlerhafter
+  Kandidat beweist, dass Nutzer die betroffene Komponente, den Prüfbeleg
+  und den nächsten Prüfschritt direkt finden. Ein Repo ohne Korpus sieht
+  den fehlenden Vorbereitungsschritt.
 
 ## 6. Premortem (Failure-Modi + Mitigation)
 
@@ -243,6 +374,12 @@ T90.7 → T90.8.
    konfigurierte Modell; Live-Lauf am echten llama.cpp/qwen bleibt
    Nutzerabnahme (P000) — der Messlauf selbst braucht ein echtes laufendes
    Modell, kein Fake.
+7. **Falscher Nutzen durch Drift oder fehlgeschlagene Läufe:** Festes
+   Protokoll, gepaarte Läufe, wirksame Konfiguration und vollständige
+   Abnahmestände sind nachprüfbar. Unvereinbare Stände bleiben sichtbar.
+8. **Effizienz verbessert sich, der Diff wird schlechter:** Qualitäts-
+   und Regelprüfungen behalten eigene Grenzwerte und Belege. Der Go-Entscheid
+   greift erst nach bestandener Qualitätsprüfung.
 
 ## 7. Definition of Done
 
@@ -253,6 +390,5 @@ ausdrücklichen Auftrag); rote CI allein wegen Umgebung wird benannt, nie als Pa
 gezählt. Jede neue UI-Funktion mit Spec in `e2e/specs/`; Eintrag in
 `docs/funktionsinventar.md`; ADR-0127 geschrieben und indexiert; Tracker-Issue mit
 `Fixes #`-Bezug (`docs/issues.md`); K5/K7/K10 nachweislich erfüllt; kein TODO ohne
-Epic-Bezug. Menschen-Abnahmen (echtes Modell beim Messlauf, Scrollen auf dem Handy,
-Badges mit echten Augen) sind nach **P000** verschoben und werden nicht
-vorweggenommen.
+Epic-Bezug. Die Geräte- und Alltagsabnahme ist nach [P000 T000.41](EPIC-000-testsuite-fuer-menschen.md)
+verschoben. Der reproduzierbare Modell-Messlauf bleibt Teil von P90.

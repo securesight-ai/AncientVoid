@@ -10,12 +10,12 @@ export function connectHub(base, token) {
       !(url.protocol === "https:" || (url.protocol === "http:" && ["127.0.0.1", "[::1]", "localhost"].includes(url.hostname)))) {
     throw new Error("Use a loopback HTTP or HTTPS evaluation hub origin");
   }
-  return async (path, body, status = 200) => {
+  return async (path, body, status = 200, timeoutMs = 30_000) => {
     const response = await globalThis.fetch(new URL(path, url), {
       method: body === undefined ? "GET" : "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       redirect: "error",
-      signal: globalThis.AbortSignal.timeout(30_000),
+      signal: globalThis.AbortSignal.timeout(timeoutMs),
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     const payload = await response.json();
@@ -42,7 +42,7 @@ export async function awaitHealthy(url, { fetcher, waitMs = 60_000, stepMs = 5_0
   }
 }
 
-export async function preflight(api, config, fetcher) {
+export async function preflight(api, config, fetcher, energyApi = api) {
   const adapters = await api("/api/adapters");
   const catalogues = new Map();
   const checks = await Promise.allSettled(config.cells.map(async (cell) => {
@@ -52,7 +52,7 @@ export async function preflight(api, config, fetcher) {
     if (!models?.some((model) => model.id === cell.model)) {
       throw new Error(`${cell.adapter}: model ${cell.model} missing from the configured catalogue`);
     }
-    if (cell.billing.kind === "local") await checkEnergy(api, cell.billing.host);
+    if (cell.billing.kind === "local") await checkEnergy(energyApi, cell.billing.host);
     if (cell.healthUrl) await probeHealth(cell.healthUrl, fetcher);
   }));
   const failures = checks.filter((result) => result.status === "rejected").map((result) => result.reason);
@@ -91,7 +91,7 @@ async function stopPhase(api, path) {
   if (!ok) throw new Error(`${path}: hub did not confirm stop`);
 }
 
-export async function runPhase(api, phase, candidate, project, prompt, timeoutMs) {
+export async function runPhase(api, phase, candidate, project, prompt, timeoutMs, energyApi = api) {
   const start = Date.now();
   const timer = performance.now();
   const record = await api("/api/sessions", {
@@ -124,7 +124,7 @@ export async function runPhase(api, phase, candidate, project, prompt, timeoutMs
   }
   return {
     sessionId: record.id, phase, harnessVersion: candidate.harnessVersion, modelFingerprint: candidate.fingerprint,
-    wallMs, billing: await phaseBilling(api, candidate.billing, start, end),
+    wallMs, billing: await phaseBilling(energyApi, candidate.billing, start, end),
     ...(aborted ? { aborted } : {}),
   };
 }

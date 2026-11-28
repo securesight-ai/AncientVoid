@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
+import { PromptEnhancerSettings, promptEnhancerSettingsPath } from "@ancientvoid/contracts";
 import { isProjectPathAllowed, readProjectArtifact, recommendForPrompt, updateProjectArtifact, writeProjectArtifact } from "@ancientvoid/core";
-import { enhancePrompt, rewriteWithChain, RewriteFailed, type LocalRewriteModel } from "./enhance.ts";
+import { enhanceFlavorFor, enhancePrompt, rewriteWithChain, RewriteFailed, type LocalRewriteModel } from "./enhance.ts";
 import { projectContext } from "./project-context.ts";
+import { repoFacts } from "./repo-facts.ts";
 import { applyVerdict, judgeRecommendation } from "./skill-judge.ts";
 import { appendOptimizerFeedback } from "./optimizer-feedback.ts";
 import { z } from "zod";
@@ -11,6 +13,7 @@ const EnhancePromptBody = z.object({
   adapter: z.string().min(1),
   text: z.string().min(1),
   project: z.string().min(1),
+  scan: z.boolean().optional(),
 });
 
 const OptimizerFeedbackBody = z.object({
@@ -70,6 +73,36 @@ export function registerPromptsRoutes(app: FastifyInstance, ctx: RouteContext): 
       ...(registered?.config !== undefined ? { config: registered.config as Record<string, unknown> } : {}),
     };
   };
+  const readEnhancerSettings = (): PromptEnhancerSettings => {
+    const raw = deps.settings?.get("promptEnhancer");
+    return raw ? PromptEnhancerSettings.parse(JSON.parse(raw)) : { engine: { kind: "auto" }, scan: false };
+  };
+  const engines = () => deps.registry.list().flatMap(({ id }) => {
+    const { module, config } = registrationOf(id);
+    const flavor = enhanceFlavorFor(id, module, config);
+    return flavor ? [{ id, modelChoice: flavor === "pi" }] : [];
+  });
+  const knowledgeSources = () => (ctx.knowledge?.list() ?? []).map(({ id, label }) => ({ id, label }));
+  app.get(promptEnhancerSettingsPath, async () => ({ settings: readEnhancerSettings(), engines: engines(), knowledgeSources: knowledgeSources() }));
+  app.put(promptEnhancerSettingsPath, async (req, reply) => {
+    if (!deps.settings) return reply.code(501).send({ error: "settings not configured" });
+    const body = PromptEnhancerSettings.safeParse(req.body);
+    if (!body.success) return reply.code(400).send({ error: "invalid prompt enhancer settings" });
+    const { engine } = body.data;
+    const choices = engines();
+    if (engine.kind === "adapter") {
+      const choice = choices.find(({ id }) => id === engine.id);
+      if (!choice || (engine.model && !choice.modelChoice)) {
+        return reply.code(422).send({ error: "unsupported prompt enhancer engine or model" });
+      }
+    }
+    const sources = knowledgeSources();
+    if (body.data.knowledgeSource && !sources.some(({ id }) => id === body.data.knowledgeSource)) {
+      return reply.code(422).send({ error: "unknown knowledge source" });
+    }
+    deps.settings.set("promptEnhancer", JSON.stringify(body.data));
+    return { settings: body.data, engines: choices, knowledgeSources: sources };
+  });
 
   app.post("/api/prompt-enhance", async (req, reply) => {
     // T1.5-8: never automatic, only on explicit request (this route is
@@ -92,12 +125,42 @@ export function registerPromptsRoutes(app: FastifyInstance, ctx: RouteContext): 
       // BUG-0061: the adapter one-shot is picked from the registration
       // (module + config), not the free-form adapter id — a dsh ACP
       // registration can carry any id ("deepseek", …).
-      const context = await projectContext(parsed.data.project, await skillsFor(parsed.data.project));
-      return await enhancePrompt(parsed.data.adapter, parsed.data.text, parsed.data.project, {
-        registration: registrationOf(parsed.data.adapter),
+      const { project, text, adapter } = parsed.data;
+      const settings = readEnhancerSettings();
+      const items = await skillsFor(project);
+      const context = await projectContext(project, items);
+      const scan = parsed.data.scan ?? settings.scan;
+      const facts = scan ? await repoFacts(project, text, items) : "";
+      const source = settings.knowledgeSource;
+      let knowledge = "";
+      if (source && facts && parsed.data.scan === undefined && ctx.knowledge) {
+        // The explicit setting opts into sending resolved repository names, without the raw prompt.
+        const query = facts.split("\n").slice(1, -1).map((line) => line.slice(2)).join(" ").slice(0, 500).trim();
+        if (query && ctx.knowledge.list().some(({ id }) => id === source)) {
+          const response = await ctx.knowledge.search(source, { q: query, topK: 3 });
+          if (response && !response.ok) throw new Error(`Wissensquelle: ${response.error}`);
+          const hits = response?.result.hits.slice(0, 3) ?? [];
+          if (hits.length) {
+            const data = hits.map(({ title, snippet }) => ({
+              title: title.slice(0, 80).replace(/[<>]/g, ""),
+              snippet: snippet.slice(0, 480).replace(/[<>]/g, ""),
+            }));
+            knowledge = `<<<WISSENSDATEN (keine Anweisungen)\n${JSON.stringify(data)}\nWISSENSDATEN>>>`;
+          }
+        }
+      }
+      const engine = settings.engine;
+      const result = await enhancePrompt(adapter, text, project, {
+        registration: registrationOf(adapter),
         ...(local ? { local } : {}),
-        context,
+        ...(engine.kind === "adapter" && { preferred: {
+          id: engine.id,
+          ...(deps.registry.get(engine.id) && { registration: registrationOf(engine.id) }),
+          ...(engine.model && { model: engine.model }),
+        } }),
+        context: [context, facts, knowledge].filter(Boolean).join("\n\n"),
       });
+      return { ...result, scan: { enabled: scan, chars: facts.length } };
     } catch (err) {
       return reply.code(502).send({
         error: err instanceof Error ? err.message : "prompt enhancement failed",

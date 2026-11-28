@@ -110,6 +110,12 @@ BUG-0170 offen ist.
 - Fixtures für echte CLI-Streams (P1): aufgezeichnet, anonymisiert,
   secret-gescannt — nie Roh-Logs committen.
 
+**Wirksamkeit von Context Management:** Änderungen an Kontext, Skills, Hooks,
+Guardrails und Regeln brauchen einen reproduzierbaren Vergleich je betroffenem
+Repo mit Qualitäts-, Regel- und Aufwandsprüfungen. Die Eval-Suite zeigt Ergebnis,
+Belege und konkreten Verbesserungsbedarf. Verfahren und Umsetzung stehen in
+[P90 §3.6](epics/EPIC-P90-namen-scroll-prompt-enhancer.md#36-vergleich-pro-repo-in-der-eval-suite-spur-d).
+
 ## Datadir & Sicherheit
 
 Ausgelagerte Jobs einer Session über `hubctl activity <sessionId> <id> run -- <Kommando>`

@@ -1,3 +1,6 @@
+import { appendFile } from "node:fs/promises";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { test, expect, sessionTab } from "../support/fixtures.ts";
 
 /**
@@ -125,4 +128,40 @@ test.describe("Chat bis zu seinem Anfang (BUG-0211)", () => {
       ),
     ).toBeLessThanOrEqual(3);
   });
+});
+
+test("P90 lädt im mobilen Chat zuerst die angrenzende Seite älterer Einträge", async ({ app, hub, browserName }, info) => {
+  test.skip(browserName !== "chromium" || info.project.name !== "mobile", "Chromium touch project");
+  const id = await hub.createSession({ adapter: "dummy", prompt: "P90 Anfang" });
+  expect((await hub.api(`/api/sessions/${id}/stop`, { body: {} })).status).toBe(200);
+  const original = await hub.events(id);
+  const start = original.at(-1)!.seq + 1;
+  const count = 2_800;
+  const ts = new Date().toISOString();
+  const events = Array.from({ length: count }, (_, index) => {
+    const seq = start + index;
+    const summary = `P90 Verlauf ${seq}`;
+    return { sessionId: id, seq, ts, type: "assistant", summary, payload: { text: summary }, blobRef: null };
+  });
+  await appendFile(join(hub.dataDir, "sessions", id, "events.jsonl"), events.map((event) => JSON.stringify(event)).join("\n") + "\n");
+  const db = new DatabaseSync(join(hub.dataDir, "hub.db"));
+  try {
+    db.prepare("UPDATE sessions SET last_seq = ? WHERE id = ?").run(events.at(-1)!.seq, id);
+  } finally {
+    db.close();
+  }
+  await app.goto(`${hub.origin}/#/sessions/${id}`);
+  const tail = app.locator(".tail-scroll");
+  await expect(tail.getByText(events.at(-1)!.summary, { exact: true })).toBeAttached();
+  await tail.evaluate((element) => { element.scrollTop = 0; });
+  const touch = await app.context().newCDPSession(app);
+  const box = (await tail.boundingBox())!;
+  const x = Math.round(box.x + box.width / 2);
+  const y = Math.round(box.y + box.height / 3);
+  await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y + 75 }] });
+  await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  const prior = events[count - 501]!;
+  await expect(tail.getByText(prior.summary, { exact: true })).toBeAttached();
+  await expect(tail.getByText(events[0]!.summary, { exact: true })).toHaveCount(0);
 });

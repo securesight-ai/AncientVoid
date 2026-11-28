@@ -366,11 +366,9 @@ eigenes Go.
 | [P88 — Empfehlungen und Routing](EPIC-P88-empfehlungen-routing.md) | Empfehlungen mit Beleglage im UI; eine Auswahl für Sessions, Teams, Loops, Automationen | P84-Ergebnisvertrag; Automatik erst mit P87-Daten | 2–3 |
 | [P89 — Eigene kleine Modelle](EPIC-P89-eigene-kleine-modelle.md) | Arbeitsmodelle und Router finetunen: Mitschnitt, Rechte je Quelle, zurückgehaltene Aufgaben, Nutzung nur bei belegtem Vorteil | P87-Daten (Spur A), P88 (Spur B); Daten-Spike mit Go/No-go | 4–6 |
 
-## Nutzerauftrag vom 27.11.2026 — Namens-Ursprung und Fokus, Chat-Scroll, Prompt-Verbesserer mit Beleg
+## Nutzerauftrag vom 27.–28.11.2026 — Namen, Chat-Scroll und Repo-Evaluation
 
-| Epic | Ergebnis | Abhängigkeit | Agenten-Wochen |
-|---|---|---|---|
-| [P90 — Session-Namen mit Ursprung und Fokus; Chat bis oben scrollbar; Prompt-Verbesserer mit Beleg, Einstellungen und deterministischem Scan](EPIC-P90-namen-scroll-prompt-enhancer.md) | Unveränderlicher Ursprung + Fokus mit definierten Revidierungs-Anlässen; Übergabe als knappes Badge; Scrollen bis zur Chat-Spitze (Repro zuerst, Bug-Datei); Verbesserer: Engine in Einstellungen konfigurierbar (Default lokal — qwen über Pi; pi-One-Shot-Stufe), deterministischer Repo-Scan plus Angebotsmodus für angebundene Wissensquellen, Go-Regel-Messlauf mit/ohne Scan | keine blockierende (Quer-Epic); P68/P72 abgeschlossen und Aufbau-Grundlage; P74 nur optional; ADR-0127 | ~2 |
+[P90](EPIC-P90-namen-scroll-prompt-enhancer.md) plant Session-Ursprung und Fokus, den Scroll-Fix, den konfigurierbaren Prompt-Verbesserer und einen belegten Repo-Scan. Die P84-Eval-Suite zeigt erfasste Repo-Vergleiche samt Qualitätsbefunden. **In Umsetzung**, vollständige Messserie und repoübergreifende Abnahme offen, Quer-Epic auf P68/P72 und P84, P74 optional. Geschätzt 3–4 Agenten-Wochen plus Messlaufzeit.
 
 ## Reihenfolge & Gating
 

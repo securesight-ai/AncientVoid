@@ -287,3 +287,20 @@
 .session-menu-items button + button {
   border-top: 1px solid var(--bg-chip);
 }
+
+.session-origin {
+  font-size: 0.78rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.session-card .session-origin {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-handover-mark {
+  color: var(--fg-dim);
+  flex-shrink: 0;
+}

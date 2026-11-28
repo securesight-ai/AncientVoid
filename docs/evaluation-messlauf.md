@@ -248,3 +248,88 @@ und hält die Serie an. `run … --series <name> --resume` setzt dieselbe Serie 
 demselben Protokoll fort: erfasste und abgebrochene Läufe entfallen, der verbrauchte
 Provider-Deckel zählt weiter. `--skip-provider anthropic` stellt einen Anbieter
 zurück; ein späteres `--resume` ohne die Angabe holt ihn nach.
+
+## Repo-Scan vergleichen (P90)
+
+Für den Vergleich von `repoFacts` im Protokoll genau eine Modellzelle,
+`parallelCloudRuns: 1`, mindestens fünf Wiederholungen und keine Splits
+angeben. Der Abschnitt `repoScan` nennt das ursprüngliche Projekt und
+die erwartete Engine der Vorschau.
+
+```json
+{
+  "repo": "/pfad/zum/angebundenen/repo",
+  "engineKind": "local",
+  "engineId": "local",
+  "model": "qwen",
+  "minimumEffect": 0.2
+}
+```
+
+`repoScan` ist ein Feld des Protokolls. `plan` zeigt die Laufzahl.
+`run` erstellt frische Arbeitskopien und schickt denselben Auftrag mit
+Scan aus und an durch die Vorschau und das festgelegte Ausführungsmodell.
+Abweichungen bei Engine, Modell oder Scan-Modus brechen den Lauf ab.
+Das Referenzmodell und die P81-Energiequelle müssen im isolierten Hub
+messbar sein. Die Wissensquellen bleiben bei diesem Vergleich außen vor.
+`Statistik → Evaluation` zeigt Ergebnisse unter dem gewählten Repo.
+Der Reportpfad `pilot-report` liest dieselbe Repo-Serie. Die dort verfügbare
+Codequalitätsentscheidung beruht auf Abnahme, Lint, Typprüfung und Laufstatus.
+Aufwand der Ausführung und Laufzeit der Vorschau werden getrennt berichtet.
+Die Akzeptanzrate der Vorschläge steht als Nutzungssignal daneben:
+`node scripts/eval/optimizer-feedback.mjs --data <hub-datadir>` wertet die
+bestehende `prompt-optimizer-feedback.jsonl` aus (Rate je Engine und Projekt,
+unlesbare Zeilen gezählt, nie gedeutet).
+
+### Regel-, Hook-, Guardrail-, Skill- und Kontextänderungen als Revisionen vergleichen (P90)
+
+`repoVariant` vergleicht zwei Git-Revisionen **derselben Datei** im Quell-Repo
+— Referenz gegen Kandidat — statt des Scans. Die Variante wird je Arm in die
+Bau-Arbeitskopie gebracht (gleiche Dateirechte, danach frischer Snapshot);
+`kind` nennt die Art der Änderung (`context|skill|hook|guardrail|rule`), und
+`observation` benennt je Arm das erwartete Ereignis (`payload.kind`), das den
+Nachweis liefert, dass die Änderung im Lauf wirkte. Für Hook-, Guardrail- und
+Regelvergleiche wird zusätzlich `policyPassed` aus der Abnahme geführt. Beide
+Vergleichsarten schließen sich aus (`repoScan` oder `repoVariant`).
+
+```json
+{
+  "repo": "/pfad/zum/repo",
+  "path": ".claude/settings.json",
+  "kind": "hook",
+  "reference": "<40-Zeichen-SHA>",
+  "candidate": "<40-Zeichen-SHA>",
+  "minimumEffect": 0.2,
+  "observation": { "reference": "hook.alt", "candidate": "hook.neu" }
+}
+```
+
+Für den Laufstart im UI legt der Betreiber am isolierten Hub
+`evaluation/presets.json` im Datadir an. Es enthält eine Liste von
+Protokollen, die jeweils an ein Repo gebunden sind.
+
+```json
+[{
+  "id": "scan-qwen",
+  "label": "Repo-Scan mit Qwen",
+  "repo": "/pfad/zum/repo",
+  "protocol": "/pfad/zum/protokoll.json",
+  "scratch": "/pfad/zur/separaten/arbeitsflaeche",
+  "origin": "http://127.0.0.1:7373",
+  "tokenFile": "/pfad/zum/operator-token"
+}]
+```
+
+`origin` ist der isolierte Loopback-Mess-Hub. Der Repo-Pfad muss mit dem
+eingefrorenen Protokoll übereinstimmen. Ein separater P81-Hub lässt sich
+als `energy: { origin, tokenFile }` eintragen. Der Laufstart akzeptiert
+eine Preset-ID. Der Bediener wählt in der Eval-Suite das Repo und das
+Messprotokoll. Start und Ende liegen je Serie in einer JSONL-Datei unter
+`<dataDir>/evaluation/`. Das gleichnamige Protokoll mit der Endung `.log`
+enthält den Grund für Prüfstandsfehler.
+
+Für ein anderes npm-/Vitest-Repo unterstützt `--corpus /pfad/tasks.json`
+das gleiche versionierte Aufgabenformat mit einer SHA-256-Datei
+`tasks.json.sha256`. Die Start- und Referenz-Commits werden aus dem in
+`repoScan.repo` angegebenen Repo gelesen. Im UI-Preset kann derselbe
+Manifestpfad unter `corpus` stehen.

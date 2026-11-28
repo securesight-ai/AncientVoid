@@ -60,4 +60,45 @@ describe("P84 summary", () => {
     mixed.input.protocolHash = "b".repeat(64);
     expect(summariseSeries("s", [run("a", "t", 1), mixed]).consistent).toBe(false);
   });
+
+  it("reports a quality regression with paired evidence from the requested repo", () => {
+    const repo = "/fixture/one";
+    const routeRuns = Array.from({ length: 5 }, (_, index) => {
+      const reference = run("reference", "t", index + 1);
+      const candidate = run("candidate", "t", index + 1, { acceptance: index !== 0 });
+      for (const entry of [reference, candidate]) {
+        Object.assign(entry.input, { comparison: {
+          repo, kind: "hook", source: "hooks/format", reference: hash, candidate: "b".repeat(64),
+          applied: true, minimumEffect: 0.2,
+        } });
+      }
+      return [reference, candidate];
+    }).flat();
+    const summary = summariseSeries("s", [...routeRuns, run("candidate", "t", 1)], repo);
+    expect(summary.runs).toBe(10);
+    expect(summary.comparison?.tasks[0]).toMatchObject({
+      status: "regressed", pairs: 5,
+      checks: expect.arrayContaining([expect.objectContaining({ id: "acceptance", reference: 5, candidate: 4,
+        evidence: [routeRuns[1]!.input.phases[0]!.sessionId] })]),
+    });
+    expect(summariseSeries("s", routeRuns.slice(2), repo).comparison?.tasks[0]?.status).toBe("insufficient");
+    expect(summariseSeries("s", routeRuns, "/fixture/two").runs).toBe(0);
+    expect(summariseSeries("s", [...routeRuns, routeRuns[0]!], repo).comparison?.tasks[0]?.reason).toBe("coverage");
+    routeRuns[1]!.input.phases[0]!.modelFingerprint = "other";
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks[0]?.reason).toBe("drift");
+    routeRuns[1]!.input.phases[0]!.modelFingerprint = "m";
+    routeRuns[1]!.input.acceptance = true;
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks[0]?.status).toBe("unchanged");
+    for (const entry of routeRuns) {
+      entry.input.comparison!.expected = { repetitions: 5, tasks: ["t", "not-run"] };
+    }
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks).toEqual([
+      expect.objectContaining({ task: "not-run", status: "insufficient", pairs: 0 }),
+      expect.objectContaining({ task: "t", status: "unchanged", pairs: 5 }),
+    ]);
+    for (const entry of routeRuns.filter(({ input }) => input.arm === "candidate")) entry.input.phases[0]!.wallMs *= 0.65;
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks[1]).toMatchObject({ status: "improved", reason: "efficiency" });
+    routeRuns[1]!.input.acceptance = false;
+    expect(summariseSeries("s", routeRuns, repo).comparison?.tasks[1]).toMatchObject({ status: "regressed", reason: "measured" });
+  });
 });

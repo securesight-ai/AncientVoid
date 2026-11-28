@@ -1,4 +1,4 @@
-import { MetricCounters, metricsState, type SessionRecord, type SessionMetricsState } from "@ancientvoid/contracts";
+import { MetricCounters, SessionFocus, metricsState, type SessionRecord, type SessionMetricsState } from "@ancientvoid/contracts";
 import type { HubDatabase } from "../../platform/index.ts";
 
 /** Raw SQLite row shape (snake_case) for the sessions table. */
@@ -33,6 +33,9 @@ export interface SessionRow {
   archived: number;
   title: string | null;
   title_source: string | null;
+  origin_intent: string | null;
+  focus: string | null;
+  handover_from: string | null;
   metric_counters: string;
   last_activity: string | null;
   pinned: number;
@@ -94,6 +97,9 @@ export function rowToRecord(row: SessionRow): SessionRecord {
     archived: row.archived === 1,
     title: row.title ?? null,
     titleSource: row.title_source === "ai" || row.title_source === "manual" ? row.title_source : "auto",
+    originIntent: row.origin_intent,
+    focus: row.focus ? SessionFocus.parse(JSON.parse(row.focus)) : null,
+    handoverFrom: row.handover_from,
     metrics: metricsState(counters(row.metric_counters)),
     lastActivity: activity(row.last_activity),
     pinned: row.pinned === 1,
@@ -109,9 +115,10 @@ export function persistRecord(db: HubDatabase, record: SessionRecord): void {
          id, adapter, project, worktree_sha, model, status, created_at, budget_usd, adapter_version, last_seq,
          cost_usd, updated_at, tokens_est, park_reason, control_mode, harness, host_id, native_session_id,
          resume_version, log_offset, parent_session_id, observed_at, fork, input_revision, writer_client, writer_lease_until,
-         archived, title, metric_counters, last_activity, pinned, permission_mode, title_source, persistent_worker, workspace_mode, workspace_baseline, auto_resume_on_limit
+         archived, title, metric_counters, last_activity, pinned, permission_mode, title_source, persistent_worker, workspace_mode, workspace_baseline, auto_resume_on_limit,
+         origin_intent, focus, handover_from
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          status = excluded.status,
          model = excluded.model,
@@ -142,6 +149,9 @@ export function persistRecord(db: HubDatabase, record: SessionRecord): void {
          pinned = excluded.pinned,
          permission_mode = excluded.permission_mode,
          title_source = excluded.title_source,
+         origin_intent = COALESCE(sessions.origin_intent, excluded.origin_intent),
+         focus = excluded.focus,
+         handover_from = COALESCE(sessions.handover_from, excluded.handover_from),
          persistent_worker = excluded.persistent_worker,
          workspace_mode = excluded.workspace_mode,
          workspace_baseline = excluded.workspace_baseline,
@@ -185,5 +195,8 @@ export function persistRecord(db: HubDatabase, record: SessionRecord): void {
       record.workspaceMode === "unknown" ? null : record.workspaceMode,
       record.workspaceBaseline ? JSON.stringify(record.workspaceBaseline) : null,
       record.autoResumeOnLimit ? 1 : 0,
+      record.originIntent ?? null,
+      record.focus ? JSON.stringify(record.focus) : null,
+      record.handoverFrom ?? null,
     );
 }

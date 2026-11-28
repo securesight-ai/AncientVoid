@@ -18,9 +18,11 @@ import { extractRuns } from "./skill-runs.mjs";
 
 const { positionals: [mode], values: options } = parseArgs({
   allowPositionals: true,
-  options: Object.fromEntries([...["protocol", "series", "scratch", "first", "repeat", "report", "data", "out", "invalid", "invalid-reason", "repo", "skip-provider"].map((key) => [key, { type: "string" }]), ["partial", { type: "boolean" }], ["resume", { type: "boolean" }]]),
+  options: Object.fromEntries([...["protocol", "corpus", "series", "scratch", "first", "repeat", "report", "data", "out", "invalid", "invalid-reason", "repo", "skip-provider"].map((key) => [key, { type: "string" }]), ["partial", { type: "boolean" }], ["resume", { type: "boolean" }]]),
 });
 const root = resolve(import.meta.dirname, "..");
+const stopWhenDetached = () => process.exit(1);
+if (process.connected) process.once("disconnect", stopWhenDetached);
 const required = (key) => {
   if (!options[key]) throw new Error(`--${key} is required`);
   return options[key];
@@ -47,7 +49,7 @@ async function main() {
       "pilot-report: --series <name> --report docs/JJJJ-MM-TT_p84-pilotserie.md [--invalid-reason <text>]\n" +
       "export: --first <sessions.jsonl> --out <neuer Ordner im Benchmark-Repo> [--invalid <invalid.jsonl>] [--partial] [--data <hub data dir>]\n" +
       "overview (ohne --protocol): --repo <Benchmark-Repo> [--out <Datei>] — Serie × Zelle × Aufgabe je Korpus-/Protokollstand\n" +
-      "run: --scratch <hub project root> --series <name> [--resume] [--skip-provider <name,…>]\n" +
+      "run: --scratch <hub project root> --series <name> [--corpus <repo fixture manifest>] [--resume] [--skip-provider <name,…>]\n" +
       "report: --first <sessions.jsonl> --repeat <sessions.jsonl> --data <hub data dir> --report <dated markdown path>");
     if (mode) process.exitCode = 2;
     return;
@@ -62,33 +64,50 @@ async function main() {
     return;
   }
   // Ohne Protokoll und Hub: liest nur Belege, Journale und Arbeitskopien, auch von Serien eines älteren Korpus.
-  const diagnose = async () => diagnoseSeries({ receipts: required("first"), data: await realpath(required("data")), tasks: readCorpus().tasks });
+  const corpus = readCorpus(options.corpus);
+  const diagnose = async () => diagnoseSeries({ receipts: required("first"), data: await realpath(required("data")), tasks: corpus.tasks });
   if (mode === "diagnose") {
     const rows = await diagnose();
     if (options.out) writeFileSync(options.out, rows.map((row) => JSON.stringify(row)).join("\n") + "\n", { flag: "wx" });
     console.log(diagnosisTable(rows));
     return;
   }
-  const plan = planSeries(JSON.parse(readFileSync(required("protocol"), "utf8")), readCorpus());
+  const plan = planSeries(JSON.parse(readFileSync(required("protocol"), "utf8")), corpus);
+  const compareRepo = plan.config.repoScan ?? plan.config.repoVariant;
+  if (options.corpus && !compareRepo) throw new Error("A repository corpus requires a repo comparison (repoScan or repoVariant) with a source repo");
   if (mode === "plan") {
     console.log(JSON.stringify({ protocolHash: plan.protocolHash, corpusHash: plan.corpus.hash, arms: plan.arms, runs: plan.jobs.length }, null, 2));
     return;
   }
   const api = connectHub(process.env.ANCIENTVOID_URL, process.env.ANCIENTVOID_TOKEN);
+  const energyApi = process.env.ANCIENTVOID_EVAL_ENERGY_URL
+    ? connectHub(process.env.ANCIENTVOID_EVAL_ENERGY_URL, process.env.ANCIENTVOID_EVAL_ENERGY_TOKEN)
+    : api;
+  // Git, npm and the benchmark's test processes do not need operator credentials.
+  delete process.env.ANCIENTVOID_TOKEN;
+  delete process.env.ANCIENTVOID_EVAL_ENERGY_TOKEN;
   if (mode === "check") {
-    await preflight(api, plan.config);
+    await preflight(api, plan.config, undefined, energyApi);
     console.log("P84 preflight passed");
     return;
   }
   if (mode === "run") {
     const scratch = await realpath(required("scratch"));
-    if (!(await stat(scratch)).isDirectory() || scratch === root) throw new Error("Use a separate scratch project root");
+    const source = options.corpus ? await realpath(compareRepo.repo) : root;
+    if (!(await stat(scratch)).isDirectory() || scratch === source) throw new Error("Use a separate scratch project root");
     const series = required("series");
     if (!/^[a-z0-9][a-z0-9._-]{0,95}$/.test(series)) throw new Error("Invalid series name");
-    const receipts = await runSeries(api, root, scratch, series, plan, {
-      resume: options.resume === true, skipProviders: options["skip-provider"]?.split(",") ?? [],
+    const receipts = await runSeries(api, source, scratch, series, plan, {
+      resume: options.resume === true, skipProviders: options["skip-provider"]?.split(",") ?? [], energyApi,
     });
     console.log(`P84 ${series}: run finished. Session references: ${receipts}`);
+    if (plan.config.repoScan) {
+      const recorded = readFileSync(receipts, "utf8").trim().split("\n").filter(Boolean).length;
+      if (recorded < plan.jobs.length) {
+        console.log(`P90 ${series}: partial comparison, ${recorded} of ${plan.jobs.length} runs recorded; inspect aborted.jsonl and invalid.jsonl.`);
+        process.exitCode = 2;
+      }
+    }
     return;
   }
   if (mode === "pilot-report") {
@@ -96,7 +115,9 @@ async function main() {
     const date = /(?:^|\/)(\d{4}-\d{2}-\d{2})_p84-[a-z0-9-]+\.md$/.exec(destination)?.[1];
     if (!date) throw new Error("Use docs/JJJJ-MM-TT_p84-<name>.md");
     const { stdout: sha } = await promisify(execFile)("git", ["rev-parse", "--short", "HEAD"], { cwd: root });
-    const markdown = renderPilotReport(await api(`/api/evaluation/series/${encodeURIComponent(required("series"))}`), plan, {
+    const repo = compareRepo?.repo;
+    const suffix = repo === undefined ? "" : `?repo=${encodeURIComponent(repo)}`;
+    const markdown = renderPilotReport(await api(`/api/evaluation/series/${encodeURIComponent(required("series"))}${suffix}`), plan, {
       date, commit: sha.trim(), runtime: `${hostname()} / ${platform()} / Node ${process.version}`,
       valid: !options["invalid-reason"], invalidReason: options["invalid-reason"] ?? "",
     });
@@ -137,4 +158,7 @@ async function main() {
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
+}).finally(() => {
+  process.off("disconnect", stopWhenDetached);
+  if (process.connected) process.disconnect();
 });

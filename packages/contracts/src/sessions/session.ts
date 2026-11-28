@@ -122,6 +122,12 @@ export const SessionSpec = z.object({
 export type SessionSpec = z.infer<typeof SessionSpec>;
 
 /** Persisted session record (SQLite `sessions` table, P0 data model). */
+export const SessionFocus = z.object({
+  text: z.string().min(1).max(120),
+  source: z.enum(["manual", "handoff", "model"]),
+  setAt: z.iso.datetime(),
+});
+
 export const SessionRecord = z.object({
   id: z.string().min(1),
   adapter: z.string().min(1),
@@ -188,6 +194,9 @@ export const SessionRecord = z.object({
    * prompt), `ai` (short title from the assistant model), `manual` (renamed by
    * the person; never overwritten). */
   titleSource: z.enum(["auto", "ai", "manual"]).default("auto"),
+  originIntent: z.string().max(240).nullable().optional(),
+  focus: SessionFocus.nullable().optional(),
+  handoverFrom: z.uuid().nullable().optional(),
   /** T8.1: the last understandable thing that happened — what the card
    * shows instead of an event number. */
   lastActivity: z.object({ text: z.string().max(160), type: z.string(), at: z.string() }).nullable().default(null),
@@ -229,4 +238,7 @@ export interface SessionSnapshot {
   inputRevision: number;
   /** ADR-0074: Projektion der offenen Aktivitäten (Wahrheit: JSONL-Events). */
   openActivities?: SessionActivity[];
+  originIntent?: SessionRecord["originIntent"];
+  focus?: SessionRecord["focus"];
+  handoverFrom?: SessionRecord["handoverFrom"];
 }

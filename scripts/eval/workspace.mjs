@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { copyFile, cp, lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
+import { chmod, copyFile, cp, lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -58,6 +58,34 @@ export async function prepareWorkspace(root, directory, task, skills) {
   } finally {
     await rm(skillStaging, { recursive: true, force: true });
   }
+}
+
+export async function readVariant(root, revision, path) {
+  const { stdout: entry } = await run("git", ["ls-tree", revision, "--", path], { cwd: root });
+  const mode = /^100(644|755) blob [0-9a-f]+\t/.exec(entry)?.[1];
+  if (!mode) throw new Error(`Variant is not a regular config file: ${path}`);
+  const { stdout } = await run("git", ["show", `${revision}:${path}`], { cwd: root, encoding: "buffer", maxBuffer: 256 * 1024 });
+  return { contents: stdout, mode: Number.parseInt(mode, 8) };
+}
+
+export async function applyVariant(directory, path, { contents, mode }) {
+  const target = join(directory, path);
+  let parent = directory;
+  for (const segment of path.split("/").slice(0, -1)) {
+    parent = join(parent, segment);
+    await mkdir(parent).catch((error) => {
+      if (error.code !== "EEXIST") throw error;
+    });
+    if (!(await lstat(parent)).isDirectory()) throw new Error(`Variant parent is not a directory: ${path}`);
+  }
+  const current = await lstat(target).catch((error) => {
+    if (error.code !== "ENOENT") throw error;
+    return null;
+  });
+  if (current && !current.isFile()) throw new Error(`Variant path is not a normal file: ${path}`);
+  await writeFile(target, contents);
+  await chmod(target, mode);
+  await snapshotWorkspace(directory);
 }
 
 async function gate(directory, command) {

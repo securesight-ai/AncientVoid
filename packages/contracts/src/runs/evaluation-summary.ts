@@ -32,6 +32,32 @@ export const EvalSummaryRow = z.strictObject({
 });
 export type EvalSummaryRow = z.infer<typeof EvalSummaryRow>;
 
+const comparison = z.strictObject({
+  kind: z.enum(["context", "skill", "hook", "guardrail", "rule"]),
+  source: z.string(),
+  reference: z.string(),
+  candidate: z.string(),
+  minimumEffect: z.number(),
+  tasks: z.array(z.strictObject({
+    task: z.string(),
+    pairs: z.number().int().nonnegative(),
+    status: z.enum(["improved", "regressed", "unchanged", "insufficient"]),
+    reason: z.enum(["drift", "coverage", "unverified", "measured", "efficiency"]),
+    checks: z.array(z.strictObject({
+      id: z.enum(["acceptance", "lint", "typecheck", "runtime", "policy"]),
+      reference: z.number().int().nonnegative(),
+      candidate: z.number().int().nonnegative(),
+      evidence: z.array(z.uuid()),
+    })),
+    effort: z.array(z.strictObject({
+      id: z.enum(["wallMs", "totalMs", "tokens", "costUsd", "enhancerMs", "contextChars"]),
+      reference: stat,
+      candidate: stat,
+      pairedDifference: stat,
+    })).optional(),
+  })),
+});
+
 export const EvalSeriesSummary = z.strictObject({
   series: z.string(),
   runs: z.number().int().nonnegative(),
@@ -42,13 +68,28 @@ export const EvalSeriesSummary = z.strictObject({
   /** Mehr als ein Hash heißt: die Serie mischt Stände und ist nicht vergleichbar. */
   consistent: z.boolean(),
   rows: z.array(EvalSummaryRow),
+  comparison: comparison.optional(),
 });
 export type EvalSeriesSummary = z.infer<typeof EvalSeriesSummary>;
 
 export const EvalSeriesList = z.strictObject({
-  series: z.array(z.strictObject({ series: z.string(), runs: z.number().int().nonnegative(), lastRecordedAt: z.iso.datetime().nullable() })),
+  series: z.array(z.strictObject({ series: z.string(), repo: z.string().optional(), runs: z.number().int().nonnegative(), lastRecordedAt: z.iso.datetime().nullable() })),
 });
 export type EvalSeriesList = z.infer<typeof EvalSeriesList>;
+
+export interface EvalLaunch {
+  series: string;
+  preset: string;
+  repo: string;
+  startedAt: string;
+  state: "running" | "finished" | "partial" | "failed" | "interrupted";
+  interruptions?: { key: string; cause: "timeout" | "approval" | "infrastructure" }[];
+}
+
+export interface EvalLaunchList {
+  presets: { id: string; label: string; repo: string }[];
+  runs: EvalLaunch[];
+}
 
 const num = (value: number, digits: number): string => value.toFixed(digits);
 

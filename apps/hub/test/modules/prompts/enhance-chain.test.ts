@@ -53,6 +53,21 @@ function recordingRunner(answer = "Ziel: vom Adapter"): { run: OneShotRunner; se
 }
 
 describe("EPIC-P68 engine chain (ADR-0089)", () => {
+  it("P90 uses a pinned Pi model before the automatic chain and explains a fallback", async () => {
+    const seen: string[] = [];
+    const server = fakeServer({});
+    const result = await enhancePrompt("claude", "x", "/tmp", {
+      local: local(server),
+      preferred: { id: "my-pi", registration: { module: "@ancientvoid/adapter-pi" }, model: "local/qwen" },
+      runOneShot: async (flavor, _prompt, _cwd, _registration, model) => {
+        seen.push(`${flavor}/${model}`);
+        throw new Error("offline");
+      },
+    });
+    expect(seen).toEqual(["pi/local/qwen"]);
+    expect(result.engine.kind).toBe("local");
+    expect(result.skipped[0]).toMatchObject({ engine: "my-pi", reason: "offline" });
+  });
   it("AC-P68-1: a free local model answers, no CLI one-shot runs, no cost is invented", async () => {
     const server = fakeServer({ chat: "<think>hmm</think>\nZiel: lokal" });
     const runner = recordingRunner();

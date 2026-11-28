@@ -93,7 +93,7 @@ describe("BUG-0048 waiting_approval ohne offene Freigabe", () => {
     const s1 = new SessionManager(db1, new EventStore(dir), first.registry, new ProcessRunner());
     const rec = await s1.create({ adapter: "talky", project: dir });
     (s1 as unknown as Internals).live.get(rec.id)!.record.status = "waiting_approval";
-    s1.setMeta(rec.id, { pinned: false }); // schreibt den Zustand in die Datenbank
+    await s1.setMeta(rec.id, { pinned: false }); // schreibt den Zustand in die Datenbank
     await s1.shutdown({ keepWorkers: true });
 
     const second = setup();

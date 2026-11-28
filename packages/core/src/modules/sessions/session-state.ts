@@ -116,6 +116,16 @@ export const TURN_END_SETTLE_MS = 250;
 const LEAD =
   /^(?:(?:hallo|hi|hey|moin|servus)\b[,!.\s]*|(?:bitte|please)\s+|(?:kannst|könntest|würdest) du(?: mir)?(?: bitte)?\s+|(?:can|could|would) you(?: please)?\s+|ich (?:würde|möchte|will|brauche|hätte)(?: gern(?:e)?)?(?: bitte)?\s+|i(?:'d| would) like(?: you)? to\s+|mir sagen[,:\s]+|sagen[,:]\s+)/i;
 
+export interface SessionCreateOptions {
+  workInProject?: boolean;
+  naming?: Pick<SessionRecord, "originIntent" | "focus" | "handoverFrom"> & { title: string | null };
+}
+
+export function originFromPrompt(text: string): string | null {
+  const compact = text.replace(/\s+/gu, " ").trim();
+  return compact.length > 240 ? `${compact.slice(0, 239).trimEnd()}…` : compact || null;
+}
+
 /** Overview title: the first line that says something, without the
  * prefixes the composer adds (Workflow:, /skill, Agent:, Ziel:) and without
  * filler words in front of the actual task. */

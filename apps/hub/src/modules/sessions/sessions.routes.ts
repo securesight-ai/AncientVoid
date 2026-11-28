@@ -94,7 +94,8 @@ export function registerSessionsRoutes(app: FastifyInstance, ctx: RouteContext):
     }
     const session = deps.sessions.get(id);
     if (!session) return reply.code(404).send({ error: "unknown session" });
-    return { ...(await withAttachCmd(session)), openActivities: deps.sessions.openActivities(id) };
+    const originIntent = await deps.sessions.sessionOrigin(session);
+    return { ...(await withAttachCmd(session)), originIntent, openActivities: deps.sessions.openActivities(id) };
   });
 
 
@@ -459,12 +460,22 @@ export function registerSessionsRoutes(app: FastifyInstance, ctx: RouteContext):
         const record = await deps.sessions.setAutoResumeOnLimit(id, body.data.autoResumeOnLimit, callerLabel(req) ?? undefined);
         return { ...record, hostId };
       }
-      return { ...deps.sessions.setMeta(id, { ...(body.data.title !== undefined ? { title: body.data.title } : {}), ...(body.data.pinned !== undefined ? { pinned: body.data.pinned } : {}) }), hostId };
+      return { ...await deps.sessions.setMeta(id, { ...(body.data.title !== undefined ? { title: body.data.title } : {}), ...(body.data.pinned !== undefined ? { pinned: body.data.pinned } : {}) }), hostId };
     } catch (err) {
       const message = err instanceof Error ? err.message : "update failed";
       if (message.startsWith("unknown session")) return reply.code(404).send({ error: message });
       if (message.startsWith("Nur Menschen")) return reply.code(403).send({ error: message });
       throw err;
+    }
+  });
+  app.post<{ Params: { id: string } }>("/api/sessions/:id/focus", async (req, reply) => {
+    const { id } = req.params;
+    if (!deps.sessions.get(id)) return reply.code(404).send({ error: "unknown session" });
+    try {
+      return { ...await deps.sessions.suggestFocus(id, callerLabel(req) ?? undefined), hostId };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "focus update failed";
+      return reply.code(message.startsWith("Nur Menschen") ? 403 : 422).send({ error: message });
     }
   });
 

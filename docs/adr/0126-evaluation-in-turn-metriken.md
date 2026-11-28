@@ -67,3 +67,30 @@ Adapter melden ihn jetzt als `cacheInputTokens` ohne `cacheIncluded`. ACP-Agente
 mit getrenntem `thoughtTokens` zählen diese zur Ausgabe, wenn `totalTokens` sie
 belegt separat führt. Frühere Aufzeichnungen dieser Adapter unterschätzen Eingabe
 und Cloud-Kosten.
+
+## Nachtrag zu P90: Repo-Vergleiche
+
+Ein Lauf kann zusätzlich einen Vergleichsstand tragen. Der Bediener ordnet
+ihn dem ausgewählten Repository über dessen Projektpfad zu, auch wenn der
+Lauf in einer temporären Arbeitskopie stattfand. Referenz und Kandidat
+teilen den Seriennamen, die Identität der geänderten Quelle und ihre
+beiden Fingerprints. Die erzwungene Konfiguration ändert sich dadurch nicht.
+Die Angabe zum Auslösen der Änderung und weitere Prüfergebnisse stammen
+vom autorisierten Prüfstand. Der Hub schreibt sie mit der bestehenden
+Abnahme ins Journal.
+
+Die Serienliste trägt für diese Läufe das Repo. Die Detailroute nimmt
+`?repo=` als zusätzlichen Schlüssel. Ohne Repo liefert sie die über P84
+erfassten Serien. Die Vergleichsansicht bildet Paare aus Aufgabe und
+Wiederholung. Doppelte oder fehlende Paare, Drift in den gemeldeten Daten
+und fehlende Bestätigung der Wirkung ergeben einen offenen Befund.
+Die Prüfung mit geringerem Erfolg verlinkt die dazugehörigen Sitzungen.
+
+Ein registriertes Preset kann ein Mensch in der Eval-Suite starten. Der
+Hub liest das Protokoll aus seinem privaten Datadir und startet den
+bestehenden P84-Runner mit festen Argumenten. Der Browser übermittelt
+nur die Preset-ID. Die ausführbaren Pfade und Zugangsdaten stammen vom
+Betreiber des isolierten Prüfstands. Die getrennten JSONL-Start- und
+Abschlussaufzeichnungen machen abgebrochene Starts nach einem Neustart
+erkennbar. Ergebnisse bleiben im Session-Journal. Ein Schreibzugriff
+auf die Preset-Definition ist lokal am Prüfstand erforderlich.

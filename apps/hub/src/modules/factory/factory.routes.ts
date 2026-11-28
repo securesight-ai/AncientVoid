@@ -70,7 +70,7 @@ export function registerFactoryRoutes(app: FastifyInstance, ctx: RouteContext): 
           { workInProject: true },
         );
         const label = (goal?.trim().split("\n")[0] || win32.basename(root) || "Lauf");
-        deps.sessions.setMeta(driver.id, { title: `Factory · ${label}`.slice(0, 120) });
+        await deps.sessions.setMeta(driver.id, { title: `Factory · ${label}`.slice(0, 120) });
         try {
           // 2. Beobachter — Verknüpfung in options.driver, damit sie im Loop-Snapshot überlebt (K7).
           const observer = await deps.sessions.create(
