@@ -103,4 +103,7 @@ test("P90 trennt Repo-Serien und verlinkt den konkreten Qualitätsrückschritt",
   await expect(page.getByText(/Evidenz fehlt/)).toBeVisible();
   await expect(page.getByText(/mindestens fünf eindeutige Paare/)).toBeVisible();
   await expect(page.getByText("format", { exact: true })).toHaveCount(0);
+  // Ein angebundenes Repo ohne Korpus nennt den fehlenden Vorbereitungsschritt (AC-P90-9).
+  await page.getByLabel("Repository").selectOption(hub.alpha);
+  await expect(page.getByText(/Lege einen Aufgabenkorpus mit ausführbaren Abnahmen an/)).toBeVisible();
 });
