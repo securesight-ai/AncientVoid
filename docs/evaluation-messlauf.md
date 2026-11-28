@@ -251,6 +251,33 @@ messbar sein. Die Wissensquellen bleiben bei diesem Vergleich außen vor.
 Der Reportpfad `pilot-report` liest dieselbe Repo-Serie. Die dort verfügbare
 Codequalitätsentscheidung beruht auf Abnahme, Lint, Typprüfung und Laufstatus.
 Aufwand der Ausführung und Laufzeit der Vorschau werden getrennt berichtet.
+Die Akzeptanzrate der Vorschläge steht als Nutzungssignal daneben:
+`node scripts/eval/optimizer-feedback.mjs --data <hub-datadir>` wertet die
+bestehende `prompt-optimizer-feedback.jsonl` aus (Rate je Engine und Projekt,
+unlesbare Zeilen gezählt, nie gedeutet).
+
+### Regel-, Hook-, Guardrail-, Skill- und Kontextänderungen als Revisionen vergleichen (P90)
+
+`repoVariant` vergleicht zwei Git-Revisionen **derselben Datei** im Quell-Repo
+— Referenz gegen Kandidat — statt des Scans. Die Variante wird je Arm in die
+Bau-Arbeitskopie gebracht (gleiche Dateirechte, danach frischer Snapshot);
+`kind` nennt die Art der Änderung (`context|skill|hook|guardrail|rule`), und
+`observation` benennt je Arm das erwartete Ereignis (`payload.kind`), das den
+Nachweis liefert, dass die Änderung im Lauf wirkte. Für Hook-, Guardrail- und
+Regelvergleiche wird zusätzlich `policyPassed` aus der Abnahme geführt. Beide
+Vergleichsarten schließen sich aus (`repoScan` oder `repoVariant`).
+
+```json
+{
+  "repo": "/pfad/zum/repo",
+  "path": ".claude/settings.json",
+  "kind": "hook",
+  "reference": "<40-Zeichen-SHA>",
+  "candidate": "<40-Zeichen-SHA>",
+  "minimumEffect": 0.2,
+  "observation": { "reference": "hook.alt", "candidate": "hook.neu" }
+}
+```
 
 Für den Laufstart im UI legt der Betreiber am isolierten Hub
 `evaluation/presets.json` im Datadir an. Es enthält eine Liste von

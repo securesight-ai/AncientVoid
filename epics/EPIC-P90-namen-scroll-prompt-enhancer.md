@@ -1,6 +1,6 @@
 # EPIC-P90 — Session-Namen mit Ursprung und Fokus; Chat bis oben scrollbar; Prompt-Verbesserer mit Beleg, Einstellungen und deterministischem Scan
 
-**Status:** In Umsetzung, vollständige Messserie und repoübergreifende Abnahme offen · **Phase:** P90 · **Dauer:** 3–4 Agenten-Wochen plus Messlaufzeit (Schätzung) · **Abhängigkeit:** Quer-Epic wie P87–P89; baut auf P68 (Engine-Kette, ADR-0089) und P72 (Skill-Pflege, beide abgeschlossen) auf; P74 liefert optionale Wissensquellen; die Repo-Eval baut auf den vorhandenen P84-Werkzeugen und ADR-0126 auf. P30/P31 bleiben On hold. Tracker [#479](https://github.com/securesight-ai/AncientVoid/issues/479).
+**Status:** In Umsetzung — Code komplett und getestet; Vollserie des Scan-Vergleichs und Übertragbarkeitsvergleich (rea) laufen über die Eval-Suite; Go-Entscheidung, Regel-/Hook-/Guardrail-/Skill-Vergleiche und Abschluss-Notiz offen · **Phase:** P90 · **Dauer:** 3–4 Agenten-Wochen plus Messlaufzeit (Schätzung) · **Abhängigkeit:** Quer-Epic wie P87–P89; baut auf P68 (Engine-Kette, ADR-0089) und P72 (Skill-Pflege, beide abgeschlossen) auf; P74 liefert optionale Wissensquellen; die Repo-Eval baut auf den vorhandenen P84-Werkzeugen und ADR-0126 auf. P30/P31 bleiben On hold. Tracker [#479](https://github.com/securesight-ai/AncientVoid/issues/479).
 
 Quelle: Nutzerauftrag vom 27.11.2026, drei Punkte: (1) Session-Namen sind oft
 nichtssagend — der **initiale Gedanke darf nicht verloren gehen**, und ein
@@ -247,48 +247,79 @@ konkrete Befunde stehen in der Eval-Suite und im Messlaufprotokoll.
 
 - [x] **T90.1** [ADR-0127](../docs/adr/0127-sitzungsursprung-fokus-und-prompt-verbesserer.md) (Vertragsfelder `originIntent`/`focus`,
   Settings-Schlüssel, pi-One-Shot-Stufe), ADR-Index. Messlatte: Contracts-first.
-- [ ] **T90.2** Contracts + Core: Felder, Migration/Recovery-Pfad (K7),
+- [x] **T90.2** Contracts + Core: Felder, Migration/Recovery-Pfad (K7),
   Benennungspolitik inkl. Wort-Overlap-Heuristik; Unit-Tests rot-dann-grün.
+  Belege: Migration #41 (`platform/db.ts`), Lazy-Backfill `sessionOrigin()`,
+  `packages/core/test/modules/sessions/session-origin-focus.test.ts`
+  (Immutability über Umbenennung/Übergabe, Backfill aus dem Journal,
+  beide Zweige der Overlap-Heuristik) + `session-ai-title.test.ts` +
+  Neustart-Recovery in `e2e/specs/session-naming.spec.ts`.
 - [x] **T90.3** PWA: Ursprung/Fokus-Anzeige (Liste + Detail), Übergabe-Badge,
   Umbenennungsfluss; e2e-Spec `e2e/specs/session-naming.spec.ts`.
-- [ ] **T90.4** Scroll-Defekt: Repro-Spec (rot), [BUG-0293](../bugs/bug-0293-chat-historie-touch-und-seitenluecke.md),
-  Fix (grün), mobiles Projekt, ohne Sprung; `Fixes #` im PR. K2 (Nachladelast).
-- [ ] **T90.5** Settings-Store + Einstellungs-Abschnitt; Engine-Kette respektiert
+- [x] **T90.4** Scroll-Defekt: Repro-Spec (rot), [BUG-0293](../bugs/bug-0293-chat-historie-touch-und-seitenluecke.md),
+  Fix (grün), mobiles Projekt, ohne Sprung; `Fixes #480` im Epic-PR (#481). K2 (Nachladelast).
+- [x] **T90.5** Settings-Store + Einstellungs-Abschnitt; Engine-Kette respektiert
   Pin mit sichtbarem Fallback; `enhanceFlavorFor` + pi-One-Shot; Unit-Tests mit
   Fake-Provider/Fake-Runner. K10 (sichtbarer Grund).
-- [ ] **T90.6** `repoFacts`-Scan (nur reale Pfade, Budgets, Rahmung,
+  Belege: `apps/hub/test/modules/prompts/enhance-pin-route.test.ts` (Route,
+  gepinnte pi-Stufe mit freiem Modell, Ausfall mit Grund, Fake-CLI und
+  Fake-Provider), `enhance-chain.test.ts`, `e2e/specs/prompt-enhancer-settings.spec.ts`.
+- [x] **T90.6** `repoFacts`-Scan (nur reale Pfade, Budgets, Rahmung,
   Angebotsmodus für P74-Quellen); Tests: gefundene Pfade existieren, Budget hält,
   Injection-Rahmen steht, Quelle nicht angebunden ⇒ still. K5/K7.
+  Belege: `apps/hub/test/modules/prompts/project-context.test.ts`
+  (inkl. Endmarker-Test), `enhance-pin-route.test.ts` (Wissensquelle
+  angebunden/nicht angebunden).
 - [ ] **T90.7** Messlauf: Korpus einfrieren, Arme, Metriken, Protokoll
   `docs/messlauf/`, Go-Regel anwenden, Ergebnis in der Eval-Suite belegen;
-  Feedback-JSONL auswerten.
-- [ ] **T90.8** `docs/funktionsinventar.md`, `docs/einstellungen-empfehlungen.md`,
-  Epic-Abschluss-Notiz. Geräte- und Alltagsabnahme in [T000.41](EPIC-000-testsuite-fuer-menschen.md).
-- [ ] **T90.9** Repo-Auswahl bis gespeicherter A/B-Befund: Eval-Vertrag und
+  Feedback-JSONL auswerten. — Pilotserie gültig und exportiert
+  ([Protokoll](../docs/messlauf/2026-11-28-p90-repo-scan-pilot.md),
+  [Bericht](../docs/2026-11-28_p84-p90-repo-scan-pilot.md), „verbessert“, aber
+  eine Aufgabe); Feedback-JSONL ausgewertet
+  ([Skript](../scripts/eval/optimizer-feedback.mjs), 79/79, Baseline). Die
+  **Vollserie (10 Aufgaben, 100 Läufe) läuft über den Laufstart der
+  Eval-Suite** (Preset `p90-scan-full`); die Go-Entscheidung für den Standard
+  wird erst nach vollständiger Serie gefällt — bis dahin bleibt der Scan
+  Opt-in.
+- [ ] **T90.8** `docs/funktionsinventar.md` (S83, G82 ergänzt),
+  `docs/einstellungen-empfehlungen.md`, Epic-Abschluss-Notiz. Geräte- und
+  Alltagsabnahme in [T000.41](EPIC-000-testsuite-fuer-menschen.md). — Doku
+  steht; die Abschluss-Notiz folgt mit dem Serieergebnis.
+- [x] **T90.9** Repo-Auswahl bis gespeicherter A/B-Befund: Eval-Vertrag und
   ADR-0126 ergänzen, Repo-Korpus und Vorprüfung an P84 anbinden, gestartete
   Serie pro Repo in der Suite wiederfinden. Contract-/Route-Tests in
   `packages/contracts/test/runs-evaluation-summary.test.ts` und
   `apps/hub/test/eval.integration.test.ts` für Altbestand, Wiederholung,
   fehlende Prüfdaten, Repo-Trennung und Journal-Recovery (K5/K7).
-- [ ] **T90.10** Diagnose vom Prüfergebnis bis zur Eval-Seite: Vergleich und
+- [x] **T90.10** Diagnose vom Prüfergebnis bis zur Eval-Seite: Vergleich und
   Beleglinks je Aufgabe und Änderung. `packages/core/test/modules/runs/evaluation-summary.test.ts`
   prüft Rückschritt, Gleichstand, Drift und unvollständige Paare.
-  `e2e/specs/evaluation.spec.ts` prüft Repo-Wechsel, fehlenden Korpus,
-  Laufstart, Vergleich und konkreten Befund samt Beleg.
+  `e2e/specs/evaluation.spec.ts` prüft Repo-Wechsel, fehlenden Korpus
+  (repoEmpty), Laufstart, Vergleich und konkreten Befund samt Beleg.
 - [ ] **T90.11** Übertragbarkeit belegen: neben AncientVoid ein zweites Repo
   mit eigenem Korpus über denselben Ablauf prüfen. Für Kontext-/Skill-,
   Hook-, Guardrail- und Regeländerungen je einen isolierten Vergleich mit
   nachvollziehbarer Wirkung bzw. einem gezielt erwarteten Fehlbefund testen.
+  — Korpus für **rea** eingefroren ([rea-tasks.json](../../../ancientvoid-benchmarks/evaluation/rea-tasks.json),
+  3 Aufgaben aus realer Historie, rot/grün nachgestellt), der
+  Kontextvergleich läuft über dasselbe Preset-Verfahren (`p90-rea-scan`); der
+  `repoVariant`-Vergleich für Skill/Hook/Guardrail/Regel ist gebaut und
+  getestet (Protokoll-Schema, Git-Revisionen sauber anwendbar), die isolierten
+  Vergleiche je Änderungsart stehen noch aus.
 
 Reihenfolge: T90.1 → T90.2/T90.3, T90.4 separat, T90.5 → T90.6.
 Die Eval-Spur T90.9 → T90.10 kann daneben laufen. T90.7 und T90.11 benötigen
 beide Spuren. T90.8 folgt zum Abschluss.
 
-Die Eval-Seite zeigt erfasste A/B-Serien mit Aufgabenbefunden, Prüfergebnissen
-und Beleglinks. Der P84-Runner kann den Repo-Scan gegen dieselben Aufgaben
-testen. Über registrierte Protokolle startet der Scan-Vergleich aus der Eval-Seite.
-Der vollständige Messlauf mit numerischem Befund sowie die vergleichende
-Abnahme weiterer Repos und Änderungstypen stehen noch aus.
+**Stand 28.11.2026 (Abend):** Alle Codeträger T90.1–T90.6, T90.9, T90.10 sind
+umgesetzt und gezielt getestet (rot-dann-grün, Spec-Namen je Haken). Die
+Pilotserie des Scan-Vergleichs ist gültig gelaufen und exportiert
+(„verbessert“ auf einer Aufgabe); die Vollserie (10 Aufgaben, 100 Läufe,
+Preset `p90-scan-full`) und der Übertragbarkeitsvergleich am zweiten Repo
+(rea, eigenes Korpus, Preset `p90-rea-scan`) laufen über den Laufstart der
+Eval-Suite. Offen bis zum Epic-Abschluss: die vollständige Serie mit
+Go-Entscheidung (T90.7), die isolierten Skill-/Hook-/Guardrail-/Regelvergleiche
+(T90.11, Mechanik `repoVariant` steht) und die Abschluss-Notiz (T90.8).
 
 ## 5. Acceptance Criteria (AC-P90-k)
 

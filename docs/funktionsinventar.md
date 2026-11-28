@@ -2,7 +2,7 @@
 
 **Art:** referenz
 
-**Stand:** 2026-11-25 (P43-Basis, P43.5-Abschluss integriert; S27/S29 nach Nutzerentscheidung vom 21.11.2026 entfallen — „nehmen zu viel Platz weg und lenken ab“; S79 kehrt am selben Tag als Ablage-Sprachnachricht zurück; G79 ergänzt (EPIC-P61 T61.10); G80 ergänzt (EPIC-P75); G81 ergänzt (EPIC-P80)) · **Zweck:** Leitplanke E10 — beim Umbau der Oberfläche
+**Stand:** 2026-11-28 (P43-Basis, P43.5-Abschluss integriert; S27/S29 nach Nutzerentscheidung vom 21.11.2026 entfallen — „nehmen zu viel Platz weg und lenken ab“; S79 kehrt am selben Tag als Ablage-Sprachnachricht zurück; G79 ergänzt (EPIC-P61 T61.10); G80 ergänzt (EPIC-P75); G81 ergänzt (EPIC-P80); S83/G82 ergänzt (EPIC-P90)) · **Zweck:** Leitplanke E10 — beim Umbau der Oberfläche
 geht keine Funktion verloren. · **Gate:** [`e2e/specs/funktionsinventar.spec.ts`](../e2e/specs/funktionsinventar.spec.ts)
 
 Jede Zeile ist eine Funktion, die ein Mensch in der PWA erreichen kann. Die letzte Spalte
@@ -113,6 +113,7 @@ Werkzeugseiten füllen die Detailspalte.
 | G79 | Oberflächensprache umschalten (Deutsch/English); Sprache bleibt über Reload und Offline erhalten | Einstellungen → Sprache | EPIC-P61 / ADR-0101 | spec:i18n-language.spec.ts |
 | G80 | Sprachausgabe: Assistant-Antworten und offene Fragen per Knopf vorlesen (Hub-Proxy zum lokalen TTS-Dienst, Sprache/Tempo/Timeout in den Einstellungen, Hörprobe, sichtbare Kürzung am Text-Cap, ohne Dienst aus mit Grund) | Session → Vorlesen-Knopf · Einstellungen → Sprachausgabe | EPIC-P75 / ADR-0097 | spec:tts.spec.ts |
 | G81 | Pentest-Seite: Backend-Status sichtbar; gelistetes Ziel mit Profil und Werkzeug scannen; Funde und Rohoutput aus der Antwort; Verlauf aus dem Hub-Journal; Ziel außerhalb der Allowliste bricht sichtbar ab; ohne Backend erklärt die Seite die Lage | Dock „Mehr“ → „Pentest“ | EPIC-P80 / ADR-0118 | spec:pentest-seite.spec.ts |
+| G82 | Evaluation je Repo: Serien nach Repository getrennt; A/B-Vergleich (Kontext-, Skill-, Hook-, Guardrail-, Regeländerung) mit Befund je Aufgabe (verbessert/verschlechtert/kein Mehrwert/Evidenz fehlt), Prüfwerten beider Arme, Laufbeleg-Links und konkretem nächsten Prüfschritt; registrierte Messprotokolle starten direkt von der Seite, Laufzustand und Abbrüche bleiben sichtbar; ein Repo ohne Korpus nennt den fehlenden Vorbereitungsschritt | Statistik → Evaluation: Repository wählen, ggf. „Vergleich starten“ | EPIC-P90 / ADR-0126 (Nachtrag P90) | spec:evaluation.spec.ts |
 
 ## Session
 
@@ -203,6 +204,7 @@ Zusätzliche Chat-Regressionen (angehefteter Auftrag, große Denktexte und Werkz
 | S80 | Die Ablage nimmt beim Wiederkommen auch extern Kopiertes auf — Text als „Andere App“, Screenshots als Bild-Stufe mit Vorschaubild — und hängt ein solches Bild an die Session an | Ablage-Blatt; automatisch beim Fokus | ADR-0093 | spec:clipboard-aussen.spec.ts |
 | S81 | Welche Spracheingabe ein Gerät benutzt, ist pro Gerät wählbar — Automatisch, Lokal (Hub) oder Browser (meist Cloud) — mit ehrlicher Quellenangabe, und „Lokal“ fällt nie still in die Cloud zurück | Mikro-Knopf gedrückt halten (Menü) oder Einstellungen → Spracheingabe | ADR-0095 (mit Nachtrag) | spec:stt-modus.spec.ts |
 | S82 | Ein Screenshot aus der Zwischenablage oder eine abgelegte Bilddatei wird mit einem Einfügen zum Anhang der Nachricht; die Chat-Zeile zeigt ein Vorschaubild, und ein Tipp — oder der Bild-Link eines Agenten — öffnet das Vollbild | Eingabefeld: Einfügen oder Ablegen; Vorschaubild in der Chat-Zeile; Link `#/anhang/<id>` | — | spec:anhang-bilder.spec.ts |
+| S83 | Der erste Gedanke einer Sitzung bleibt: der unveränderliche Ursprung steht in Kopf und Karte; der änderbare Fokus (Umbenennung, thematisch abweichende Übergabe, Modell-Bitte) übersteuert den Titel, und eine angenommene Übergabe trägt das ↪-Badge, ohne den Titel zu beschlagnahmen | Sitzungskopf/Karte: Ursprungszeile, Fokus als Titel, ↪-Badge; „⋯“ → „Umbenennen“ | EPIC-P90 / ADR-0127 | spec:session-naming.spec.ts |
 
 ## PC-Arbeitsfläche
 
