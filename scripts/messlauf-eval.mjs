@@ -62,7 +62,8 @@ async function main() {
     return;
   }
   const plan = planSeries(JSON.parse(readFileSync(required("protocol"), "utf8")), corpus);
-  if (options.corpus && !plan.config.repoScan) throw new Error("A repository corpus requires a repoScan protocol with a source repo");
+  const compareRepo = plan.config.repoScan ?? plan.config.repoVariant;
+  if (options.corpus && !compareRepo) throw new Error("A repository corpus requires a repo comparison (repoScan or repoVariant) with a source repo");
   if (mode === "plan") {
     console.log(JSON.stringify({ protocolHash: plan.protocolHash, corpusHash: plan.corpus.hash, arms: plan.arms, runs: plan.jobs.length }, null, 2));
     return;
@@ -81,7 +82,7 @@ async function main() {
   }
   if (mode === "run") {
     const scratch = await realpath(required("scratch"));
-    const source = options.corpus ? await realpath(plan.config.repoScan.repo) : root;
+    const source = options.corpus ? await realpath(compareRepo.repo) : root;
     if (!(await stat(scratch)).isDirectory() || scratch === source) throw new Error("Use a separate scratch project root");
     const series = required("series");
     if (!/^[a-z0-9][a-z0-9._-]{0,95}$/.test(series)) throw new Error("Invalid series name");
@@ -103,7 +104,7 @@ async function main() {
     const date = /(?:^|\/)(\d{4}-\d{2}-\d{2})_p84-[a-z0-9-]+\.md$/.exec(destination)?.[1];
     if (!date) throw new Error("Use docs/JJJJ-MM-TT_p84-<name>.md");
     const { stdout: sha } = await promisify(execFile)("git", ["rev-parse", "--short", "HEAD"], { cwd: root });
-    const repo = plan.config.repoScan?.repo;
+    const repo = compareRepo?.repo;
     const suffix = repo === undefined ? "" : `?repo=${encodeURIComponent(repo)}`;
     const markdown = renderPilotReport(await api(`/api/evaluation/series/${encodeURIComponent(required("series"))}${suffix}`), plan, {
       date, commit: sha.trim(), runtime: `${hostname()} / ${platform()} / Node ${process.version}`,

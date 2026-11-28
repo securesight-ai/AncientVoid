@@ -13,6 +13,19 @@ const local = z.strictObject({
   usdPerEur: z.number().positive().optional(),
   fxDate: z.iso.date().optional(),
 });
+const variantRevision = z.string().regex(/^[0-9a-f]{40}$/);
+const variantPath = z.string().regex(/^(?:[.\w-]+\/)*[.\w-]+$/).max(240)
+  .refine((path) => !path.split("/").some((part) => [".", "..", ".git", "node_modules"].includes(part)));
+const repoVariant = z.strictObject({
+  repo: z.string().min(1).max(4096),
+  path: variantPath,
+  kind: z.enum(["context", "skill", "hook", "guardrail", "rule"]),
+  reference: variantRevision,
+  candidate: variantRevision,
+  minimumEffect: z.number().gt(0).lte(1),
+  // Each arm has an explicit observable result. Different guards may deliver different events.
+  observation: z.strictObject({ reference: name, candidate: name }),
+}).refine(({ reference, candidate }) => reference !== candidate, "variant revisions must differ");
 const cell = z.strictObject({
   id: name,
   harness: name,
@@ -47,7 +60,8 @@ const protocol = z.strictObject({
     model: label,
     minimumEffect: z.number().gt(0).lte(1),
   }).optional(),
-});
+  repoVariant: repoVariant.optional(),
+}).refine((value) => !(value.repoScan && value.repoVariant), "choose one repo comparison");
 
 export const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 
@@ -73,14 +87,15 @@ export function planSeries(raw, corpus) {
     ...(entry.budgetUsd ? { budgetUsd: entry.budgetUsd } : {}), ...(entry.healthUrl ? { healthUrl: entry.healthUrl } : {}),
   });
   const arms = [];
-  if (config.repoScan) {
+  const compareRepo = config.repoScan ?? config.repoVariant;
+  if (compareRepo) {
     if (config.repetitions < 5 || config.cells.length !== 1 || config.splits.length || config.parallelCloudRuns !== 1) {
       throw new Error("A repo scan comparison needs at least five repetitions, one cell, no splits and one worker");
     }
     const build = candidate(config.cells[0]);
     arms.push({ id: "reference", group: "core", skills: false, build }, { id: "candidate", group: "core", skills: false, build });
   }
-  for (const entry of config.repoScan ? [] : cells.values()) {
+  for (const entry of compareRepo ? [] : cells.values()) {
     for (const skills of entry.skillsAb ? [false, true] : [false]) {
       arms.push({ id: `${entry.id}-${skills ? "skills" : "plain"}`, group: "core", skills, build: candidate(entry) });
     }
@@ -93,7 +108,7 @@ export function planSeries(raw, corpus) {
     arms.push({ id: split.id, group: "split", skills: false, plan: candidate(planCell), build: candidate(buildCell) });
   }
   const core = arms.filter((arm) => arm.group === "core");
-  if (!config.repoScan && !core.some((a) => core.some((b) => a.build.harnessId !== b.build.harnessId && a.build.fingerprint === b.build.fingerprint &&
+  if (!compareRepo && !core.some((a) => core.some((b) => a.build.harnessId !== b.build.harnessId && a.build.fingerprint === b.build.fingerprint &&
     a.build.billing.kind === b.build.billing.kind))) {
     throw new Error("The matrix needs an identical model fingerprint across two harnesses");
   }

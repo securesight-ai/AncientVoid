@@ -1,5 +1,6 @@
+import { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { exportSeries } from "./export.mjs";
@@ -60,6 +61,67 @@ it("P90 alternates scan off and on with one fixed local model and at least five 
   expect(comparison.jobs.slice(0, 4).map(({ arm }) => arm.id)).toEqual(["candidate", "reference", "reference", "candidate"]);
   expect(comparison.jobs.every(({ arm }) => arm.build.fingerprint === "shared-local" && !arm.skills)).toBe(true);
   expect(() => planSeries({ ...config, repetitions: 4 }, readCorpus())).toThrow(/five/);
+});
+
+it("P90 plant einen Regel-/Hook-/Skill-Vergleich aus zwei Git-Revisionen derselben Datei", () => {
+  const variant = {
+    repo: "/fixture/project", path: ".claude/settings.json", kind: "hook",
+    reference: "a".repeat(40), candidate: "b".repeat(40), minimumEffect: 0.2,
+    observation: { reference: "hook.old_fired", candidate: "hook.new_fired" },
+  };
+  const config = { ...testProtocol, cells: testProtocol.cells.slice(0, 1), splits: [], parallelCloudRuns: 1, tasks: [plan.corpus.tasks[0].id], repoVariant: variant };
+  const comparison = planSeries(config, readCorpus());
+  expect(comparison.jobs).toHaveLength(10);
+  expect(comparison.jobs.map(({ arm }) => arm.id)).toEqual(expect.arrayContaining(["reference", "candidate"]));
+  // Beide Vergleiche schließen sich aus — gemischte Ursachen wären nicht zuordenbar.
+  expect(() => planSeries({ ...config, repoScan: { repo: "/fixture/project", engineKind: "local", engineId: "local", model: "m", minimumEffect: 0.2 } }, readCorpus()))
+    .toThrow(/one repo comparison/);
+  // Dieselbe Revision zweimal ist kein Vergleich.
+  expect(() => planSeries({ ...config, repoVariant: { ...variant, candidate: variant.reference } }, readCorpus())).toThrow(/differ/);
+  expect(() => planSeries({ ...config, repoVariant: { ...variant, path: "../escape/.claude/settings.json" } }, readCorpus())).toThrow(/path/i);
+});
+
+it("P90 liest eine Variante aus Git und bringt sie in sauberer Kopie an", async () => {
+  const repo = mkdtempSync(join(tmpdir(), "p90-variant-"));
+  try {
+    const run = (args) => execFileSync("git", args, { cwd: repo, encoding: "utf8", maxBuffer: 1024 * 1024 }).trim();
+    execFileSync("git", ["init", "-q"], { cwd: repo });
+    execFileSync("git", ["config", "user.email", "bench@example"], { cwd: repo });
+    execFileSync("git", ["config", "user.name", "bench"], { cwd: repo });
+    writeFileSync(join(repo, "AGENTS.md"), "guide");
+    execFileSync("git", ["add", "."], { cwd: repo });
+    execFileSync("git", ["commit", "-qm", "base"], { cwd: repo });
+    mkdirSync(join(repo, ".claude"), { recursive: true });
+    writeFileSync(join(repo, ".claude", "settings.json"), JSON.stringify({ hooks: { old: true } }));
+    execFileSync("git", ["add", "."], { cwd: repo });
+    execFileSync("git", ["commit", "-qm", "old hook"], { cwd: repo });
+    const reference = run(["rev-parse", "HEAD"]);
+    writeFileSync(join(repo, ".claude", "settings.json"), JSON.stringify({ hooks: { neu: true } }));
+    execFileSync("git", ["add", "."], { cwd: repo });
+    execFileSync("git", ["commit", "-qm", "new hook"], { cwd: repo });
+    const candidate = run(["rev-parse", "HEAD"]);
+    const { readVariant, applyVariant } = await import("./workspace.mjs");
+    const old = await readVariant(repo, reference, ".claude/settings.json");
+    const neu = await readVariant(repo, candidate, ".claude/settings.json");
+    expect(old.contents.toString()).toContain("old");
+    expect(neu.contents.toString()).toContain("neu");
+    // Ein Ziel, das keine reguläre Datei ist, wird abgelehnt — keine Überraschungen im Prüfstand.
+    const work = mkdtempSync(join(tmpdir(), "p90-variant-work-"));
+    try {
+      await applyVariant(work, ".claude/settings.json", neu);
+      expect(readFileSync(join(work, ".claude", "settings.json"), "utf8")).toContain("neu");
+      const git = (...args) => execFileSync("git", args, { cwd: work, encoding: "utf8" }).trim();
+      expect(git("status", "--porcelain")).toBe("");
+      await expect(readVariant(repo, reference, "gibt-es-nicht.md")).rejects.toThrow(/not a regular config file/);
+      const { createHash } = await import("node:crypto");
+      const sha = (entry) => createHash("sha256").update(Buffer.concat([Buffer.from(String(entry.mode) + "\n"), entry.contents])).digest("hex");
+      expect(sha(old)).not.toBe(sha(neu));
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
 });
 
 it("waits for in-flight parallel records, reports failures and keeps local runs exclusive", async () => {

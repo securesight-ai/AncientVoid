@@ -1,12 +1,22 @@
 import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { Buffer } from "node:buffer";
 import { join } from "node:path";
-import { prepareWorkspace, carryPlan, judgeWorkspace } from "./workspace.mjs";
+import { applyVariant, prepareWorkspace, carryPlan, judgeWorkspace, readVariant } from "./workspace.mjs";
 import { awaitHealthy, preflight, probeHealth, runPhase } from "./hub.mjs";
 import { BudgetGuard, isInfrastructureFailure, jobKey, resumeJobs, runJobs, sha256 } from "./protocol.mjs";
 
 const jsonLines = (path) => readFileSync(path, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line));
 
 export async function runSeries(api, root, scratch, series, plan, { resume = false, skipProviders = [], energyApi = api } = {}) {
+  const variant = plan.config.repoVariant;
+  const variants = variant ? {
+    reference: await readVariant(root, variant.reference, variant.path),
+    candidate: await readVariant(root, variant.candidate, variant.path),
+  } : null;
+  const signature = (entry) => sha256(Buffer.concat([Buffer.from(String(entry.mode) + "\n"), entry.contents]));
+  if (variants && signature(variants.reference) === signature(variants.candidate)) {
+    throw new Error("Reference and candidate contain the same configuration");
+  }
   await preflight(api, plan.config, undefined, energyApi);
   const destination = join(scratch, series);
   mkdirSync(destination, { recursive: resume, mode: 0o700 });
@@ -58,6 +68,7 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
     const toolScope = `Arbeite nur in diesem Workspace. Zulässige Quelldateien für die Abnahme: ${task.editable.join(", ")}.`;
     try {
       const rules = await prepareWorkspace(root, build, task, arm.skills);
+      if (variant && variants) await applyVariant(build, variant.path, variants[arm.id]);
       const phases = [];
       let handover = "";
       if (arm.plan) {
@@ -90,13 +101,23 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
       phases.push(await runPhase(api, "build", arm.build, build,
         `${prompt}\n\n${toolScope}\nImplementiere und prüfe die Änderung.${handover}`, plan.config.timeoutMs, energyApi));
       const { verdict, why } = await judgeWorkspace(root, join(directory, "judge"), build, task);
+      const buildId = phases.at(-1).sessionId;
+      if (variant && variants) {
+        const observed = await observedEvent(api, buildId, variant.observation[arm.id]);
+        comparisonRecord = {
+          repo: variant.repo, kind: variant.kind, source: variant.path, applied: observed,
+          reference: signature(variants.reference), candidate: signature(variants.candidate),
+          minimumEffect: variant.minimumEffect,
+          expected: { repetitions: plan.config.repetitions, tasks: plan.config.tasks ?? plan.corpus.tasks.map(({ id }) => id) },
+          ...((variant.kind === "hook" || variant.kind === "guardrail" || variant.kind === "rule") && { policyPassed: verdict.acceptance }),
+        };
+      }
       const input = {
         series, arm: arm.id, task: task.id, repetition, attempt,
         corpusHash: plan.corpus.hash, protocolHash: plan.protocolHash,
         rulesHash: rules.rulesHash, skills: arm.skills, skillHash: rules.skillHash,
         ...verdict, phases, ...(comparisonRecord && { comparison: comparisonRecord }),
       };
-      const buildId = phases.at(-1).sessionId;
       budget.record(job, await api(`/api/sessions/${buildId}/evaluation`, input));
       appendFileSync(receipts, JSON.stringify({ key, sessionId: buildId }) + "\n", { flush: true });
       appendFileSync(join(destination, "verdicts.jsonl"), JSON.stringify({ key, sessionId: buildId, ...why }) + "\n", { flush: true });
@@ -110,4 +131,14 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
     }
   }
   return receipts;
+}
+
+async function observedEvent(api, sessionId, kind) {
+  let after = 0;
+  for (;;) {
+    const page = await api(`/api/sessions/${sessionId}/events?afterSeq=${after}&limit=500`);
+    if (page.some((event) => event.type !== "user" && event.type !== "assistant" && event.payload?.kind === kind)) return true;
+    if (page.length < 500) return false;
+    after = page.at(-1).seq;
+  }
 }
