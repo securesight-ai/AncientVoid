@@ -38,8 +38,15 @@ const protocol = z.strictObject({
   maxInfraRetries: z.number().int().min(0).max(5).default(2),
   setup: label,
   providerBudgetUsd: z.record(name, z.number().positive()),
-  cells: z.array(cell).min(2),
+  cells: z.array(cell).min(1),
   splits: z.array(z.strictObject({ id: name, plan: name, build: name })).default([]),
+  repoScan: z.strictObject({
+    repo: z.string().min(1).max(4096),
+    engineKind: z.enum(["local", "adapter"]),
+    engineId: name,
+    model: label,
+    minimumEffect: z.number().gt(0).lte(1),
+  }).optional(),
 });
 
 export const sha256 = (value) => createHash("sha256").update(value).digest("hex");
@@ -66,7 +73,14 @@ export function planSeries(raw, corpus) {
     ...(entry.budgetUsd ? { budgetUsd: entry.budgetUsd } : {}), ...(entry.healthUrl ? { healthUrl: entry.healthUrl } : {}),
   });
   const arms = [];
-  for (const entry of cells.values()) {
+  if (config.repoScan) {
+    if (config.repetitions < 5 || config.cells.length !== 1 || config.splits.length || config.parallelCloudRuns !== 1) {
+      throw new Error("A repo scan comparison needs at least five repetitions, one cell, no splits and one worker");
+    }
+    const build = candidate(config.cells[0]);
+    arms.push({ id: "reference", group: "core", skills: false, build }, { id: "candidate", group: "core", skills: false, build });
+  }
+  for (const entry of config.repoScan ? [] : cells.values()) {
     for (const skills of entry.skillsAb ? [false, true] : [false]) {
       arms.push({ id: `${entry.id}-${skills ? "skills" : "plain"}`, group: "core", skills, build: candidate(entry) });
     }
@@ -79,7 +93,7 @@ export function planSeries(raw, corpus) {
     arms.push({ id: split.id, group: "split", skills: false, plan: candidate(planCell), build: candidate(buildCell) });
   }
   const core = arms.filter((arm) => arm.group === "core");
-  if (!core.some((a) => core.some((b) => a.build.harnessId !== b.build.harnessId && a.build.fingerprint === b.build.fingerprint &&
+  if (!config.repoScan && !core.some((a) => core.some((b) => a.build.harnessId !== b.build.harnessId && a.build.fingerprint === b.build.fingerprint &&
     a.build.billing.kind === b.build.billing.kind))) {
     throw new Error("The matrix needs an identical model fingerprint across two harnesses");
   }

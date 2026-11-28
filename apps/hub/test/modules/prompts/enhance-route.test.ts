@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { AdapterRegistry, EventStore, HubDatabase, SessionManager, TokenService } from "@ancientvoid/core";
+import { AdapterRegistry, EventStore, HubDatabase, SessionManager, SettingsStore, TokenService } from "@ancientvoid/core";
 import { ProcessRunner } from "@ancientvoid/workers";
 import { createHubApp } from "../../../src/app.ts";
 
@@ -32,6 +32,7 @@ async function setup(chat: (body: { messages: { role: string; content: string }[
   }) as typeof fetch;
   const app = await createHubApp({
     sessions,
+    settings: new SettingsStore(db),
     tokens,
     registry,
     auth: { tokens, enforceTailnetIdentity: false },
@@ -46,6 +47,17 @@ async function setup(chat: (body: { messages: { role: string; content: string }[
 }
 
 describe("POST /api/prompt-enhance with a local model (EPIC-P68)", () => {
+  it("P90 persists the opt-in repo scan and uses it in the next rewrite", async () => {
+    const { app, project, seen, headers } = await setup(() => Response.json({ choices: [{ message: { content: "Ziel: schneller Login" } }] }));
+    const url = "/api/settings/prompt-enhancer";
+    const ask = () => app.inject({ method: "POST", url: "/api/prompt-enhance", headers, payload: { adapter: "aider", text: "Prüfe AGENTS.md und nutze bugfix", project } });
+    expect((await ask()).statusCode).toBe(200);
+    expect(seen[0]?.messages[0]?.content).not.toContain("REPO_FAKTEN");
+    expect((await app.inject({ method: "PUT", url, headers, payload: { engine: { kind: "auto" }, scan: true } })).statusCode).toBe(200);
+    expect((await app.inject({ url, headers })).json().settings.scan).toBe(true);
+    expect((await ask()).statusCode).toBe(200);
+    expect(seen[1]?.messages[0]?.content).toContain("REPO_FAKTEN");
+  });
   it("answers from the local model with the project context in the system message", async () => {
     const { app, project, seen, headers } = await setup(() => Response.json({ choices: [{ message: { content: "Ziel: schneller Login" } }] }));
     const res = await app.inject({ method: "POST", url: "/api/prompt-enhance", headers, payload: { adapter: "aider", text: "login schneller", project } });

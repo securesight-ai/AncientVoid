@@ -11,7 +11,7 @@ import { canonicalCheckout, checkoutState, foldWorkspaceState, gateManifest, res
 import { refuseSpec } from "../harness/index.ts";
 import { buildSessionSummary } from "../reporting/index.ts";
 import { resolveSkillChain, withSkillChain } from "../skills/index.ts";
-import { type LiveSession, sessionTitle, activityOf, readSkillName, limitFailureInEvents, limitWindow } from "./session-state.ts";
+import { type LiveSession, type SessionCreateOptions, originFromPrompt, sessionTitle, activityOf, readSkillName, limitFailureInEvents, limitWindow } from "./session-state.ts";
 import { readOpenCodeMirrorDelta } from "../discovery/index.ts";
 import { SessionManagerRuntime } from "./session-manager-runtime.ts";
 
@@ -28,18 +28,38 @@ export abstract class SessionManagerWorkspace extends SessionManagerRuntime {
 
 
   /** Hide or restore a session in the overview. Does not stop the worker. */
-  /** T8.6: rename or pin — the overview's own metadata, no event. */
-  setMeta(sessionId: string, meta: { title?: string | null; pinned?: boolean }): SessionRecord {
-    const live = this.live.get(sessionId);
-    const record = live?.record ?? this.require(sessionId);
-    if (meta.title !== undefined) {
-      record.title = meta.title?.trim() ? meta.title.trim().slice(0, 80) : null;
-      // A person's own title is never replaced; clearing it hands the job back.
-      record.titleSource = record.title ? "manual" : "auto";
-    }
-    if (meta.pinned !== undefined) record.pinned = meta.pinned;
-    this.persist(record);
-    return record;
+  /** T8.6/P90: pin the overview or journal the current focus. */
+  setMeta(sessionId: string, meta: { title?: string | null; pinned?: boolean }): Promise<SessionRecord> {
+    return this.chainWork(sessionId, async () => {
+      const live = this.live.get(sessionId) ?? this.openStopped(sessionId);
+      const record = live?.record ?? this.require(sessionId);
+      if (meta.title !== undefined) {
+        record.title = meta.title?.trim() ? meta.title.trim().slice(0, 80) : null;
+        record.titleSource = record.title ? "manual" : "auto";
+        record.focus = record.title ? { text: record.title, source: "manual", setAt: new Date().toISOString() } : null;
+        if (live) await this.emitSystem(live, "session.focus", { focus: record.focus });
+      }
+      if (meta.pinned !== undefined) record.pinned = meta.pinned;
+      this.persist(record);
+      return record;
+    });
+  }
+
+  async suggestFocus(sessionId: string, actor?: string): Promise<SessionRecord> {
+    if (actorKind(actor) !== "human" && actorKind(actor) !== "fleet") throw new Error("Nur Menschen dürfen einen Fokus vorschlagen lassen.");
+    const original = this.require(sessionId);
+    const currentFocus = JSON.stringify(original.focus ?? null);
+    const title = await this.requestFocusTitle(sessionId);
+    if (!title) throw new Error("Kein Fokusvorschlag verfügbar");
+    return this.chainWork(sessionId, async () => {
+      const live = this.live.get(sessionId) ?? this.openStopped(sessionId);
+      const record = live?.record ?? this.require(sessionId);
+      if (JSON.stringify(record.focus ?? null) !== currentFocus) throw new Error("Der Fokus wurde während der Anfrage geändert.");
+      record.focus = { text: title, source: "model", setAt: new Date().toISOString() };
+      if (live) await this.emitSystem(live, "session.focus", { focus: record.focus });
+      this.persist(record);
+      return record;
+    });
   }
 
   setArchived(sessionId: string, archived: boolean): SessionRecord {
@@ -194,7 +214,7 @@ export abstract class SessionManagerWorkspace extends SessionManagerRuntime {
    * site, every test) renders as `actor: null` — "no caller identity
    * available", not "system" or a guess.
    */
-  async create(spec: unknown, actor?: string, options: { workInProject?: boolean } = {}): Promise<SessionRecord> {
+  async create(spec: unknown, actor?: string, options: SessionCreateOptions = {}): Promise<SessionRecord> {
     const requested = SessionSpecSchema.parse(spec);
     if (requested.mirrorNativeSessionId) return this.createMirror(requested, actor);
     const registered = this.registry.require(requested.adapter);
@@ -261,8 +281,11 @@ export abstract class SessionManagerWorkspace extends SessionManagerRuntime {
       writerClient: null,
       writerLeaseUntil: null,
       archived: false,
-      title: parsed.prompt ? sessionTitle(parsed.prompt) : (parsed.title ?? null),
+      title: options.naming ? options.naming.title : parsed.prompt ? sessionTitle(parsed.prompt) : parsed.title ?? null,
       titleSource: "auto",
+      originIntent: options.naming ? options.naming.originIntent ?? null : originFromPrompt(parsed.prompt ?? parsed.title ?? ""),
+      focus: options.naming?.focus ?? null,
+      handoverFrom: options.naming?.handoverFrom ?? null,
       persistentWorker: false,
     };
     await this.store.initSession(record.id);
@@ -279,6 +302,7 @@ export abstract class SessionManagerWorkspace extends SessionManagerRuntime {
       worktreeIsolated: false,
       budgetWarned: false,
       ...(parsed.prompt ? { titlePrompt: parsed.prompt } : {}),
+      ...(options.naming ? { aiTitleTried: true } : {}),
     };
     this.live.set(record.id, session);
 
@@ -360,6 +384,9 @@ export abstract class SessionManagerWorkspace extends SessionManagerRuntime {
       workspaceMode: record.workspaceMode,
       model: record.model,
       budgetUsd: record.budgetUsd,
+      originIntent: record.originIntent,
+      focus: record.focus,
+      handoverFrom: record.handoverFrom,
       // T1.5-10/AC-P1.5-12: whatever skill/agent was requested must stay
       // traceable in the tail — nobody should have to guess afterwards
       // what a session was actually started with. skillChain is names
@@ -947,6 +974,7 @@ export abstract class SessionManagerWorkspace extends SessionManagerRuntime {
       archived: false,
       title: first.info.title ?? sessionTitle(nativeId),
       titleSource: "auto",
+      originIntent: originFromPrompt(first.info.title ?? ""),
       persistentWorker: false,
     };
     await this.store.initSession(record.id);

@@ -8,7 +8,7 @@ Das hier ist eine **Empfehlungsliste**. Umgesetzt ist nur, was in der Spalte „
 
 ## Heute vorhanden
 
-Die Seite besteht aus vier Karten (`apps/pwa/src/app/App.tsx`, Seite `settings`):
+Die Einstellungen enthalten unter anderem diese Karten:
 
 | Karte | Inhalt | Quelle |
 |---|---|---|
@@ -16,6 +16,7 @@ Die Seite besteht aus vier Karten (`apps/pwa/src/app/App.tsx`, Seite `settings`)
 | Flotte | Hosts hinzufügen/entfernen, Einladungscode | `features/fleet/` |
 | Benachrichtigungen | Push an/aus und welche Ereignisse | `features/settings/PushSettings.tsx` |
 | Gemini | Schlüssel (nur schreibbar), lokale Auslese | `features/settings/GeminiSettings.tsx` |
+| Prompt-Verbesserer (P90) | Automatik, bevorzugter Adapter, Pi-Modell, Repo-Scan und optionale Wissensquelle | `features/settings/PromptEnhancerSettings.tsx` |
 
 Mit EPIC-P20 kommt in „Allgemein“ dazu: **Zoom der Oberfläche** (70–200 %, Strg + Mausrad,
 Strg + `+`/`−`/`0`) und **Schimmer der Kontextleiste** (an/aus, folgt „Bewegung reduzieren“).

@@ -688,7 +688,8 @@ function SessionRow({
       window.removeEventListener("pointerdown", onDown);
     };
   }, [menuOpen, actionsOpen]);
-  const name = session.title ?? project;
+  const focus = session.focus?.text ?? session.title;
+  const name = focus ?? project;
   const [handoverOpen, setHandoverOpen] = useState(false);
   const actions: { label: string; run: () => void; danger?: boolean; pressed?: boolean }[] = [
     { label: t("common.repo_graph"), run: () => (location.hash = graphHash(session.id, remoteHost(session.hostId))) },
@@ -728,9 +729,13 @@ function SessionRow({
         onClick={(ev) => onOpen(session, { newTile: ev.ctrlKey || ev.metaKey, ...(hit ? { seq: hit.seq, seqAt: Date.now() } : {}) })}
       >
         <div class="row">
-          <strong class={`session-title${session.title ? "" : " dim"}`}>{session.title ?? (session.adapter === "loop:securesight-factory" ? t("common.factory_observer", { "project": project }) : t("common.no_order", { "project": project }))}</strong>
+          <strong class={`session-title${focus ? "" : " dim"}`} title={session.originIntent ?? undefined}>{focus ?? (session.adapter === "loop:securesight-factory" ? t("common.factory_observer", { "project": project }) : t("common.no_order", { "project": project }))}</strong>
+          {session.handoverFrom && <span class="session-handover-mark" aria-label={t("session.handover_badge")} title={t("session.handover_badge")}>↪</span>}
           <StatusDot status={session.status} question={question} unseen={unseen} />
         </div>
+        {session.originIntent && session.originIntent !== focus && (
+          <div class="dim session-origin" title={session.originIntent}>{t("session.origin_intent", { text: session.originIntent })}</div>
+        )}
         {inWindow && (
           <div >
             <span class="badge-window" title={t("common.bring_front")}>{t("common.own_window")}</span>

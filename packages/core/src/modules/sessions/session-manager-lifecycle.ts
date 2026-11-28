@@ -5,7 +5,7 @@ import { foldWorkspaceState, gateManifest, resolveManifest } from "../workspace/
 import { refuseSteer } from "../harness/index.ts";
 import { resolveSkillChain, withSkillChain } from "../skills/index.ts";
 import { type QueuedPrompt } from "./session-queue.ts";
-import { type SteerMeta, type LiveSession, sessionTitle, skillNameFromEvents, nativeIdFromEvents, nativeIdFromWorkerLog, foldActivities } from "./session-state.ts";
+import { type SteerMeta, type LiveSession, originFromPrompt, sessionTitle, skillNameFromEvents, nativeIdFromEvents, nativeIdFromWorkerLog, foldActivities } from "./session-state.ts";
 import { SessionManagerWorkspace } from "./session-manager-workspace.ts";
 
 /** BUG-0050: how many sessions are recovered at the same time. */
@@ -601,7 +601,10 @@ export class SessionManager extends SessionManagerWorkspace {
    * for these; adapters no longer echo prompts as `user` events. */
   protected async emitPrompt(session: LiveSession, text: string, actor?: string, attachments?: readonly PromptAttachment[]): Promise<void> {
     // A session that had no start prompt takes its first reply as title.
-    if (!session.record.title) session.record.title = sessionTitle(text);
+    if (!session.record.handoverFrom) {
+      if (!session.record.title) session.record.title = sessionTitle(text);
+      session.record.originIntent ??= await this.sessionOrigin(session.record) ?? originFromPrompt(text);
+    }
     session.titlePrompt ??= text;
     // T7.10: references only (K5) — never the bytes or the extracted text.
     const refs = attachments?.map((a) => ({ id: a.id, name: a.name, mimeType: a.mimeType, kind: a.kind, bytes: a.bytes, method: a.method }));

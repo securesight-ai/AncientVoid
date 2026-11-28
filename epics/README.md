@@ -368,7 +368,7 @@ eigenes Go.
 
 ## Nutzerauftrag vom 27.–28.11.2026 — Namen, Chat-Scroll und Repo-Evaluation
 
-[P90](EPIC-P90-namen-scroll-prompt-enhancer.md) plant Session-Ursprung und Fokus, den Scroll-Fix, den konfigurierbaren Prompt-Verbesserer und einen belegten Repo-Scan. Die bestehende P84-Eval-Suite erhält Vergleiche je Repo für Kontext, Skills, Hooks, Guardrails und Regeln samt Qualitäts- und Ursachenbefunden. **Offen**, Quer-Epic auf P68/P72 und P84, P74 optional. Geschätzt 3–4 Agenten-Wochen plus Messlaufzeit.
+[P90](EPIC-P90-namen-scroll-prompt-enhancer.md) plant Session-Ursprung und Fokus, den Scroll-Fix, den konfigurierbaren Prompt-Verbesserer und einen belegten Repo-Scan. Die P84-Eval-Suite zeigt erfasste Repo-Vergleiche samt Qualitätsbefunden. **In Umsetzung**, vollständige Messserie und repoübergreifende Abnahme offen, Quer-Epic auf P68/P72 und P84, P74 optional. Geschätzt 3–4 Agenten-Wochen plus Messlaufzeit.
 
 ## Reihenfolge & Gating
 

@@ -424,6 +424,7 @@ export function SessionTail({
   // BUG-0043: nur wer unten liest, wird mit neuen Events nach unten geführt.
   const stickRef = useRef(true);
   const userInputAt = useRef(0);
+  const touchY = useRef<number | null>(null);
   /** BUG-0207: „hat sich weggelesen“ — der Leser hat die Spitze selbst verlassen. Unterdrueckt
    * erneutes Anheften, bis er selbst wieder unten ist oder ein neuer Strom beginnt. */
   const awayRef = useRef(false);
@@ -432,10 +433,7 @@ export function SessionTail({
   /** Während eines Sprungs gilt: kein Abschneiden des Fensters (sonst fällt das
    * Ziel heraus, während die älteren Seiten hereinkommen). */
   const jumpHoldRef = useRef<number | null>(null);
-  /** Haltet die Ansicht, als aeltere Eintraege dazukamen: die Haltezeile behaelt ihren
-   *  Abstand zum Rand. `floor` ist die aelteste frisch vorgelagerte Folge — der Anker wirkt
-   *  erst, wenn diese Zeile tatsaechlich im DOM steht (ein Events-Commit vorher darf ihn
-   *  nicht aufbrauchen). */
+  /** The reading anchor applies once the prepended sequence is in the event window. */
   const anchorRef = useRef<{
     seq: number;
     floor: number;
@@ -1213,13 +1211,17 @@ export function SessionTail({
    *  TAIL_ROWS — damit war der Anfang eines langen Chats nie erreichbar. Aeltere werden in
    *  Seiten geholt, solange der Leser nach oben will. */
   const loadOlder = async (): Promise<void> => {
-    const first = events[0];
-    if (!first || first.seq <= 1 || loadingOlderRef.current) return;
+    const firstSeq = floorSeqRef.current || events[0]?.seq || 0;
+    if (firstSeq <= 1 || loadingOlderRef.current) return;
     loadingOlderRef.current = true;
+    stickRef.current = false;
+    awayRef.current = true;
     setOlderNote("laden");
     const el = tailRef.current;
-    const row = (el?.querySelector(".event.assistant[data-seq]") ??
-      el?.querySelector("[data-seq]")) as HTMLElement | null;
+    const box = el?.getBoundingClientRect();
+    const row = box && el
+      ? [...el.querySelectorAll<HTMLElement>("[data-seq]")].find((node) => node.getBoundingClientRect().bottom > box.top)
+      : null;
     const anchor =
       el && row
         ? {
@@ -1229,13 +1231,10 @@ export function SessionTail({
           }
         : null;
     try {
-      const page = await api.events(
-        session.id,
-        0,
-        Math.min(2000, first.seq - 1),
-      );
+      const after = Math.max(0, firstSeq - TAIL_ROWS - 1);
+      const page = await api.events(session.id, after, firstSeq - after - 1);
       const older = page
-        .filter((e) => e.seq < first.seq)
+        .filter((e) => e.seq < firstSeq)
         .map((e) => ({
           ...e,
           sessionId: session.id,
@@ -1377,7 +1376,7 @@ export function SessionTail({
     const a = anchorRef.current;
     const el = tailRef.current;
     if (!a || !el) return;
-    if (!el.querySelector(`[data-seq="${a.floor}"]`)) return; // die Vorlage ist noch nicht gemalt — Anker halten
+    if ((events[0]?.seq ?? Infinity) > a.floor) return;
     anchorRef.current = null;
     const row = (el.querySelector(`.event.assistant[data-seq="${a.seq}"]`) ??
       el.querySelector(`[data-seq="${a.seq}"]`)) as HTMLElement | null;
@@ -1388,7 +1387,6 @@ export function SessionTail({
         el.scrollTop +
         (row.getBoundingClientRect().top - el.getBoundingClientRect().top) -
         a.offset;
-    else el.scrollTop = Math.min(el.scrollTop + 400, el.scrollHeight); // Haltezeile fehlt — nicht springen lassen
   }, [events]);
   const lastPrompt = lastUserPrompt(shownEvents);
   const chatItems = useMemo(() => {
@@ -1440,7 +1438,7 @@ export function SessionTail({
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const [title, setTitle] = useState(session.title ?? null);
+  const title = record.focus?.text ?? record.title;
   // T9.4: the text entry knows which session is open (bound to its plans).
   // EPIC-P18: with several tiles only the focused one speaks for "here".
   const ownsHere = tile?.active ?? true;
@@ -1503,12 +1501,24 @@ export function SessionTail({
       const updated = await api.setSessionMeta(session.id, {
         title: titleDraft,
       });
-      setTitle(updated.title ?? null);
+      setRecord(updated);
       setRenaming(false);
     } catch (err) {
       setReplyError(
         err instanceof Error ? err.message : t("session.rename_failed"),
       );
+    }
+  };
+  const [suggestingFocus, setSuggestingFocus] = useState(false);
+  const suggestFocus = async () => {
+    setSuggestingFocus(true);
+    setReplyError("");
+    try {
+      setRecord(await api.suggestFocus(session.id));
+    } catch (err) {
+      setReplyError(err instanceof Error ? err.message : t("session.rename_failed"));
+    } finally {
+      setSuggestingFocus(false);
     }
   };
   const togglePin = async () => {
@@ -1923,8 +1933,14 @@ export function SessionTail({
                   {title ?? projectName(session.project)}
                 </div>
               )}
+                {record.handoverFrom && <span class="session-handover-mark" aria-label={t("session.handover_badge")} title={t("session.handover_badge")}>↪</span>}
                 <LiveStatus sessionId={session.id} status={status} />
               </div>
+              {record.originIntent && (
+                <div class="dim session-origin" title={record.originIntent}>
+                  {t("session.origin_intent", { text: record.originIntent })}
+                </div>
+              )}
               <div class="dim session-top-meta">
                 {mainSync && mainSync.behind > 0 && (
                   <>
@@ -2066,6 +2082,9 @@ export function SessionTail({
                     }
                   >
                     {t("session.rename")}
+                  </button>
+                  <button type="button" disabled={suggestingFocus} onClick={() => menuDo(() => void suggestFocus())}>
+                    {t("session.suggest_focus")}
                   </button>
                   <button
                     type="button"
@@ -2320,9 +2339,23 @@ export function SessionTail({
             class={`tail-scroll${activeTab === "chat" ? " chat-readable" : ""}`}
             onWheel={(event) => {
               userInputAt.current = Date.now();
-              if (event.deltaY < 0) stickRef.current = false;
+              if (event.deltaY < 0) {
+                stickRef.current = false;
+                if (event.currentTarget.scrollTop <= 24) void loadOlder();
+              }
             }}
-            onTouchMove={() => (userInputAt.current = Date.now())}
+            onTouchStart={(event) => {
+              touchY.current = event.touches[0]?.clientY ?? null;
+            }}
+            onTouchMove={(event) => {
+              userInputAt.current = Date.now();
+              const y = event.touches[0]?.clientY;
+              if (y === undefined || touchY.current === null || y - touchY.current < 12) return;
+              if (event.currentTarget.scrollTop <= 24) {
+                touchY.current = null;
+                void loadOlder();
+              }
+            }}
             onPointerDown={() => (userInputAt.current = Date.now())}
             onKeyDown={() => (userInputAt.current = Date.now())}
             onScroll={() => {
@@ -2353,7 +2386,7 @@ export function SessionTail({
             }}
             style={`overflow-y: auto; max-height: ${tailMaxHeight !== null ? `calc(${tailMaxHeight}px / var(--ui-zoom, 1))` : "60vh"}`}
           >
-            {events.length > 0 && events[0]!.seq > 1 && (
+            {olderNote !== "ende" && events.length > 0 && events[0]!.seq > 1 && (
               /* BUG-0211: der Anfang eines langen Chats ist nur erreichbar, wenn die frueheren
              Eintraege geholt werden — der Hub hat sie, der Client hielt nur TAIL_ROWS. */
               <div class="tail-older" data-testid="load-older">

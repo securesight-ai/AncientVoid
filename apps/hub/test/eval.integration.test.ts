@@ -54,7 +54,7 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
       expect((await hub.app.inject({ method: "POST", url: `/api/sessions/${id}/stop`, headers, payload: {} })).statusCode).toBe(200);
       return id as string;
     };
-    const ids = await Promise.all(Array.from({ length: 20 }, (_, index) => start(index)));
+    const ids = await Promise.all(Array.from({ length: 22 }, (_, index) => start(index)));
     const records = await Promise.all(ids.map(async (id, index) => {
       const hash = "a".repeat(64);
       const payload: EvalRunInput = {
@@ -67,6 +67,11 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
             : { kind: "local", date: "2026-11-25", source: "p81:power:components", host: "test", kwh: 0.01, usdPerKwh: 0.25 },
         }],
       };
+      if (index >= 20) {
+        payload.arm = "candidate";
+        payload.comparison = { repo: join(dir, `repo-${index}`), kind: "context", source: "repoFacts",
+          reference: hash, candidate: "b".repeat(64), applied: true, minimumEffect: 0.2 };
+      }
       const url = `/api/sessions/${id}/evaluation`;
       const request = { method: "POST" as const, url, headers, payload };
       expect((await hub.app.inject({ ...request, headers: agent })).statusCode).toBe(403);
@@ -91,7 +96,11 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
     }
     // P84: dieselbe Zusammenfassung für PWA und Report — nach dem Neustart aus den Journalen (K7).
     const listed = (await hub.app.inject({ method: "GET", url: "/api/evaluation/series", headers })).json();
-    expect(listed.series).toEqual([{ series: "fixture", runs: 20, lastRecordedAt: expect.any(String) }]);
+    expect(listed.series).toHaveLength(3);
+    expect(listed.series).toEqual(expect.arrayContaining([
+      { series: "fixture", runs: 20, lastRecordedAt: expect.any(String) },
+      ...[20, 21].map((index) => ({ series: "fixture", repo: join(dir, `repo-${index}`), runs: 1, lastRecordedAt: expect.any(String) })),
+    ]));
     const summary = (await hub.app.inject({ method: "GET", url: "/api/evaluation/series/fixture", headers })).json();
     expect(summary).toMatchObject({ series: "fixture", runs: 20, consistent: true });
     expect(summary.rows.map((row: { task: string }) => row.task)).toEqual(["task", "gesamt"]);
@@ -99,6 +108,9 @@ it("P84 saves 20 parallellaufende Abnahmen ohne Lücken und liest sie nach Neust
     expect(total.n).toBe(20);
     expect(total.metrics.cacheTokens.median).toBe(200);
     expect(total.metrics.energyKwh).toMatchObject({ min: 0, max: 0.01 });
+    const scoped = (await hub.app.inject({ method: "GET", url: `/api/evaluation/series/fixture?repo=${encodeURIComponent(join(dir, "repo-20"))}`, headers })).json();
+    expect(scoped).toMatchObject({ runs: 1, comparison: { source: "repoFacts",
+      tasks: [{ task: "task", status: "insufficient", reason: "coverage" }] } });
     expect((await hub.app.inject({ method: "GET", url: "/api/evaluation/series/unbekannt", headers })).statusCode).toBe(404);
   } finally {
     await hub.app.close();

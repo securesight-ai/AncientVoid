@@ -1,6 +1,8 @@
+import { promptEnhancerSettingsPath, type PromptEnhancerPreferences, type PromptEnhancerSettings } from "@ancientvoid/contracts";
+import type { EvalLaunch, EvalLaunchList } from "@ancientvoid/contracts";
 import { compactionSettingsPath, type CompactionSettings } from "@ancientvoid/contracts";
 import { errorText } from "./i18n/index.ts";
-import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity } from "@ancientvoid/contracts";
+import type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine, SessionActivity, SessionRecord as SessionContract } from "@ancientvoid/contracts";
 import type { KnowledgeOverview, KnowledgeReadResult, KnowledgeSearchResult, KnowledgeSourceInputRaw, KnowledgeSourceView } from "@ancientvoid/contracts";
 import type { PentestJobDetail, PentestScanJob, PentestStatus, ScanTargetEntry, ScanToolDecl } from "@ancientvoid/contracts";
 export type { PromptRecommendation, SkillArtifact, RewriteEngine, SkippedEngine };
@@ -9,7 +11,7 @@ export type { TerminalTarget };
 import type { TtsSettingsPatch, TtsSettingsView, TtsStatusResponse } from "@ancientvoid/contracts";
 import type { SessionTextSearchResponse, TranscriptRole, UnifiedSearchResponse } from "@ancientvoid/contracts";
 import { noteApprovalDecided } from "./first-run.ts";
-export interface SessionRecord {
+export interface SessionRecord extends Pick<SessionContract, "originIntent" | "focus" | "handoverFrom"> {
   id: string;
   adapter: string;
   project: string;
@@ -1015,7 +1017,11 @@ function createHubApi(P: (path: string) => string) {
   aimetrics: () => api<AiMetricsReport>(P("/api/aimetrics")),
   /** EPIC-P81 (ADR-0117): alle Werte aller Hosts. */
   evaluationSeries: () => api<EvalSeriesList>(P("/api/evaluation/series")),
-  evaluationSummary: (series: string) => api<EvalSeriesSummary>(P(`/api/evaluation/series/${encodeURIComponent(series)}`)),
+  evaluationRuns: () => api<EvalLaunchList>(P("/api/evaluation/runs")),
+  startEvaluation: (preset: string) => api<EvalLaunch>(P("/api/evaluation/runs"), { method: "POST", body: JSON.stringify({ preset }) }),
+  evaluationSummary: (series: string, repo?: string) => api<EvalSeriesSummary>(
+    P(`/api/evaluation/series/${encodeURIComponent(series)}${repo === undefined ? "" : `?repo=${encodeURIComponent(repo)}`}`),
+  ),
   hostMetrics: () => api<HostMetricsReport>(P("/api/hostmetrics")),
   hostMetricsDetail: (id: string) => api<HostMetricsDetail>(P(`/api/hostmetrics/host?id=${encodeURIComponent(id)}`)),
   hostMetricsHistory: (id: string, range: HostMetricRange, key?: string) =>
@@ -1145,6 +1151,9 @@ function createHubApi(P: (path: string) => string) {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  promptEnhancerSettings: () => api<PromptEnhancerPreferences>(P(promptEnhancerSettingsPath)),
+  savePromptEnhancerSettings: (body: PromptEnhancerSettings) =>
+    api<PromptEnhancerPreferences>(P(promptEnhancerSettingsPath), { method: "PUT", body: JSON.stringify(body) }),
   enhancePrompt: (adapter: string, project: string, text: string) =>
     api<EnhanceResult>(P("/api/prompt-enhance"), { method: "POST", body: JSON.stringify({ adapter, project, text }) }),
   /** T3.9 (Learning-Loop, lokal, "niemals Cloud, niemals Telemetrie"): one
@@ -1580,6 +1589,8 @@ function createHubApi(P: (path: string) => string) {
    * „nach dem Limit-Fenster automatisch weitermachen" (Menschen, kein Agent). */
   setSessionMeta: (id: string, meta: { title?: string | null; pinned?: boolean; autoResumeOnLimit?: boolean }) =>
     api<SessionRecord>(P(`/api/sessions/${id}/meta`), { method: "POST", body: JSON.stringify(meta) }),
+  suggestFocus: (id: string) =>
+    api<SessionRecord>(P(`/api/sessions/${id}/focus`), { method: "POST", body: "{}" }),
   setArchived: (id: string, archived: boolean) =>
     api<SessionRecord>(P(`/api/sessions/${id}/archive`), {
       method: "POST",

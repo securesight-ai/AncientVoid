@@ -52,6 +52,16 @@ it("plans a complete balanced 1020-run matrix (15 regressions + negative control
   expect(ids.every((group) => group.join() === ids[0].join())).toBe(true);
 });
 
+it("P90 alternates scan off and on with one fixed local model and at least five pairs", () => {
+  const config = { ...testProtocol, cells: testProtocol.cells.slice(0, 1), splits: [], parallelCloudRuns: 1, tasks: [plan.corpus.tasks[0].id],
+    repoScan: { repo: "/fixture/project", engineKind: "local", engineId: "local", model: "fixture/rewrite", minimumEffect: 0.2 } };
+  const comparison = planSeries(config, readCorpus());
+  expect(comparison.jobs).toHaveLength(10);
+  expect(comparison.jobs.slice(0, 4).map(({ arm }) => arm.id)).toEqual(["candidate", "reference", "reference", "candidate"]);
+  expect(comparison.jobs.every(({ arm }) => arm.build.fingerprint === "shared-local" && !arm.skills)).toBe(true);
+  expect(() => planSeries({ ...config, repetitions: 4 }, readCorpus())).toThrow(/five/);
+});
+
 it("waits for in-flight parallel records, reports failures and keeps local runs exclusive", async () => {
   const cloud = plan.jobs.find(({ arm }) => arm.build.billing.kind === "cloud" && !arm.plan);
   const local = plan.jobs.find(({ arm }) => arm.build.billing.kind === "local" && !arm.plan);

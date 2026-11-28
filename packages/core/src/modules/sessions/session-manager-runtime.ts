@@ -27,7 +27,7 @@ import { SessionQueue } from "./session-queue.ts";
 import { askTitleModel } from "./session-title.ts";
 import { createTokenTally, type SessionTokenTotals } from "./token-totals.ts";
 import type { PlannerModelConfig } from "../commands/model.ts";
-import { WRITER_LEASE_MS, type SteerMeta, type LiveSession, TURN_END_SETTLE_MS, activityOf, VALID_TRANSITIONS, DEFAULT_HEARTBEAT_MS, DEFAULT_STEER_WAIT_MS } from "./session-state.ts";
+import { WRITER_LEASE_MS, type SteerMeta, type LiveSession, type SessionCreateOptions, originFromPrompt, sessionTitle, TURN_END_SETTLE_MS, activityOf, VALID_TRANSITIONS, DEFAULT_HEARTBEAT_MS, DEFAULT_STEER_WAIT_MS } from "./session-state.ts";
 import { defaultOpencodeDataDir } from "../discovery/index.ts";
 import { type SessionRow, persistRecord, rowToRecord } from "./session-row.ts";
 
@@ -65,7 +65,7 @@ export abstract class SessionManagerRuntime {
   protected abstract emitPrompt(session: LiveSession, text: string, actor?: string, attachments?: readonly PromptAttachment[]): Promise<void>;
   protected abstract withAttachments<T extends { text: string; attachments?: PromptAttachment[] | undefined }>(session: LiveSession, input: T): T;
   protected abstract continueStopped(session: LiveSession, input: Extract<SteerInput, { kind: "prompt" }>, actor?: string): Promise<Ack>;
-  abstract create(spec: unknown, actor?: string, options?: { workInProject?: boolean }): Promise<SessionRecord>;
+  abstract create(spec: unknown, actor?: string, options?: SessionCreateOptions): Promise<SessionRecord>;
   abstract stop(sessionId: string, actor?: string): Promise<Ack>;
   abstract steer(sessionId: string, input: SteerInput, actor?: string, meta?: SteerMeta): Promise<Ack>;
   abstract resolveWorkspaceSetup(op: PendingOperation, decidedByLabel?: string): Promise<Ack>;
@@ -735,6 +735,36 @@ export abstract class SessionManagerRuntime {
     return this.store.tail(sessionId, afterSeq, limit);
   }
 
+  private readonly originScan = new Map<string, number>();
+
+  /** Lazily project the original input for sessions recorded before P90. */
+  async sessionOrigin(record: SessionRecord): Promise<string | null> {
+    if (record.originIntent || record.handoverFrom || record.lastSeq === 0) return record.originIntent ?? null;
+    let cursor = this.originScan.get(record.id) ?? 0;
+    while (cursor < record.lastSeq) {
+      const events = await this.store.tail(record.id, cursor, 200);
+      if (events.length === 0) break;
+      for (const event of events) {
+        if (event.type !== "user") continue;
+        const text = typeof event.payload.text === "string" ? event.payload.text : event.blobRef ? event.summary : "";
+        const origin = originFromPrompt(text);
+        if (!origin) continue;
+        this.db.prepare("UPDATE sessions SET origin_intent = ? WHERE id = ? AND origin_intent IS NULL").run(origin, record.id);
+        this.originScan.delete(record.id);
+        const saved = this.get(record.id)?.originIntent ?? origin;
+        const live = this.live.get(record.id);
+        if (live) live.record.originIntent ??= saved;
+        return saved;
+      }
+      cursor = events.at(-1)!.seq;
+    }
+    if (cursor > 0) {
+      if (this.originScan.size >= 128) this.originScan.delete(this.originScan.keys().next().value!);
+      this.originScan.set(record.id, cursor);
+    }
+    return null;
+  }
+
   /**
    * ADR-0084: Token-Bilanz der Session — „erzeugt“ und „verarbeitet“ getrennt.
    * Abgeleitet und seitenweise gezählt (kein neuer Zustand, K7): große Sessions
@@ -783,7 +813,21 @@ export abstract class SessionManagerRuntime {
     const source = this.live.get(sessionId)?.record ?? this.list().find((r) => r.id === sessionId);
     if (!source) throw new Error("unknown session");
     if (input.prompt.length === 0 || input.prompt.length > HANDOVER_PROMPT_MAX) throw new Error(`handover prompt must be 1–${HANDOVER_PROMPT_MAX} characters`);
-    const created = await this.create({ adapter: input.adapter, project: source.project, prompt: input.prompt, ...(input.model ? { model: input.model } : {}) }, actor);
+    const oldTitle = source.focus?.text ?? source.title;
+    const firstLine = input.prompt.trimStart().split("\n", 1)[0]!;
+    const proposed = firstLine.startsWith("Übergabe: Diese Arbeit lief bisher") ? null : sessionTitle(firstLine);
+    const words = (value: string) => new Set(value.toLowerCase().match(/[\p{L}\d]+/gu) ?? []);
+    const previous = words(oldTitle ?? "");
+    const next = [...words(proposed ?? "")];
+    const changed = proposed && next.length > 0 && next.filter((word) => previous.has(word)).length / next.length < 0.5;
+    const created = await this.create({ adapter: input.adapter, project: source.project, prompt: input.prompt, ...(input.model ? { model: input.model } : {}) }, actor, {
+      naming: {
+        originIntent: await this.sessionOrigin(source) ?? originFromPrompt(source.title ?? ""),
+        title: oldTitle,
+        focus: changed ? { text: proposed, source: "handoff", setAt: new Date().toISOString() } : source.focus ?? null,
+        handoverFrom: source.id,
+      },
+    });
     const from = this.live.get(sessionId);
     const to = this.live.get(created.id);
     if (from) await this.emitEvents(from, [{ type: "system", summary: `Übergeben an ${created.adapter}${created.model ? ` (${created.model})` : ""}`, payload: { kind: "session.handover_out", toSessionId: created.id, adapter: created.adapter, model: created.model } }]);
@@ -1172,10 +1216,20 @@ export abstract class SessionManagerRuntime {
     this.titleModel = model;
   }
 
+  protected async requestFocusTitle(sessionId: string): Promise<string | null> {
+    if (!this.titleModel) throw new Error("Kein Modell für Namensvorschläge konfiguriert");
+    const events = await this.store.replay(sessionId);
+    const prompt = events.findLast((entry) => entry.type === "user" && typeof entry.payload.text === "string")?.payload.text;
+    const answer = events.findLast((entry) => entry.type === "assistant" && typeof entry.payload.text === "string")?.payload.text;
+    return typeof prompt === "string" && prompt.trim()
+      ? askTitleModel(this.titleModel, prompt, typeof answer === "string" ? answer : "")
+      : null;
+  }
+
   /** EPIC-P15 T15.5: once per session, after the first real answer. Fire and forget: a slow or
    * failing model never holds up the stream, and the prompt-based title stays when it fails. */
   private maybeTitleWithModel(session: LiveSession, events: readonly NormalizedEvent[]): void {
-    if (!this.titleModel || session.aiTitleTried || session.record.titleSource !== "auto") return;
+    if (!this.titleModel || session.aiTitleTried || session.record.handoverFrom || session.record.focus || session.record.titleSource !== "auto") return;
     const answer = events.find((e) => e.type === "assistant" && typeof (e.payload as { text?: unknown }).text === "string" && (e.payload as { text: string }).text.trim());
     const prompt = session.titlePrompt ?? session.record.title;
     if (!answer || !prompt) return;
@@ -1183,7 +1237,7 @@ export abstract class SessionManagerRuntime {
     const text = (answer.payload as { text: string }).text;
     void (async () => {
       const title = await askTitleModel(this.titleModel!, prompt, text);
-      if (!title || session.record.titleSource !== "auto") return; // none, or renamed meanwhile
+      if (!title || session.record.focus || session.record.titleSource !== "auto") return; // none, or renamed meanwhile
       session.record.title = title;
       session.record.titleSource = "ai";
       session.record.updatedAt = new Date().toISOString();
@@ -1232,6 +1286,9 @@ export abstract class SessionManagerRuntime {
       resumeVersion: session.record.resumeVersion,
       inputRevision: session.record.inputRevision,
       openActivities: [...session.activities.values()],
+      originIntent: session.record.originIntent,
+      focus: session.record.focus,
+      handoverFrom: session.record.handoverFrom,
     };
   }
 

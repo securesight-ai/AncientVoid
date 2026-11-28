@@ -1,6 +1,8 @@
 import type { RewriteEngine as EngineRef, SkippedEngine } from "@ancientvoid/contracts";
 export type { SkippedEngine };
 import { execFile, spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -309,10 +311,12 @@ export function parseDshEnhanceOutput(stdout: string): OneShotOutput {
  * registry (module + config), not from a hardcoded adapter id — ids are
  * free-form in hub.config.json ("deepseek", "securesight-factory", …),
  * BUG-0061. */
-export type EnhanceFlavor = "claude" | "codex" | "opencode" | "dsh";
+export type EnhanceFlavor = "claude" | "codex" | "opencode" | "dsh" | "pi";
+type Registration = { module?: string; config?: Record<string, unknown> };
 
 export function enhanceFlavorFor(id: string, module?: string, config?: Record<string, unknown>): EnhanceFlavor | null {
   if (id === "claude" || id === "codex" || id === "opencode") return id;
+  if (id === "pi" || module === "@ancientvoid/adapter-pi") return "pi";
   // Only an ACP registration of dsh gets the dsh enhancer — the preset
   // names the binary, a custom `command` starting with dsh does too.
   if (module?.includes("adapter-acp")) {
@@ -323,12 +327,39 @@ export function enhanceFlavorFor(id: string, module?: string, config?: Record<st
   return null;
 }
 
-export type OneShotRunner = (flavor: EnhanceFlavor, prompt: string, cwd: string) => Promise<OneShotOutput>;
+export type OneShotRunner = (flavor: EnhanceFlavor, prompt: string, cwd: string, registration?: Registration, model?: string) => Promise<OneShotOutput>;
 
-const runCliOneShot: OneShotRunner = (flavor, prompt, cwd) => {
+async function piOneShot(prompt: string, cwd: string, config: Registration["config"], model?: string): Promise<OneShotOutput> {
+  const env = { ...process.env };
+  for (const [name, value] of Object.entries(config?.env ?? {})) {
+    if (typeof value === "string") env[name] = value;
+  }
+  for (const [name, file] of Object.entries(config?.envFiles ?? {})) {
+    if (typeof file === "string") env[name] = (await readFile(file.replace(/^~(?=\/)/, homedir()), "utf8")).trim();
+  }
+  const command = typeof config?.command === "string" ? config.command : "pi";
+  const selectedModel = model ?? (typeof config?.model === "string" ? config.model : undefined);
+  const args = ["-p", "--no-tools", "--no-extensions", "--no-mcp", "--no-skills", "--no-context-files", "--no-session"];
+  if (selectedModel) args.push("--model", selectedModel);
+  const stdout = await new Promise<string>((resolve, reject) => {
+    const child = execFile(command, [...args, "--", prompt], { cwd, env, timeout: OPENCODE_TIMEOUT_MS, maxBuffer: MAX_BUFFER },
+      (error, out, stderr) => {
+        if (error) {
+          reject(Object.assign(error, { stderr }));
+          return;
+        }
+        resolve(out);
+      });
+    child.stdin?.end();
+  });
+  return { enhanced: cleanLocalAnswer(stdout) };
+}
+
+const runCliOneShot: OneShotRunner = (flavor, prompt, cwd, registration, model) => {
   if (flavor === "claude") return claudeOneShot(prompt, cwd);
   if (flavor === "codex") return codexOneShot(prompt, cwd);
   if (flavor === "dsh") return dshOneShot(prompt, cwd);
+  if (flavor === "pi") return piOneShot(prompt, cwd, registration?.config, model);
   return opencodeOneShot(prompt, cwd);
 };
 
@@ -423,12 +454,13 @@ export async function localOneShot(cfg: LocalRewriteModel, task: RewriteTask): P
   }
 }
 
-const ADAPTER_LABEL: Record<EnhanceFlavor, string> = { claude: "Claude", codex: "Codex", opencode: "OpenCode", dsh: "DeepSeek Harness" };
+const ADAPTER_LABEL: Record<EnhanceFlavor, string> = { claude: "Claude", codex: "Codex", opencode: "OpenCode", dsh: "DeepSeek Harness", pi: "Pi" };
 
 export interface RewriteOptions {
   /** Absent = no local model configured; the stage is skipped with that reason. */
   local?: LocalRewriteModel;
-  registration?: { module?: string; config?: Record<string, unknown> };
+  registration?: Registration;
+  preferred?: { id: string; registration?: Registration; model?: string };
   /** Tests inject this; production spawns the CLIs. */
   runOneShot?: OneShotRunner;
 }
@@ -462,6 +494,28 @@ function skipLine(skipped: SkippedEngine[]): string {
 export async function rewriteWithChain(adapterId: string, task: RewriteTask, project: string, options: RewriteOptions = {}): Promise<RewriteResult> {
   const start = Date.now();
   const skipped: SkippedEngine[] = [];
+  const run = options.runOneShot ?? runCliOneShot;
+  const attempt = async (flavor: EnhanceFlavor, id: string, registration?: Registration, model?: string): Promise<RewriteResult> => {
+    const out = await run(flavor, cliPrompt(task), project, registration, model);
+    if (!out.enhanced) throw new Error(`${ADAPTER_LABEL[flavor]} hat keinen Text geliefert.`);
+    return {
+      text: out.enhanced,
+      engine: { kind: "adapter", id, ...(model && { model }) },
+      skipped,
+      ...(out.costUsd !== undefined ? { costUsd: out.costUsd } : {}),
+      latencyMs: Date.now() - start,
+    };
+  };
+  const preferred = options.preferred;
+  const preferredFlavor = preferred?.registration && enhanceFlavorFor(preferred.id, preferred.registration.module, preferred.registration.config);
+  if (preferred) {
+    try {
+      if (!preferredFlavor) throw new Error("Gewählte Engine nicht verfügbar");
+      return await attempt(preferredFlavor, preferred.id, preferred.registration, preferred.model);
+    } catch (err) {
+      skipped.push({ engine: preferred.id, reason: err instanceof Error ? err.message : String(err) });
+    }
+  }
   const local = options.local;
   if (!local) {
     skipped.push({ engine: "Lokales Modell", reason: "nicht konfiguriert" });
@@ -474,22 +528,16 @@ export async function rewriteWithChain(adapterId: string, task: RewriteTask, pro
     }
   }
 
-  const run = options.runOneShot ?? runCliOneShot;
   const native = enhanceFlavorFor(adapterId, options.registration?.module, options.registration?.config);
-  // 2026-10-24: adapters without a native one-shot (aider, copilot, pi,
-  // custom registrations) — opencode is the last stage for those.
   if (!native) skipped.push({ engine: adapterId, reason: "kein eigener One-Shot" });
-  const flavor = native ?? "opencode";
+  const useNative = native !== null && (preferred?.id !== adapterId || preferred.model !== undefined);
+  const flavor = useNative ? native : "opencode";
+  if (!useNative && preferredFlavor === "opencode") {
+    throw new RewriteFailed(`Prompt verbessern fehlgeschlagen — ${skipLine(skipped)}`, skipped);
+  }
   try {
-    const out = await run(flavor, cliPrompt(task), project);
-    if (!out.enhanced) throw new Error(`${ADAPTER_LABEL[flavor]} hat keinen Text geliefert.`);
-    return {
-      text: out.enhanced,
-      engine: { kind: "adapter", id: native ? adapterId : "opencode" },
-      skipped,
-      ...(out.costUsd !== undefined ? { costUsd: out.costUsd } : {}),
-      latencyMs: Date.now() - start,
-    };
+    const model = flavor === "pi" && typeof options.registration?.config?.model === "string" ? options.registration.config.model : undefined;
+    return await attempt(flavor, useNative ? adapterId : "opencode", useNative ? options.registration : undefined, model);
   } catch (err) {
     const failure = enhanceFailure(ADAPTER_LABEL[flavor], err);
     skipped.push({ engine: ADAPTER_LABEL[flavor], reason: failure.message });

@@ -1,6 +1,6 @@
 # EPIC-P90 — Session-Namen mit Ursprung und Fokus; Chat bis oben scrollbar; Prompt-Verbesserer mit Beleg, Einstellungen und deterministischem Scan
 
-**Status:** offen (Planungsentwurf) · **Phase:** P90 · **Dauer:** 3–4 Agenten-Wochen plus Messlaufzeit (Schätzung) · **Abhängigkeit:** Quer-Epic wie P87–P89; baut auf P68 (Engine-Kette, ADR-0089) und P72 (Skill-Pflege, beide abgeschlossen) auf; P74 liefert optionale Wissensquellen; die Repo-Eval baut auf den vorhandenen P84-Werkzeugen und ADR-0126 auf. P30/P31 bleiben On hold. Tracker-Issue wird bei Start nach `docs/issues.md` angelegt.
+**Status:** In Umsetzung, vollständige Messserie und repoübergreifende Abnahme offen · **Phase:** P90 · **Dauer:** 3–4 Agenten-Wochen plus Messlaufzeit (Schätzung) · **Abhängigkeit:** Quer-Epic wie P87–P89; baut auf P68 (Engine-Kette, ADR-0089) und P72 (Skill-Pflege, beide abgeschlossen) auf; P74 liefert optionale Wissensquellen; die Repo-Eval baut auf den vorhandenen P84-Werkzeugen und ADR-0126 auf. P30/P31 bleiben On hold. Tracker [#479](https://github.com/securesight-ai/AncientVoid/issues/479).
 
 Quelle: Nutzerauftrag vom 27.11.2026, drei Punkte: (1) Session-Namen sind oft
 nichtssagend — der **initiale Gedanke darf nicht verloren gehen**, und ein
@@ -245,13 +245,13 @@ konkrete Befunde stehen in der Eval-Suite und im Messlaufprotokoll.
 
 ## 4. Aufgaben (Checkliste T90.m)
 
-- [ ] **T90.1** ADR-0127 (Vertragsfelder `originIntent`/`focus`,
+- [x] **T90.1** [ADR-0127](../docs/adr/0127-sitzungsursprung-fokus-und-prompt-verbesserer.md) (Vertragsfelder `originIntent`/`focus`,
   Settings-Schlüssel, pi-One-Shot-Stufe), ADR-Index. Messlatte: Contracts-first.
 - [ ] **T90.2** Contracts + Core: Felder, Migration/Recovery-Pfad (K7),
   Benennungspolitik inkl. Wort-Overlap-Heuristik; Unit-Tests rot-dann-grün.
-- [ ] **T90.3** PWA: Ursprung/Fokus-Anzeige (Liste + Detail), Übergabe-Badge,
+- [x] **T90.3** PWA: Ursprung/Fokus-Anzeige (Liste + Detail), Übergabe-Badge,
   Umbenennungsfluss; e2e-Spec `e2e/specs/session-naming.spec.ts`.
-- [ ] **T90.4** Scroll-Defekt: Repro-Spec (rot), Bug-Datei nach `bug-report`,
+- [ ] **T90.4** Scroll-Defekt: Repro-Spec (rot), [BUG-0293](../bugs/bug-0293-chat-historie-touch-und-seitenluecke.md),
   Fix (grün), mobiles Projekt, ohne Sprung; `Fixes #` im PR. K2 (Nachladelast).
 - [ ] **T90.5** Settings-Store + Einstellungs-Abschnitt; Engine-Kette respektiert
   Pin mit sichtbarem Fallback; `enhanceFlavorFor` + pi-One-Shot; Unit-Tests mit
@@ -263,8 +263,7 @@ konkrete Befunde stehen in der Eval-Suite und im Messlaufprotokoll.
   `docs/messlauf/`, Go-Regel anwenden, Ergebnis in der Eval-Suite belegen;
   Feedback-JSONL auswerten.
 - [ ] **T90.8** `docs/funktionsinventar.md`, `docs/einstellungen-empfehlungen.md`,
-  Epic-Abschluss-Notiz; Menschen-Abnahmen (echtes lokales Modell, Scrollen auf dem
-  Handy, Badges mit echten Augen) nach **P000** verschoben.
+  Epic-Abschluss-Notiz. Geräte- und Alltagsabnahme in [T000.41](EPIC-000-testsuite-fuer-menschen.md).
 - [ ] **T90.9** Repo-Auswahl bis gespeicherter A/B-Befund: Eval-Vertrag und
   ADR-0126 ergänzen, Repo-Korpus und Vorprüfung an P84 anbinden, gestartete
   Serie pro Repo in der Suite wiederfinden. Contract-/Route-Tests in
@@ -284,6 +283,12 @@ konkrete Befunde stehen in der Eval-Suite und im Messlaufprotokoll.
 Reihenfolge: T90.1 → T90.2/T90.3, T90.4 separat, T90.5 → T90.6.
 Die Eval-Spur T90.9 → T90.10 kann daneben laufen. T90.7 und T90.11 benötigen
 beide Spuren. T90.8 folgt zum Abschluss.
+
+Die Eval-Seite zeigt erfasste A/B-Serien mit Aufgabenbefunden, Prüfergebnissen
+und Beleglinks. Der P84-Runner kann den Repo-Scan gegen dieselben Aufgaben
+testen. Über registrierte Protokolle startet der Scan-Vergleich aus der Eval-Seite.
+Der vollständige Messlauf mit numerischem Befund sowie die vergleichende
+Abnahme weiterer Repos und Änderungstypen stehen noch aus.
 
 ## 5. Acceptance Criteria (AC-P90-k)
 
@@ -354,6 +359,5 @@ ausdrücklichen Auftrag); rote CI allein wegen Umgebung wird benannt, nie als Pa
 gezählt. Jede neue UI-Funktion mit Spec in `e2e/specs/`; Eintrag in
 `docs/funktionsinventar.md`; ADR-0127 geschrieben und indexiert; Tracker-Issue mit
 `Fixes #`-Bezug (`docs/issues.md`); K5/K7/K10 nachweislich erfüllt; kein TODO ohne
-Epic-Bezug. Menschen-Abnahmen (echtes Modell beim Messlauf, Scrollen auf dem Handy,
-Badges mit echten Augen) sind nach **P000** verschoben und werden nicht
-vorweggenommen.
+Epic-Bezug. Die Geräte- und Alltagsabnahme ist nach [P000 T000.41](EPIC-000-testsuite-fuer-menschen.md)
+verschoben. Der reproduzierbare Modell-Messlauf bleibt Teil von P90.

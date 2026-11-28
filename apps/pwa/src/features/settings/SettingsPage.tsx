@@ -6,6 +6,7 @@ import { PresetSettings } from "./PresetSettings.tsx";
 import { AppearanceSettings } from "./AppearanceSettings.tsx";
 import { ConnectionsSettings } from "./ConnectionsSettings.tsx";
 import { InferenceSettings } from "./InferenceSettings.tsx";
+import { PromptEnhancerSettings } from "./PromptEnhancerSettings.tsx";
 import { DevicesSettings } from "./DevicesSettings.tsx";
 import { FontSettings } from "./FontSettings.tsx";
 import { GeminiSettings } from "./GeminiSettings.tsx";
@@ -45,6 +46,7 @@ export function SettingsPage({ onSwitchToken }: { onSwitchToken: () => void }) {
           <MainSyncSettings />
           <GeminiSettings />
           <InferenceSettings />
+          <PromptEnhancerSettings />
           <SecuritySettings onSwitchToken={onSwitchToken} />
         </div>
       </div>

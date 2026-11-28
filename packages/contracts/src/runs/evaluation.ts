@@ -50,12 +50,36 @@ export const EvalRunInput = z.strictObject({
   acceptance: z.boolean(),
   lint: z.boolean(),
   typecheck: z.boolean(),
+  /** Repo identity is the registered project path, even for a scratch build session. */
+  comparison: z.strictObject({
+    repo: z.string().min(1).max(4096),
+    kind: z.enum(["context", "skill", "hook", "guardrail", "rule"]),
+    source: z.string().min(1).max(200),
+    reference: hash,
+    candidate: hash,
+    applied: z.boolean(),
+    minimumEffect: z.number().gt(0).lte(1),
+    expected: z.strictObject({
+      repetitions: z.number().int().min(5).max(50),
+      tasks: z.array(id).min(1).max(50),
+    }).optional(),
+    policyPassed: z.boolean().optional(),
+    enhancer: z.strictObject({
+      wallMs: z.number().nonnegative(),
+      costUsd: z.number().nonnegative().optional(),
+      contextChars: z.number().int().nonnegative(),
+    }).optional(),
+  }).optional(),
   phases: z.array(phase).min(1).max(2),
 }).refine((run) => {
   const phases = run.phases;
   return phases.at(-1)?.phase === "build" &&
     (phases.length === 1 || (phases[0]?.phase === "plan" && phases[0].sessionId !== phases[1]?.sessionId)) &&
-    run.skills === (run.skillHash !== null);
+    run.skills === (run.skillHash !== null) &&
+    (!run.comparison || (
+      (run.arm === "reference" || run.arm === "candidate") &&
+      run.comparison.reference !== run.comparison.candidate
+    ));
 }, "Expected build, or distinct plan and build phases, with a hash for enabled skills");
 
 export type EvalRunInput = z.infer<typeof EvalRunInput>;

@@ -275,6 +275,15 @@ Entscheidungstore bleiben offen), Doku-Pflege.
   gegen den Dev-Server („passt, sieht gut aus“) — hier zählt der gemergte
   Stand.
 
+### Übernommen aus EPIC-P90 (2026-11-28)
+
+- [ ] **T000.41 — P90 im Alltag am Handy und mit lokalem Modell abnehmen.**
+  (Herkunft: [EPIC-P90](EPIC-P90-namen-scroll-prompt-enhancer.md))
+  Überschriften mit Ursprung und Übergabe-Badge auf dem echten Handy prüfen,
+  eine lange Sitzung mit Touch bis zur ersten Nachricht lesen und eine
+  Prompt-Vorschau mit der konfigurierten lokalen Engine öffnen.
+  Beleg je Gerät mit Datum, Engine-Anzeige und Urteil zur Lesbarkeit.
+
 ## 5. Acceptance Criteria
 
 * **AC-P000-1:** Jedes migrierte Epic, dessen einziger Rest eine

@@ -4,7 +4,7 @@ import type { RewriteEngine, SkippedEngine } from "../../shared/api.ts";
 export function engineLabel(engine: RewriteEngine | undefined): string {
   if (!engine) return "";
   if (engine.kind === "local") return engine.model ? `lokal (${engine.model})` : "lokal";
-  return `über ${engine.id}`;
+  return `über ${engine.id}${engine.model ? ` (${engine.model})` : ""}`;
 }
 
 /** Why earlier stages were passed over — shown, never swallowed (Regel 6).

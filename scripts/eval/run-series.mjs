@@ -2,12 +2,12 @@ import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } f
 import { join } from "node:path";
 import { prepareWorkspace, carryPlan, judgeWorkspace } from "./workspace.mjs";
 import { awaitHealthy, preflight, probeHealth, runPhase } from "./hub.mjs";
-import { BudgetGuard, isInfrastructureFailure, jobKey, resumeJobs, runJobs } from "./protocol.mjs";
+import { BudgetGuard, isInfrastructureFailure, jobKey, resumeJobs, runJobs, sha256 } from "./protocol.mjs";
 
 const jsonLines = (path) => readFileSync(path, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line));
 
-export async function runSeries(api, root, scratch, series, plan, { resume = false, skipProviders = [] } = {}) {
-  await preflight(api, plan.config);
+export async function runSeries(api, root, scratch, series, plan, { resume = false, skipProviders = [], energyApi = api } = {}) {
+  await preflight(api, plan.config, undefined, energyApi);
   const destination = join(scratch, series);
   mkdirSync(destination, { recursive: resume, mode: 0o700 });
   const [receipts, invalid, aborted] = ["sessions", "invalid", "aborted"].map((name) => join(destination, `${name}.jsonl`));
@@ -64,17 +64,37 @@ export async function runSeries(api, root, scratch, series, plan, { resume = fal
         const plannedRules = await prepareWorkspace(root, planning, task, arm.skills);
         if (plannedRules.rulesHash !== rules.rulesHash) throw new Error("Plan and build received different rules");
         phases.push(await runPhase(api, "plan", arm.plan, planning,
-          `${task.prompt}\n\n${toolScope}\nErarbeite einen Plan und schreibe ihn in PLAN.md. Belasse die Quelldateien unverändert.`, plan.config.timeoutMs));
+          `${task.prompt}\n\n${toolScope}\nErarbeite einen Plan und schreibe ihn in PLAN.md. Belasse die Quelldateien unverändert.`, plan.config.timeoutMs, energyApi));
         if (await carryPlan(planning, build)) handover = "\nPLAN.md enthält einen Vorschlag aus einem getrennten Planungszug. Prüfe ihn anhand der Aufgabe.";
       }
+      const comparison = plan.config.repoScan;
+      let prompt = task.prompt;
+      let comparisonRecord;
+      if (comparison) {
+        const scan = arm.id === "candidate";
+        const rewrite = await api("/api/prompt-enhance", { adapter: arm.build.adapter, project: build, text: prompt, scan }, 200, 360_000);
+        if (rewrite.engine?.kind !== comparison.engineKind || rewrite.engine.id !== comparison.engineId ||
+            rewrite.engine.model !== comparison.model || rewrite.scan?.enabled !== scan || typeof rewrite.enhanced !== "string") {
+          throw new Error("The rewrite used a different engine, model or scan mode from the frozen protocol");
+        }
+        prompt = `Ursprünglicher Auftrag:\n${prompt}\n\nVorschlag für die Umsetzung (bei Abweichungen gilt der Auftrag):\n${rewrite.enhanced}`;
+        comparisonRecord = {
+          repo: comparison.repo, kind: "context", source: "repoFacts", applied: true,
+          reference: sha256(`repoFacts:off:${plan.protocolHash}`), candidate: sha256(`repoFacts:on:${plan.protocolHash}`),
+          minimumEffect: comparison.minimumEffect,
+          expected: { repetitions: plan.config.repetitions, tasks: plan.config.tasks ?? plan.corpus.tasks.map(({ id }) => id) },
+          enhancer: { wallMs: rewrite.latencyMs, contextChars: rewrite.scan.chars,
+            ...(rewrite.costUsd === undefined ? {} : { costUsd: rewrite.costUsd }) },
+        };
+      }
       phases.push(await runPhase(api, "build", arm.build, build,
-        `${task.prompt}\n\n${toolScope}\nImplementiere und prüfe die Änderung.${handover}`, plan.config.timeoutMs));
+        `${prompt}\n\n${toolScope}\nImplementiere und prüfe die Änderung.${handover}`, plan.config.timeoutMs, energyApi));
       const { verdict, why } = await judgeWorkspace(root, join(directory, "judge"), build, task);
       const input = {
         series, arm: arm.id, task: task.id, repetition, attempt,
         corpusHash: plan.corpus.hash, protocolHash: plan.protocolHash,
         rulesHash: rules.rulesHash, skills: arm.skills, skillHash: rules.skillHash,
-        ...verdict, phases,
+        ...verdict, phases, ...(comparisonRecord && { comparison: comparisonRecord }),
       };
       const buildId = phases.at(-1).sessionId;
       budget.record(job, await api(`/api/sessions/${buildId}/evaluation`, input));

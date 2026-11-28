@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /** Prompt enhancement and skill maintenance API (ADR-0089). */
 export interface PromptRecommendation {
   /** EPIC-P68: `update` = exists already, adapt instead of a new file. */
@@ -31,4 +33,21 @@ export interface SkippedEngine {
   engine: string;
   reason: string;
 }
+
+export const PromptEnhancerSettings = z.strictObject({
+  engine: z.discriminatedUnion("kind", [
+    z.strictObject({ kind: z.literal("auto") }),
+    z.strictObject({ kind: z.literal("adapter"), id: z.string().trim().min(1).max(120), model: z.string().trim().min(1).max(200).optional() }),
+  ]),
+  scan: z.boolean(),
+  knowledgeSource: z.uuid().nullable().optional(),
+});
+export type PromptEnhancerSettings = z.infer<typeof PromptEnhancerSettings>;
+export interface PromptEnhancerPreferences {
+  settings: PromptEnhancerSettings;
+  engines: { id: string; modelChoice: boolean }[];
+  knowledgeSources: { id: string; label: string }[];
+}
+
+export const promptEnhancerSettingsPath = "/api/settings/prompt-enhancer";
 

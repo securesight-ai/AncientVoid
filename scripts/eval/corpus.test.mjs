@@ -1,4 +1,7 @@
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import { readCorpus } from "./corpus.mjs";
 import { selectedSource, testNames, unnamed } from "./solvability.mjs";
@@ -22,6 +25,28 @@ describe("P84 frozen corpus", () => {
       .flatMap((task) => unnamed(root, task).map((name) => `${task.id}: ${name}`));
     expect(missing).toEqual([]);
   }, 60_000);
+
+  it("P90 binds a repo-specific task corpus to its digest and rejects metadata paths", () => {
+    const dir = mkdtempSync(join(tmpdir(), "p90-corpus-"));
+    const file = join(dir, "tasks.json");
+    const entry = { ...readCorpus().tasks[0], test: "test/format.test.ts", editable: ["src/format.ts"] };
+    const freeze = () => {
+      const data = JSON.stringify({ version: 1, tasks: [entry] });
+      writeFileSync(file, data);
+      writeFileSync(`${file}.sha256`, createHash("sha256").update(data).digest("hex"));
+    };
+    try {
+      freeze();
+      expect(readCorpus(file).tasks).toEqual([entry]);
+      writeFileSync(file, "changed");
+      expect(() => readCorpus(file)).toThrow("corpus hash mismatch");
+      entry.editable = [".git/config"];
+      freeze();
+      expect(() => readCorpus(file)).toThrow();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("P84 solvability scan", () => {

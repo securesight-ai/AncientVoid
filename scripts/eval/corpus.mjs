@@ -9,8 +9,8 @@ import { z } from "zod";
 const run = promisify(execFile);
 const digest = z.string().regex(/^[a-f0-9]{64}$/);
 const revision = z.string().regex(/^[a-f0-9]{40}$/);
-const repoPath = z.string().regex(/^(apps|packages)\/(?:[\w.-]+\/)*[\w.-]+$/)
-  .refine((path) => !path.split("/").some((part) => part === "." || part === ".."));
+const repoPath = z.string().regex(/^(?:[\w.-]+\/)*[\w.-]+$/)
+  .refine((path) => !path.split("/").some((part) => part.startsWith(".")));
 const taskSchema = z.strictObject({
   id: z.string().regex(/^[a-z][a-z0-9-]+$/),
   createdOn: z.iso.date(),
@@ -27,12 +27,12 @@ const taskSchema = z.strictObject({
 }).refine((task) => !task.negative || (task.start === task.reference && !task.split),
   "A negative control starts at its reference and stays out of the split subset");
 
-export function readCorpus() {
-  const bytes = readFileSync(new URL("corpus.json", import.meta.url));
-  const expected = digest.parse(readFileSync(new URL("corpus.sha256", import.meta.url), "utf8").trim());
+export function readCorpus(file) {
+  const bytes = readFileSync(file ?? new URL("corpus.json", import.meta.url));
+  const expected = digest.parse(readFileSync(file ? `${file}.sha256` : new URL("corpus.sha256", import.meta.url), "utf8").trim());
   const hash = createHash("sha256").update(bytes).digest("hex");
   if (hash !== expected) throw new Error("P84 corpus hash mismatch");
-  const { tasks } = z.strictObject({ version: z.literal(1), tasks: z.array(taskSchema).min(12).max(20) }).parse(JSON.parse(bytes));
+  const { tasks } = z.strictObject({ version: z.literal(1), tasks: z.array(taskSchema).min(file ? 1 : 12).max(20) }).parse(JSON.parse(bytes));
   if (new Set(tasks.map(({ id }) => id)).size !== tasks.length) throw new Error("Duplicate P84 task ID");
   for (const task of tasks) new RegExp(task.selector);
   return { hash, tasks };

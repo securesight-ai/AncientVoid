@@ -107,10 +107,12 @@ describe("EPIC-P15 T15.5: KI-Titel am SessionManager", () => {
     try {
       const rec = await sessions.create({ adapter: "talky", project: dir, prompt: "Kannst du ein neues Epic erstellen, um die settings Seite zu verbessern?" });
       expect(rec.title).toBe("Ein neues Epic erstellen, um die settings Seite zu verbessern");
+      expect(rec.originIntent).toBe("Kannst du ein neues Epic erstellen, um die settings Seite zu verbessern?");
       expect(rec.titleSource).toBe("auto");
       answer(rec.id, "Ich lege das Epic an …");
       await waitFor(() => sessions.get(rec.id)?.titleSource === "ai");
       expect(sessions.get(rec.id)).toMatchObject({ title: "Settings-Seite verbessern", titleSource: "ai" });
+      expect(sessions.get(rec.id)?.originIntent).toBe(rec.originIntent);
       answer(rec.id, "Zweite Antwort");
       await new Promise((r) => setTimeout(r, 80));
       expect(calls.n).toBe(1); // nur einmal gefragt
@@ -126,8 +128,9 @@ describe("EPIC-P15 T15.5: KI-Titel am SessionManager", () => {
     const { dir, sessions, answer, done } = await setup("KI-Titel", calls);
     try {
       const rec = await sessions.create({ adapter: "talky", project: dir, prompt: "Mach etwas" });
-      sessions.setMeta(rec.id, { title: "Mein eigener Titel" });
-      expect(sessions.get(rec.id)).toMatchObject({ title: "Mein eigener Titel", titleSource: "manual" });
+      await sessions.setMeta(rec.id, { title: "Mein eigener Titel" });
+      expect(sessions.get(rec.id)).toMatchObject({ title: "Mein eigener Titel", titleSource: "manual",
+        originIntent: "Mach etwas", focus: { text: "Mein eigener Titel", source: "manual" } });
       answer(rec.id, "Antwort");
       await new Promise((r) => setTimeout(r, 120));
       expect(calls.n).toBe(0);
@@ -143,7 +146,7 @@ describe("EPIC-P15 T15.5: KI-Titel am SessionManager", () => {
     try {
       const rec = await sessions.create({ adapter: "talky", project: dir, prompt: "Mach etwas" });
       answer(rec.id, "Antwort");
-      sessions.setMeta(rec.id, { title: "Von Hand" }); // direkt danach, vor der Modellantwort
+      await sessions.setMeta(rec.id, { title: "Von Hand" }); // direkt danach, vor der Modellantwort
       await new Promise((r) => setTimeout(r, 120));
       expect(sessions.get(rec.id)).toMatchObject({ title: "Von Hand", titleSource: "manual" });
     } finally {

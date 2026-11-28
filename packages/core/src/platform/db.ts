@@ -654,6 +654,15 @@ export const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    id: 41,
+    name: "session-origin-and-focus",
+    sql: `
+      ALTER TABLE sessions ADD COLUMN origin_intent TEXT;
+      ALTER TABLE sessions ADD COLUMN focus TEXT;
+      ALTER TABLE sessions ADD COLUMN handover_from TEXT;
+    `,
+  },
 ];
 
 export class HubDatabase {
