@@ -1,8 +1,9 @@
 import { t } from "../../shared/i18n/index.ts";
 import { useEffect, useState } from "preact/hooks";
+import { createPortal } from "preact/compat";
 import type { AdapterInfo, HubApi, SessionRecord } from "../../shared/api.ts";
 import { HANDOVER_CATEGORIES, type ProviderFailure } from "./handover.ts";
-import { Button } from "../../shared/ui/index.ts";
+import { Button, Sheet } from "../../shared/ui/index.ts";
 
 /**
  * EPIC-P21 T21.2: a provider failure (login expired, rate limit, quota) is shown in words, and the work can
@@ -46,6 +47,33 @@ export function HandoverBar({ failure, session, api, onHandedOver, onRepaired }:
       {open && <HandoverForm session={session} api={api} onCancel={() => setOpen(false)} onHandedOver={onHandedOver} />}
       {error && <div class="error">{error}</div>}
     </div>
+  );
+}
+
+/**
+ * Übergabe aus der Übersichtskarte (ADR-0039): dasselbe zentrierte Modal wie
+ * „Neue Session“ (BUG-0291) — Titel + ✕, Hinterlegung über dem ganzen
+ * Fenster. Der Übergabetext (Hub-Entwurf) steht schon im Textfeld. Als
+ * Body-Portal (Muster Anhang-Ansicht) hängt es nicht mehr im Karten-DOM:
+ * Dort fing die Tiefenebene (transform auf .app-page) das Blatt in einem
+ * Stapelzusammenhang unter dem Dock ein — Klicks auf die Knöpfe gingen an
+ * den Dock, die Hinterlegung deckte nur die App-Spalte.
+ */
+export function HandoverModal({ session, api, onClose, onHandedOver }: { session: SessionRecord; api: HubApi; onClose: () => void; onHandedOver: (created: SessionRecord) => void }) {
+  return createPortal(
+    <Sheet open onClose={onClose} label={t("common.handover")} variant="modal" testid="handover-modal" class="new-session-modal">
+      <div class="new-session-modal-head">
+        <h3>{t("common.handover")}</h3>
+        {/* tool-pane-close: Zielflächengröße (--icon-target) wie die ×-Taste der Werkzeugfläche. */}
+        <button type="button" class="tool-pane-close" aria-label={t("common.close")} title={t("common.close")} onClick={onClose}>
+          ×
+        </button>
+      </div>
+      {/* Die Quelle parkt der Hub beim Übergeben (SessionManager.handover) —
+       * hier wird nur das Ziel gewählt und der Übergabetext gesichtet. */}
+      <HandoverForm session={session} api={api} onCancel={onClose} onHandedOver={onHandedOver} />
+    </Sheet>,
+    document.body,
   );
 }
 

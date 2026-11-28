@@ -1,5 +1,17 @@
 # PROGRESS — AncientVoid (Lagebericht)
 
+## 27.11.2026 — EPIC-P90 angelegt; Hub-Neustart auf Auftrag des Nutzers
+
+Lage: `epics/EPIC-P90-namen-scroll-prompt-enhancer.md` neu (Namen mit
+Ursprung/Fokus/Übergabe-Badge, Chat-Scroll-Repro, Prompt-Verbesserer mit
+Settings-Pin, deterministischem Scan und Go-Regel-Messlauf) — Doku-Commit auf
+Branch `ancientvoid/6eeeb972-…`, PR nach `main`, Auto-Merge gestellt.
+Umsetzung T90.1–T90.8 hat noch nicht begonnen; ADR-0127 offen.
+Wiederaufnahme: bei Abbruch hier weiter — epics/EPIC-P90 …, Reihenfolge
+T90.1 → T90.2/T90.3 und T90.4 → T90.5 → T90.6 → T90.7 → T90.8.
+Hub-Neustart (Nutzerauftrag, ohne neuen Code: main unverändert
+`ae50cbd9`, version.json dirty:false); Rückfall-Stand = `ae50cbd9`.
+
 ## 26.11.2026 — Der Denk-Strom gehört zum Schwanz (BUG-0288, PR #446, main 5aab9b8a)
 
 Lage: main = `5aab9b8a`, Hub ausgeliefert (`health=200`,

@@ -1,13 +1,13 @@
 import { fmtTime } from "../../shared/i18n/format.ts";
 import { t } from "../../shared/i18n/index.ts";
-import { Sheet, Button, Chip, ConfirmDialog, EmptyState, Card } from "../../shared/ui/index.ts";
+import { Button, Chip, ConfirmDialog, EmptyState, Card } from "../../shared/ui/index.ts";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { registerField } from "../../shared/command-context.ts";
 import { registerShortcut } from "../../shared/shortcuts/registry.ts";
 import type { ApprovalRequest, DiscoveredProject, FleetHost, SessionRecord } from "../../shared/api.ts";
 import { hostApi, hubApi, remoteHost } from "../../shared/api.ts";
 import { graphHash, sessionHash, FOUND_HASH_ALIAS } from "../../app/route.ts";
-import { HandoverForm } from "../session/Handover.tsx";
+import { HandoverModal } from "../session/Handover.tsx";
 import { targetKey } from "../windows/protocol.ts";
 import { TabIcon } from "../../shared/TabIcon.tsx";
 import { useOpenWindows } from "../windows/windows.ts";
@@ -827,25 +827,15 @@ function SessionRow({
         </span>
       </div>
       {handoverOpen && (
-        <Sheet open onClose={() => setHandoverOpen(false)} label={t("common.handover")}>
-            <div class="row" style="justify-content: space-between; align-items: center">
-              <strong>{t("common.handover")}</strong>
-              <Button aria-label={t("common.close")} onClick={() => setHandoverOpen(false)}>
-                ✕
-              </Button>
-            </div>
-            {/* Die Quelle parkt der Hub beim Übergeben (SessionManager.handover) —
-             * hier wird nur das Ziel gewählt und der Übergabetext gesichtet. */}
-            <HandoverForm
-              session={session}
-              api={hostApi(session.hostId)}
-              onCancel={() => setHandoverOpen(false)}
-              onHandedOver={(created) => {
-                setHandoverOpen(false);
-                onOpen(created);
-              }}
-            />
-        </Sheet>
+        <HandoverModal
+          session={session}
+          api={hostApi(session.hostId)}
+          onClose={() => setHandoverOpen(false)}
+          onHandedOver={(created) => {
+            setHandoverOpen(false);
+            onOpen(created);
+          }}
+        />
       )}
     </div>
   );
